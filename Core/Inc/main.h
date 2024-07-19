@@ -1,0 +1,145 @@
+/* USER CODE BEGIN Header */
+/**
+  ******************************************************************************
+  * @file           : main.h
+  * @brief          : Header for main.c file.
+  *                   This file contains the common defines of the application.
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) 2024 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
+  */
+/* USER CODE END Header */
+
+/* Define to prevent recursive inclusion -------------------------------------*/
+#ifndef __MAIN_H
+#define __MAIN_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* Includes ------------------------------------------------------------------*/
+#include "stm32h7xx_hal.h"
+
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+#include "stdio.h"
+#include "stdlib.h"
+#include "string.h"
+#include "math.h"
+/* USER CODE END Includes */
+
+/* Exported types ------------------------------------------------------------*/
+/* USER CODE BEGIN ET */
+#define SizeBuf_ADC 8192
+#define SizeLogBuf 8000
+#define SizeBuf_DAC 75
+#define ResolutionADC  10
+  
+//#define MAXREPIT  40 // 36максимальное число повторений для данного режима
+#define MAXREPIT  8 // 36максимальное число повторений для данного режима ADC MS9280
+      
+#define LIGHTSPEED 299792458
+// варианты комбинаций построения накопителя
+  
+  
+//#define ADCPeriod 166.666667//150=6.666MHz 166.666667=6МГц 145.8333333=6.851
+ // для внешней АЦП MS9280 30 МГц 
+#define ADCPeriod 33.3333333//33.33333333=30MHz 
+  
+#define BELCORESIZE 224
+      
+      typedef struct
+      {
+        // Структура установок заголовка передачи файла (24 байта)
+        unsigned char Head[8]; // первое слово зависит от длины блока ( #4/5)
+        unsigned int ValDS; /* разрешающая способность 10000 точек, одно проходного значения в 100 пС(0.1нС) частоты съема*/
+        unsigned int NumAvrg;    // число накоплений 
+        unsigned int AW_PWU;    // длина волны лазера (ст слово), длительность импульса (младшее слово)
+        unsigned int FormatData; // формат данных, основные - 0  или для индикации (мин/макс) - N- масштаб (степень прореживания)
+        unsigned int SizeFrm; // размер окна блокировки в 100пС
+        unsigned int NumPtsMain; // число отсчетов блока данных
+        
+        
+      } Measuring_Stat;
+      
+      extern Measuring_Stat Head_RAW;
+      
+/* USER CODE END ET */
+
+/* Exported constants --------------------------------------------------------*/
+/* USER CODE BEGIN EC */
+      
+/* USER CODE END EC */
+
+/* Exported macro ------------------------------------------------------------*/
+/* USER CODE BEGIN EM */
+      void StopAllTIM(int Ext);  // остановка таймеров (OTDR)
+      void CreateNextAvrg(void); //Задаем импульс
+      void StartADC_DMA (void);
+      // пересчет в логарифм
+      void GetLogData (void);
+      
+      // заполнение структуры блока заголовка белкора
+      void GetHeaderBelcore (char* Name, unsigned short Block, unsigned short NumEvents); // заполняем шапку белкора
+      
+      // Отправка файла Белкора построенных как Т7к без событий
+      void SendFileBelcore (void);
+      
+      
+/* USER CODE END EM */
+
+/* Exported functions prototypes ---------------------------------------------*/
+void Error_Handler(void);
+
+/* USER CODE BEGIN EFP */
+      extern uint8_t  CntTx;
+      extern uint16_t BufADC[SizeBuf_ADC];
+      extern uint8_t EnaStartRun;// признак разрешения импульса и преобразования, пока от кнопки
+      extern uint8_t EnaPrintRes;// признак разрешения печати данных по окончании преобразования
+      extern uint8_t EnaNextAvrg;// признак начала текущего накопления ( старт ДМА с текущими параметрами)
+      extern uint32_t Cnt2Timer[128]; // время тамера 2 по окончании цикла ДМА
+      extern uint32_t CountDMA; // число совершенных циклов DMA 
+      extern uint32_t CurrCnt2Timer; // время тамера 2 по окончании цикла ДМА
+extern uint32_t CountCC4 ; // число совершенных прерываний по TIM4_CH4
+extern uint32_t CountEndCMI ; // число прерываний совершенных циклов DMA по DCMI
+      
+/* USER CODE END EFP */
+
+/* Private defines -----------------------------------------------------------*/
+#define LD1_Pin GPIO_PIN_0
+#define LD1_GPIO_Port GPIOB
+#define STLINK_RX_Pin GPIO_PIN_8
+#define STLINK_RX_GPIO_Port GPIOD
+#define STLINK_TX_Pin GPIO_PIN_9
+#define STLINK_TX_GPIO_Port GPIOD
+#define USB_OTG_FS_PWR_EN_Pin GPIO_PIN_10
+#define USB_OTG_FS_PWR_EN_GPIO_Port GPIOD
+#define SW_SD_Pin GPIO_PIN_4
+#define SW_SD_GPIO_Port GPIOG
+#define JTMS_Pin GPIO_PIN_13
+#define JTMS_GPIO_Port GPIOA
+#define JTCK_Pin GPIO_PIN_14
+#define JTCK_GPIO_Port GPIOA
+#define LD2_Pin GPIO_PIN_1
+#define LD2_GPIO_Port GPIOE
+
+/* USER CODE BEGIN Private defines */
+#define LED_G(a) ((a>0)?(HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_SET)):(HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_RESET)))
+#define LED_Y(a) ((a>0)?(HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET)):(HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET)))
+//#define LED_R(a) ((a>0)?(HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_SET)):(HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_RESET)))
+/* USER CODE END Private defines */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __MAIN_H */
