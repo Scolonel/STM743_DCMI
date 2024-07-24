@@ -193,7 +193,7 @@ int8_t STORAGE_Init(uint8_t lun)
 int8_t STORAGE_GetCapacity(uint8_t lun, uint32_t *block_num, uint16_t *block_size)
 {
   /* USER CODE BEGIN 3 */
- //UNUSED(lun);
+  //UNUSED(lun);
 
    //*block_num  = STORAGE_BLK_NBR;
   // *block_size = STORAGE_BLK_SIZ;
