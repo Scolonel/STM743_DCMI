@@ -178,7 +178,7 @@ uint8_t CSP_QUADSPI_Init(void) {
 		return HAL_ERROR;
 	}
 
-	HAL_Delay(1);
+	HAL_Delay(10);
 
 	if (QSPI_AutoPollingMemReady() != HAL_OK) {
 		return HAL_ERROR;

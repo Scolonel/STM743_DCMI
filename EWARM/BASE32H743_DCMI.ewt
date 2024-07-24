@@ -1233,6 +1233,9 @@
                 <file>
                     <name>$PROJ_DIR$\..\Core\Src\usart.c</name>
                 </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Core\Src\usb_otg.c</name>
+                </file>
             </group>
             <group>
                 <name>FATFS</name>
@@ -1257,22 +1260,7 @@
                 <group>
                     <name>App</name>
                     <file>
-                        <name>$PROJ_DIR$\..\USB_DEVICE\App\usb_device.c</name>
-                    </file>
-                    <file>
                         <name>$PROJ_DIR$\..\USB_DEVICE\App\usbd_cdc_if.c</name>
-                    </file>
-                    <file>
-                        <name>$PROJ_DIR$\..\USB_DEVICE\App\usbd_desc.c</name>
-                    </file>
-                    <file>
-                        <name>$PROJ_DIR$\..\USB_DEVICE\App\usbd_storage_if.c</name>
-                    </file>
-                </group>
-                <group>
-                    <name>Target</name>
-                    <file>
-                        <name>$PROJ_DIR$\..\USB_DEVICE\Target\usbd_conf.c</name>
                     </file>
                 </group>
             </group>
@@ -1392,6 +1380,63 @@
     <group>
         <name>Middlewares</name>
         <group>
+            <name>Composite</name>
+            <group>
+                <name>USB/COMPOSITE/CDC_ACM</name>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\AL94_USB_Composite\COMPOSITE\Class\CDC_ACM\Src\usbd_cdc_acm.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\AL94_USB_Composite\COMPOSITE\App\usbd_cdc_acm_if.c</name>
+                </file>
+            </group>
+            <group>
+                <name>USB/COMPOSITE/COMPOSITE</name>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\AL94_USB_Composite\COMPOSITE\Class\COMPOSITE\Src\usbd_composite.c</name>
+                </file>
+            </group>
+            <group>
+                <name>USB/COMPOSITE/Core</name>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\AL94_USB_Composite\COMPOSITE\App\usb_device.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\AL94_USB_Composite\COMPOSITE\Target\usbd_conf.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\AL94_USB_Composite\COMPOSITE\Core\Src\usbd_core.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\AL94_USB_Composite\COMPOSITE\Core\Src\usbd_ctlreq.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\AL94_USB_Composite\COMPOSITE\App\usbd_desc.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\AL94_USB_Composite\COMPOSITE\Core\Src\usbd_ioreq.c</name>
+                </file>
+            </group>
+            <group>
+                <name>USB/COMPOSITE/MSC_BOT</name>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\AL94_USB_Composite\COMPOSITE\Class\MSC\Src\usbd_msc.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\AL94_USB_Composite\COMPOSITE\Class\MSC\Src\usbd_msc_bot.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\AL94_USB_Composite\COMPOSITE\Class\MSC\Src\usbd_msc_data.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\AL94_USB_Composite\COMPOSITE\App\usbd_msc_if.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\AL94_USB_Composite\COMPOSITE\Class\MSC\Src\usbd_msc_scsi.c</name>
+                </file>
+            </group>
+        </group>
+        <group>
             <name>FatFs</name>
             <file>
                 <name>$PROJ_DIR$\..\Middlewares\Third_Party\FatFs\src\option\ccsbcs.c</name>
@@ -1411,33 +1456,6 @@
         </group>
         <group>
             <name>USB_Device_Library</name>
-            <file>
-                <name>$PROJ_DIR$\..\Middlewares\ST\STM32_USB_Device_Library\Class\CDC\Src\usbd_cdc.c</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\Middlewares\ST\STM32_USB_Device_Library\Class\CDC\Src\usbd_composite.c</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\Middlewares\ST\STM32_USB_Device_Library\Core\Src\usbd_core.c</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\Middlewares\ST\STM32_USB_Device_Library\Core\Src\usbd_ctlreq.c</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\Middlewares\ST\STM32_USB_Device_Library\Core\Src\usbd_ioreq.c</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\Middlewares\ST\STM32_USB_Device_Library\Class\MSC\Src\usbd_msc.c</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\Middlewares\ST\STM32_USB_Device_Library\Class\MSC\Src\usbd_msc_bot.c</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\Middlewares\ST\STM32_USB_Device_Library\Class\MSC\Src\usbd_msc_data.c</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\Middlewares\ST\STM32_USB_Device_Library\Class\MSC\Src\usbd_msc_scsi.c</name>
-            </file>
         </group>
     </group>
 </project>

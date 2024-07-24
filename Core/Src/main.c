@@ -27,12 +27,12 @@
 #include "sdmmc.h"
 #include "tim.h"
 #include "usart.h"
-#include "usb_device.h"
+#include "usb_otg.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "usb_device.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -183,11 +183,12 @@ int main(void)
   MX_TIM1_Init();
   MX_DCMI_Init();
   MX_QUADSPI_Init();
-  MX_USB_DEVICE_Init();
   MX_SDMMC2_SD_Init();
   MX_FATFS_Init();
   MX_RTC_Init();
+  MX_USB_OTG_FS_PCD_Init();
   /* USER CODE BEGIN 2 */
+  MX_USB_DEVICE_Init();
   // Start Uart1 
   uint16_t  Dummy = huart3.Instance->RDR ; // чистим буффер приема от SIM
   HAL_UART_Receive_IT(&huart3, RxBufExt,1); // ждем принятия первого байта из внешнего мира
