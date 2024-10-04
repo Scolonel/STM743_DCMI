@@ -23,7 +23,7 @@
 #include "usbd_msc_if.h"
 
 /* USER CODE BEGIN INCLUDE */
-#include "sdmmc.h" //  подключенная SD карточка
+#include "sdmmc.h" //  РїРѕРґРєР»СЋС‡РµРЅРЅР°СЏ SD РєР°СЂС‚РѕС‡РєР°
 /* USER CODE END INCLUDE */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -114,7 +114,7 @@ const int8_t STORAGE_Inquirydata[] = {/* 36 */
 /* USER CODE END INQUIRY_DATA */
 
 /* USER CODE BEGIN PRIVATE_VARIABLES */
-HAL_SD_CardInfoTypeDef cardInfo; // <--- Добавлено
+HAL_SD_CardInfoTypeDef cardInfo; // <--- Р”РѕР±Р°РІР»РµРЅРѕ
 
 /* USER CODE END PRIVATE_VARIABLES */
 
@@ -244,7 +244,7 @@ int8_t STORAGE_Read(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t blk_l
 //  UNUSED(blk_len);
 //
 //  return (USBD_OK);
-  // код из примера
+  // РєРѕРґ РёР· РїСЂРёРјРµСЂР°
      int8_t ret = -1;
 
   HAL_SD_ReadBlocks(&hsd2, buf, blk_addr, blk_len, HAL_MAX_DELAY);
@@ -271,7 +271,7 @@ int8_t STORAGE_Write(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t blk_
 //  UNUSED(blk_len);
 //
 //  return (USBD_OK);
-  // код из примера
+  // РєРѕРґ РёР· РїСЂРёРјРµСЂР°
    int8_t ret = -1;
 
    HAL_SD_WriteBlocks(&hsd2, buf, blk_addr, blk_len, HAL_MAX_DELAY);

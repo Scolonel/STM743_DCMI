@@ -1101,7 +1101,7 @@
           <name>$PROJ_DIR$\..\Core\Src\dma.c</name>
         </file>
         <file>
-          <name>$PROJ_DIR$\..\Core\Src\quadspi.c</name>
+          <name>$PROJ_DIR$/../Core/Src/i2c.c</name>
         </file>
         <file>
           <name>$PROJ_DIR$\..\Core\Src\rtc.c</name>
@@ -1140,6 +1140,9 @@
           </file>
           <file>
             <name>$PROJ_DIR$\..\FATFS\Target\sd_diskio.c</name>
+          </file>
+          <file>
+            <name>$PROJ_DIR$/../FATFS/Target/fatfs_platform.c</name>
           </file>
         </group>
       </group>
@@ -1223,9 +1226,6 @@
       </file>
       <file>
         <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_dcmi.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_qspi.c</name>
       </file>
       <file>
         <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_rtc.c</name>

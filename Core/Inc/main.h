@@ -115,6 +115,8 @@ extern uint32_t CountEndCMI ; // число прерываний совершенных циклов DMA по DCMI
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define OPT_RX_Pin GPIO_PIN_3
+#define OPT_RX_GPIO_Port GPIOA
 #define LD1_Pin GPIO_PIN_0
 #define LD1_GPIO_Port GPIOB
 #define STLINK_RX_Pin GPIO_PIN_8
@@ -125,10 +127,16 @@ extern uint32_t CountEndCMI ; // число прерываний совершенных циклов DMA по DCMI
 #define USB_OTG_FS_PWR_EN_GPIO_Port GPIOD
 #define SW_SD_Pin GPIO_PIN_4
 #define SW_SD_GPIO_Port GPIOG
+#define UNEX_TX_Pin GPIO_PIN_9
+#define UNEX_TX_GPIO_Port GPIOA
+#define UNEX_RX_Pin GPIO_PIN_10
+#define UNEX_RX_GPIO_Port GPIOA
 #define JTMS_Pin GPIO_PIN_13
 #define JTMS_GPIO_Port GPIOA
 #define JTCK_Pin GPIO_PIN_14
 #define JTCK_GPIO_Port GPIOA
+#define LAS_MOD_Pin GPIO_PIN_5
+#define LAS_MOD_GPIO_Port GPIOD
 #define LD2_Pin GPIO_PIN_1
 #define LD2_GPIO_Port GPIOE
 

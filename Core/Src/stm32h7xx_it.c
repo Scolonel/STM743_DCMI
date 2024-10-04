@@ -62,6 +62,8 @@
 extern DMA_HandleTypeDef hdma_adc1;
 extern DMA_HandleTypeDef hdma_dcmi;
 extern TIM_HandleTypeDef htim1;
+extern DMA_HandleTypeDef hdma_usart1_tx;
+extern DMA_HandleTypeDef hdma_usart2_tx;
 extern DMA_HandleTypeDef hdma_usart3_tx;
 extern UART_HandleTypeDef huart3;
 extern PCD_HandleTypeDef hpcd_USB_OTG_FS;
@@ -271,7 +273,7 @@ void DMA1_Stream2_IRQHandler(void)
     
     // можно притупить "основной" таймер для суммирования снятого
     // и вызвать само суммирование
-    LED_Y(0); // закончили текущий цикл ДМА 
+    //LED_Y(0); // закончили текущий цикл ДМА 
     DMA1->LIFCR |= (uint32_t)(DMA_LIFCR_CTCIF2);
     EnaNextAvrg = 1;
   }
@@ -279,6 +281,34 @@ void DMA1_Stream2_IRQHandler(void)
   HAL_DMA_IRQHandler(&hdma_dcmi);
   /* USER CODE BEGIN DMA1_Stream2_IRQn 1 */
   /* USER CODE END DMA1_Stream2_IRQn 1 */
+}
+
+/**
+  * @brief This function handles DMA1 stream3 global interrupt.
+  */
+void DMA1_Stream3_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA1_Stream3_IRQn 0 */
+
+  /* USER CODE END DMA1_Stream3_IRQn 0 */
+  HAL_DMA_IRQHandler(&hdma_usart1_tx);
+  /* USER CODE BEGIN DMA1_Stream3_IRQn 1 */
+
+  /* USER CODE END DMA1_Stream3_IRQn 1 */
+}
+
+/**
+  * @brief This function handles DMA1 stream4 global interrupt.
+  */
+void DMA1_Stream4_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA1_Stream4_IRQn 0 */
+
+  /* USER CODE END DMA1_Stream4_IRQn 0 */
+  HAL_DMA_IRQHandler(&hdma_usart2_tx);
+  /* USER CODE BEGIN DMA1_Stream4_IRQn 1 */
+
+  /* USER CODE END DMA1_Stream4_IRQn 1 */
 }
 
 /**
@@ -304,7 +334,7 @@ void TIM1_CC_IRQHandler(void)
     
     TIM1->CR1 |= TIM_CR1_CEN; // снова разрешим
     CountCC4++;
-    LED_Y(1); // начало одного накопления, старт текущего цикла ДМА
+    //LED_Y(1); // начало одного накопления, старт текущего цикла ДМА
     
   }
 

@@ -22,7 +22,7 @@
 #include "dcmi.h"
 #include "dma.h"
 #include "fatfs.h"
-#include "quadspi.h"
+#include "i2c.h"
 #include "rtc.h"
 #include "sdmmc.h"
 #include "tim.h"
@@ -33,6 +33,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "usb_device.h"
+#include "usbd_cdc_acm_if.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -182,11 +183,13 @@ int main(void)
   MX_TIM4_Init();
   MX_TIM1_Init();
   MX_DCMI_Init();
-  MX_QUADSPI_Init();
   MX_SDMMC2_SD_Init();
   MX_FATFS_Init();
   MX_RTC_Init();
   MX_USB_OTG_FS_PCD_Init();
+  MX_USART1_UART_Init();
+  MX_I2C1_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   MX_USB_DEVICE_Init();
   // Start Uart1 
@@ -246,16 +249,16 @@ int main(void)
   
   //EnaStartRun = 1;
   // TEST!  QUADSPI -  init, erase, write (to Chip), read (from Chip)
-   if (CSP_QUADSPI_Init() != HAL_OK) Error_Handler();
+  // if (CSP_QUADSPI_Init() != HAL_OK) Error_Handler();
 
   //if (CSP_QSPI_Erase_Chip() != HAL_OK) Error_Handler();
 
-  if (CSP_QSPI_WriteMemory(QSPI_TxBuf, 0, sizeof(QSPI_TxBuf)) != HAL_OK) Error_Handler();
+  //if (CSP_QSPI_WriteMemory(QSPI_TxBuf, 0, sizeof(QSPI_TxBuf)) != HAL_OK) Error_Handler();
 
   //if (CSP_QSPI_Read(QSPI_RxBuf, 0, 100) != HAL_OK) Error_Handler();
-  if (CSP_QSPI_EnableMemoryMappedMode() != HAL_OK) Error_Handler();
+  //if (CSP_QSPI_EnableMemoryMappedMode() != HAL_OK) Error_Handler();
 
-  memcpy(QSPI_RxBuf, (uint8_t *) 0x90000000, sizeof(QSPI_TxBuf));
+  //memcpy(QSPI_RxBuf, (uint8_t *) 0x90000000, sizeof(QSPI_TxBuf));
   
   // test SD_Card
   //SDMMC_SDCard_Test(999);
@@ -357,7 +360,7 @@ int main(void)
                if(SW_TIM1>2)
       {
       TIM1->CNT = TIM1->CCR1 - 5;
-        // переустанвливаем осноной таймер ближе к окончанию счета
+        // переустанвливаем основной таймер ближе к окончанию счета
         
       }
        // и продолжаем его для запуска следующего сбора
@@ -532,13 +535,13 @@ void StopAllTIM(int Ext)  // остановка таймеров (OTDR)
 {
   if(Ext)
   {
-  TIM1->CR1 &= ~TIM_CR1_CEN; // STop генератора TIM8 (вспомогательный генратор()
+  TIM1->CR1 &= ~TIM_CR1_CEN; // STop генератора TIM1 (вспомогательный генратор()
   TIM1->CNT = 0;
   }
   //TIM2->CR1 &= ~TIM_CR1_CEN; // STop генератора TIM2 (Основной генератор задающий частоту повторения измерений)
   TIM3->CR1 &= ~TIM_CR1_CEN; // STop генератора TIM3 (формирователь зондирующего импульса)
   TIM4->CR1 &= ~TIM_CR1_CEN; // STop генератора TIM4 (формирователь основных тактов для ДМА АЦП (3.75 мГц из 240/64)
-  TIM2->CR1 &= ~TIM_CR1_CEN; // STop генератора TIM8 (вспомогательный генратор()
+  TIM2->CR1 &= ~TIM_CR1_CEN; // STop генератора TIM2 (вспомогательный генратор()
   //TIM12->CR1 &= ~TIM_CR1_CEN; // STop генератора TIM8 (вспомогательный генратор()
   // пытаемся их всех запустить от мастера TIM1 - (то же самое в Т9400 только там мастер TIM3)
   TIM3->CNT = 0;
@@ -703,7 +706,7 @@ void GetHeaderBelcore (char* Name, unsigned short Block, unsigned short NumEvent
       // заполняем производителя
       memcpy( &Name[118-118], IdnsBC[0], 14 );
       // идентификатор изделия 12 байт 
-      sprintf (Str,"TOPAZ_AVRG");
+      sprintf (Str,"TOPAZ_AVRG  ");
       // Set MDIF
       memcpy( &Name[133-118], Str, 12 );
       // Number Device
@@ -825,6 +828,8 @@ void SendFileBelcore (void)
   //  HAL_UART_Transmit_DMA(&huart3, (void*)BufString,56+16*((NumEventNow)?(1):(0))); // выдаем 
   //  TxDMA=1;
   HAL_UART_Transmit(&huart3, (void*)BufString,56+16*((NumEventNow)?(1):(0)),10); // выдаем 
+  // попробуем здесь выдать по виртуальному ком порту этот же блок
+    CDC_Transmit(0, (void*)BufString, 56+16*((NumEventNow)?(1):(0))); // выдаем блок
   //HAL_Delay(3);
   c = (unsigned char*)&BufString;
   for (int i=0;i<56+16*((NumEventNow)?(1):(0));i++)
@@ -843,6 +848,8 @@ void SendFileBelcore (void)
   //  TxDMA=1;
   //HAL_Delay(3);
   HAL_UART_Transmit(&huart3, (void*)BufString,62,10); // выдаем 
+  // попробуем здесь выдать по виртуальному ком порту этот же блок
+    CDC_Transmit(0, (void*)BufString, 62); // выдаем блок
   c = (unsigned char*)&BufString;
   for (int i=0;i<62;i++)
   {
@@ -859,6 +866,8 @@ void SendFileBelcore (void)
   //  HAL_UART_Transmit_DMA(&huart3, (void*)BufString,95); // выдаем 
   //  TxDMA=1;
   HAL_UART_Transmit(&huart3, (void*)BufString,95,10); // выдаем 
+  // попробуем здесь выдать по виртуальному ком порту этот же блок
+    CDC_Transmit(0, (void*)BufString, 95); // выдаем блок
   //HAL_Delay(5);
   c = (unsigned char*)&BufString;
   for (int i=0;i<95;i++)
@@ -919,6 +928,8 @@ void SendFileBelcore (void)
   //  HAL_UART_Transmit_DMA(&huart3, (void*)BufString,12); // выдаем 
   //  TxDMA=1;
   HAL_UART_Transmit(&huart3, (void*)BufString,12,3); // выдаем 
+  // попробуем здесь выдать по виртуальному ком порту этот же блок
+    CDC_Transmit(0, (void*)BufString, 12); // выдаем блок
   //HAL_Delay(1);
   c = (unsigned char*)&BufString;
   for (int i=0;i<12;i++)
@@ -935,7 +946,11 @@ void SendFileBelcore (void)
   //        while(TxDMA);
   //  HAL_UART_Transmit_DMA(&huart3, (void*)LogData,SizeLogBuf*2); // выдаем 
   //  TxDMA=1;
-  HAL_UART_Transmit(&huart3, (void*)LogData,SizeLogBuf*2,2000); // выдаем 
+  HAL_UART_Transmit(&huart3, (void*)LogData,SizeLogBuf*2,2000); // выдаем блок логарифмических данных от двух байтовый
+  
+  // попробуем здесь выдать по вертуальному ком порту этот же блок
+    CDC_Transmit(0, (void*)LogData, SizeLogBuf*2); // выдаем блок логарифмических данных от двух байтовый
+
   //HAL_Delay(150);
   c = (unsigned char*)&LogData;
   for (int i=0;i<SizeLogBuf*2;i++)
@@ -948,7 +963,12 @@ void SendFileBelcore (void)
   }
   
   // UARTSend0 ((BYTE*)&new_crc, 2);
+  //while(TxCDCFree(0)); // ждем окончания передачи предыдущего блока
+  // без этого терялись последние два байта
   HAL_UART_Transmit(&huart3, (void*)new_crc,2,1); // выдаем 
+  // попробуем здесь выдать по вертуальному ком порту этот же блок
+  // теряем этот блок при передаче предыдущего
+    CDC_Transmit(0, (void*)new_crc, 2); // выдаем блок контрольной суммы
 }
 
 //Чужая прогрпмма теста работы FATFS in SDMMC2 with SD_Card
@@ -974,7 +994,7 @@ void SDMMC_SDCard_Test(int Num)
       HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
       break;
     }
-    sprintf(TxBuffer, "SD Card Mounted Successfully! \r\n\n");
+    sprintf(TxBuffer, "00000\nSD Card Mounted Successfully! \r\n\n");
     HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
     //------------------[ Get & Print The SD Card Size & Free Space ]--------------------
     f_getfree("", &FreeClusters, &FS_Ptr);
