@@ -22,6 +22,10 @@
 #include "stm32h7xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "usart.h"
+#include "adc.h"
+#include "dcmi.h"
+//#include "dac.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -41,7 +45,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-
+unsigned beepTick = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -58,8 +62,13 @@
 extern DMA_HandleTypeDef hdma_adc1;
 extern DMA_HandleTypeDef hdma_dcmi;
 extern TIM_HandleTypeDef htim1;
+extern DMA_HandleTypeDef hdma_uart5_tx;
+extern DMA_HandleTypeDef hdma_uart7_tx;
 extern DMA_HandleTypeDef hdma_usart3_tx;
+extern UART_HandleTypeDef huart5;
+extern UART_HandleTypeDef huart7;
 extern UART_HandleTypeDef huart3;
+extern PCD_HandleTypeDef hpcd_USB_OTG_FS;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -208,11 +217,15 @@ void SysTick_Handler(void)
 void DMA1_Stream0_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA1_Stream0_IRQn 0 */
-
+  CntTx++;
+  if(DMA1->LISR & DMA_LISR_TCIF0)
+  {
+    HAL_UART_DMAStop(&huart3);
+    TxDMA=0;
+  }
   /* USER CODE END DMA1_Stream0_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_usart3_tx);
   /* USER CODE BEGIN DMA1_Stream0_IRQn 1 */
-
   /* USER CODE END DMA1_Stream0_IRQn 1 */
 }
 
@@ -222,11 +235,22 @@ void DMA1_Stream0_IRQHandler(void)
 void DMA1_Stream1_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA1_Stream1_IRQn 0 */
+  // остановка ДМА при накоплении с работой с внутренней АЦП
+//  if(DMA1->LISR & DMA_LISR_TCIF1)
+//  {
+//    CurrCnt2Timer = TIM2->CNT;
+//    HAL_ADC_Stop_DMA(&hadc1);
+//    // можно притупить "основной" таймер для суммирования снятого
+//    // и вызвать само суммирование
+//    LED_Y(0); // закончили текущий цикл ДМА 
+//    TIM1->CR1 &= ~TIM_CR1_CEN; // притупим таймер основной
+//    EnaNextAvrg = 1;
+//
+//  }
 
   /* USER CODE END DMA1_Stream1_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_adc1);
   /* USER CODE BEGIN DMA1_Stream1_IRQn 1 */
-
   /* USER CODE END DMA1_Stream1_IRQn 1 */
 }
 
@@ -236,12 +260,57 @@ void DMA1_Stream1_IRQHandler(void)
 void DMA1_Stream2_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA1_Stream2_IRQn 0 */
-
+  //DMA1_Stream2->CR &= ~DMA_SxCR_EN; // запрещаем ДМА DCMI
+    CountEndCMI++; 
+  if(DMA1->LISR & DMA_LISR_TCIF2)
+  {
+    //DCMI->CR &= ~DCMI_CR_CAPTURE;
+    //while(DCMI->CR&0X01);               // Waiting for transmission to complete
+    //DMA1_Stream2->CR &= ~DMA_SxCR_EN; // выключаем цикл ДМА for DCMI
+    //DMA1_Stream2->CR |= DMA_SxCR_EN; // запускаем новый цикл ДМА for DCMI
+    TIM1->CR1 &= ~TIM_CR1_CEN; // притупим таймер основной
+    CurrCnt2Timer = TIM1->CNT;
+    //HAL_DCMI_Stop(&hdcmi);
+    DMA1_Stream2->CR &=~DMA_SxCR_EN; // запрещаем  ДМА for DCMI
+    
+    // можно притупить "основной" таймер для суммирования снятого
+    // и вызвать само суммирование
+    //LED_Y(0); // закончили текущий цикл ДМА 
+    DMA1->LIFCR |= (uint32_t)(DMA_LIFCR_CTCIF2);
+    EnaNextAvrg = 1;
+  }
   /* USER CODE END DMA1_Stream2_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_dcmi);
   /* USER CODE BEGIN DMA1_Stream2_IRQn 1 */
-
   /* USER CODE END DMA1_Stream2_IRQn 1 */
+}
+
+/**
+  * @brief This function handles DMA1 stream3 global interrupt.
+  */
+void DMA1_Stream3_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA1_Stream3_IRQn 0 */
+
+  /* USER CODE END DMA1_Stream3_IRQn 0 */
+  HAL_DMA_IRQHandler(&hdma_uart7_tx);
+  /* USER CODE BEGIN DMA1_Stream3_IRQn 1 */
+
+  /* USER CODE END DMA1_Stream3_IRQn 1 */
+}
+
+/**
+  * @brief This function handles DMA1 stream5 global interrupt.
+  */
+void DMA1_Stream5_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA1_Stream5_IRQn 0 */
+
+  /* USER CODE END DMA1_Stream5_IRQn 0 */
+  HAL_DMA_IRQHandler(&hdma_uart5_tx);
+  /* USER CODE BEGIN DMA1_Stream5_IRQn 1 */
+
+  /* USER CODE END DMA1_Stream5_IRQn 1 */
 }
 
 /**
@@ -254,6 +323,22 @@ void TIM1_CC_IRQHandler(void)
   /* USER CODE END TIM1_CC_IRQn 0 */
   HAL_TIM_IRQHandler(&htim1);
   /* USER CODE BEGIN TIM1_CC_IRQn 1 */
+  if(TIM1->DIER & TIM_IT_CC1) // прерывание по "почти" окончании счета частоты повторения импульсов
+    // здесь перестроим Таймеры на новые положения если надо
+  {
+    TIM1->CR1 &= ~TIM_CR1_CEN; // притупим таймер основной
+    // можно тормознуть все остальные таймеры, и даже сбросить
+    StopAllTIM(0);
+    // сформируем сдвиг зондирующего импульса
+    // и там же пробуем предустановить новый цикл ДМА АЦП
+    CreateNextAvrg();      
+    // продолжим тики основного генератора
+    
+    TIM1->CR1 |= TIM_CR1_CEN; // снова разрешим
+    CountCC4++;
+    //LED_Y(1); // начало одного накопления, старт текущего цикла ДМА
+    
+  }
 
   /* USER CODE END TIM1_CC_IRQn 1 */
 }
@@ -278,12 +363,54 @@ void USART3_IRQHandler(void)
 void EXTI15_10_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI15_10_IRQn 0 */
-
   /* USER CODE END EXTI15_10_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_13);
+  HAL_GPIO_EXTI_IRQHandler(BUT_START_Pin);
   /* USER CODE BEGIN EXTI15_10_IRQn 1 */
-
+EnaStartRun = 1;
   /* USER CODE END EXTI15_10_IRQn 1 */
+}
+
+/**
+  * @brief This function handles UART5 global interrupt.
+  */
+void UART5_IRQHandler(void)
+{
+  /* USER CODE BEGIN UART5_IRQn 0 */
+
+  /* USER CODE END UART5_IRQn 0 */
+  HAL_UART_IRQHandler(&huart5);
+  /* USER CODE BEGIN UART5_IRQn 1 */
+
+  /* USER CODE END UART5_IRQn 1 */
+}
+
+/**
+  * @brief This function handles UART7 global interrupt.
+  */
+void UART7_IRQHandler(void)
+{
+  /* USER CODE BEGIN UART7_IRQn 0 */
+
+  /* USER CODE END UART7_IRQn 0 */
+  HAL_UART_IRQHandler(&huart7);
+  /* USER CODE BEGIN UART7_IRQn 1 */
+
+  /* USER CODE END UART7_IRQn 1 */
+}
+
+/**
+  * @brief This function handles USB On The Go FS global interrupt.
+  */
+void OTG_FS_IRQHandler(void)
+{
+  /* USER CODE BEGIN OTG_FS_IRQn 0 */
+
+  /* USER CODE END OTG_FS_IRQn 0 */
+  HAL_PCD_IRQHandler(&hpcd_USB_OTG_FS);
+  /* USER CODE BEGIN OTG_FS_IRQn 1 */
+
+  /* USER CODE END OTG_FS_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

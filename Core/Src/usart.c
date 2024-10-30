@@ -180,12 +180,19 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     PB12     ------> UART5_RX
     PB13     ------> UART5_TX
     */
-    GPIO_InitStruct.Pin = OPT_RX_Pin|LMOD_TX_Pin;
+    GPIO_InitStruct.Pin = OPT_RX_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Alternate = GPIO_AF14_UART5;
+    HAL_GPIO_Init(OPT_RX_GPIO_Port, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = LMOD_TX_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStruct.Alternate = GPIO_AF14_UART5;
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    HAL_GPIO_Init(LMOD_TX_GPIO_Port, &GPIO_InitStruct);
 
     /* UART5 DMA Init */
     /* UART5_TX Init */
@@ -226,12 +233,19 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     PF6     ------> UART7_RX
     PF7     ------> UART7_TX
     */
-    GPIO_InitStruct.Pin = NEX_RX_Pin|NEX_TX_Pin;
+    GPIO_InitStruct.Pin = NEX_RX_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF7_UART7;
+    HAL_GPIO_Init(NEX_RX_GPIO_Port, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = NEX_TX_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF7_UART7;
-    HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
+    HAL_GPIO_Init(NEX_TX_GPIO_Port, &GPIO_InitStruct);
 
     /* UART7 DMA Init */
     /* UART7_TX Init */

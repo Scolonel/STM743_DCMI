@@ -200,6 +200,17 @@ void SysTick_Handler(void)
   /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
+  // my control BEEP
+  if (beepTick > 1)
+  {
+    --beepTick;
+    HAL_GPIO_TogglePin(Beep_GPIO_Port, Beep_Pin);
+  }
+  else if(beepTick == 1)
+  {
+    beepTick = 0;
+    HAL_GPIO_WritePin(Beep_GPIO_Port, Beep_Pin, GPIO_PIN_RESET);
+  }
 
   /* USER CODE END SysTick_IRQn 1 */
 }
@@ -381,6 +392,7 @@ void UART5_IRQHandler(void)
   /* USER CODE END UART5_IRQn 0 */
   HAL_UART_IRQHandler(&huart5);
   /* USER CODE BEGIN UART5_IRQn 1 */
+   HAL_NVIC_ClearPendingIRQ(UART5_IRQn);
 
   /* USER CODE END UART5_IRQn 1 */
 }
@@ -391,10 +403,16 @@ void UART5_IRQHandler(void)
 void UART7_IRQHandler(void)
 {
   /* USER CODE BEGIN UART7_IRQn 0 */
-
+        /* Check if RXNE flag is set */
+      if (__HAL_UART_GET_FLAG(&huart7, UART_FLAG_RXNE))
+  {
+    
+  Dummy = (uint16_t)(huart7.Instance->RDR); // 
+  }
   /* USER CODE END UART7_IRQn 0 */
   HAL_UART_IRQHandler(&huart7);
   /* USER CODE BEGIN UART7_IRQn 1 */
+   HAL_NVIC_ClearPendingIRQ(UART7_IRQn);
 
   /* USER CODE END UART7_IRQn 1 */
 }

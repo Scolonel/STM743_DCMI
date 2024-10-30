@@ -76,6 +76,7 @@ extern I2C_HandleTypeDef hi2c2;
       } Measuring_Stat;
       
       extern Measuring_Stat Head_RAW;
+      extern uint16_t Dummy; // пустое чтение буфферов UART
       
 /* USER CODE END ET */
 
@@ -137,8 +138,6 @@ extern uint32_t CountEndCMI ; // число прерываний совершенных циклов DMA по DCMI
 #define LD1_GPIO_Port GPIOB
 #define V_BAT_Pin GPIO_PIN_11
 #define V_BAT_GPIO_Port GPIOF
-#define LED_START_Pin GPIO_PIN_15
-#define LED_START_GPIO_Port GPIOF
 #define BUT_START_Pin GPIO_PIN_14
 #define BUT_START_GPIO_Port GPIOE
 #define BUT_START_EXTI_IRQn EXTI15_10_IRQn
@@ -146,10 +145,10 @@ extern uint32_t CountEndCMI ; // число прерываний совершенных циклов DMA по DCMI
 #define OPT_RX_GPIO_Port GPIOB
 #define LMOD_TX_Pin GPIO_PIN_13
 #define LMOD_TX_GPIO_Port GPIOB
-#define STLINK_TX_Pin GPIO_PIN_8
-#define STLINK_TX_GPIO_Port GPIOD
-#define STLINK_RX_Pin GPIO_PIN_9
+#define STLINK_RX_Pin GPIO_PIN_8
 #define STLINK_RX_GPIO_Port GPIOD
+#define STLINK_TX_Pin GPIO_PIN_9
+#define STLINK_TX_GPIO_Port GPIOD
 #define USB_OTG_FS_PWR_EN_Pin GPIO_PIN_10
 #define USB_OTG_FS_PWR_EN_GPIO_Port GPIOD
 #define SW_SD_Pin GPIO_PIN_4

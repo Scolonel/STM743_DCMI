@@ -182,6 +182,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
+  MX_USART3_UART_Init();
   MX_TIM2_Init();
   MX_ADC1_Init();
   MX_TIM3_Init();
@@ -193,10 +194,9 @@ int main(void)
   MX_RTC_Init();
   MX_USB_OTG_FS_PCD_Init();
   MX_I2C2_Init();
-  MX_DAC1_Init();
   MX_UART7_Init();
   MX_UART5_Init();
-  MX_USART3_UART_Init();
+  MX_DAC1_Init();
   /* USER CODE BEGIN 2 */
   MX_USB_DEVICE_Init();
   // так как по€вилось I2C - конфигураци€ прибора и управление клавиатурой 
@@ -296,10 +296,10 @@ int main(void)
   {
     Error_Handler();
   }
-  HAL_Delay(1000);
+  HAL_Delay(100);
   sprintf((void*)Str,"bauds=115200€€€");
   NEX_Transmit(Str);// 
-  HAL_Delay(1000);
+  HAL_Delay(100);
   huart7.Init.BaudRate = 115200;
   if (HAL_UART_Init(&huart7) != HAL_OK)
   {
@@ -308,7 +308,20 @@ int main(void)
   
   
   
-  HAL_Delay(1000);
+  HAL_Delay(100);
+    sprintf((void*)Str,"page 1€€€");
+  NEX_Transmit(Str);// 
+  HAL_Delay(100);
+  HAL_Delay(100);
+    sprintf((void*)Str,"page 1€€€");
+  NEX_Transmit(Str);// 
+  HAL_Delay(100);
+    myBeep(100);
+
+    sprintf((void*)Str,"page 23€€€");
+  NEX_Transmit(Str);// 
+  HAL_Delay(100);
+
   InitBtns(); 
   /* USER CODE END 2 */
 
@@ -338,7 +351,8 @@ int main(void)
         Error_Handler();
       }
       CntCMD++;
-      sprintf((void*)Str,"%s",CmdNextion[CntCMD%0xF]);// 
+      //sprintf((void*)Str,"%s",CmdNextion[CntCMD%0xF]);// 
+      sprintf((void*)Str,"page %d€€€",CntCMD%0xF);// 
       NEX_Transmit(Str);// 
       uint32_t DAC_CODE = BufADC[0]>>2;
       HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_2, DAC_ALIGN_12B_R, ((CntCMD%0xF)<<8));
