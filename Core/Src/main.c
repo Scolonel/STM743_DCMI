@@ -187,9 +187,9 @@ int main(void)
   MX_FATFS_Init();
   MX_RTC_Init();
   MX_USB_OTG_FS_PCD_Init();
-  MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_I2C2_Init();
+  MX_UART7_Init();
   /* USER CODE BEGIN 2 */
   MX_USB_DEVICE_Init();
   // Start Uart1 
