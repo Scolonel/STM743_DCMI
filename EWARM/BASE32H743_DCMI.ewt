@@ -1201,6 +1201,9 @@
                     <name>$PROJ_DIR$\..\Core\Src\adc.c</name>
                 </file>
                 <file>
+                    <name>$PROJ_DIR$\..\Core\Src\dac.c</name>
+                </file>
+                <file>
                     <name>$PROJ_DIR$\..\Core\Src\dcmi.c</name>
                 </file>
                 <file>
@@ -1210,10 +1213,10 @@
                     <name>$PROJ_DIR$\..\Core\Src\gpio.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\Core\Src\main.c</name>
+                    <name>$PROJ_DIR$\..\Core\Src\i2c.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\Core\Src\quadspi.c</name>
+                    <name>$PROJ_DIR$\..\Core\Src\main.c</name>
                 </file>
                 <file>
                     <name>$PROJ_DIR$\..\Core\Src\rtc.c</name>
@@ -1251,6 +1254,9 @@
                         <name>$PROJ_DIR$\..\FATFS\Target\bsp_driver_sd.c</name>
                     </file>
                     <file>
+                        <name>$PROJ_DIR$\..\FATFS\Target\fatfs_platform.c</name>
+                    </file>
+                    <file>
                         <name>$PROJ_DIR$\..\FATFS\Target\sd_diskio.c</name>
                     </file>
                 </group>
@@ -1263,6 +1269,27 @@
                         <name>$PROJ_DIR$\..\USB_DEVICE\App\usbd_cdc_if.c</name>
                     </file>
                 </group>
+            </group>
+            <group>
+                <name>User</name>
+                <file>
+                    <name>$PROJ_DIR$\..\User\Src\buttons.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\User\Src\CmdNextion.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\User\Src\HardSetDevice.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\User\Src\msgs.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\User\Src\PCA955x.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\User\Src\PM.c</name>
+                </file>
             </group>
         </group>
     </group>
@@ -1287,6 +1314,12 @@
             </file>
             <file>
                 <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_cortex.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_dac.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_dac_ex.c</name>
             </file>
             <file>
                 <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_dcmi.c</name>
@@ -1332,9 +1365,6 @@
             </file>
             <file>
                 <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_pwr_ex.c</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_qspi.c</name>
             </file>
             <file>
                 <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_rcc.c</name>
@@ -1453,9 +1483,6 @@
             <file>
                 <name>$PROJ_DIR$\..\Middlewares\Third_Party\FatFs\src\option\syscall.c</name>
             </file>
-        </group>
-        <group>
-            <name>USB_Device_Library</name>
         </group>
     </group>
 </project>

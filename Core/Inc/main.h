@@ -35,10 +35,14 @@ extern "C" {
 #include "stdlib.h"
 #include "string.h"
 #include "math.h"
+#include "SysT7Knew.h"
+  
+extern I2C_HandleTypeDef hi2c2;
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
+#define SizeBuf_ADC_int 8
 #define SizeBuf_ADC 8192
 #define SizeLogBuf 8000
 #define SizeBuf_DAC 75
@@ -101,8 +105,10 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
+void myBeep (unsigned sound);
+
       extern uint8_t  CntTx;
-      extern uint16_t BufADC[SizeBuf_ADC];
+      extern uint16_t BufADC[SizeBuf_ADC_int];
       extern uint8_t EnaStartRun;// признак разрешения импульса и преобразования, пока от кнопки
       extern uint8_t EnaPrintRes;// признак разрешения печати данных по окончании преобразования
       extern uint8_t EnaNextAvrg;// признак начала текущего накопления ( старт ДМА с текущими параметрами)
@@ -129,6 +135,10 @@ extern uint32_t CountEndCMI ; // число прерываний совершенных циклов DMA по DCMI
 #define FREE2_GPIO_Port GPIOC
 #define LD1_Pin GPIO_PIN_0
 #define LD1_GPIO_Port GPIOB
+#define V_BAT_Pin GPIO_PIN_11
+#define V_BAT_GPIO_Port GPIOF
+#define LED_START_Pin GPIO_PIN_15
+#define LED_START_GPIO_Port GPIOF
 #define BUT_START_Pin GPIO_PIN_14
 #define BUT_START_GPIO_Port GPIOE
 #define BUT_START_EXTI_IRQn EXTI15_10_IRQn
@@ -136,10 +146,10 @@ extern uint32_t CountEndCMI ; // число прерываний совершенных циклов DMA по DCMI
 #define OPT_RX_GPIO_Port GPIOB
 #define LMOD_TX_Pin GPIO_PIN_13
 #define LMOD_TX_GPIO_Port GPIOB
-#define STLINK_RX_Pin GPIO_PIN_8
-#define STLINK_RX_GPIO_Port GPIOD
-#define STLINK_TX_Pin GPIO_PIN_9
+#define STLINK_TX_Pin GPIO_PIN_8
 #define STLINK_TX_GPIO_Port GPIOD
+#define STLINK_RX_Pin GPIO_PIN_9
+#define STLINK_RX_GPIO_Port GPIOD
 #define USB_OTG_FS_PWR_EN_Pin GPIO_PIN_10
 #define USB_OTG_FS_PWR_EN_GPIO_Port GPIOD
 #define SW_SD_Pin GPIO_PIN_4

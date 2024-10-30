@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "adc.h"
+#include "dac.h"
 #include "dcmi.h"
 #include "dma.h"
 #include "fatfs.h"
@@ -34,6 +35,7 @@
 /* USER CODE BEGIN Includes */
 #include "usb_device.h"
 #include "usbd_cdc_acm_if.h"
+#include "SysT7Knew.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -70,7 +72,7 @@ const char HeaderBelcore[241] = {
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+const uint8_t* TxGenOpt={"UUUUUUUUUUUUUUUUU"};
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -79,7 +81,7 @@ const char HeaderBelcore[241] = {
 uint8_t TxDMA = 0; // признак занятости DMA 
 uint8_t TxBufAns[512]; // буффер передачи в USB
 uint8_t  CntTx=0;
-uint16_t BufADC[SizeBuf_ADC]; // буфер АЦП, в него пишем при съеме DMA, размер до 8192
+uint16_t BufADC[SizeBuf_ADC_int]; // буфер внутреннего АЦП (8), в него пишем при съеме DMA, размер до 8
 uint16_t BufADD[SizeBuf_ADC]; // буфер 2АЦП, в него пишем при съеме DMA, размер до 8192
 uint32_t BufNAK[SizeBuf_ADC]; // буфер накопления, в него добавляем из буфера АЦП
 uint16_t LogData[SizeBuf_ADC]; // буфер логарифмических данных накопления, в него добавляем из буфера АЦП
@@ -89,12 +91,14 @@ uint32_t CurrCnt2Timer; // время тамера 2 по окончании цикла ДМА
 // test QSPI
 uint8_t QSPI_TxBuf[]= "Hello world fromQSPI";
 uint8_t QSPI_RxBuf[100];
-
-
+// переменные UART I2C
+uint16_t Dummy; // пустое чтение буфферов UART
+uint32_t ErrCheck; // контроль памяти конфигурации
+uint8_t N_LS=0; // число лазеров в конфигурации (для контроля есть ли источник)
 // основные установки параметров сборщика
 //
 volatile uint32_t MaxADC = (1<<ResolutionADC)-1; // максимальный уровень АЦП - разрядность
-
+uint8_t Str[64];
 
 uint32_t BeginShift = 152; // начальное смещение для рассчета 
 uint32_t BeginSet = 200; // место установки начала зондир импульса при различных режимах прореживания (
@@ -118,7 +122,7 @@ uint32_t Sm_Shift = 0; // текущее значение сдвига Зонд.Импульса
 // пишем в блок в начало и подсуммируем в накопление
 // по кнопке устаналиваем начальные установки по накоплению, пока
 // 10 накоплений, 
-uint32_t CntIzmer = 0;// число совершенныхизмерений
+uint32_t CntIzmer = 0;// число совершенных измерений
 
 uint8_t EnaNextAvrg = 0;// признак начала текущего накопления ( старт ДМА с текущими параметрами)
 
@@ -128,6 +132,8 @@ uint8_t EnaPrintRes = 0;// признак разрешения печати данных по окончании преобра
 uint8_t PressKey=0; // признак что нажимали кнопку для разрешения передачи файла
 int a = 13,j,i;
 uint32_t SM;
+uint16_t KeyP; // клавиши нажатые 
+uint8_t CntCMD;
 
 /* USER CODE END PV */
 
@@ -176,7 +182,6 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  MX_USART3_UART_Init();
   MX_TIM2_Init();
   MX_ADC1_Init();
   MX_TIM3_Init();
@@ -188,11 +193,16 @@ int main(void)
   MX_RTC_Init();
   MX_USB_OTG_FS_PCD_Init();
   MX_I2C2_Init();
+  MX_DAC1_Init();
   MX_UART7_Init();
   MX_UART5_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
   MX_USB_DEVICE_Init();
-  // Start Uart1 
+  // так как появилось I2C - конфигурация прибора и управление клавиатурой 
+  // будет первым настраиваться
+  ErrCheck =   BeginConfig();
+  // Start Uart3 - внешний мир
   uint16_t  Dummy = huart3.Instance->RDR ; // чистим буффер приема от SIM
   HAL_UART_Receive_IT(&huart3, RxBufExt,1); // ждем принятия первого байта из внешнего мира
   /* disable the UART Parity Error Interrupt */
@@ -202,6 +212,21 @@ int main(void)
   // Тестовая посылка по UART
   sprintf((void*)TxBufAns,"TEst\n"); //  
   HAL_UART_Transmit(&huart3,(void*)TxBufAns, strlen((void*)TxBufAns),100);
+  // Start Uart7 - Nextion
+  Dummy = huart7.Instance->RDR ; // чистим буффер приема от NEXTION
+  HAL_UART_Receive_IT(&huart7, RxBufExt,1); // ждем принятия первого байта из внешнего мира
+  /* disable the UART Parity Error Interrupt */
+  __HAL_UART_DISABLE_IT(&huart7, UART_IT_PE);
+  /* disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
+  __HAL_UART_DISABLE_IT(&huart7, UART_IT_ERR);
+  // Start Uart5 - Optics
+  Dummy = huart5.Instance->RDR ; // чистим буффер приема от OPTIC
+  HAL_UART_Receive_IT(&huart5, RxBufExt,1); // ждем принятия первого байта из внешнего мира
+  /* disable the UART Parity Error Interrupt */
+  __HAL_UART_DISABLE_IT(&huart5, UART_IT_PE);
+  /* disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
+  __HAL_UART_DISABLE_IT(&huart5, UART_IT_ERR);
+  
   // необходимо запустить таймеры, но они работают от мастера TIM1, 
   // в прерывании которго они могут перекофигурироваться и запускатся по его Перезаписи чуть позже!
   HAL_TIM_PWM_Start_IT (&htim1, TIM_CHANNEL_1 ); // мастер таймер Период повторения 
@@ -210,36 +235,39 @@ int main(void)
   HAL_TIM_PWM_Start (&htim2, TIM_CHANNEL_1 ); // для подсчета времени выполнения ДМА с заданными параметрами
   //HAL_TIM_PWM_Start (&htim12, TIM_CHANNEL_2 ); // запускаем таймер синхронизации ЦАП 
   //HAL_TIM_Base_Start(&htim4); // запускаем таймер для DAC и DAC 
+  // прочитаем клавиатуру
   
   //
+  myBeep(100);
   HAL_Delay(10);
+  
   
   if (HAL_ADCEx_Calibration_Start(&hadc1, ADC_CALIB_OFFSET_LINEARITY, ADC_SINGLE_ENDED) != HAL_OK)
   {
     Error_Handler();
   }
-//  if (HAL_ADCEx_Calibration_Start(&hadc2, ADC_CALIB_OFFSET_LINEARITY, ADC_SINGLE_ENDED) != HAL_OK)
-//  {
-//    Error_Handler();
-//  }
+  //  if (HAL_ADCEx_Calibration_Start(&hadc2, ADC_CALIB_OFFSET_LINEARITY, ADC_SINGLE_ENDED) != HAL_OK)
+  //  {
+  //    Error_Handler();
+  //  }
   
   
   if (HAL_ADC_Start_DMA(&hadc1,
                         (uint32_t *)BufADC,
-                        SizeBuf_ADC
+                        SizeBuf_ADC_int
                           ) != HAL_OK)
   {
     Error_Handler();
   }
   //DCMI->CR|=DCMI_CR_CAPTURE;          // DCMI capture enable
-
-//  if (HAL_ADC_Start_DMA(&hadc2,
-//                        (uint32_t *)BufADD,
-//                        SizeBuf_ADC
-//                          ) != HAL_OK)
-//  {
-//    Error_Handler();
-//  }
+  
+  //  if (HAL_ADC_Start_DMA(&hadc2,
+  //                        (uint32_t *)BufADD,
+  //                        SizeBuf_ADC
+  //                          ) != HAL_OK)
+  //  {
+  //    Error_Handler();
+  //  }
   // попробуем запусить DAC
   //    if (HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, (uint32_t *)CodeDAC, 64, DAC_ALIGN_12B_R) != HAL_OK)
   //  {
@@ -250,20 +278,38 @@ int main(void)
   //EnaStartRun = 1;
   // TEST!  QUADSPI -  init, erase, write (to Chip), read (from Chip)
   // if (CSP_QUADSPI_Init() != HAL_OK) Error_Handler();
-
+  
   //if (CSP_QSPI_Erase_Chip() != HAL_OK) Error_Handler();
-
+  
   //if (CSP_QSPI_WriteMemory(QSPI_TxBuf, 0, sizeof(QSPI_TxBuf)) != HAL_OK) Error_Handler();
-
+  
   //if (CSP_QSPI_Read(QSPI_RxBuf, 0, 100) != HAL_OK) Error_Handler();
   //if (CSP_QSPI_EnableMemoryMappedMode() != HAL_OK) Error_Handler();
-
+  
   //memcpy(QSPI_RxBuf, (uint8_t *) 0x90000000, sizeof(QSPI_TxBuf));
   
   // test SD_Card
   //SDMMC_SDCard_Test(999);
-  HAL_Delay(5000);
+  // перенастроим UART1
+  huart7.Init.BaudRate = 9600;
+  if (HAL_UART_Init(&huart7) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  HAL_Delay(1000);
+  sprintf((void*)Str,"bauds=115200яяя");
+  NEX_Transmit(Str);// 
+  HAL_Delay(1000);
+  huart7.Init.BaudRate = 115200;
+  if (HAL_UART_Init(&huart7) != HAL_OK)
+  {
+    Error_Handler();
+  }
   
+  
+  
+  HAL_Delay(1000);
+  InitBtns(); 
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -271,116 +317,145 @@ int main(void)
   while (1)
   { 
     
+    // проверка кнопок 
+    if(GetSysTick(0)>30)// каждые 30 мС или больше...
+    {
+      KeyP = SetBtnStates( GetExpand (), 1 ); // опрос клавиатуры
+      GetSysTick(1);// сброс системного ожидания
+    }
+    
+    //test проверим кнопку
+    if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
+      // обработка кнопки Ок
+    {
+      myBeep(55);
+      HAL_ADC_Stop_DMA(&hadc1); 
+      if (HAL_ADC_Start_DMA(&hadc1,
+                            (uint32_t *)BufADC,
+                            SizeBuf_ADC_int
+                              ) != HAL_OK)
+      {
+        Error_Handler();
+      }
+      CntCMD++;
+      sprintf((void*)Str,"%s",CmdNextion[CntCMD%0xF]);// 
+      NEX_Transmit(Str);// 
+      uint32_t DAC_CODE = BufADC[0]>>2;
+      HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_2, DAC_ALIGN_12B_R, ((CntCMD%0xF)<<8));
+      KeyP &=~BTN_OK;
+      
+    }
+    
     // начало измерения устанавливаем исходные параметры измерения, 
     // число проходов, шаг изменения положения зонд импульса
-     if(EnaStartRun) //
-     {
-       //LED_Y(1);
-       // при старте накоплений надо, перестроить таймеры в соответствии с заданными параметрами измерений
-       // счетчик TIM2 - период повторения зондирующих импульсов
-       // зависит от установленной длинны линии, шаг задали 1мкС 
-       // все таймеры останавливаем и сбрасываем
-       memset(&BufADC, 0, sizeof(BufADC));
-       memset(&BufADD, 0, sizeof(BufADD));
-       memset(&BufNAK, 0, sizeof(BufNAK));
-       TIM4->CR1 &=~TIM_CR1_CEN;
-       TIM2->CR1 &=~TIM_CR1_CEN;
-       TIM3->CR1 &=~TIM_CR1_CEN;
-       TIM4->CNT =30000;
-       TIM2->CNT =0;
-       TIM3->CNT =0;
-       Sm_Shift = 0; // текущее значение сдвига Зонд.Импульса
-       CountDMA = 0; //clear count DMA
-       //HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, (uint32_t *)CodeDAC, SizeBuf_DAC, DAC_ALIGN_12B_R);
-       StartTime++;
-       // считаем сколько нам сравнивать 
-       SumNumNak = NumNak*NumRepit;
-       // ВНИМАНИЕ! Здесь надо перенастроить TIM1 для устаногвленного режима прореживания
-       // тайминг TIM1 = 1uS Соотв для коротких линий ставим не менее 100 далее кратно 
-       // отношению МаксРепит к текущему  ставим TIM1 (MAXREPIT/NumRepit)
-       SW_TIM1 = (MAXREPIT/NumRepit);
-       TIM1->ARR = 300;
-       if(SW_TIM1>1)
-       {
-         //for ADC MS9280 
-         //( NumRepit == 8 => 240 MHz ~0.4 m , max = 3.2 km => )
-         //( NumRepit == 4 => 120 MHz ~0.8 m , max = 6.4 km)
-         //( NumRepit == 2 =>  60 MHz ~1.6 m , max = 12.8 km)
-         //( NumRepit == 1 =>  30 MHz ~3.2 m , max = 25.6 km)
-         TIM1->ARR = 50*SW_TIM1;
-       } 
-       TIM1->CCR1 = TIM1->ARR - 5;
-       TIM1->CNT = TIM1->CCR1 - 5;
-       TIM1->CR1 |=TIM_CR1_CEN;
-       EnaStartRun = 0;
-       
-       //HAL_DCMI_Start_DMA(&hdcmi,DCMI_MODE_SNAPSHOT,(uint32_t)BufADD,SizeBlockNakVar);
-       
-       PressKey=1;
-       // тест по счетчикам прерываний
-       CountCC4 = 0 ; // число совершенных прерываний по TIM4_CH4
-       CountEndCMI = 0;
-       SizeBlockNak = (uint32_t)(SizeBuf_ADC/NumRepit);
-       HAL_DCMI_Start_DMA(&hdcmi,DCMI_MODE_SNAPSHOT,(uint32_t)BufADD,SizeBlockNak);
-       
-       //DCMI->CR|=DCMI_CR_CAPTURE;          // DCMI capture enable
-       
-       
-       // ВНИМАНИЕ! первый съем будет при сдвиге 1 сразу, 
-       //надо учесть чтобы дособрать последний на 0 сдвиге!
-       //LED_Y(0);
-       //HAL_Delay(100);
-     }
+    if(EnaStartRun) //
+    {
+      //LED_Y(1);
+      // при старте накоплений надо, перестроить таймеры в соответствии с заданными параметрами измерений
+      // счетчик TIM2 - период повторения зондирующих импульсов
+      // зависит от установленной длинны линии, шаг задали 1мкС 
+      // все таймеры останавливаем и сбрасываем
+      memset(&BufADC, 0, sizeof(BufADC));
+      memset(&BufADD, 0, sizeof(BufADD));
+      memset(&BufNAK, 0, sizeof(BufNAK));
+      TIM4->CR1 &=~TIM_CR1_CEN;
+      TIM2->CR1 &=~TIM_CR1_CEN;
+      TIM3->CR1 &=~TIM_CR1_CEN;
+      TIM4->CNT =30000;
+      TIM2->CNT =0;
+      TIM3->CNT =0;
+      Sm_Shift = 0; // текущее значение сдвига Зонд.Импульса
+      CountDMA = 0; //clear count DMA
+      //HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, (uint32_t *)CodeDAC, SizeBuf_DAC, DAC_ALIGN_12B_R);
+      StartTime++;
+      // считаем сколько нам сравнивать 
+      SumNumNak = NumNak*NumRepit;
+      // ВНИМАНИЕ! Здесь надо перенастроить TIM1 для устаногвленного режима прореживания
+      // тайминг TIM1 = 1uS Соотв для коротких линий ставим не менее 100 далее кратно 
+      // отношению МаксРепит к текущему  ставим TIM1 (MAXREPIT/NumRepit)
+      SW_TIM1 = (MAXREPIT/NumRepit);
+      TIM1->ARR = 300;
+      if(SW_TIM1>1)
+      {
+        //for ADC MS9280 
+        //( NumRepit == 8 => 240 MHz ~0.4 m , max = 3.2 km => )
+        //( NumRepit == 4 => 120 MHz ~0.8 m , max = 6.4 km)
+        //( NumRepit == 2 =>  60 MHz ~1.6 m , max = 12.8 km)
+        //( NumRepit == 1 =>  30 MHz ~3.2 m , max = 25.6 km)
+        TIM1->ARR = 50*SW_TIM1;
+      } 
+      TIM1->CCR1 = TIM1->ARR - 5;
+      TIM1->CNT = TIM1->CCR1 - 5;
+      TIM1->CR1 |=TIM_CR1_CEN;
+      EnaStartRun = 0;
+      
+      //HAL_DCMI_Start_DMA(&hdcmi,DCMI_MODE_SNAPSHOT,(uint32_t)BufADD,SizeBlockNakVar);
+      
+      PressKey=1;
+      // тест по счетчикам прерываний
+      CountCC4 = 0 ; // число совершенных прерываний по TIM4_CH4
+      CountEndCMI = 0;
+      SizeBlockNak = (uint32_t)(SizeBuf_ADC/NumRepit);
+      HAL_DCMI_Start_DMA(&hdcmi,DCMI_MODE_SNAPSHOT,(uint32_t)BufADD,SizeBlockNak);
+      
+      //DCMI->CR|=DCMI_CR_CAPTURE;          // DCMI capture enable
+      
+      
+      // ВНИМАНИЕ! первый съем будет при сдвиге 1 сразу, 
+      //надо учесть чтобы дособрать последний на 0 сдвиге!
+      //LED_Y(0);
+      //HAL_Delay(100);
+    }
     // суммирование текущего накопления , параметры должны быть установленны заранее
     // нужно посчитать число проходов ДМА - возможно это размер массива деленный на число повторений
     // если накопили до конца отключаем основной таймер и тормозим все остаальные
     // если суммируем перустанавливаем основной таймер в пред окончание и его запускаем
     if(EnaNextAvrg)
     {
-
-     LED_G(1);
+      
+      LED_G(1);
       StopAllTIM(1);
-     // CountDMA указывает на смещение в индексе куда суммируем текущий съем
+      // CountDMA указывает на смещение в индексе куда суммируем текущий съем
       //Sm_Shift = (CountDMA)&(NumRepit-1);
       Cnt2Timer[CountDMA%128]=CurrCnt2Timer;
       //uint32_t PointDMA = (CountDMA&(NumRepit-1));
       uint32_t PointDMA = (CountDMA%(NumRepit));
       for(int i=0;i<SizeBlockNak; i++)
       {
-       //BufNAK[NumRepit*i+PointDMA] +=BufADC[i]; 
-       // for ADC MS9280 buffer BufADD
-       BufNAK[NumRepit*i+PointDMA] +=BufADD[i]; 
-       //BufNAK[NumRepit*i+PointDMA] +=(BufADC[i]+BufADD[i-1])/2; 
-       // BufNAK[2*(NumRepit*i+PointDMA)+1] +=BufADC[i]; 
-       //BufNAK[2*(NumRepit*i+PointDMA)] +=BufADD[i-1]; 
-       TIM1->CNT = TIM1->CCR1 - 5; 
+        //BufNAK[NumRepit*i+PointDMA] +=BufADC[i]; 
+        // for ADC MS9280 buffer BufADD
+        BufNAK[NumRepit*i+PointDMA] +=BufADD[i]; 
+        //BufNAK[NumRepit*i+PointDMA] +=(BufADC[i]+BufADD[i-1])/2; 
+        // BufNAK[2*(NumRepit*i+PointDMA)+1] +=BufADC[i]; 
+        //BufNAK[2*(NumRepit*i+PointDMA)] +=BufADD[i-1]; 
+        TIM1->CNT = TIM1->CCR1 - 5; 
       }
       if(++CountDMA<SumNumNak)
       {
-               if(SW_TIM1>2)
-      {
-      TIM1->CNT = TIM1->CCR1 - 5;
-        // переустанвливаем основной таймер ближе к окончанию счета
-        
-      }
-       // и продолжаем его для запуска следующего сбора
-      //TIM1->CNT =990;
-      TIM1->CR1 |=TIM_CR1_CEN;
+        if(SW_TIM1>2)
+        {
+          TIM1->CNT = TIM1->CCR1 - 5;
+          // переустанвливаем основной таймер ближе к окончанию счета
+          
+        }
+        // и продолжаем его для запуска следующего сбора
+        //TIM1->CNT =990;
+        TIM1->CR1 |=TIM_CR1_CEN;
         
       }
       else
       {
-      TIM1->CR1 &=~TIM_CR1_CEN;
+        TIM1->CR1 &=~TIM_CR1_CEN;
         //  останавливаем основной таймер для прекращения накопления
         // установим признак окончания измерения для вывода результатов
-          // можно тормознуть все остальные таймеры, и даже сбросить
-
-      EnaPrintRes = 1;
+        // можно тормознуть все остальные таймеры, и даже сбросить
+        
+        EnaPrintRes = 1;
       }
-     
+      
       EnaNextAvrg = 0;
-           LED_G(0);
-
+      LED_G(0);
+      
     }
     //здесь когда закончили очередной DMA можно проссумировать 
     // с параметром смещения зондирующего импульса,
@@ -397,19 +472,19 @@ int main(void)
       // быстро посчитаем Логарифм
       if(PressKey)
       {
-          GetLogData ();
-
-
-      //LED_R(1); // delete
-      // выдадим файл
-      SendFileBelcore ();
-      // и запишем тест файл...
-      HAL_Delay(200);
+        GetLogData ();
+        
+        
+        //LED_R(1); // delete
+        // выдадим файл
+        SendFileBelcore ();
+        // и запишем тест файл...
+        HAL_Delay(200);
         SDMMC_SDCard_Test(CntIzmer);
-      CntIzmer++;
-      HAL_Delay(200);
-      //LED_R(0); //delete
-      PressKey =0;
+        CntIzmer++;
+        HAL_Delay(200);
+        //LED_R(0); //delete
+        PressKey =0;
       }
       // остановим таймер для ЦАП
       //HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 0x0);
@@ -534,6 +609,27 @@ void PeriphCommonClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+// тики опроса клавиатура взято из Т7К_АР
+uint32_t GetSysTick( int Mode) // получение тиков 1 мС. 0 - получение счетчика от предыдущего сброса 1- сброс
+{
+  static uint32_t MemTick;
+  if(Mode) MemTick=HAL_GetTick();
+  return HAL_GetTick()-MemTick;
+}
+
+
+
+/* 
+ * set  beepTick
+ */
+void myBeep (unsigned sound)
+{
+  extern unsigned beepTick; // 
+
+	beepTick = sound + 1;
+}
+
+
 void StopAllTIM(int Ext)  // остановка таймеров (OTDR)
 {
   if(Ext)
@@ -604,12 +700,12 @@ void StopAllTIM(int Ext)  // остановка таймеров (OTDR)
  {
    HAL_ADC_Start_DMA(&hadc1,
                      (uint32_t *)BufADC,
-                     SizeBlockNak
+                     8
                        );
    
  }
 // Перерасчет в логарифмические данные ,
-// пока без аналиаз но на со следующими параметрами
+// пока без анализа но на со следующими параметрами
 // начало с 60 точки , шум считаем с 5 по 45 точку в начале
 // особенности всего 10 разрядов, напряжение не более 3 v
 // пока ВСЕ данные что накопили NumNak

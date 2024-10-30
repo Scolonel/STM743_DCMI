@@ -399,5 +399,10 @@ void SendUartTX (uint8_t *Str_mas)
   }
 
 }
-
+//
+void NEX_Transmit(uint8_t *Str)
+{
+  uint16_t Size = strlen((void*)Str);
+ HAL_UART_Transmit(&huart7,(void*)Str, Size,(uint32_t)(Size/1));  
+}
 /* USER CODE END 1 */

@@ -45,7 +45,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-
+unsigned beepTick = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
