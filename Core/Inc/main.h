@@ -119,10 +119,12 @@ extern uint32_t CountEndCMI ; // число прерываний совершенных циклов DMA по DCMI
 #define NEX_RX_GPIO_Port GPIOF
 #define NEX_TX_Pin GPIO_PIN_7
 #define NEX_TX_GPIO_Port GPIOF
-#define OPT_RX_Pin GPIO_PIN_3
-#define OPT_RX_GPIO_Port GPIOA
 #define LD1_Pin GPIO_PIN_0
 #define LD1_GPIO_Port GPIOB
+#define OPT_RX_Pin GPIO_PIN_12
+#define OPT_RX_GPIO_Port GPIOB
+#define LMOD_TX_Pin GPIO_PIN_13
+#define LMOD_TX_GPIO_Port GPIOB
 #define STLINK_RX_Pin GPIO_PIN_8
 #define STLINK_RX_GPIO_Port GPIOD
 #define STLINK_TX_Pin GPIO_PIN_9
@@ -135,8 +137,6 @@ extern uint32_t CountEndCMI ; // число прерываний совершенных циклов DMA по DCMI
 #define JTMS_GPIO_Port GPIOA
 #define JTCK_Pin GPIO_PIN_14
 #define JTCK_GPIO_Port GPIOA
-#define LAS_MOD_Pin GPIO_PIN_5
-#define LAS_MOD_GPIO_Port GPIOD
 #define LD2_Pin GPIO_PIN_1
 #define LD2_GPIO_Port GPIOE
 
