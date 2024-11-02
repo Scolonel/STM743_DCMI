@@ -29,12 +29,23 @@ extern "C" {
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "stm32h7xx_hal_rtc.h"
 /* USER CODE END Includes */
 
 extern RTC_HandleTypeDef hrtc;
 
 /* USER CODE BEGIN Private defines */
+typedef struct {
+    DWORD RTC_Sec;     /* Second value - [0,59] */
+    DWORD RTC_Min;     /* Minute value - [0,59] */
+    DWORD RTC_Hour;    /* Hour value - [0,23] */
+    DWORD RTC_Mday;    /* Day of the month value - [1,31] */
+    DWORD RTC_Mon;     /* Month value - [1,12] */
+    DWORD RTC_Year;    /* Year value - [0,4095] */
+    DWORD RTC_Wday;    /* Day of week value - [0,6] */
+    DWORD RTC_Yday;    /* Day of year value - [1,365] */
+} RTCTime;
+
 
 /* USER CODE END Private defines */
 
@@ -49,10 +60,11 @@ void k_SetTime  (RTC_TimeTypeDef *Time);
 void k_GetTime  (RTC_TimeTypeDef *Time);
 void k_SetDate  (RTC_DateTypeDef *Date);
 void k_GetDate  (RTC_DateTypeDef *Date);
-uint32_t get_fattime_RTC (void);
-uint32_t TotalSec( void); // перевод текущего времени в секунды
-void Sec2Date( uint32_t TimeSec,  RTC_DateTypeDef *Dates, RTC_TimeTypeDef *Time); // перевод секунд в структуры времени
 
+RTCTime RTCGetTime(void); // получение времени в формате T7kAR из рабочих регистров
+uint32_t get_fattime_RTC (void);
+unsigned int TotalSec( RTCTime CurrentTime); // подсчет общего времени в сек
+void Sec2Date( unsigned long TimeSec, RTCTime* CurrentTime); // перевод секунд в дату
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

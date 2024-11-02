@@ -180,15 +180,17 @@ void WriteNeedStruct (int NumStruct)
   {
     if(NumStruct)
     {
-      if (NumStruct & 0x01) EEPROM_write(&UserMeasConfig, ADR_UserMeasConfig, sizeof(UserMeasConfig)); // сохрананение структуры установок пользователя бит 0 (0x01)
+      if (NumStruct & 0x01)   EEPROM_write(&ConfigDevice, ADR_ConfigDevice, sizeof(ConfigDevice));; // сохраненеие конфигурации  прибора бит 0(0x01)
       NumStruct = NumStruct>>1;
       if (NumStruct & 0x01) EEPROM_write(&CoeffPM, ADR_CoeffPM, sizeof(CoeffPM)); // сохранение коэффициентов настройки измерителя P1 бит 1  (0x02)
       NumStruct = NumStruct>>1;
-      if (NumStruct & 0x01)   EEPROM_write(&SpecCoeffPM, ADR_SpecCoeffPM, sizeof(SpecCoeffPM)); // сохранение таблицы специальных коэффициентов бит 2(0x04)
+      if (NumStruct & 0x01) EEPROM_write(&UserSet, ADR_UserMeasConfig, sizeof(UserSet)); // сохрананение структуры установок пользователя бит 2 (0x04)
       NumStruct = NumStruct>>1;
-      if (NumStruct & 0x01)   EEPROM_write(&DeviceConfig, ADR_ConfigDevice, sizeof(DeviceConfig)); // сохраненеие конфигурации  прибора бит 3(0x08)
+      if (NumStruct & 0x01) EEPROM_write(&ReflParam, ADR_EventSet, sizeof(ReflParam)); // установка параметров поиска событий бит 3(0x08)
       NumStruct = NumStruct>>1;
-      if (NumStruct & 0x01) EEPROM_write(&SettingPrm, ADR_SettingPrm, sizeof(SettingPrm)); // сохранение данных Р2, измеритель длины, номер волокна и инкремент 4(0x10)
+      if (NumStruct & 0x01)   EEPROM_write(&NameDB, ADR_NameDB, sizeof(NameDB));// сохранение альтернативного имени бит 4(0x10)
+      NumStruct = NumStruct>>1;
+      if (NumStruct & 0x01) EEPROM_write(&SetJDSU, ADR_ComplJDSU, sizeof(SetJDSU)); // сохранение данных совместимости JDSU бит 5( 0x20)
       NumStruct = NumStruct>>1;
  
     }
@@ -202,7 +204,7 @@ uint32_t BeginConfig (void) // начальная конфигурация
 {
   uint32_t CodeError = 0; //
     uint32_t ErrDev=0;
-  
+    uint32_t SPCTR_err=0;
   // проверка наличия микросхемы управления ключами 95555 на шине I2C(2)
   //конфигурация PCA9555 ( клавитатура ) адрес 0x20
   // устанавливаем как входы все! несмотря на то что после сброса уже должно быть как входд
@@ -224,48 +226,58 @@ uint32_t BeginConfig (void) // начальная конфигурация
   if (StatusI2C2) CodeError |= NOT_EEPROM_24LC128; // микросхема не определяется
   else // микросхема есть прочитаем конфигурацию таблиц и поправим если надо Взята конфигурация от 9400
   {
-
+    // читаем сохраненные массивы
+    // контроль  установок поддержки JDSU
+    //        EEPROM_write(&SpecCoeffPM, ADR_SpecCoeffPM, sizeof(SpecCoeffPM));
+    EEPROM_read(&SetJDSU, ADR_ComplJDSU, sizeof(SetJDSU));
+    unsigned ErrDevJDSU = InvalidJDSU ();
+     if (ErrDevJDSU)
+    {
+      InitJDSU (ErrDevJDSU); //  фиксируем  (исправляем )
+      EEPROM_write(&SetJDSU, ADR_ComplJDSU, sizeof(SetJDSU));
+    }
+    // контроль альтернативного имени (Д.Б.)
+    EEPROM_read(&NameDB, ADR_NameDB, sizeof(NameDB));
+    unsigned ErrDevDB = InvalidDBNAME ();
+     if (ErrDevDB)
+    {
+      InitDBNAME (ErrDevDB); //  фиксируем  (исправляем )
+      EEPROM_write(&NameDB, ADR_NameDB, sizeof(NameDB));
+    }
+    
     // функция контроля конфигурации прибора (проверка)
-    EEPROM_read(&DeviceConfig, ADR_ConfigDevice, sizeof(DeviceConfig));
+    EEPROM_read(&ConfigDevice, ADR_ConfigDevice, sizeof(ConfigDevice));
     ErrDev = InvalidDevice();
     if (ErrDev)
     {
+      SPCTR_err=0x80; // если плохой прибор, очистим спектральную характеристику
       InitDevice(ErrDev); 
-    EEPROM_write(&DeviceConfig, ADR_ConfigDevice, sizeof(DeviceConfig));
+    EEPROM_write(&ConfigDevice, ADR_ConfigDevice, sizeof(ConfigDevice));
     }
     // контроль спектральной таблицы
-    EEPROM_read(&CoeffPM, ADR_CoeffPM, sizeof(CoeffPM));
-    ErrDev = FindErrCoeff ();
-     if (ErrDev)
+    EEPROM_read(&CoeffPM, ADR_CoeffPM, sizeof(CoeffPM)); //проверка таблицы коэффициентов и исправление таблицы коэффициентов
+    SPCTR_err = SPCTR_err + FindErrCoeff ();
+     if (SPCTR_err)
     {
-      FixErrCoeff (ErrDev); //  фиксируем  (исправляем коэффициенты)
+      FixErrCoeff (SPCTR_err); //  фиксируем  (исправляем коэффициенты)
       EEPROM_write(&CoeffPM, ADR_CoeffPM, sizeof(CoeffPM));
-    }
-    // контроль  специальной спектральной таблицы 
-    //        EEPROM_write(&SpecCoeffPM, ADR_SpecCoeffPM, sizeof(SpecCoeffPM));
-    EEPROM_read(&SpecCoeffPM, ADR_SpecCoeffPM, sizeof(SpecCoeffPM));
-    ErrDev = FindErrSpec ();
-     if (ErrDev)
-    {
-      FixErrSpec (ErrDev); //  фиксируем  (исправляем коэффициенты)
-      EEPROM_write(&SpecCoeffPM, ADR_SpecCoeffPM, sizeof(SpecCoeffPM));
     }
 
     // контроль установок пользователя измерений прибора
-    EEPROM_read(&UserMeasConfig, ADR_UserMeasConfig, sizeof(UserMeasConfig));
-    ErrDev = FindErrUserMC ();
-    if (ErrDev)
+    EEPROM_read(&UserSet, ADR_UserMeasConfig, sizeof(UserSet));
+    SPCTR_err = SPCTR_err + CheckUserGonfig ();  // Проверка пользовательских настроек 
+    if (SPCTR_err>=0x100)// были ошибки их уже исправили надо просто перезаписать 
     {
-      FixErrUserMC (ErrDev); //  фиксируем  (исправляем настройки)
-      EEPROM_write(&UserMeasConfig, ADR_UserMeasConfig, sizeof(UserMeasConfig));
+      //FixErrUserMC (ErrDev); //  фиксируем  (исправляем настройки)
+      EEPROM_write(&UserSet, ADR_UserMeasConfig, sizeof(UserSet));
     }
-    // функция контроля содержимого настройки P2 и измерителя длины
-    EEPROM_read(&SettingPrm, ADR_SettingPrm, sizeof(SettingPrm));
-    ErrDev = FindErrSettingPrm ();
-    if (ErrDev)
+    // проверка блока установок контроля рефлектограммы
+    EEPROM_read(&ReflParam, ADR_EventSet, sizeof(ReflParam));
+    DWORD Param_err =  CheckReflParam ();  // Проверка установок событий рефлектограммы и исправление
+    if (Param_err)
     {
-      FixErrSettingPrm (ErrDev); //  фиксируем  (исправляем настройки)
-      EEPROM_write(&SettingPrm, ADR_SettingPrm, sizeof(SettingPrm));
+      //FixErrSettingPrm (ErrDev); //  фиксируем  (исправляем настройки)
+      EEPROM_write(&ReflParam, ADR_EventSet, sizeof(ReflParam));
     }
 //    // функция контроля содержимого пременных страницы файл-инфо
 //    EEPROM_read(&g_FileParamInfo, ADR_FileInfoParam, sizeof(g_FileParamInfo));

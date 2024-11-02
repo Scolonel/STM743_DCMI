@@ -1171,7 +1171,7 @@
           <name>$PROJ_DIR$\..\User\Src\CmdNextion.c</name>
         </file>
         <file>
-          <name>$PROJ_DIR$\..\User\Src\HardSetDevice.c</name>
+          <name>$PROJ_DIR$\..\User\Src\DeviceData.c</name>
         </file>
         <file>
           <name>$PROJ_DIR$\..\User\Src\msgs.c</name>
@@ -1181,6 +1181,9 @@
         </file>
         <file>
           <name>$PROJ_DIR$\..\User\Src\PM.c</name>
+          <excluded>
+            <configuration>BASE32H743_DCMI</configuration>
+          </excluded>
         </file>
       </group>
     </group>

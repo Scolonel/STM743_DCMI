@@ -35,23 +35,24 @@ extern "C" {
 #include "stdlib.h"
 #include "string.h"
 #include "math.h"
-#include "SysT7Knew.h"
+//#include "SysT7Knew.h"
+#include "system.h"
   
 extern I2C_HandleTypeDef hi2c2;
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-#define SizeBuf_ADC_int 8
-#define SizeBuf_ADC 8192
-#define SizeLogBuf 8000
-#define SizeBuf_DAC 75
-#define ResolutionADC  10
+//#define SizeBuf_ADC_int 8 // перенесены в system.h
+//#define SizeBuf_ADC 8192
+//#define SizeLogBuf 8000
+//#define SizeBuf_DAC 75
+//#define ResolutionADC  10
   
 //#define MAXREPIT  40 // 36максимальное число повторений для данного режима
 #define MAXREPIT  8 // 36максимальное число повторений для данного режима ADC MS9280
       
-#define LIGHTSPEED 299792458
+//#define LIGHTSPEED 299792458
 // варианты комбинаций построения накопителя
   
   
@@ -59,23 +60,9 @@ extern I2C_HandleTypeDef hi2c2;
  // для внешней АЦП MS9280 30 МГц 
 #define ADCPeriod 33.3333333//33.33333333=30MHz 
   
-#define BELCORESIZE 224
+//#define BELCORESIZE 224
       
-      typedef struct
-      {
-        // Структура установок заголовка передачи файла (24 байта)
-        unsigned char Head[8]; // первое слово зависит от длины блока ( #4/5)
-        unsigned int ValDS; /* разрешающая способность 10000 точек, одно проходного значения в 100 пС(0.1нС) частоты съема*/
-        unsigned int NumAvrg;    // число накоплений 
-        unsigned int AW_PWU;    // длина волны лазера (ст слово), длительность импульса (младшее слово)
-        unsigned int FormatData; // формат данных, основные - 0  или для индикации (мин/макс) - N- масштаб (степень прореживания)
-        unsigned int SizeFrm; // размер окна блокировки в 100пС
-        unsigned int NumPtsMain; // число отсчетов блока данных
-        
-        
-      } Measuring_Stat;
       
-      extern Measuring_Stat Head_RAW;
       extern uint16_t Dummy; // пустое чтение буфферов UART
       
 /* USER CODE END ET */
@@ -94,7 +81,7 @@ extern I2C_HandleTypeDef hi2c2;
       void GetLogData (void);
       
       // заполнение структуры блока заголовка белкора
-      void GetHeaderBelcore (char* Name, unsigned short Block, unsigned short NumEvents); // заполняем шапку белкора
+//      void GetHeaderBelcore (char* Name, unsigned short Block, unsigned short NumEvents); // заполняем шапку белкора
       
       // Отправка файла Белкора построенных как Т7к без событий
       void SendFileBelcore (void);
@@ -138,6 +125,8 @@ extern uint32_t CountEndCMI ; // число прерываний совершенных циклов DMA по DCMI
 #define LD1_GPIO_Port GPIOB
 #define V_BAT_Pin GPIO_PIN_11
 #define V_BAT_GPIO_Port GPIOF
+#define LEDSTART_Pin GPIO_PIN_15
+#define LEDSTART_GPIO_Port GPIOF
 #define BUT_START_Pin GPIO_PIN_14
 #define BUT_START_GPIO_Port GPIOE
 #define BUT_START_EXTI_IRQn EXTI15_10_IRQn

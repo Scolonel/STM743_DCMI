@@ -18,7 +18,7 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include "rtc.h"
+#include "system.h"
 
 /* USER CODE BEGIN 0 */
 
@@ -26,6 +26,9 @@
   #define YearSec   31536000
   #define DaySec    86400
   #define Y2000Sec  946684800 // секунды до 2000 года
+
+RTCTime TimeSaveOTDR;
+RTCTime TimeSaveOLT;
 
 /* USER CODE END 0 */
 
@@ -208,7 +211,29 @@ void k_SetDate(  RTC_DateTypeDef *Date)
 {
    HAL_RTC_SetDate(&hrtc, Date, FORMAT_BIN);
 }
-
+//функция из t7kAR
+// получение текущего времени, читаем регистры, переписываем в структкру
+RTCTime RTCGetTime( void )
+{
+  RTC_TimeTypeDef CsTime = {0};
+  RTC_DateTypeDef CsDate = {0};
+  
+  RTCTime LocalTime; // выходная структура
+  // получим текущее время
+  k_GetDate(&CsDate);
+  k_GetTime(&CsTime);
+  
+  LocalTime.RTC_Sec = CsTime.Seconds;
+  LocalTime.RTC_Min = CsTime.Minutes;
+  LocalTime.RTC_Hour = CsTime.Hours;
+  LocalTime.RTC_Mday = CsDate.Date;
+  LocalTime.RTC_Wday = CsDate.WeekDay;
+  LocalTime.RTC_Yday = 200;
+  LocalTime.RTC_Mon = CsDate.Month;
+  LocalTime.RTC_Year = CsDate.Year;
+  return ( LocalTime );
+}
+ 
 
 uint32_t get_fattime_RTC (void)
 {
@@ -225,62 +250,58 @@ uint32_t get_fattime_RTC (void)
       | ((uint32_t)Date.Date << 16)
         | (uint16_t)(Time.Hours << 11)
           | (uint16_t)(Time.Minutes << 5)
-			| (uint16_t)(Time.Seconds >> 1);
+            | (uint16_t)(Time.Seconds >> 1);
   
   return res;
 }
 
-uint32_t TotalSec( void) // перевод текущего времени в секунды
+unsigned int TotalSec( RTCTime CurrentTime) // подсчет общего времени в сек
 {
-  uint32_t secs;
-  RTC_DateTypeDef          Datas;  
-  RTC_TimeTypeDef          Time; 
-  k_GetDate(&Datas);  
-  k_GetTime(&Time);   
-
   int Year;
   unsigned int Month;
   unsigned int Date, days;
   unsigned int Hour;
   unsigned int Minut;
-  unsigned int Sec;
+  unsigned int Sec, secs;
   unsigned int _Days[]={31,28,31,30,31,30,31,31,30,31,30,31};
   days = 0;
   secs = 0;
-  Sec = Time.Seconds; 
-  Minut = Time.Minutes; 
-  Hour = Time.Hours; 
-  Date = Datas.Date; 
-  Month = Datas.Month; 
- if ((Month > 12) || (Month == 0)) Month =5; 
- Year = Datas.Year%100 ;//+ 14; 
- 	if((!((Year) % 4))&&(Month>2)) days++;
-        
-	if (Year > 99) Year = 1;
-
-	Year--;
-        
-	while(Year>=0)
-	{
-		if(!((Year)%4))days+=366;
-		else days+=365;
-		Year--;
-	}
-	while(Month-1>0)
-		days+=_Days[(--Month)-1];
-
-	days+=Date-1;
-	
-	secs=days*24*3600+Hour*3600+Minut*60+Sec;
-        secs = secs + 946684800; // 2000aia naeoia
-//(946684800)
-
-    return(secs);
+  Sec = CurrentTime.RTC_Sec; 
+  Minut = CurrentTime.RTC_Min; 
+  Hour = CurrentTime.RTC_Hour; 
+  Date = CurrentTime.RTC_Mday; 
+  Month = CurrentTime.RTC_Mon; 
+  if ((Month > 12) || (Month == 0)) Month = 5; 
+  Year = CurrentTime.RTC_Year%100; 
+  if((!((Year) % 4))&&(Month>2)) days++;
+  
+  if (Year > 32) Year = 19; // при плохом годе поставим 2019 (попробуем)
+  
+  Year--;
+  
+  while(Year>=0)
+  {
+    if(!((Year)%4))days+=366;
+    else days+=365;
+    Year--;
+  }
+  while(Month-1>0)
+    days+=_Days[(--Month)-1];
+  
+  days+=Date-1;
+  
+  secs=days*24*3600+Hour*3600+Minut*60+Sec;
+  secs = secs + 946684800; // 2000год секунд
+  //(946684800)
+  
+  return(secs);
+  
+  
 }
 
-void Sec2Date( uint32_t TimeSec,  RTC_DateTypeDef *Dates, RTC_TimeTypeDef *Time) // перевод секунд в структуры времени
+void Sec2Date( unsigned long TimeSec, RTCTime* CurrentTime) // перевод секунд в дату
 {
-
+  
   unsigned int _Days[]={31,28,31,30,31,30,31,31,30,31,30,31};
   
   int Year = 2000;
@@ -295,7 +316,8 @@ void Sec2Date( uint32_t TimeSec,  RTC_DateTypeDef *Dates, RTC_TimeTypeDef *Time)
   
   TimeSec = TimeSec - Y2000Sec; // вычитаем секунды до 2000 года
   TimeSec = TimeSec - DaySec; // вычитаем секунды высокосного дня 2000 года
-  if (TimeSec>0x80000000) TimeSec = 10*YearSecV-1; // зачем это не понятно???
+  
+  if (TimeSec>0x80000000) TimeSec = 10*YearSecV-1; // это если текущие секунды больше 19 января 2038
   tmp = YearSec;
   while(TimeSec > tmp)
   {
@@ -304,18 +326,17 @@ void Sec2Date( uint32_t TimeSec,  RTC_DateTypeDef *Dates, RTC_TimeTypeDef *Time)
     if(Year%4) tmp = YearSec;
     else tmp = YearSecV;
   }
-  // получили год 
-  Dates->Year = Year - 2000;
+  // получили год
+  CurrentTime->RTC_Year = Year;
   Month = 1;
-
+  
   while(TimeSec>_Days[Month-1]*DaySec)
   {
     TimeSec -= _Days[Month-1]*DaySec;
     Month++;
   }
-  if((Month>1)&&(!(Year%4))) TimeSec -=DaySec;
   // Mounth
-  Dates->Month = Month;
+  CurrentTime->RTC_Mon = Month;
   
   Day = 1;
   
@@ -325,22 +346,22 @@ void Sec2Date( uint32_t TimeSec,  RTC_DateTypeDef *Dates, RTC_TimeTypeDef *Time)
     Day++;    
   }
   // Day 
-  Dates->Date = Day;
+  CurrentTime->RTC_Mday = Day;
   
   Hour = TimeSec/3600;
-  Time->Hours = Hour;
-
+  CurrentTime->RTC_Hour = Hour;
+  
   TimeSec -= Hour*3600;
   
   Minute = TimeSec/60;
-  Time->Minutes = Minute;
+  CurrentTime->RTC_Min = Minute;
   
   TimeSec -= Minute*60;
   
   Second = TimeSec;
-  Time->Seconds = Second;
+  CurrentTime->RTC_Sec = Second;
   
-
+  
   return;
 }
 

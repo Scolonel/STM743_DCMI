@@ -1,6 +1,7 @@
 #ifndef __MODES_H__
 #define __MODES_H__
 
+#include "rtc.h"
 // Режимы работы прибора ( для соответсвия комманд для старой платы)
 #define MODEMENU 0 // режим МЕНЮ
 #define MODESETREFL 2 // режим установок рефлектомтра
@@ -164,8 +165,8 @@ void CreatDelay (unsigned long a); // перенесли из LCD.h
 //void ArcanoidGame (void);
 //void KeyTestGame (void);
 
-extern RTCTime TimeSaveOTDR; // время сохраненной рефлектограммы
-extern RTCTime TimeSaveOLT; // время сохраненной рефлектограммы
+//extern RTCTime TimeSaveOTDR; // время сохраненной рефлектограммы
+//extern RTCTime TimeSaveOLT; // время сохраненной рефлектограммы
 extern char CommentsOTDR[20]; //комментарии рефлектометра
 extern char IndexCommOTDR ;
 extern BYTE RSOptYes; // признак приема команды по оптическому UART
