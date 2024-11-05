@@ -231,7 +231,7 @@ uint32_t BeginConfig (void) // начальная конфигурация
     //        EEPROM_write(&SpecCoeffPM, ADR_SpecCoeffPM, sizeof(SpecCoeffPM));
     EEPROM_read(&SetJDSU, ADR_ComplJDSU, sizeof(SetJDSU));
     unsigned ErrDevJDSU = InvalidJDSU ();
-     if (ErrDevJDSU)
+    if (ErrDevJDSU)
     {
       InitJDSU (ErrDevJDSU); //  фиксируем  (исправляем )
       EEPROM_write(&SetJDSU, ADR_ComplJDSU, sizeof(SetJDSU));
@@ -239,7 +239,7 @@ uint32_t BeginConfig (void) // начальная конфигурация
     // контроль альтернативного имени (Д.Б.)
     EEPROM_read(&NameDB, ADR_NameDB, sizeof(NameDB));
     unsigned ErrDevDB = InvalidDBNAME ();
-     if (ErrDevDB)
+    if (ErrDevDB)
     {
       InitDBNAME (ErrDevDB); //  фиксируем  (исправляем )
       EEPROM_write(&NameDB, ADR_NameDB, sizeof(NameDB));
@@ -252,17 +252,17 @@ uint32_t BeginConfig (void) // начальная конфигурация
     {
       SPCTR_err=0x80; // если плохой прибор, очистим спектральную характеристику
       InitDevice(ErrDev); 
-    EEPROM_write(&ConfigDevice, ADR_ConfigDevice, sizeof(ConfigDevice));
+      EEPROM_write(&ConfigDevice, ADR_ConfigDevice, sizeof(ConfigDevice));
     }
     // контроль спектральной таблицы
     EEPROM_read(&CoeffPM, ADR_CoeffPM, sizeof(CoeffPM)); //проверка таблицы коэффициентов и исправление таблицы коэффициентов
     SPCTR_err = SPCTR_err + FindErrCoeff ();
-     if (SPCTR_err)
+    if (SPCTR_err)
     {
       FixErrCoeff (SPCTR_err); //  фиксируем  (исправляем коэффициенты)
       EEPROM_write(&CoeffPM, ADR_CoeffPM, sizeof(CoeffPM));
     }
-
+    
     // контроль установок пользователя измерений прибора
     EEPROM_read(&UserSet, ADR_UserMeasConfig, sizeof(UserSet));
     SPCTR_err = SPCTR_err + CheckUserGonfig ();  // Проверка пользовательских настроек 
@@ -279,61 +279,12 @@ uint32_t BeginConfig (void) // начальная конфигурация
       //FixErrSettingPrm (ErrDev); //  фиксируем  (исправляем настройки)
       EEPROM_write(&ReflParam, ADR_EventSet, sizeof(ReflParam));
     }
-//    // функция контроля содержимого пременных страницы файл-инфо
-//    EEPROM_read(&g_FileParamInfo, ADR_FileInfoParam, sizeof(g_FileParamInfo));
-//    ErrDev = FindErrPrmFileInfo ();
-//    if (ErrDev)
-//    {
-//      FixErrPrmFileInfo (ErrDev); //  фиксируем  (исправляем настройки)
-//      EEPROM_write(&g_FileParamInfo, ADR_FileInfoParam, sizeof(g_FileParamInfo));
-//    }
-//    
-//        // контроль установок поиска событий
-//    EEPROM_read(&g_eventSearch, ADR_SearchEventsParam, sizeof(g_eventSearch));
-//    ErrDev = FindErrEventsParam ();
-//    if (ErrDev)
-//    {
-//      FixErrEventsParam (ErrDev); //  фиксируем  (исправляем настройки)
-//      EEPROM_write(&g_eventSearch, ADR_SearchEventsParam, sizeof(g_eventSearch));
-//    }
-//    
-//    g_eventSearch.iThreshoulds = THRESHOULDS_BY_USER;
-//    
-//    //Контроль установок параметров волокна
-//    EEPROM_read(&g_customFiberParam, ADR_FiberParam, sizeof(g_customFiberParam));
-//    ErrDev = FindErrFiberParam ();
-//    if (ErrDev)
-//    {
-//      FixErrFiberParam (ErrDev); //  фиксируем  (исправляем настройки)
-//      EEPROM_write(&g_customFiberParam, ADR_FiberParam, sizeof(g_customFiberParam));
-//    }
-//    
-//    //Контроль установок уровней привязок калиброваных длинн волн
-//    EEPROM_read(&g_SetLW_REF, ADR_LW_RefPM, sizeof(g_SetLW_REF));
-//    ErrDev = FindErrSetRefCalibr ();
-//    if (ErrDev)
-//    {
-//      FixErrSetRefCalibr (ErrDev); //  фиксируем  (исправляем настройки)
-//      EEPROM_write(&g_SetLW_REF, ADR_LW_RefPM, sizeof(g_SetLW_REF));
-//    }
-//    
-//    //Контроль установок значения установок лазерных параметров измерителя
-//    EEPROM_read(&g_SetLS_InOutParam, ADR_LS_Set, sizeof(g_SetLS_InOutParam));
-//    ErrDev = FindErrLSParamSet ();
-//    if (ErrDev)
-//    {
-//      FixErrLSParamSet (ErrDev); //  фиксируем  (исправляем настройки)
-//      EEPROM_write(&g_SetLS_InOutParam, ADR_LS_Set, sizeof(g_SetLS_InOutParam));
-//    }
-//    
-//    
-//  }
-//  
-//  // поуправляем переферией
-//  CntrlExpUnit (DSBL, EN_FLTR); // выкл. фильтр усилителя 
-//  CntrlExpUnit (DSBL, EN_RELAY); // выкл. реле, МАКСИМ усиление
-//  CntrlExpUnit (DSBL, EN_70V); // выключаем преобразователь напряжения лавины
-//  SetRange(0); // устанавливаем самый чувствительный диапазон
+    
+    //  // поуправляем переферией
+    //  CntrlExpUnit (DSBL, EN_FLTR); // выкл. фильтр усилителя 
+    //  CntrlExpUnit (DSBL, EN_RELAY); // выкл. реле, МАКСИМ усиление
+    //  CntrlExpUnit (DSBL, EN_70V); // выключаем преобразователь напряжения лавины
+    //  SetRange(0); // устанавливаем самый чувствительный диапазон
   }
   return (CodeError | (ErrDev<<3)); 
 }

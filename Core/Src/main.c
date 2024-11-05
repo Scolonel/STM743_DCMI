@@ -137,6 +137,13 @@ uint16_t KeyP; // клавиши нажатые
 uint8_t CntCMD;
 // перенос переменных из MAIN.c from T7kAR
 Measuring_Stat Head_RAW;
+// из modes.c - надо вернуть обратно
+char VerFW_LCD[25] = {"No version LCD          \0"}; //верси€ ѕќ индикатора NEXION
+volatile BYTE TypeLCD = 0; // тип индикатора в идентификаторе v-3.2(=0) s-3.5(=1) 
+volatile BYTE g_NeedChkAnsvNEX=0; // признак получени€ строки из редактора.и ее проверка
+
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -357,9 +364,45 @@ int main(void)
         Error_Handler();
       }
       CntCMD++;
-      //sprintf((void*)Str,"%s",CmdNextion[CntCMD%0xF]);// 
-      sprintf((void*)Str,"page %d€€€",CntCMD%0xF);// 
-      NEX_Transmit(Str);// 
+      sprintf((void*)Str,"%s",CmdNextion[CntCMD%0xF]);// 
+      //sprintf((void*)Str,"page %d€€€",CntCMD%0xF);// 
+      NEX_Transmit(Str);//
+      sprintf((void*)Str,"t1.txt=\"%d\"€€€",CntCMD);
+      NEX_Transmit(Str);//
+      if((CntCMD%0xF)==1)
+      {
+        StartRecievNEX (80);
+        sprintf((void*)Str,"get t6.txt€€€");
+        NEX_Transmit(Str);//
+        while(!((g_WtRdyNEX)||(ReadyNEX==4)));
+        // здесь просто можем повиснуть не дождавшись ответов от индикатора
+        // это плохо при плохих индикаторах
+        if(RX_BufNEX[0] == 0x70) // есть ответ! перепишем буффер
+        {
+          for(int i=0;i<25;++i)VerFW_LCD[i]=RX_BufNEX[i+1];
+          VerFW_LCD[23]=0;
+          // здесь получим идентификатор индикатора (если его прочтем)
+          // он нужен дл€ вариантов отображени€ при просмотре рефлектограмм и в пам€ти
+          switch(VerFW_LCD[3])
+          {
+          case '2':
+            TypeLCD=0;
+            //KnowLCD = 1;
+            break;
+          case '5':
+            TypeLCD=1;
+            //KnowLCD = 1;
+            break;
+          default:
+            TypeLCD=0;
+            //KnowLCD = 0;
+            break;
+          }
+        }
+      sprintf((void*)Str,"t2.txt=\"%s\"€€€",VerFW_LCD);
+      NEX_Transmit(Str);//
+        
+      }
       //uint32_t DAC_CODE = BufADC[0]>>2;
       HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_2, DAC_ALIGN_12B_R, ((CntCMD%0xF)<<8));
       KeyP &=~BTN_OK;

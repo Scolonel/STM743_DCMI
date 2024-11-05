@@ -25,6 +25,7 @@
 #include "usart.h"
 #include "adc.h"
 #include "dcmi.h"
+#include "system.h"
 //#include "dac.h"
 /* USER CODE END Includes */
 
@@ -196,7 +197,7 @@ void PendSV_Handler(void)
 void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
-
+  
   /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
@@ -211,7 +212,18 @@ void SysTick_Handler(void)
     beepTick = 0;
     HAL_GPIO_WritePin(Beep_GPIO_Port, Beep_Pin, GPIO_PIN_RESET);
   }
-
+  // контроль счетчика ожидания окончания приема
+  if(CountTimerUart2) // подождали посмотрим что приняли
+  {
+    CountTimerUart2--;
+    if(CountTimerUart2==0) // подождали посмотрим что приняли
+    {
+      Uart2DecYes = 1;// признак необходимости обработки принятой команды
+      RecievNEX=END_UART; // время истекло, приняли что то, пока не принимаем, ждем обработку
+      g_WtRdyNEX = 1; // ввзводим признак готовности данных, грубо окончание текущего приема
+    }
+  }
+  
   /* USER CODE END SysTick_IRQn 1 */
 }
 
@@ -404,10 +416,11 @@ void UART7_IRQHandler(void)
 {
   /* USER CODE BEGIN UART7_IRQn 0 */
         /* Check if RXNE flag is set */
+  // это ответы из индикатора
       if (__HAL_UART_GET_FLAG(&huart7, UART_FLAG_RXNE))
   {
-    
   Dummy = (uint16_t)(huart7.Instance->RDR); // 
+  RS_LCD((BYTE)Dummy); 
   }
   /* USER CODE END UART7_IRQn 0 */
   HAL_UART_IRQHandler(&huart7);

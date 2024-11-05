@@ -84,6 +84,7 @@
 #include "devicedata.h"  //from T7kAR
 #include "device.h"  //from T7kAR
 #include "modes.h"  //from T7kAR
+#include "UartNEX.h"  //from T7kAR
 // функции общие 
 
 //const uint8_t* TxGenOpt={"UUUUUUUUUUUUUUUUU"};
@@ -169,7 +170,7 @@ extern volatile BYTE ProgFW_LCD; // признак программирования индикатора Nexion
 extern volatile DWORD UART2Count; // счетчик приема байт UART2 от индикатора NEX - интересны в режиме программирования
 extern volatile DWORD UART0Count; // счетчик приема байт UART0 для индикатора NEX - интересны в режиме программирования
 extern volatile BYTE UART2Buffer[BUFSIZEUART2];
-
+extern volatile WORD CountTimerUart2;
 //extern unsigned short DataADC ;
 extern DWORD TimeBegin; // время начала, для контроля начальной заставки
 

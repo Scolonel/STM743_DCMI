@@ -1290,6 +1290,9 @@
                 <file>
                     <name>$PROJ_DIR$\..\User\Src\PM.c</name>
                 </file>
+                <file>
+                    <name>$PROJ_DIR$\..\User\Src\UartNEX.c</name>
+                </file>
             </group>
         </group>
     </group>
