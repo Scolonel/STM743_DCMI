@@ -4,15 +4,16 @@
 //#define MANUAL    0
 
 static BYTE Range = 0;                  // Диапазон работы усилителя (коэффициент усиления)
-static BOOL SwitchRangeMode=AUTO;       // Режим переключения коэффициентов усиления: автоматический или ручной
+static char SwitchRangeMode=AUTO;       // Режим переключения коэффициентов усиления: автоматический или ручной
 static BYTE TypeRslt=0;                 // Единицы измерений: дБм - 0, дБ - 1, Вт-2
 static DWORD Watchdog;
 volatile BYTE StateADC = FREEADC;
 static int DataADC_PM=0x00;
 //static BOOL Ready=TRUE;
+static int FreeCodeADC_PM=0x00;       // приведенное значение кодов АЦП для текущего измерения
 
 
-static float Res_Old=0;                 // Предыдущее усредненное значение АЦП с учетом смещения
+static int Res_Old=0;                 // Предыдущее усредненное значение АЦП с учетом смещения
 static int Level[40];         // Накопленные значения АЦП с учетом смещения
 static unsigned int PMWavelenght=1310;  // Текущая длина волны
 
@@ -35,7 +36,7 @@ unsigned int GetPMWavelenght(signed char DeltaLambda) //Возвращает, либо изменяе
     return  PMWavelenght;    
   };
   // блок для обычных измерителей
-  if (FIO1PIN & WIDE_VER)  // если нет перемычки для расширенного диапазона
+  if (WIDE_VER)  // если нет перемычки для расширенного диапазона
   {
   if((PMWavelenght+DeltaLambda)<800) 
   {
@@ -85,7 +86,7 @@ unsigned int GetPMWavelenght(signed char DeltaLambda) //Возвращает, либо изменяе
 // установка длинны волны если включен Wide и JDSU поддержка
 void SetAutoLamdaJDSU (DWORD Freq)
 {
-    if (!(FIO1PIN & WIDE_VER))  // если  расширенный диапазон
+    if (!(WIDE_VER))  // если  расширенный диапазон
     {
       if (SetJDSU.CompMode)
       {
@@ -111,7 +112,7 @@ unsigned int GetLambdaJDSUFreq (unsigned int Freq)
 
 unsigned int SetPMWavelenght (unsigned int CurrPMWavelenght) // принудительная установка текущей длины волны
 {
-  if (FIO1PIN & WIDE_VER)  // если нет перемычки для расширенного диапазона
+  if (WIDE_VER)  // если нет перемычки для расширенного диапазона
   {
   if ((CurrPMWavelenght<800)||(CurrPMWavelenght>1650)||((CurrPMWavelenght>900)&&(CurrPMWavelenght<1210))) CurrPMWavelenght = 1310;
   }
@@ -131,6 +132,27 @@ void SetSwitchPMMode(BYTE SwMode)
   return;
 }
 
+void MyDe_t (int lin) // подпрограмма формирования программной задержки
+{
+  for (int i=0;i<lin;i++);
+}
+
+
+// ногоДрыганное чтение данных из АЦП
+uint32_t ReadDataADC7782 (void)
+{
+  uint32_t Data=0;
+  for (int i=0; i<24; i++)
+  {
+    PM_CLK(0);
+    MyDe_t(2);
+    if ((GET_PM_DATA)!=0) Data++;
+    PM_CLK(1);  
+    Data = Data<<1;
+    MyDe_t(4);
+  }
+  return Data>>1;
+}
 
 // Читает данные из АЦП измерителя
 // Читает данные из АЦП измерителя
@@ -140,42 +162,52 @@ void SetSwitchPMMode(BYTE SwMode)
 int GetPMData(void)       
 {
   
+  
   switch (StateADC)
   {
   case FREEADC: 
     PM_CS(0);               // Запускаем цикл измерения выбрав CS
-    Watchdog=0; // обнуляем счетчик сторожевого таймера (такт около 30 мС)
+    Watchdog=0; // обнуляем счетчик от зависонов (25 мС)
     StateADC = BUSYADC;
-    P08_Init(); // разрешаем прерывание по готовности АЦП
     break;
   case BUSYADC: // 
-     Watchdog++; // ждем готовности АЦП
-   if (Watchdog > 10) // данных не дождались более 300 мС
-   {
-     // ложное считывание и перевод в готовность нового запуска
-   SSP_FlashTransmit(1, 0);
-   SSP_FlashTransmit(1, 0);
-   SSP_FlashTransmit(1, 0);  
-   CreatDelay (10); // задержка 0,8 мкс чтобы сосчитать все
-   StateADC = FREEADC;
-   PM_CS(1);
-   //P08_Init(); // разрешаем прерывание по готовности АЦП
-   //P08_IRQ_EN(OFF); // запрещаем прерывание по готовности АЦП
-   }
+    Watchdog++; // ждем готовности АЦП
+    
+    if (Watchdog > 10) // не дождались более 250 мС
+    {
+      // чистим буфер на всякий случай (делаем пустое чтение
+      ReadDataADC7782 ();
+      StateADC = FREEADC;
+      PM_CS(1);
+    }
+    else
+    {
+      if (!(GET_PM_DATA)) // данные готовы можно считывать
+      {
+        DataADC_PM =  ReadDataADC7782 ();
+        Watchdog=0; //
+        StateADC = READYDATA;
+      }
+    }
+    
     break;
-  case READYDATA:
-    // Данные готовы можно выдавать для обработки
-    P08_IRQ_EN(OFF); // запрещаем прерывание по готовности АЦП
-    Watchdog=0; // обнуляем счетчик сторожевого таймера (такт около 30 мС)
+  case READYDATA: // данные готовы (здесь попробуем фильтрануть их)
+    Watchdog=0; // 
     PM_CS(1);
+    //CurrRange = Range;
+    //PMCurrValue = GetPower(PMWavelenght);      // Получаем мощность в мВт не зависимо от длины волны
+    StateADC = FREEADC;
     break;
   }
-
   
-  
-  return 0x800000-DataADC_PM;                            // Возвращаем либо новые, либо старые данные
+  //FreeCodeADC_PM = 0x800000-DataADC_PM;
+  //FreeCodeADC_PM = 0xFFFFFF-DataADC_PM; // для маленьких тесторов
+//  if(DeviceConfig.CfgRE>>1) // если новая плата аналоговая 03.03.2023
+//    FreeCodeADC_PM = 0x800000 - DataADC_PM;
+//  else // старая аналоговая плата
+    FreeCodeADC_PM = DataADC_PM-0x800000;
+  return  FreeCodeADC_PM;                           // 
 }
-
 void SetStateADC (BYTE State) // установка режима АЦП
 {
  StateADC = State; 
@@ -314,7 +346,7 @@ float GetCoeffSpctr(unsigned int Lambda)
   unsigned int i;    // Индекс
   double a,b;        // индексы по которым расчитывают коэфф.  a*x+b=y
   
-    if (FIO1PIN & WIDE_VER)  // если нет перемычки для расширенного диапазона
+    if (WIDE_VER)  // если нет перемычки для расширенного диапазона
   {
 
   if((Lambda<800) || ((Lambda>900)&&(Lambda<1210)) || (Lambda>1650)) // Если указана неверная длина волны    
@@ -513,7 +545,7 @@ float Watt2dB(char *str, float mWatt,BYTE TypeRslt)           // Преобразует мВт
       if (mWatt<1e-9)mWatt = 5e-10;                          //ограничение показаний на уровне 1pW простой фотодиод
       break;
     case 2:
-    if (FIO1PIN & WIDE_VER)  // если нет перемычки для расширенного диапазона
+    if (WIDE_VER)  // если нет перемычки для расширенного диапазона
       if (mWatt<1e-6)mWatt = 5e-7;                          //ограничение показаний на уровне 1nW  сфера
     else 
       if (mWatt<1e-8)mWatt = 5e-9;                          //ограничение показаний на уровне 1nW  сфера
@@ -566,10 +598,10 @@ int AcquireShZeroLowRng(void)                          // Измерение уровней смещ
     for(i=0;i<3;i++)
     {    
       if(StateADC==FREEADC) GetPMData();
-      __no_operation();
+      MyDe_t(1); // микро задержка
       while(StateADC!=READYDATA) 
       {
-      __no_operation();
+      MyDe_t(1); // микро задержка
       }     
 
       SetStateADC(FREEADC);
@@ -581,10 +613,10 @@ int AcquireShZeroLowRng(void)                          // Измерение уровней смещ
     for(i=0;i<20;i++)
     {    
       if(StateADC==FREEADC) GetPMData();
-      __no_operation();
+      MyDe_t(1); // микро задержка
       while(StateADC!=READYDATA) 
       {
-      __no_operation();
+      MyDe_t(1); // микро задержка
       }
       
       AverageData+=GetPMData();
@@ -609,7 +641,7 @@ int AcquireShZeroRng(void)                          // Измерение уровней смещени
   float AverageData=0;                              // Усредненые данные
   char Str[20];
   
-  ClearScreen();
+  //ClearScreen();
   
   for(j=0;j<4;j++)
   {
@@ -628,7 +660,8 @@ int AcquireShZeroRng(void)                          // Измерение уровней смещени
       SetStateADC(FREEADC);
     }     
     sprintf(Str,"t%d.txt=\"измеряю...\"яяя",2*j+2); //
-    UARTSend2((BYTE*)Str, strlen(Str));    //
+    //UARTSend2((BYTE*)Str, strlen(Str));    //
+    NEX_Transmit((void*)Str);// 
 
     AverageData=0;
     
@@ -651,8 +684,9 @@ int AcquireShZeroRng(void)                          // Измерение уровней смещени
     CoeffPM.ShZeroRng[j]=(int)(AverageData/20);
     
     sprintf(Str,"t%d.txt=\"%d\"яяя",2*j+1,CoeffPM.ShZeroRng[j]); //
-    UARTSend2((BYTE*)Str, strlen(Str));    //
-    
+    //UARTSend2((BYTE*)Str, strlen(Str));    //
+      NEX_Transmit((void*)Str);// 
+
   }
   
   
@@ -663,26 +697,28 @@ int AcquireShZeroRng(void)                          // Измерение уровней смещени
 
 int AcquireCoefStykRange(BYTE Rng, float* PrevRng, float* CurrRng)         // Вычисляет стыковычный коэффициент текущего диапазона с предыдущим
 {
+  // пользуется только в режиме UART - настройка диапазонов, выводы на экран не нужны
   //float PrevRng=0;                         // Значение кодов АЦП на предыдущем диапазоне
   //float CurrRng=0;                         // Значение кодов АЦП на текущем диапазоне
   BYTE i;                                    // Счётчик
-  char Str[20];                              // Строка для вывода на экран
+  //char Str[20];                              // Строка для вывода на экран
   
   if((Rng<1)||(Rng>3)) return 0;             // Если указан неверный диапазон
   
-  ClearScreen();
+  //ClearScreen();
   SetRange(Rng-1);                            // установили предыдущий диапазон
   
-  sprintf(Str,"Стык. коэфф.");       
-  putString(0,0,Str,1,1);
+  //sprintf(Str,"Стык. коэфф.");       
+  //putString(0,0,Str,1,1);
 
-  sprintf(Str,"Диапазон %d", Rng-1); 
-  putString(2,18,Str,1,0);
-  sprintf(Str,"измеряю..."); 
-  putString(82,18,Str,1,0);
+  //sprintf(Str,"Диапазон %d", Rng-1); 
+  //putString(2,18,Str,1,0);
+  //sprintf(Str,"измеряю..."); 
+  //putString(82,18,Str,1,0);
   
-  PaintLCD();
-  CreatDelay(1.2e6);  // ~ 0.1 S
+  //PaintLCD();
+  HAL_Delay(100);
+  //CreatDelay(1.2e6);  // ~ 0.1 S
 
   // пустое чтение
   for(i=0;i<3;i++)
@@ -699,29 +735,31 @@ int AcquireCoefStykRange(BYTE Rng, float* PrevRng, float* CurrRng)         // Вы
     
     while(StateADC!=READYDATA) 
     {
-      sprintf(Str,"%d",0x800000-DataADC_PM); // nm
-      putString(82,54,Str,1,0);
-      PaintLCD();                
+      //sprintf(Str,"%d",0x800000-DataADC_PM); // nm
+      //putString(82,54,Str,1,0);
+      //PaintLCD();  
+      HAL_Delay(10);
     }
     
     *PrevRng+=GetPMData();
     SetStateADC(FREEADC);
   } 
-  __no_operation();
+      MyDe_t(1); // микро задержка
   *PrevRng=*PrevRng/20.0;
   *PrevRng= *PrevRng - (float)CoeffPM.ShZeroRng[Rng];
   
   SetRange(Rng);
-  sprintf(Str,"%.0f",*PrevRng); 
-  putString(82,18,Str,1,0);
+  //sprintf(Str,"%.0f",*PrevRng); 
+  //putString(82,18,Str,1,0);
  
-  sprintf(Str,"Диапазон %d",Rng); // опора
-  putString(2,30,Str,1,0);
+  //sprintf(Str,"Диапазон %d",Rng); // опора
+  //putString(2,30,Str,1,0);
   
-  sprintf(Str,"измеряю...");
-  putString(82,30,Str,1,0);
+  //sprintf(Str,"измеряю...");
+  //putString(82,30,Str,1,0);
+  HAL_Delay(100);
 
-  PaintLCD();   
+  //PaintLCD();   
   // пустое чтение
   for(i=0;i<3;i++)
   {    
@@ -737,30 +775,33 @@ int AcquireCoefStykRange(BYTE Rng, float* PrevRng, float* CurrRng)         // Вы
     
     while(StateADC!=READYDATA) 
     {
-      sprintf(Str,"%d",0x800000-DataADC_PM); // nm
-      putString(82,54,Str,1,0);
-      PaintLCD();                
+      //sprintf(Str,"%d",0x800000-DataADC_PM); // nm
+      //putString(82,54,Str,1,0);
+      //PaintLCD(); 
+      HAL_Delay(10);
     }
     
     *CurrRng+=GetPMData();
     SetStateADC(FREEADC);
   } 
   
-  __no_operation();
+      MyDe_t(1); // микро задержка
   
   *CurrRng=*CurrRng/20.0;
   *CurrRng =*CurrRng - (float)CoeffPM.ShZeroRng[Rng];
   CoeffPM.CoefStykRange[0] = 1.0;
   CoeffPM.CoefStykRange[Rng]=CoeffPM.CoefStykRange[Rng-1]*(*PrevRng)/(*CurrRng*100);
 
-  sprintf(Str,"%.0f",*PrevRng);
-  putString(82,30,Str,1,0);
+  //sprintf(Str,"%.0f",*PrevRng);
+  //putString(82,30,Str,1,0);
   
-  sprintf(Str,"Коэффициент"); // опора
-  putString(2,42,Str,1,0);
-  sprintf(Str,"%.2f",CoeffPM.CoefStykRange[Rng]); // nm
-  putString(82,42,Str,1,0);
-  CreatDelay(1e7);   // ~ 0.8 S
+  //sprintf(Str,"Коэффициент"); // опора
+  //putString(2,42,Str,1,0);
+  //sprintf(Str,"%.2f",CoeffPM.CoefStykRange[Rng]); // nm
+  //putString(82,42,Str,1,0);
+      HAL_Delay(100);
+  
+  
   return 1;
 }
 
@@ -811,23 +852,26 @@ float GetCoefSpctr(WORD Lambda, float RealPower)     // Возвращает спектральный 
     // выведем здесь инфу о измерениях
     // по результатам изменений вызваныйх обработчиком клавиатуры
     sprintf(Str,"t1.txt=\"%2.2e\"яяя",AcqPower); // в поле данных dBm REF
-    UARTSend2((BYTE*)Str, strlen(Str));    //
+    //UARTSend2((BYTE*)Str, strlen(Str));    //
+      NEX_Transmit((void*)Str);// 
     
     sprintf(Str,"t3.txt=\"%d  %d\"яяя",i,GetRange() ); // в поле  значение счетчика nm
-    UARTSend2((BYTE*)Str, strlen(Str));    //
-      if (GetStateADC()==BUSYADC)
-    while(GetStateADC()!=BUSYADC);
-  // Ждем, когда АЦП освободится
-
+    //UARTSend2((BYTE*)Str, strlen(Str));    //
+      NEX_Transmit((void*)Str);// 
+    
+    if (GetStateADC()==BUSYADC)
+      while(GetStateADC()!=BUSYADC);
+    // Ждем, когда АЦП освободится
+    
     CreatDelay(3e5);   // ~ 
     
   }
   
   Coef=RealPower/AcqPower;              // Спектральный коэффициент
   sprintf(Str,"t5.txt=\"%.4f\"яяя",Coef);
-  UARTSend2((BYTE*)Str, strlen(Str));    // источник
+      NEX_Transmit((void*)Str);// 
   SetSwitchPMMode(AUTO);                // Переключаем измеритель в автоматический режим
-    CreatDelay(3e5);   // ~ 
+  CreatDelay(3e5);   // ~ 
   
   return Coef;
 }

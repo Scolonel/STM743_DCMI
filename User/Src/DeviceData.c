@@ -1828,18 +1828,4 @@ void DeletedAllCell (void) // удаление всех записей измерителя
 }
 //
 
-DWORD CheckReflParam (void)
-{
-  DWORD err = 0;
-  if ((ReflParam.BC>850)||(ReflParam.BC<450)) {err++; ReflParam.BC = BC_def;}
-  if (ReflParam.FPO!=0){err++; ReflParam.FPO = FPO_def;}
-  if (ReflParam.NF<40000) {err++;ReflParam.NF = NF_def;}
-  if (ReflParam.NFSF!=1000) {err++;ReflParam.NFSF = NFSF_def;}
-  if (ReflParam.PO!=0) {err++;ReflParam.PO = PO_def;}
-  if ((ReflParam.ET>20000)||((ReflParam.ET<100))) {err++; ReflParam.ET = ET_def;} //end line 0.1 --- 20.0
-  if ((ReflParam.LT>5000)||(ReflParam.LT<50)) {err++; ReflParam.LT = LT_def;}  //styk  0.05 --- 5.0
-  if ((ReflParam.RT>RT_def)||(ReflParam.RT<10000)) {err++; ReflParam.RT = RT_def;} // refl 10 ... 65
-  return err;
-
-}
 

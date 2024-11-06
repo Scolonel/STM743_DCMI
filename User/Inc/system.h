@@ -75,16 +75,17 @@
 //#include "fonts.h"
 #include "pca955x.h"
 #include "buttons.h"      
-//#include "ssd1305.h"
+//#include "usbd_cdc_acm_if.h"
 //#include "KB_processing.h"
 //#include "HardSetDevice.h" // функции управления "железом" 
-//#include "usartExt.h" // for UART 
-//#include "MyClock.h"
+#include "usart.h" // for UART 
 //#include "Automat.h"
+#include "events.h" //from T7kAR
 #include "devicedata.h"  //from T7kAR
 #include "device.h"  //from T7kAR
 #include "modes.h"  //from T7kAR
 #include "UartNEX.h"  //from T7kAR
+#include "UartEXT.h"  //from T7kAR
 // функции общие 
 
 //const uint8_t* TxGenOpt={"UUUUUUUUUUUUUUUUU"};
@@ -173,7 +174,7 @@ extern volatile BYTE UART2Buffer[BUFSIZEUART2];
 extern volatile WORD CountTimerUart2;
 //extern unsigned short DataADC ;
 extern DWORD TimeBegin; // время начала, для контроля начальной заставки
-
+extern uint8_t WIDE_VER;
 extern BYTE CurrLang; // текущий язык
 extern unsigned short KeyP; // клавиши нажатые 
 //extern int CntAccumulat; // счетчик накоплений
@@ -188,6 +189,7 @@ extern const char *MsgMass[MSG_NUM][LANG_NUM];
 extern const DWORD DelayPeriod[LENGTH_LINE_NUM];// задержка периода в тиках CreatDelay()~ 83.33 нс
 extern const DWORD NumPointsPeriod[LENGTH_LINE_NUM];
 extern const unsigned char fonts[2048];
+extern char BufString[225];
 //extern char BufString[60];
 //extern const char *NumVer; // номер версии
 extern char NumVer[10]; // номер версии

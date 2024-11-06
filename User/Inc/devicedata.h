@@ -246,7 +246,6 @@ unsigned short GetSet_BC (float Dir); // коэффциент обратного отражения
 unsigned short GetSet_LT (float Dir); // мнимльный перепад контроля события
 unsigned short GetSet_ET (float Dir); // конец линии не более 10 дБ
 unsigned short GetSet_RT (float Dir); // отражение не более -55дБ
-DWORD CheckReflParam (void);
 //Зуев И.А.
 int GetIndxPON (int Lambda);
 

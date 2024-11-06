@@ -21,7 +21,6 @@
 #define EXT_POW           (1UL<<1)  // P2.1 (152) // сигнал внешнего питания
 // пины конфигураторы железа
 #define TEST_VER           (1UL<<26)  // P3.26 (55) // сигнал контроля версий
-#define WIDE_VER           (1UL<<24)  // P1.24 (78) // сигнал расширенного диапазона длин волн измерителя (800-1700)
 #define TEST_PIN2         (1UL<<21)  // P1.21 (72) пин контроля новых плат июнь2012 (перепутана клава)
 #define ENA_PIL           (1UL<<23)  // P1.23 (76) // сигнал переназначения пинов управления лазером в постоянном излучении и генератора пилы
                                       //PHLD - переключается на пин P0.29 (61) P0.26 (12) - AOUT - для генерации пилы,
@@ -62,6 +61,9 @@
 #define TEST_PIN1         (0x04)  // P2 (FREE6) 
 #define TST_P1(a)    ((a>0)?(CtrlExpand (TEST_PIN1, TEST_PIN1)):(CtrlExpand (0, TEST_PIN1)))  /* set SSEL P1.20 to high/low */
 
+#define PM_CS(a)    ((a>0)?(PM_CS_GPIO_Port->BSRR = PM_CS_Pin):(PM_CS_GPIO_Port->BSRR = (uint32_t)PM_CS_Pin << 16))  /* set CS_PM PB.04 to high/low */
+#define PM_CLK(a)    ((a>0)?(PM_SCLK_GPIO_Port->BSRR = PM_SCLK_Pin):(PM_SCLK_GPIO_Port->BSRR = (uint32_t)PM_SCLK_Pin << 16))  /* set CLK_PM PB.08 to high/low */
+#define GET_PM_DATA    HAL_GPIO_ReadPin(PM_DOUT_GPIO_Port, PM_DOUT_Pin)  /* set DATA_PM PB.05 to high/low */
 
 
 // Strob_сбора данных START (P3.21) (175)
@@ -81,7 +83,7 @@
 //#define FLO_CS(a,b) #if (a > 0) \
                     
 #define ALT_CS(a)    ((a>0)?(FIO0SET |= CSALT):(FIO0CLR |= CSALT))  /* set SSEL P0.6 to high/low */
-#define PM_CS(a)    ((a>0)?(FIO0SET |= CSPM):(FIO0CLR |= CSPM))  /* set SSEL P0.14 to high/low */
+//#define PM_CS(a)    ((a>0)?(FIO0SET |= CSPM):(FIO0CLR |= CSPM))  /* set SSEL P0.14 to high/low */
 #define FL_CS(b,a)    ((b>0)?((a>0)?(FIO4SET |= CSFL1):(FIO4CLR |= CSFL1)):((a>0)?(FIO0SET |= CSFL0):(FIO0CLR |= CSFL0))) /* set SSEL P0.16 to high/low */
 //#define FL1_CS(a)    ((a>0)?(FIO4SET |= CSFL1):(FIO4CLR |= CSFL1))  /* set SSEL P0.16 to high/low */
 
