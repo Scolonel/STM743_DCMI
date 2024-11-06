@@ -49,6 +49,8 @@
   * @{
   */
 /* USER CODE BEGIN EXPORTED_DEFINES */
+//#define APP_RX_DATA_SIZE 128
+//#define APP_TX_DATA_SIZE 128
 
 /* USER CODE END EXPORTED_DEFINES */
 
@@ -91,6 +93,8 @@
 extern USBD_CDC_ACM_ItfTypeDef  USBD_CDC_ACM_fops;
 
 /* USER CODE BEGIN EXPORTED_VARIABLES */
+//extern uint8_t RX_Buffer[NUMBER_OF_CDC][APP_RX_DATA_SIZE];
+extern uint32_t RecievUSB ; // признак прин€ти€ данных по USB, число данных в буфере
 
 /* USER CODE END EXPORTED_VARIABLES */
 

@@ -372,10 +372,17 @@ void TIM1_CC_IRQHandler(void)
 void USART3_IRQHandler(void)
 {
   /* USER CODE BEGIN USART3_IRQn 0 */
-
+  // это запросы из вне по RS
+      if (__HAL_UART_GET_FLAG(&huart3, UART_FLAG_RXNE))
+  {
+  Dummy = (uint16_t)(huart3.Instance->RDR); // 
+  RS_com((BYTE)Dummy); 
+  }
+  
   /* USER CODE END USART3_IRQn 0 */
   HAL_UART_IRQHandler(&huart3);
   /* USER CODE BEGIN USART3_IRQn 1 */
+   HAL_NVIC_ClearPendingIRQ(USART3_IRQn);
 
   /* USER CODE END USART3_IRQn 1 */
 }

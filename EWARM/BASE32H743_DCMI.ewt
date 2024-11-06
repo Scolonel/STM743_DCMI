@@ -1282,6 +1282,9 @@
                     <name>$PROJ_DIR$\..\User\Src\DeviceData.c</name>
                 </file>
                 <file>
+                    <name>$PROJ_DIR$\..\User\Src\events.c</name>
+                </file>
+                <file>
                     <name>$PROJ_DIR$\..\User\Src\msgs.c</name>
                 </file>
                 <file>
@@ -1289,6 +1292,9 @@
                 </file>
                 <file>
                     <name>$PROJ_DIR$\..\User\Src\PM.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\User\Inc\UartEXT.c</name>
                 </file>
                 <file>
                     <name>$PROJ_DIR$\..\User\Src\UartNEX.c</name>

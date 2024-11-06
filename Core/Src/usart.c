@@ -21,6 +21,7 @@
 #include "usart.h"
 
 /* USER CODE BEGIN 0 */
+#define ENAUSBCOM 0  // признак работы внешнего uART 0 - uart3 1 - USB-COM
 uint8_t RxBufExt[64]; // буффер что приняли извне
 
 /* USER CODE END 0 */
@@ -399,6 +400,23 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 }
 
 /* USER CODE BEGIN 1 */
+// передача во внешний мир, в старой реализации, передача ведется
+// побайтно, поэтому в нашем случае будем передавать также
+// плюс будем отвечать либо через USB-COM либо через UART3
+void UARTSendExt(BYTE *BufferPtr, DWORD Length )  // буфер и размер
+{
+ if (ENAUSBCOM)
+  {
+     CDC_Transmit(0, (void*)BufferPtr, Length); // выдаем блок
+
+  }
+  else
+  {
+     HAL_UART_Transmit(&huart3,(void*)BufferPtr, Length,(uint32_t)(Length/8+1));  
+
+  }
+}
+
 void SendUartTX (uint8_t *Str_mas)
 {
   if(TxDMA!=1)
@@ -413,7 +431,7 @@ void SendUartTX (uint8_t *Str_mas)
   }
 
 }
-//
+// функция передачи в индикатор NEXTION
 void NEX_Transmit(uint8_t *Str)
 {
   uint16_t Size = strlen((void*)Str);

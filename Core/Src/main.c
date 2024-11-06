@@ -135,6 +135,9 @@ int a = 13,j,i;
 uint32_t SM;
 uint16_t KeyP; // клавиши нажатые 
 uint8_t CntCMD;
+//variable USB
+uint32_t RecievUSB=0 ; // признак прин€ти€ данных по USB, число данных в буфере
+
 // перенос переменных из MAIN.c from T7kAR
 Measuring_Stat Head_RAW;
 // из modes.c - надо вернуть обратно
@@ -142,6 +145,7 @@ char VerFW_LCD[25] = {"No version LCD          \0"}; //верси€ ѕќ индикатора NEXI
 volatile BYTE TypeLCD = 0; // тип индикатора в идентификаторе v-3.2(=0) s-3.5(=1) 
 volatile BYTE g_NeedChkAnsvNEX=0; // признак получени€ строки из редактора.и ее проверка
 
+uint8_t WIDE_VER=1; // 1- обычный диапазон 0 - расширенный
 
 
 /* USER CODE END PV */
@@ -349,6 +353,12 @@ int main(void)
       // управление лазерами в режиме CW*
       // поконтролить батарейку
     }
+    // проверка приема по UART EXT
+          if (RSDecYes) // вызов программы обработки комманды прин€той по UART
+      {
+        DecodeCommandRS();
+      }
+
     
     //test проверим кнопку
     if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
@@ -966,7 +976,7 @@ void SendFileBelcore (void)
   };
   
   char StartStr[8]={"#516611\0"}; // 5-х значные номера!!! т.к. более 8000 точек
-  char BufString[225];
+  //char BufString[225];
   unsigned char *c;
   unsigned char value;
   unsigned short NumEventNow = 0; //без событий

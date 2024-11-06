@@ -50,6 +50,9 @@ void MX_USART3_UART_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 void SendUartTX (uint8_t *Str_mas);
+void UARTSendExt(BYTE *BufferPtr, DWORD Length );  // буфер и размер
+// функция передачи в индикатор NEXTION
+void NEX_Transmit(uint8_t *Str);
 
 /* USER CODE END Prototypes */
 
