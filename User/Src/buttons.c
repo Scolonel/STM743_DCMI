@@ -103,7 +103,7 @@ uint16_t SetBtnStates( unsigned int states, unsigned int timeStep )
         {
           //Sound(3);
           cb->State = SHORT_PRESSED;
-          KeyPressed |= cb->Bind;// // нажали кнопку
+          KeyPressed |= (uint16_t)(cb->Bind);// // нажали кнопку
         }
         if( cb->Time == LONG_TIME )
         {

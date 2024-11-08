@@ -71,22 +71,22 @@
 #include "math.h"
 #include "pm.h" // функции измерителя
 #include "rtc.h" // 
-//#include "DrawFunctions.h"
 //#include "fonts.h"
 #include "pca955x.h"
 #include "buttons.h"      
 //#include "usbd_cdc_acm_if.h"
-//#include "KB_processing.h"
+#include "OTDR_Meas.h" //from T7kAR
 //#include "HardSetDevice.h" // функции управления "железом" 
 #include "usart.h" // for UART 
-//#include "Automat.h"
+
 #include "events.h" //from T7kAR
 #include "devicedata.h"  //from T7kAR
 #include "device.h"  //from T7kAR
 #include "modes.h"  //from T7kAR
 #include "UartNEX.h"  //from T7kAR
 #include "UartEXT.h"  //from T7kAR
-// функции общие 
+#include "drawfunctions.h" //from T7kAR
+#include "memflash.h"// //from T7kAR
 
 //const uint8_t* TxGenOpt={"UUUUUUUUUUUUUUUUU"};
 
@@ -94,7 +94,8 @@
 uint32_t GetSysTick( int Mode); // получение тиков 1 мС. 0 - получение счетчика от предыдущего сброса 1- сброс
 
 void NEX_Transmit(uint8_t *Str);
-
+// управление таймером в измерителе АВТОМАТЕ
+WORD TimerPA (BYTE Set);
 
 // структура хранения памяти измерителя
 struct tag_PON
@@ -151,8 +152,9 @@ extern unsigned int PointsPerPeriod; // шаг дискретизации
 extern unsigned int PointInPeriod; // шаг дискретизации
 extern int CntAccumulat; // счетчик накоплений
 // переменные счетчика Т2, предыдущее и новое
-extern volatile DWORD OldTime2; // предыдущее значение
-extern volatile DWORD CurrTime2; // текущее значение
+extern volatile DWORD OldTimeAccum; // предыдущее значение
+extern volatile DWORD CurrTimeAccum; // текущее значение
+extern uint8_t EnaTimerAccum; // текущее значение
 
 extern volatile unsigned char rawPressure;
 extern volatile unsigned char rawPressKeyS; // признак необработанной нажатой клавиши S по прерыванию

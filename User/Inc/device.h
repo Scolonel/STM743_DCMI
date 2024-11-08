@@ -18,7 +18,7 @@
 #define POWDET(a)    ((a>0)?(CtrlExpand(POW_DET_ON, POW_DET_ON)):(CtrlExpand(0, POW_DET_ON)))  /* set POW_DET_ON to high/low */
 #define POWREF(a)    ((a>0)?(CtrlExpand(POW_DET_ON, POW_REF_ON)):(CtrlExpand(0, POW_REF_ON)))  /* set POW_REF_ON to high/low */
 //#define POWALT(a)    ((a>0)?(FIO4SET |= V_ALT_ON):(FIO4CLR |= V_ALT_ON))  /* set V_ALT_ON to high/low */
-#define EXT_POW           (1UL<<1)  // P2.1 (152) // сигнал внешнего питания
+#define EXT_POW           HAL_GPIO_ReadPin(PWR_EXT_GPIO_Port, PWR_EXT_Pin)  // PD10 (79) // сигнал внешнего питания 0-внешнее питание
 // пины конфигураторы железа
 #define TEST_VER           (1UL<<26)  // P3.26 (55) // сигнал контроля версий
 #define TEST_PIN2         (1UL<<21)  // P1.21 (72) пин контроля новых плат июнь2012 (перепутана клава)

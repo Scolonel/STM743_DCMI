@@ -64,11 +64,6 @@
 //  0xaa, 0xaa, 0xaa, 0xaa 
 //};
 
-const unsigned char DmBo [1024] = {
- #include "pdbok.dat"
- 
-}
-;
 // начало линии
 const unsigned char BegLine [40] = {
  #include "BegB.pic"
@@ -101,11 +96,6 @@ const unsigned char OutOfNoise [40] = {
 ;
 
 
-// таблица символов в редакторе комметрариев
-const unsigned char Tab_Kb[192] = { 
-#include "KeyB_Tab.h"
-}
-;
 
 
 const int KeyPoints[PNTSNUM] = { 96, 172, 344, 688, 1366, 2048, 4608 }; // порги определения индекса установленной длины 4096
@@ -123,8 +113,6 @@ const DWORD DelayBadLength [LENGTH_LINE_NUM-1][LENGTH_LINE_NUM]= //длина установ
 
 struct tag_PON PONI;
 
-RTCTime TimeSaveOTDR;
-RTCTime TimeSaveOLT;
 
 char CommentsOTDR[20] = {"                   \0"}; //комментарии рефлектометра
 char FileNameOTDR[20] = {"                   \0"}; //комментарии рефлектометра
@@ -216,18 +204,6 @@ static BYTE ReturnMemView = 0; // признак куда возвращаемся по Esc из просмотра 
 // 0 - из старта измерений 
 
 
-// кнопки перстановка - для старых плат так (для новых плат по P1.21=0)
-unsigned short BTN_UP = (1UL<<11);
-unsigned short BTN_DOWN = (1UL<<9);
-unsigned short BTN_LEFT = (1UL<<13);
-unsigned short BTN_RIGHT = (1UL<<14);
-unsigned short BTN_START = (1UL<<10);
-// #define BTN_UP      (1UL<<11)
-// #define BTN_DOWN    (1UL<<9)
-// #define BTN_LEFT    (1UL<<13)
-// #define BTN_RIGHT   (1UL<<14)
-unsigned short BTN_OK   =   (1UL<<8);
-unsigned short BTN_MENU =   (1UL<<12);
 
       // переключатель вывода в зависимости от комбинации
 void SetPlaceNew(int Mode)
@@ -283,17 +259,15 @@ void SetPlaceNew(int Mode)
 // звуковой сигнал типа аварии (проба) 04.04.2024
 void AlarmSignal(int type)
 {
-   CreatDelay(20000000);
+   CreatDelay(2000);
  for (int i=0; i<type; i++)
  {
-   FIO1PIN |=LEDSTART;//On  LED
-   LCD_LIGHT(ON);
-   Sound(10);
-   CreatDelay(2500000);
-   FIO1PIN &=~LEDSTART;//Off  LED
-   LCD_LIGHT(OFF);
-   Sound(0);
-   CreatDelay(2500000);
+   LED_START(1);//On  LED
+   myBeep(10);
+   HAL_Delay(250);
+   LED_START(0);//Off  LED
+   myBeep(0);
+   HAL_Delay(250);
  }
 }
 
@@ -308,28 +282,6 @@ void AlarmSignal(int type)
 //  CreatDelay (4000000); // 0.3 мС
 //}
 
-void SetPinsKeyB (void)
-{
-BTN_START =  (1UL<<10);
-BTN_OK   =   (1UL<<8);
-BTN_MENU =   (1UL<<12);
-
-  
-  if(FIO1PIN & TEST_PIN2) // старая плата
-  {
- BTN_UP = (1UL<<11);
- BTN_DOWN = (1UL<<9);
- BTN_LEFT = (1UL<<13);
- BTN_RIGHT = (1UL<<14);
-  }
-  else// новая плата
-  {
- BTN_UP = (1UL<<9);
- BTN_DOWN = (1UL<<11);
- BTN_LEFT = (1UL<<14);
- BTN_RIGHT = (1UL<<13);
-  }
-}
 
 BYTE SetGetMonEna (BYTE Data) // запрос/установка признака выдачи событий по результату измерения
 {
@@ -371,7 +323,6 @@ unsigned SetCntNumAvrg ( unsigned Data)// установка текущего значения накоплений
 void ModeFuncTmp(void)
 {
   ModeFunc();
-  // SetPinsKeyB(); // переустановка клавиатуры
   if(KeyP)
     KeyP = 0;
 }
@@ -401,7 +352,7 @@ void ModeWelcome(void)// режим заставки
     // наименование прибора
     GetDeviceLabel( Str, NameDB.Ena_DB  );
     sprintf (StrN,"t0.txt=\"%s\"яяя",Str); // 
-    NEX_Transmit(StrN);//
+    NEX_Transmit((void*)(void*)StrN);//
     // производитель
     if (GetID_Dev())
     {
@@ -411,23 +362,23 @@ void ModeWelcome(void)// режим заставки
     {
       sprintf (Str,"t1.txt=\"%s\"яяя",MsgMass[75][CurrLang]); // Мы
     }
-    NEX_Transmit(Str);//
+    NEX_Transmit((void*)Str);//
     // Date
     sprintf (Str,"t2.txt=\"%s\"яяя",MsgMass[13][CurrLang]); // Date
-    NEX_Transmit(Str);//
+    NEX_Transmit((void*)Str);//
     // Time
     sprintf (Str,"t4.txt=\"%s\"яяя",MsgMass[15][CurrLang]); // time
-    NEX_Transmit(Str);//
+    NEX_Transmit((void*)Str);//
     // Battery
     sprintf (Str,"t6.txt=\"%s\"яяя",MsgMass[16][CurrLang]); // Battery
-    NEX_Transmit(Str);//
+    NEX_Transmit((void*)Str);//
     // Version
     GetNumVer(St);
     sprintf (Str,"t8.txt=\"v%s(%X)\"яяя",St,CheckErrMEM); // Version
-    NEX_Transmit(Str);//
+    NEX_Transmit((void*)Str);//
     // Number
     sprintf (Str,"t9.txt=\"№%d\"яяя",GetNumDevice()); // Number
-    NEX_Transmit(Str);//
+    NEX_Transmit((void*)Str);//
     
   }
   // проверка изменения величин для изменений (время и аккумулятор)
@@ -437,12 +388,12 @@ void ModeWelcome(void)// режим заставки
     //отображение времени
     SecOld = current_time.RTC_Sec ; 
     sprintf(Str,"t5.txt=\"%02d:%02d:%02d\"яяя",current_time.RTC_Hour,current_time.RTC_Min,current_time.RTC_Sec);
-    NEX_Transmit(Str);//
+    NEX_Transmit((void*)Str);//
     // отображение даты
     sprintf (Str,"t3.txt=\"%02d.%02d.%02d\"яяя",current_time.RTC_Mday,current_time.RTC_Mon,current_time.RTC_Year);//,MsgMass[14][CurrLang] убран год 25.12.2013
-    NEX_Transmit(Str);//
+    NEX_Transmit((void*)Str);//
     // уровень и тип заряда
-    if (!(FIO2PIN & EXT_POW))
+    if (!(EXT_POW))
     {
       sprintf(Str,"t7.txt=\"%s\"яяя",MsgMass[11][CurrLang]);// внешнее питание
     }
@@ -450,18 +401,17 @@ void ModeWelcome(void)// режим заставки
     {
       sprintf(Str,"t7.txt=\"%d%%\"яяя", ProcBatInd);
     }
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
   }
   g_FirstScr=0; // выключаем признак первого прохода
   
-  if ((GetSysTime() - TimeBegin) > 400) //4s
+  if ((HAL_GetTick() - TimeBegin) > 4000) //4s
     //if (CntWelcome > WAITWELCOME)
   {
     SetMode(ModeMainMenu);
     CmdInitPage(1);// посылка команды переключения окна на MainMenu и установка признака первого входа
     
-    Sound(10);
-    __no_operation();
+    myBeep(10);
     ModeDevice = MODEMENU;
     SetHeadFileRaw (0); // пишем заголовок файла выдачи необработаных данных
     
@@ -487,14 +437,14 @@ void ModeMainMenu(void) // режим основного МЕНЮ
   //  if (BUTTON_DOWN(BTN_UP)/*(KeyP & (1<<b_UP)*/)&&(getStateButtons(b_UP)==SHORT_PRESSED))
   if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1;
     FrSetMainMenu = ChangeFrSet (FrSetMainMenu, 4, 1, MINUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_UP);
   }
   if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1;
     FrSetMainMenu = ChangeFrSet (FrSetMainMenu, 4, 1, PLUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_DOWN);
@@ -507,9 +457,9 @@ void ModeMainMenu(void) // режим основного МЕНЮ
   //  }
   if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     while (SetIndexLight(1)!=1);
-    Light(GetTimeLight(SetIndexLight(0)));
+    //Light(GetTimeLight(SetIndexLight(0)));
     //ClrKey (BTN_LEFT);
   }
   if ((CntInd++%10)==0)
@@ -525,33 +475,27 @@ void ModeMainMenu(void) // режим основного МЕНЮ
     // наименование прибора
     GetDeviceLabel( Str, NameDB.Ena_DB  );
     sprintf (StrN,"t5.txt=\"%s\"яяя",Str); // 
-    NEX_Transmit(StrN);//
+    NEX_Transmit((void*)StrN);//
     // refl
     sprintf(Str,"t1.txt=\"%s\"яяя",MsgMass[7][CurrLang]);
-    NEX_Transmit(Str);//
+    NEX_Transmit((void*)Str);//
     GetTesterName(Str ); // Tester
     sprintf (StrN,"t2.txt=\"%s\"яяя",Str); // 
-    NEX_Transmit(StrN);//
+    NEX_Transmit((void*)StrN);//
     sprintf(Str,"t3.txt=\"%s\"яяя",MsgMass[9][CurrLang]);
-    NEX_Transmit(Str);//
+    NEX_Transmit((void*)Str);//
     sprintf(Str,"t4.txt=\"%s\"яяя",MsgMass[10][CurrLang]);
-    LCD_LIGHT(ON);
-    NEX_Transmit(Str);//
+    //LCD_LIGHT(ON);
+    NEX_Transmit((void*)Str);//
     CreatDelay (3000000); // 168 мС - пока без ответа (подтверждения) 83nS*30000 надо приблизительно 2 мС
     // попробуем запросить код версии индикатора
-    RX_BufNEX[0] = 0;
-    ReadyNEX = 0;
+    StartRecievNEX (80);
     sprintf(Str,"get t6.txtяяя");
-    GetRstTMUart2(1); // сбросим таймер Uart2
-    g_WtRdyNEX = 0;
-    ClearRS2();
-    NEX_Transmit(Str);//
-    //NEX_Transmit(CmdBuf);//
+    NEX_Transmit((void*)Str);//
+    //NEX_Transmit((void*)CmdBuf);//
     while(!((g_WtRdyNEX)||(ReadyNEX==4)));
     // здесь просто можем повиснуть не дождавшись ответов от индикатора
     // это плохо при плохих индикаторах
-    //while(!(ReadyNEX==4));
-    LCD_LIGHT(OFF);
     // надо ждать получения ответа
     //CreatDelay (2000000); // 168 мС - пока без ответа (подтверждения) 83nS*30000 надо приблизительно 2 мС
     if(RX_BufNEX[0] == 0x70) // есть ответ! перепишем буффер
@@ -589,28 +533,28 @@ void ModeMainMenu(void) // режим основного МЕНЮ
     // раскрашивание поля выбора 
     // закрасим бэкграунды  и установим требуемый
     sprintf(Str,"t1.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str,"t2.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str,"t3.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str,"t4.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);//
+    NEX_Transmit((void*)Str);//
     sprintf(Str,"t%d.bco=GREENяяя",FrSetMainMenu); // зеленый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     if(TypeLCD)
     sprintf(Str,"qr0.pco=BLACKяяя"); // QR черный
     else
     sprintf(Str,"qr0.pco=BLUEяяя"); // QR синий
       
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     
     g_NeedScr=0;
   }
   if (OnlyBat)
   {
     // уровень и тип заряда
-    if (!(FIO2PIN & EXT_POW))
+    if (!(EXT_POW))
     {
       sprintf(Str,"t0.txt=\"%s\"яяя",MsgMass[11][CurrLang]);// внешнее питание
     }
@@ -618,13 +562,13 @@ void ModeMainMenu(void) // режим основного МЕНЮ
     {
       sprintf(Str,"t0.txt=\"%d%%\"яяя", ProcBatInd);
     }
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     OnlyBat=0;
   }
   // кнопка "ОК" для данного меню означает переход в другое окно, поэтому ее можно перенести сюда!
   if (PRESS(BTN_OK))
   {
-    Sound(10);
+    myBeep(10);
     switch (FrSetMainMenu)
     {
     case 1: // рефлектометр
@@ -674,30 +618,30 @@ void ModeMainMenu(void) // режим основного МЕНЮ
       // сделаем "тупую задержку" перед вклчением питания, так как на некоторых приборах
       // не успевал прориоваться индикатор, это было на 2529 с 3.2 дюйма
       // 
-      CreatDelay (400000); //
+      HAL_Delay (40); //
       SetupSource ( SetModeLS (Str, CURRENT, CurrLang)); // возвращает номер режима источника, и пишет строку для отображения на индикаторе
       
       break;
     case 3: // ПАМЯТЬ
-      PWM_LMOD_Init (OFF); // выключаем LMOD от PWM 0 - OFF, 1- 270Hz 2-2kHz  
+//123      PWM_LMOD_Init (OFF); // выключаем LMOD от PWM 0 - OFF, 1- 270Hz 2-2kHz  
       SetMode(ModeSelectMEM);
       ModeDevice = MODEOTHER;
-      SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
+//123      SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
       CmdInitPage(4);// посылка команды переключения окна на MemoryMenu
       
       break;
     case 4: // УСТАНОВКИ
       SetMode(ModeSetting);
-      PWM_LMOD_Init (OFF); // выключаем LMOD от PWM 0 - OFF, 1- 270Hz 2-2kHz  
+//123      PWM_LMOD_Init (OFF); // выключаем LMOD от PWM 0 - OFF, 1- 270Hz 2-2kHz  
       ModeDevice = MODESETUP;
-      SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
+//123      SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
       CmdInitPage(5);// посылка команды переключения окна на Setting
       break;
     }
     //ClrKey (BTN_OK);
   }
   // сделаем "тупую задержку"
-  CreatDelay (20000); //
+  HAL_Delay (20); //
   
   //ClrKey (BTN_MENU + BTN_LEFT + BTN_RIGHT);
 }
@@ -712,14 +656,14 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
   //DWORD KeyP = SetBtnStates( KEYS_REG, 1 );
   if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
     FrSetSetupOTDR = ChangeFrSet (FrSetSetupOTDR, 4, 0, MINUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_UP);
   }
   if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
     FrSetSetupOTDR = ChangeFrSet (FrSetSetupOTDR, 4, 0, PLUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_DOWN);
@@ -730,7 +674,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
     // кнопка ОК переключаем АВТО!
     if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
 //      if(g_AutoSave) g_AutoSave = 0;
 //      else g_AutoSave = 1;
 //      if(GetIndexVRM()>3) // время реальное или непрерываное не ставится авто сохранение
@@ -746,7 +690,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
     // ВЛЕВО <---
     if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_FirstScr = 1; // Need reDraw Screen
       if(GetIndexVRM()>3) // время реальное или непрерываное не ставится авто сохранение
       {
@@ -767,7 +711,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
     }
     if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_FirstScr = 1; // Need reDraw Screen
       // 22.11.2022 манипуляции с переключениями длин волн в зависимости от выбранного времени измерения
       if(GetIndexVRM()>3) // время реальное или непрерываное не ставится авто сохранение
@@ -789,7 +733,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
     }
     //    if (((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))||((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED)))
     //    {
-    //      Sound(10);
+    //      myBeep(10);
     //      g_FirstScr = 1; // Need reDraw Screen
     //      if ((CntLS) < GetSetNumLS(0))
     //      {
@@ -812,11 +756,11 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
   case 1: //длина линии
     if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
-      PosCursorMain (-4100); // сброс курсора в начало
+//123      PosCursorMain (-4100); // сброс курсора в начало
       IndexVerSize  = 0;// установка вертикального размера отображения рефлектограммы ( самый крупный)
-      GetSetHorizontScale (5); // сброс масштаба уст самый крупный
+//123      GetSetHorizontScale (5); // сброс масштаба уст самый крупный
       if (!GetSubModRefl ())// ручной
       { 
         if ((GetIndexLN()==0)&&(IndexSmall==0))
@@ -832,17 +776,17 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
         SettingRefl.SubModeRef = MANUAL;
         SetIndexLN(0);
         IndexSmall=0;
-        GetSetHorizontScale (-2); // масштаб для 0.5 км
+//123        GetSetHorizontScale (-2); // масштаб для 0.5 км
       }
       //ClrKey (BTN_RIGHT);
     }
     if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
-      PosCursorMain (-4100); // сброс курсора в начало
+//123      PosCursorMain (-4100); // сброс курсора в начало
       IndexVerSize  = 0;// установка вертикального размера отображения рефлектограммы ( самый крупный)
-      GetSetHorizontScale (5); // сброс масштаба уст самый крупный
+//123      GetSetHorizontScale (5); // сброс масштаба уст самый крупный
       if (!GetSubModRefl ())// ручной
       {
         if (GetIndexLN()>0)
@@ -855,7 +799,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
           if ((GetIndexLN()==0)&&(IndexSmall==1))
           {
             IndexSmall=0;
-            GetSetHorizontScale (-2); // масштаб для 0.5 км
+//123            GetSetHorizontScale (-2); // масштаб для 0.5 км
           }
           else
           {
@@ -876,7 +820,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
   case 2: //длительность импульса 
     if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       if (!GetSubModRefl ())// ручной
       {
@@ -890,7 +834,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
     }
     if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       if (!GetSubModRefl ())// ручной
       {
@@ -913,7 +857,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
   case 3: //время измерения или для автомата номер волокна
     if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
     // 22.11.2022 изменение индикации строк 4-5 надо привязать к режиму с автоматическим сохранением
     //if (GetSetModeLW(0))
@@ -935,7 +879,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
     }
     if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==INF_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
     // 22.11.2022 изменение индикации строк 4-5 надо привязать к режиму с автоматическим сохранением
     //if (GetSetModeLW(0))
@@ -948,7 +892,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
     }
     if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==INF_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
     // 22.11.2022 изменение индикации строк 4-5 надо привязать к режиму с автоматическим сохранением
     //if (GetSetModeLW(0))
@@ -961,7 +905,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
     }
     if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
     // 22.11.2022 изменение индикации строк 4-5 надо привязать к режиму с автоматическим сохранением
     //if (GetSetModeLW(0))
@@ -997,7 +941,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
       if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
       {
         g_NeedScr = 1; // Need reDraw Screen
-        Sound(10);
+        myBeep(10);
         for (int Ind =ARRAY_SIZE(PrefixFileNm)-2; Ind>=0; Ind--)
         {
           if (PrefixFileNm[Ind]<0x20) PrefixFileNm[Ind]=' ';
@@ -1017,7 +961,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
     {
       //            if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED)) // запомним изменение коэфф. преломления
       //      {
-      //        Sound(20);
+      //        myBeep(20);
       //        SetWAV_SC(GetIndexWAV(),GetPlaceLS(CURRENT));
       //        SSPInit_Any(MEM_FL1); // Инициализация SSP для записи FLASH 
       //        SaveUserConfig();
@@ -1027,7 +971,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
       
       if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
       {
-        Sound(10);
+        myBeep(10);
         g_NeedScr = 1; // Need reDraw Screen
         SetIndexWAV(GetIndexWAV()+0.0001);
         NeedReSaveIndex = 1;
@@ -1035,7 +979,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
       }
       if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
       {
-        Sound(10);
+        myBeep(10);
         g_NeedScr = 1; // Need reDraw Screen
         SetIndexWAV(GetIndexWAV()-0.0001);
         NeedReSaveIndex = 1;
@@ -1043,7 +987,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
       }
       if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==INF_PRESSED))
       {
-        //Sound(10);
+        //myBeep(10);
         g_NeedScr = 1; // Need reDraw Screen
         SetIndexWAV(GetIndexWAV()+0.0001);
         NeedReSaveIndex = 1;
@@ -1051,7 +995,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
       }
       if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==INF_PRESSED))
       {
-        //Sound(10);
+        //myBeep(10);
         g_NeedScr = 1; // Need reDraw Screen
         SetIndexWAV(GetIndexWAV()-0.0001);
         NeedReSaveIndex = 1;
@@ -1085,19 +1029,19 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
       
       break;
     }
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str,"t2.txt=\"%s\"яяя", MsgMass[19][CurrLang]); // длина линии 
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str,"t4.txt=\"%s\"яяя", MsgMass[22][CurrLang]); //зонд.Имп.
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     // 22.11.2022 изменение индикации строк 4-5 надо привязать к режиму с автоматическим сохранением
     //sprintf(Str,"t6.txt=\"%s\"яяя", (GetSetModeLW(0))?(MsgMass[61][CurrLang]):(MsgMass[24][CurrLang])); //"Время Изм."//"№ волокна"
     sprintf(Str,"t6.txt=\"%s\"яяя", (g_AutoSave)?(MsgMass[61][CurrLang]):(MsgMass[24][CurrLang])); //"Время Изм."//"№ волокна"
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     // 22.11.2022 изменение индикации строк 4-5 надо привязать к режиму с автоматическим сохранением
     //sprintf(Str,"t8.txt=\"%s\"яяя", (GetSetModeLW(0))? (PrefixFileNm):(MsgMass[27][CurrLang])); //"префикс Коэфф.прелом."
     sprintf(Str,"t8.txt=\"%s\"яяя", (g_AutoSave)? (PrefixFileNm):(MsgMass[27][CurrLang])); //"префикс Коэфф.прелом."
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     
     
     
@@ -1144,7 +1088,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
 //      sprintf(Str,"t1.txt=\"13,15,85\"яяя"); // test
 //    else
 //      sprintf(Str,"t1.txt=\"%d%s\"яяя",GetLengthWaveLS (GetPlaceLS(CURRENT)),MsgMass[18][CurrLang]); // nm
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     // вторая строка - диапазон
     if (!GetSubModRefl ()) // manual
     {
@@ -1158,7 +1102,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
       sprintf(Str,"t3.txt=\"%s\"яяя", MsgMass[21][CurrLang]);
       SetIndexLN (0); // установка индекса длины линии
     }
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     
     // третья сторка - длительность импульса
     if (!GetSubModRefl ()) sprintf(Str,"t5.txt=\"%d%s\"яяя", GetWidthPulse(GetIndexIM()),MsgMass[23][CurrLang]);//ns
@@ -1167,7 +1111,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
       sprintf(Str,"t5.txt=\"%s\"яяя", MsgMass[21][CurrLang]);
       SetIndexIM (0); // установка индекса длины импульса
     }
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     // четвертая строка в зависимости от положения длины волны
     // строка отображения времени измерения или номера волокна
     // 22.11.2022 изменение индикации строк 4-5 надо привязать к режиму с автоматическим сохранением
@@ -1184,40 +1128,43 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
       if (GetIndexVRM() == 4)
         sprintf(Str,"t7.txt=\"%s\"яяя", MsgMass[26][CurrLang]);//"разов."
     }
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     // пятая строка - индекс измерения или префикс при авто
     // строка отображения коэфф преломления или префикса имани файла
     //if (GetSetModeLW(0))
-    if (g_AutoSave)
-    {
-      sprintf(Str,"t9.txt=\"%03d/%03d\"яяя",GetNumTraceSaved(0),MAXMEMALL);// сколько занято
-    }
-    else
-    {
-      sprintf(Str,"t9.txt=\"%.4f\"яяя",GetIndexWAV ());
-      putString(82,54,Str,1,0);
-    }
-    NEX_Transmit(Str);// 
+    //123
+    // здесь вызываются функции для прорисовки строки в разных режимах
+    // надо разобраться , пока пишу ТЕСТ
+//    if (g_AutoSave)
+//    {
+//      sprintf(Str,"t9.txt=\"%03d/%03d\"яяя",GetNumTraceSaved(0),MAXMEMALL);// сколько занято
+//    }
+//    else
+//    {
+//      sprintf(Str,"t9.txt=\"%.4f\"яяя",GetIndexWAV ());
+//    }
+      sprintf(Str,"t9.txt=\"ТЕСТ\"яяя");// надо убрать
+    NEX_Transmit((void*)Str);// 
     // закрасим бэкграунды  и установим требуемый
     sprintf(Str,"t0.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str,"t2.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str,"t4.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str,"t6.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str,"t8.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);//
+    NEX_Transmit((void*)Str);//
     sprintf(Str,"t%d.bco=GREENяяя",FrSetSetupOTDR<<1); // зеленый ?
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     // покраска поля t1 в зависимости от режима
     if(g_AutoSave)
         sprintf(Str,"t1.bco=YELLOWяяя"); // оранжевый
     else
         sprintf(Str,"t1.bco=WHITEяяя"); // белый
 
-    NEX_Transmit(Str);//
+    NEX_Transmit((void*)Str);//
     
     //FIO1PIN &=~LEDSTART;//Off  LED
     g_NeedScr = 0;
@@ -1226,14 +1173,14 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
   if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
   {
     SetMode(ModeMainMenu);
-    Sound(10);
+    myBeep(10);
     ReSaveWAV_SC (); // пересохраняем если есть изменения
     ModeDevice = MODEMENU;
     CmdInitPage(1);// посылка команды переключения окна на MainMenu (возврат)
   }
   if (rawPressKeyS) // START Measure из режима установок рефлектометра
   {        
-    Sound(10);
+    myBeep(10);
     ReSaveWAV_SC (); // пересохраняем если есть изменения
     LSEL0(0);
     LSEL1(0);
@@ -1246,7 +1193,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
     ModeDevice = MODEMEASURE;
     //IndexVerSize  = 0;// установка вертикального размера отображения рефлектограммы ( самый крупный)
     SubModeMeasOTDR = SETPOWER;
-    SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
+//123    SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
     rawPressKeyS=0;
     CntLS=0;
     CreatDelay (30000); // 3.3 мС
@@ -1276,7 +1223,7 @@ void ModeErrorOTDR(void) // режим отображения "Излучение на входе" CHECK_OFF
   //CreatDelay(300000);
   if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
   {
-    __no_operation();
+    myBeep(1);
   }
   //ClrKey (BNS_MASK); // сброс нажатых клавиш
   if (g_FirstScr)
@@ -1284,13 +1231,13 @@ void ModeErrorOTDR(void) // режим отображения "Излучение на входе" CHECK_OFF
     // здесь заполняем данными поля нового индикатора
     // не требущие изменения при первичной инициализации
     sprintf(Str, "t0.txt=\"%s\"яяя", MsgMass[36][CurrLang]); // Внимание
-    NEX_Transmit(Str);    //
+    NEX_Transmit((void*)Str);    //
     sprintf(Str, "t1.txt=\"%s\"яяя", MsgMass[37][CurrLang]); // Излучение на входе [ДА]
-    NEX_Transmit(Str);    //
+    NEX_Transmit((void*)Str);    //
     sprintf(Str, "t2.txt=\"%s\"яяя", MsgMass[38][CurrLang]); // для продолжения
-    NEX_Transmit(Str);    //
+    NEX_Transmit((void*)Str);    //
     sprintf(Str, "t3.txt=\"%s\"яяя", MsgMass[39][CurrLang]); // Нажмите <S> 
-    NEX_Transmit(Str);    //
+    NEX_Transmit((void*)Str);    //
     
     g_FirstScr = 0;
     g_NeedScr = 1;
@@ -1300,7 +1247,7 @@ void ModeErrorOTDR(void) // режим отображения "Излучение на входе" CHECK_OFF
     // здесь заполняем данными поля нового индикатора
     // по результатам изменений вызваныйх обработчиком клавиатуры
     //sprintf(Str,"t3.bco=REDяяя"); // белый
-    //NEX_Transmit(Str);//
+    //NEX_Transmit((void*)Str);//
     
     // раскрашивание поля выбора 
     // закрасим бэкграунды  и установим требуемый
@@ -1311,7 +1258,7 @@ void ModeErrorOTDR(void) // режим отображения "Излучение на входе" CHECK_OFF
   
   if (rawPressKeyS)
   { 
-    Sound(10);
+    myBeep(10);
     //g_NeedScr = 1; // Need reDraw Screen
     SetMode(ModeSetupOTDR);
     GetSetModeLW(-1); // сброс счетчика длин волн источников, так как ошибка
@@ -1358,28 +1305,28 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     if(g_FirstScr) // рисуем новый индикатор
     {
       sprintf(Str,"t0.txt=\"%s\"яяя", MsgMass[28][CurrLang]); // Wait
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
       // остальное почистим
       sprintf(Str,"t1.txt=\"\"яяя"); // 
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
       sprintf(Str,"t2.txt=\"\"яяя"); // 
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
       sprintf(Str,"t3.txt=\"\"яяя"); // 
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
       sprintf(Str,"t4.txt=\"\"яяя"); // 
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
       sprintf(Str,"t5.txt=\"\"яяя"); // 
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
       sprintf(Str,"t6.txt=\"\"яяя"); // 
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
       sprintf(Str,"t7.txt=\"\"яяя"); //
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
       sprintf(Str,"t8.txt=\"\"яяя"); //
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
       sprintf(Str,"t9.txt=\"\"яяя"); //
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
       sprintf(Str,"t10.txt=\"\"яяя"); //
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
       g_FirstScr = 0;
       g_NeedScr = 1;
     }
@@ -1388,15 +1335,18 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     ShadowIndexIM = GetIndexIM();
     PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
     memset( RawData, 0, RAWSIZE * sizeof(DWORD) );
-    Sound (0);
-    disable_timer ( 0 );
-    FIO1PIN |=LEDSTART;//On  LED
+    myBeep (0);
+    //123    disable_timer ( 0 );
+    LED_START(1);//On  LED
     CntNumAvrg = 0; // обнуляем счетчик накоплений
     HV_LOW(ON); //ON LOW HIGH VOLT
     HV_SW(ON); // ON HIGH VOLT
     // запустим таймер 2 и посчитаем время
-    reset_timer(2);
-    enable_timer(2);
+    //123    reset_timer(2);
+    //123    enable_timer(2);
+    CurrTimeAccum = 0;
+    EnaTimerAccum = 1;
+    
     Averaging (200,0,0);//запуск прогревочного измерения
     break;
   case INPUTOTDR:
@@ -1405,9 +1355,9 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     if(g_NeedScr) //
     {
       sprintf(Str,"t1.txt=\"%s\"яяя",MsgMass[34][CurrLang]); // 
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
       sprintf(Str,"t6.txt=\"???\"яяя"); // 
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
       g_NeedScr = 0;  
     }
     PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
@@ -1423,16 +1373,15 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     //Mean = 200; // тест для проверки батарейки
     if (Mean > 2000)
     {
-      POWALT(OFF);
       POWDET(OFF);
       POWREF (OFF);
       SetMode(ModeErrorOTDR);
       ModeDevice = MODEERREFL;
       SubModeMeasOTDR = NOTMODE;
-      SSPInit_Any(MEM_FL1); // Востанавливаем Инициализацию SSP для управления внешней FLASH (порт 1 та что на плате отладочной)
-      enable_timer ( 0 );
-      Sound(20);
-      FIO1PIN &=~LEDSTART;//Off  LED
+      //123      SSPInit_Any(MEM_FL1); // Востанавливаем Инициализацию SSP для управления внешней FLASH (порт 1 та что на плате отладочной)
+      //123      enable_timer ( 0 );
+      myBeep(20);
+      LED_START(0);//Off  LED
       // посылка команды переключения окна на Сообщение об излучении на входе ErrPowerInput
       //CmdInitPage(19);
       NeedReturn = 19;
@@ -1450,10 +1399,10 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
   case CALKORLBEG:
     // Здесь функция измерения ORL 
     g_VolORL = MeasORL (1000, 0);
-    FIO1PIN |=LEDSTART;//On  LED - продолжаем измерение
+    LED_START(1);//On  LED - продолжаем измерение
     // печатаем что НЕТ излучения на входе
     sprintf(Str,"t6.txt=\"%s\"яяя",MsgMass[35][CurrLang]); // 
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     
     g_NeedScr =1;
     SubModeMeasOTDR = QUALITYBEGIN;
@@ -1467,11 +1416,11 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     if(g_NeedScr)
     {
       //sprintf(Str,"t6.txt=\"%s\"яяя",MsgMass[35][CurrLang]); // 
-      //NEX_Transmit(Str);// 
+      //NEX_Transmit((void*)Str);// 
       sprintf(Str,"t2.txt=\"%s\"яяя",MsgMass[32][CurrLang]); // 
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
       sprintf(Str,"t7.txt=\"%s\"яяя",MsgMass[33][CurrLang]); // 
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
       
       g_NeedScr = 0;
     }
@@ -1498,11 +1447,11 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     if(g_NeedScr)
     {
       sprintf(Str,"t7.txt=\"%s\"яяя",((InputOK)?("OK"):("???"))); // 
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
       sprintf(Str,"t3.txt=\"%s\"яяя",MsgMass[31][CurrLang]); // длина линии
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
       sprintf(Str,"t8.txt=\"???\"яяя"); //  состояние - неопределено
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
       
       g_NeedScr = 0;
     }
@@ -1581,15 +1530,15 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
       else
         sprintf(Str,"t8.txt=\"%d%s%s\"яяя",GetLengthLine(GetIndexLN()),MsgMass[20][CurrLang],((LengthOK)?(" "):("!")));//Длина линии: XXкм
       //sprintf(Str,"t6.txt=\"%s\"яяя",MsgMass[35][CurrLang]); // 
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
       sprintf(Str,"t4.txt=\"%s\"яяя",MsgMass[29][CurrLang]); // Длит.импульса: XXнс
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
       sprintf(Str,"t9.txt=\"%d%s\"яяя",GetWidthPulse(GetIndexIM()),MsgMass[23][CurrLang]); // Длит.импульса: XXнс
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
       sprintf(Str,"t5.txt=\"%s\"яяя",MsgMass[30][CurrLang]); //Идет измерение: XXс 
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
       sprintf(Str,"t10.txt=\"%d%s\"яяя",GetTimeAvrg(GetIndexVRM()),MsgMass[4][CurrLang]); //Идет измерение: XXс 
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
       
       g_NeedScr = 0;
     }
@@ -1611,28 +1560,34 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     //PINSEL1 &=~0x00300000; //set P0.26 us GIO
     //PINSEL1 |=0x00200000; // set P0.26 us AOUT
     //SetLvlDAC (0);
-    if (!(FIO2PIN & BTN_DOWN))
-    {
-      Averaging (1,CurrentSumDelay,0);// через 3 сек первый результат
-      for (int i = 0; i<RAWSIZE;++i)
-      {
-        sprintf(Str,"%u\n", RawData[i]);//c
-        UARTSend0 ((BYTE*)Str, strlen (Str));
-      }
-      sprintf(Str,"\r");//c
-      UARTSend0 ((BYTE*)Str, strlen (Str));
-      
-      memset( RawData, 0, RAWSIZE * sizeof(DWORD) ); // обнуляем массив накоплений
-      CntNumAvrg = 0; // обнуляем счетчик накоплений
-      
-    }
+    //123
+    // здесь какой-то тестовый вывод по "кнопке" не обработанных данных
+    // во внешний мир 1 накопления, зачем не помню
+    //    if (!(FIO2PIN & BTN_DOWN))
+    //    {
+    //      Averaging (1,CurrentSumDelay,0);// через 3 сек первый результат
+    //      for (int i = 0; i<RAWSIZE;++i)
+    //      {
+    //        sprintf(Str,"%u\n", RawData[i]);//c
+    //        UARTSend0 ((BYTE*)Str, strlen (Str));
+    //      }
+    //      sprintf(Str,"\r");//c
+    //      UARTSend0 ((BYTE*)Str, strlen (Str));
+    //      
+    //      memset( RawData, 0, RAWSIZE * sizeof(DWORD) ); // обнуляем массив накоплений
+    //      CntNumAvrg = 0; // обнуляем счетчик накоплений
+    //      
+    //    }
     // запустим таймер 2 и посчитаем время
-    reset_timer(2);
-    enable_timer(2);
+    //123    reset_timer(2);
+    //123    enable_timer(2);
+    CurrTimeAccum = 0;
+    EnaTimerAccum = 1;
+    
     // можно задать 3000 это как бы время накопления за 3 сек
     //    CmdInitPage(17);// посылка команды переключения окна на DrawOTDR
     //    sprintf(Str,"t0.txt=\"%s\"яяя",MsgMass[30][CurrLang]); //Идет измерение: XXс 
-    //    NEX_Transmit(Str);// 
+    //    NEX_Transmit((void*)Str);// 
     
     g_NeedScr = 1; // используем его для переключения в режим отображения накоплений
     // переключим окно для нового индиктора и сбросим признак
@@ -1653,34 +1608,38 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     //UARTSend0 ((BYTE*)Str, strlen (Str));
     
     // сюда попадаем после первого измерения (первые 3 сек)
-    if (NeedResetIM) // восстановим импульс и сохраним рефлектограмму
-    {
-      SetIndexIM(ShadowIndexIM);
-      SSPInit_Any(MEM_FL1); // Востанавливаем Инициализацию SSP для управления внешней FLASH (чтобы записать)
-      SpliceWRITE(250); 
-      LogData[12] = FlashReadSpliceData(12);
-      SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (переключаем обратно управление )
-      memset( RawData, 0, RAWSIZE * sizeof(DWORD) ); // обнуляем массив накоплений
-      CntNumAvrg = 0; // обнуляем счетчик накоплений
-      NeedResetIM = 0;
-    }
+    // если есть склейка, сохраняем рефлектограмму для склейки
+    //123    
+    //    if (NeedResetIM) // восстановим импульс и сохраним рефлектограмму
+    //    {
+    //      SetIndexIM(ShadowIndexIM);
+    //      SSPInit_Any(MEM_FL1); // Востанавливаем Инициализацию SSP для управления внешней FLASH (чтобы записать)
+    //      SpliceWRITE(250); 
+    //      LogData[12] = FlashReadSpliceData(12);
+    //      SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (переключаем обратно управление )
+    //      memset( RawData, 0, RAWSIZE * sizeof(DWORD) ); // обнуляем массив накоплений
+    //      CntNumAvrg = 0; // обнуляем счетчик накоплений
+    //      NeedResetIM = 0;
+    //    }
     if (GetIndexVRM()==4) // разовый ~1,5 cek ... режим Реал тайм
     {
       CntNumAvrg = 0; // обнуляем счетчик накоплений
       memset( RawData, 0, RAWSIZE * sizeof(DWORD) );
-      reset_timer(2); //04.02.2014
-      enable_timer(2);
+      //123      reset_timer(2); //04.02.2014
+      //123      enable_timer(2);
+      CurrTimeAccum = 0;
+      EnaTimerAccum = 1;
+      
     }
     Averaging (NumAvrg,CurrentSumDelay,1); //запуск текущего накопления
-    if ((GetCntNumAvrg() >= FinAvrg)||((CurrTime2/100)>GetTimeAvrg(GetIndexVRM()))) //закончили накопление рисуем рефлектограмму
+    if ((GetCntNumAvrg() >= FinAvrg)||((CurrTimeAccum/1000)>GetTimeAvrg(GetIndexVRM()))) //закончили накопление рисуем рефлектограмму
     {
       
-      RawData[RAWSIZE-1]= GetTimer(2);
-      disable_timer(2);
+      RawData[RAWSIZE-1]= CurrTimeAccum;// что-то хотим сохранить в данных рефлектограммы (время съема)
+      EnaTimerAccum = 0;
       
       HV_LOW(ON); //ON LOW HIGH VOLT
       HV_SW(OFF); // OFF HIGH VOLT
-      POWALT(OFF);
       POWDET(OFF);
       POWREF (OFF);
       // востановим пин управления лазерами
@@ -1695,22 +1654,22 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
       SubModeMeasOTDR = NOTMODE;
       GetPlaceLS(CURRENT);
       rawPressKeyS=0;
-      SSPInit_Any(MEM_FL1); // Востанавливаем Инициализацию SSP для управления внешней FLASH (порт 1 та что на плате отладочной)
-      enable_timer ( 0 );
-      Sound(30);
-      FIO1PIN &=~LEDSTART;//Off  LED
-      Light(GetTimeLight(SetIndexLight(0))); // включаем если была подсветка
+      //123      SSPInit_Any(MEM_FL1); // Востанавливаем Инициализацию SSP для управления внешней FLASH (порт 1 та что на плате отладочной)
+      //123      enable_timer ( 0 );
+      myBeep(30);
+      LED_START(0);//Off  LED
+      //Light(GetTimeLight(SetIndexLight(0))); // включаем если была подсветка
       //IndexVerSize  = 0;// установка вертикального размера отображения рефлектограммы ( самый крупный)
       //GetSetHorizontScale (5); // установка Вся картинка на экран
       // закончили полное накопление ... попробуем сшить (если установлены "жирные" импульсы)
       // Поработаем с данными уже отлогарифмированными после накоплений
       if(EnaCorrMZ)// если разрешено корректировка мертвых зон!
       {
-      // здесь можно попробовать улучшить мертвую зону по событию, обострить пик импульса
-      // только при (PointsPerPeriod==48), алгоритм следующий 
-      // условие сигнал менее 18000 но не более 700 ( т.е. не в шумах, может даже 17000)
-      // точки дальше 20-
-      // ищем пик, смотрим например 7 точек
+        // здесь можно попробовать улучшить мертвую зону по событию, обострить пик импульса
+        // только при (PointsPerPeriod==48), алгоритм следующий 
+        // условие сигнал менее 18000 но не более 700 ( т.е. не в шумах, может даже 17000)
+        // точки дальше 20-
+        // ищем пик, смотрим например 7 точек
         CntPointPick=0;
         if((GetIndexIM()==0)&&(PointsPerPeriod==48)) // только на мелком импульсе
         {
@@ -1747,18 +1706,18 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
             }
           }
           // тест вывод точек пиков
-//          if(CntPointPick)
-//          {
-//            char BufOut[32];
-//            for(int j=0;j<CntPointPick;j++)
-//            {
-//              sprintf(BufOut,"%d. %d\r",PointsPickIndx[j],PointsPick[j]);//c
-//              UARTSend0 ((BYTE*)BufOut, strlen (BufOut));
-//            }
-//          }
+          //          if(CntPointPick)
+          //          {
+          //            char BufOut[32];
+          //            for(int j=0;j<CntPointPick;j++)
+          //            {
+          //              sprintf(BufOut,"%d. %d\r",PointsPickIndx[j],PointsPick[j]);//c
+          //              UARTSend0 ((BYTE*)BufOut, strlen (BufOut));
+          //            }
+          //          }
         }
       }
-        
+      
       if (GetIndexIM()>4)
       {
         SpliceProg (PointsInImpulse(0));
@@ -1766,8 +1725,9 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
       TimeSaveOTDR = RTCGetTime(); // сохраняем время сбора
       SetNumAverag (FinAvrg); // Запись числа накоплений в память рефлектограмм
       SaveLogNoise(); // сохраняем уровень шумов(перед импульсом в дБ (NF)
-      TraceERASE(0); // стирание трассы (0)
-      TraceWRITE(0); // запись трассы (0)
+      //123      TraceERASE(0); // стирание трассы (0) в старом для сохранеия параметров измерения, что бы
+      //123      TraceWRITE(0); // запись трассы (0) при следующем включении востановить параметры по этой (нулевой)
+      // рефлектограмме, в новом надо по другому...
       IndexEvents=0; // указатель на событие (характеристика линии)
       if (SetGetMonEna(255)) PrintEventTbl(); // если установлен признак выдаем по RS таблицу событий
       // если установлен признак автоматического измерения, надо повторить измерение на новой длинне волны и сохранить текущее
@@ -1783,7 +1743,8 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
         memcpy( &FileNameOTDR[10], &Str, 9 ); // 
         memcpy( CommentsOTDR,FileNameOTDR, 20 );
         // сохраняем рефлектограмму в памяти 
-        if (SaveTrace())
+        //123 !!!!        if (SaveTrace())
+        if (1)
         {
           CntLS++;
           // проверяем не закончился ли цикл измерений трассу сохранили
@@ -1810,18 +1771,18 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
           case 7:
             SizeRepit=3;
             if (CntLS<2)
-            SettingRefl.SW_LW = 1; // установка следующего индекса рабочего лазера
+              SettingRefl.SW_LW = 1; // установка следующего индекса рабочего лазера
             else
-            SettingRefl.SW_LW = 2; // установка следующего индекса рабочего лазера
-              
+              SettingRefl.SW_LW = 2; // установка следующего индекса рабочего лазера
+            
             break;
-            default:
+          default:
             SizeRepit=0;
             break;
           }
           
           // для комбинационных измерений можно проверять по установленному признаку
-         // выбранной длины волны или комбинации
+          // выбранной длины волны или комбинации
           //if (++CntLS<GetSetNumLS(0)) // еще есть длина волны на которой можно измерить (старое)
           if (CntLS<SizeRepit) // 17.11.2022 (новое) еще есть длина волны на которой можно измерить
           {
@@ -1829,20 +1790,19 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
             //просто все разрешенные подряд
             //
             GetPlaceLS(CURRENT); // выбираем следующую длину волны из списка разрешенныз
-            Sound(10);
+            myBeep(10);
             LSEL0(0);
             LSEL1(0);
             SlowON();
             //POWALT(ON);
             //POWREF (ON);
             //POWDET(ON);
-            Light(0); // Выключаем подсветку
             SetMode(ModeStartOTDR);
             ModeDevice = MODEMEASURE;
             CmdInitPage(16);// посылка команды переключения окна на начало измерения Measuring
             //IndexVerSize  = 0;// установка вертикального размера отображения рефлектограммы ( самый крупный)
             SubModeMeasOTDR = SETPOWER;
-            SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
+            //123 SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
           }
           else // выход в режим установок рефлектометра по окончании цикла измерений
           {
@@ -1852,9 +1812,9 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
             SetMode(ModeSetupOTDR);  //  переход в режим установок рефлектометра (было)
             ModeDevice = MODESETREFL;
             SubModeMeasOTDR = NOTMODE;
-                  // переключатель вывода в зависимости от комбинации
+            // переключатель вывода в зависимости от комбинации
             SetPlaceNew(0); // без сброса установки авто сохранения
-
+            
             CmdInitPage(2);// посылка команды переключения окна на OTDR (Установки рефлектометра)
           } 
         }
@@ -1862,7 +1822,7 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
         {
           SetMode(ModeMemoryOTDR);
           ModeDevice = MODEMEMR;
-          Sound(10);
+          myBeep(10);
           ModeMemDraw = MEMFULL;
           // посылка команды переключения окна на Mem_OTDR_garaph (вызов)  
           CmdInitPage(13);
@@ -1873,7 +1833,7 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
       {
         sprintf(Str,"END\r");//c
         RemoutCtrl = 0;
-        UARTSend0 ((BYTE*)Str, strlen (Str));
+        UARTSendExt ((BYTE*)Str, strlen (Str));
         ClearRS();
       }
       
@@ -1883,10 +1843,9 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
   // прерывание по кнопке S возврат в настройку рефлектометра
   if (rawPressKeyS)
   { 
-    Sound(10);
+    myBeep(10);
     HV_LOW(ON); //ON LOW HIGH VOLT
     HV_SW(OFF); // OFF HIGH VOLT
-    POWALT(OFF);
     POWDET(OFF);
     POWREF (OFF);
     // востановим пин управления лазерами
@@ -1894,12 +1853,12 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     
     GetPlaceLS(CURRENT);
     rawPressKeyS=0;
-    SSPInit_Any(MEM_FL1); // Востанавливаем Инициализацию SSP для управления внешней FLASH (порт 1 та что на плате отладочной)
-    enable_timer ( 0 );
-    Sound(20);
-    FIO1PIN &=~LEDSTART;//Off  LED
+    //123 SSPInit_Any(MEM_FL1); // Востанавливаем Инициализацию SSP для управления внешней FLASH (порт 1 та что на плате отладочной)
+//123    enable_timer ( 0 );
+    myBeep(20);
+    LED_START(0);//Off  LED
     //SetVerticalSize (22000);// установка вертикального размера отображения рефлектограммы
-    Light(GetTimeLight(SetIndexLight(0))); // включаем если была подсветка
+//123    Light(GetTimeLight(SetIndexLight(0))); // включаем если была подсветка- not need
     if ((SubModeMeasOTDR==AVERAGING)&&(GetSetModeLW(0)!=1))
     {
       SetMode(ModeDrawOTDR);
@@ -1915,8 +1874,8 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
       SaveLogNoise(); // сохраняем уровень шумов(перед импульсом в дБ (NF)
       SetHeadFileRaw (GetNumAverag()); // пишем заголовок файла выдачи необработаных данных
       
-      TraceERASE(0); // стирание трассы (0)
-      TraceWRITE(0); // запись трассы (0)
+//123      TraceERASE(0); // стирание трассы (0)
+//123      TraceWRITE(0); // запись трассы (0)
       CmdInitPage(18);// посылка команды переключения окна на просмотра рефлектограммы DrawOTDRView
       
     }
@@ -1931,8 +1890,7 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     {
       sprintf(Str,"END\r");//c
       RemoutCtrl = 0;
-      UARTSend0 ((BYTE*)Str, strlen (Str));
-      ClearRS();
+      UARTSendExt ((BYTE*)Str, strlen (Str));
     }
   }
   // вызов нового окна, если необходимо (например при ошибке на входе)
@@ -1947,37 +1905,37 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
   //    // здесь заполняем данными поля нового индикатора
   //    // не требущие изменения при первичной инициализации
   //    sprintf(Str, "t0.txt=\"%s\"яяя", MsgMass[1][CurrLang]);
-  //    NEX_Transmit(Str);    // 
+  //    NEX_Transmit((void*)Str);    // 
   //
   //    sprintf(Str, "t1.txt=\"%s\"яяя", MsgMass[1][CurrLang]);
-  //    NEX_Transmit(Str);    // 
+  //    NEX_Transmit((void*)Str);    // 
   //
   //    sprintf(Str, "t2.txt=\"%s\"яяя", MsgMass[32][CurrLang]);
-  //    NEX_Transmit(Str);    // входной разъем:
+  //    NEX_Transmit((void*)Str);    // входной разъем:
   //
   //    sprintf(Str, "t3.txt=\"%s\"яяя", MsgMass[31][CurrLang]);
-  //    NEX_Transmit(Str);    // Range
+  //    NEX_Transmit((void*)Str);    // Range
   //
   //    sprintf(Str, "t4.txt=\"%s\"яяя", MsgMass[29][CurrLang]);
-  //    NEX_Transmit(Str);    // Pulse width
+  //    NEX_Transmit((void*)Str);    // Pulse width
   //
   //    sprintf(Str, "t5.txt=\"%s\"яяя", MsgMass[30][CurrLang]);
-  //    NEX_Transmit(Str);    // Идет измерение
+  //    NEX_Transmit((void*)Str);    // Идет измерение
   //
   //    sprintf(Str, "t6.txt=\" \"яяя");
-  //    NEX_Transmit(Str);    // Пустая строка
+  //    NEX_Transmit((void*)Str);    // Пустая строка
   //
   //    sprintf(Str, "t7.txt=\" \"яяя");
-  //    NEX_Transmit(Str);    // Пустая строка
+  //    NEX_Transmit((void*)Str);    // Пустая строка
   //
   //    sprintf(Str, "t8.txt=\" \"яяя");
-  //    NEX_Transmit(Str);    // Пустая строка
+  //    NEX_Transmit((void*)Str);    // Пустая строка
   //
   //    sprintf(Str, "t9.txt=\" \"яяя");
-  //    NEX_Transmit(Str);    // Пустая строка
+  //    NEX_Transmit((void*)Str);    // Пустая строка
   //
   //    sprintf(Str, "t10.txt=\" \"яяя");
-  //    NEX_Transmit(Str);    // Пустая строка
+  //    NEX_Transmit((void*)Str);    // Пустая строка
   //    g_FirstScr = 0;
   //    g_NeedScr = 1;
   //  }
@@ -1989,29 +1947,29 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
   //    // раскрашивание поля выбора 
   //    // закрасим бэкграунды  и установим требуемый
   //    sprintf(Str, "t1.bco=WHITEяяя"); // белый
-  //    NEX_Transmit(Str);//
+  //    NEX_Transmit((void*)Str);//
   //    sprintf(Str, "t1.bco=WHITEяяя"); // белый
-  //    NEX_Transmit(Str);// 
+  //    NEX_Transmit((void*)Str);// 
   //    sprintf(Str, "t2.bco=WHITEяяя"); // белый
-  //    NEX_Transmit(Str);// 
+  //    NEX_Transmit((void*)Str);// 
   //    sprintf(Str, "t3.bco=WHITEяяя"); // белый
-  //    NEX_Transmit(Str);// 
+  //    NEX_Transmit((void*)Str);// 
   //    sprintf(Str, "t4.bco=WHITEяяя"); // белый
-  //    NEX_Transmit(Str);//
+  //    NEX_Transmit((void*)Str);//
   //    sprintf(Str, "t5.bco=WHITEяяя"); // белый
-  //    NEX_Transmit(Str);//
+  //    NEX_Transmit((void*)Str);//
   //    sprintf(Str, "t6.bco=WHITEяяя"); // белый
-  //    NEX_Transmit(Str);//
+  //    NEX_Transmit((void*)Str);//
   //    sprintf(Str, "t7.bco=WHITEяяя"); // белый
-  //    NEX_Transmit(Str);//
+  //    NEX_Transmit((void*)Str);//
   //    sprintf(Str, "t8.bco=WHITEяяя"); // белый
-  //    NEX_Transmit(Str);//
+  //    NEX_Transmit((void*)Str);//
   //    sprintf(Str, "t9.bco=WHITEяяя"); // белый
-  //    NEX_Transmit(Str);//
+  //    NEX_Transmit((void*)Str);//
   //    sprintf(Str, "t10.bco=WHITEяяя"); // белый
-  //    NEX_Transmit(Str);//
+  //    NEX_Transmit((void*)Str);//
   //    sprintf(Str, "t%d.bco=GREENяяя", SubModeMeasOTDR); // зеленый - ПОКА так! надо проверить
-  //    NEX_Transmit(Str);// 
+  //    NEX_Transmit((void*)Str);// 
   //                                       // код подсветки требуемой строки если есть есть маркер строки
   //    g_NeedScr = 0;
   //  }
@@ -2030,7 +1988,8 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
   float fCD; // переменная для оценки дБ
   static float LvlLSA; // уровень погонного затухания
   BYTE NeedCalkLSA = 0;
-  unsigned CursorMain = PosCursorMain (0);
+//123  unsigned CursorMain = PosCursorMain (0);
+  unsigned CursorMain = (0);
   float TmpACI;
 
   //float PosLine;// = ((ValueDS*LIGHTSPEED*1e-14)/GetIndexWAV())*CursorMain;
@@ -2042,7 +2001,7 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
   case VIEWER: // обычный просмотр
     if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==UP_SHORT_PRESSED)) // установка снятие курсора замечание 3 (UP_)
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       //      switch (NumCursors) // откат по однократному нажатию
       //      {
@@ -2058,14 +2017,14 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
       // у нас как бы всегда 2 курсора, но при ОК совмещаем курсоры....
       NumCursors = 2;
       NeedCalkLSA = 1;
-      SetPosCursorSlave (CursorMain);
+//123      SetPosCursorSlave (CursorMain);
       
       //TypeCentral = BYCUR;
       //ClrKey(BTN_OK);
     }
     if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==LONG_PRESSED)) // переход в режим зума
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       ViewMode = SETSCALE;
       //      if (NumCursors != 2)
@@ -2089,9 +2048,9 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     // перемещение курсора в право
     if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED)) 
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
-      PosCursorMain (GetSetHorizontScale (0));
+//123      PosCursorMain (GetSetHorizontScale (0));
       NeedCalkLSA = 1;
     }
     // отпустили долго нажатую кнопку
@@ -2102,16 +2061,16 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     }
     if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==INF_PRESSED))
     {
-      PosCursorMain (GetSetHorizontScale(0)*5);
+//123      PosCursorMain (GetSetHorizontScale(0)*5);
       NeedCalkLSA = 1;
       g_NeedScr = 1; // перерисовки экрана ! Аккуратно! надо проверить потому что нет звука
     } 
     // перемещение курсора влево
     if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
-      PosCursorMain (-GetSetHorizontScale(0));
+//123      PosCursorMain (-GetSetHorizontScale(0));
       NeedCalkLSA = 1;
     }
     // отпустили долго нажатую кнопку
@@ -2122,13 +2081,13 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     }
     if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==INF_PRESSED))
     {
-      PosCursorMain (-GetSetHorizontScale(0)*5);
+//123      PosCursorMain (-GetSetHorizontScale(0)*5);
       NeedCalkLSA = 1;
       g_NeedScr = 1; // перерисовки экрана ! Аккуратно! надо проверить 
     }
     if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       TypeCentral = UP10PICS;
     }
@@ -2139,7 +2098,7 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     }
     if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       TypeCentral = DOWN10PICS;
     }
@@ -2175,17 +2134,17 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     // изменение горизонтального масштаба
     if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))//&&(getStateButtons(BTN_DOWN)==INF_PRESSED)
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
-      GetSetHorizontScale (-1);
+//123      GetSetHorizontScale (-1);
       //ClrKey (BTN_RIGHT);
       KeyP &=~BTN_RIGHT;
     }
     if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))//&&(getStateButtons(BTN_DOWN)==INF_PRESSED)
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
-      GetSetHorizontScale (1);
+ //123     GetSetHorizontScale (1);
       //ClrKey (BTN_LEFT);
       KeyP &=~BTN_LEFT;
       
@@ -2193,7 +2152,7 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     // переключение вертикального масштаба
     if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       if (IndexVerSize < PNTVERTICALSIZE-1)IndexVerSize++;
       else IndexVerSize = PNTVERTICALSIZE-1;
@@ -2202,7 +2161,7 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     }
     if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       if (IndexVerSize > 0)IndexVerSize--;
       else IndexVerSize = 0;
@@ -2213,9 +2172,9 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     
     if (((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==LONG_PRESSED))||((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==LONG_PRESSED))) // возврат в полную катинку
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
-      GetSetHorizontScale (5);
+//123      GetSetHorizontScale (5);
       IndexVerSize = 0;
       TypeCentral = MEDIUM;
       ViewMode = VIEWER;
@@ -2223,7 +2182,7 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     }
     if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==UP_SHORT_PRESSED)) // возврат в режим просмотра
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       //TypeCentral = MEDIUM;
       ViewMode = VIEWER;
@@ -2232,7 +2191,8 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     
   } // от переключателя режимов просмотра
   // устнавливаем параметры отображения
-  GraphParams params = {GetVerticalSize(IndexVerSize),CursorMain,GetSetHorizontScale(0),NumCursors, TypeCentral};//PosCursorMain (0)
+//123  GraphParams params = {GetVerticalSize(IndexVerSize),CursorMain,GetSetHorizontScale(0),NumCursors, TypeCentral};//PosCursorMain (0)
+  //GraphParams params = {22000,CursorMain,1<<3,NumCursors, TypeCentral};//PosCursorMain (0)
   //UserParams = {GetVerticalSize(IndexVerSize),CursorMain,GetSetHorizontScale(0),NumCursors, TypeCentral};//PosCursorMain (0)
   
   Rect rct={0,0,128,56};
@@ -2245,11 +2205,11 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
   {
     
     //sprintf( Str,"xstr 0,208,27,16,3,RED,WHITE,0,1,1,\"A:\"яяя"); // 0
-    //NEX_Transmit(Str);// 
+    //NEX_Transmit((void*)Str);// 
     //sprintf( Str,"xstr 0,224,27,16,3,BLUE,WHITE,0,1,1,\"B:\"яяя"); // 0
-    //NEX_Transmit(Str);// 
+    //NEX_Transmit((void*)Str);// 
     sprintf(Str,"t4.txt=\"%s\"яяя", MsgMass[118][CurrLang]);// Slope Наклон
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     
     g_NeedScr = 1; // для вызова заполнения значений
     g_FirstScr = 0;
@@ -2263,8 +2223,10 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     {
       // расчет погонного затухания, двух точечным методом
       NeedCalkLSA = 0;
-      unsigned ptA = PosCursorMain (0);
-      unsigned ptB = PosCursorSlave (0);
+//123!!!      unsigned ptA = PosCursorMain (0);
+//123!!!      unsigned ptB = PosCursorSlave (0);
+      unsigned ptA = 0;
+      unsigned ptB = 128;
       if(ptA!=ptB)
       {
       TmpACI = (GetPosLine(ptA)-GetPosLine(ptB)); // расстояние между точками
@@ -2280,9 +2242,11 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
   {
     
     // устнавливаем параметры отображения
-    CursorMain = PosCursorMain (0); // переустановим курсор после изменений
+//123!!!    CursorMain = PosCursorMain (0); // переустановим курсор после изменений
+    CursorMain =  (0); // переустановим курсор после изменений
     // расчет параметров графика, и курсоры, надо ставить выше расчетов значений!?
-    GraphParams paramsN = {GetVerticalSize(IndexVerSize),CursorMain,GetSetHorizontScale(0),NumCursors, TypeCentral};//PosCursorMain (0)
+//123!!!    GraphParams paramsN = {GetVerticalSize(IndexVerSize),CursorMain,GetSetHorizontScale(0),NumCursors, TypeCentral};//PosCursorMain (0)
+    GraphParams paramsN = {22000,CursorMain,1<<3,NumCursors, TypeCentral};//PosCursorMain (0)
     // прорисовка(заполнение) данных для нового индикатора после обработки кнопок
     // здесь надо переопределить установки для разных типоразмеров индикаторов 400*240(3.2") или 480*320(3.5")
     if(TypeLCD)
@@ -2324,7 +2288,7 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     }
     else
       sprintf(Str,"t0.txt=\"A:%.1f%s\"яяя", GetPosLine(CursorMain)*1000.0 ,MsgMass[78][CurrLang]);//м - метры
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     // Slave Cursor  
     if (GetIndexLN()) // не 2 км ( значит в км)
     {
@@ -2335,7 +2299,7 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     }
     else
       sprintf(Str,"t1.txt=\"B:%.1f%s\"яяя", GetPosLine(PosCursorSlave (0))*1000.0 ,MsgMass[78][CurrLang]);//м - метры
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     
     if (GetIndexLN()) // не 2 км ( значит в км)
     {
@@ -2346,7 +2310,7 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     }
     else
       sprintf(Str,"t2.txt=\"A-B:%.1f%s\"яяя",fabs((GetPosLine(CursorMain)-GetPosLine(PosCursorSlave (0)))*1000.0) ,MsgMass[78][CurrLang]);//м - метры
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     // разница дБ между курсорами
     if ((int)(PosCursorSlave(0) - PosCursorMain(0))>0)
     {
@@ -2365,7 +2329,7 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
       else
         sprintf(Str,"t3.txt=\"L:%.2f%s\"яяя",fCD,MsgMass[47][CurrLang]);//дБ
     }
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     // расчет и индикация погонного затухания
 //    if(LvlLSA<0.0)
 //      sprintf(Str,"t5.txt=\"<0 %s/%s\"яяя",MsgMass[47][CurrLang],MsgMass[20][CurrLang]);//дБ/км
@@ -2377,19 +2341,19 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     else 
       sprintf(Str,"t5.txt=\">< %s/%s\"яяя",MsgMass[47][CurrLang],MsgMass[20][CurrLang]);//дБ/км
     
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     
     // курсоры, попробуем прорисовть бирюзовым если они вместе
     
     if(CurrBlue==CurrRed)
     {
       sprintf( Str,"line %d,0,%d,%d,63519яяя",CurrRed,CurrRed,(int)(rct.bottom*CursorScale)-1); // 0
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
     }
     else
     {
       sprintf( Str,"line %d,0,%d,%d,REDяяя",CurrRed,CurrRed,(int)(rct.bottom*CursorScale)-1); // 0
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
       CreatDelay (20000);
       if(CurrBlue<rct.right)
       {
@@ -2412,7 +2376,7 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
             sprintf( Str,"xstr 1,192,16,24,2,BLUE,BLACK,0,1,3,\"<\"яяя"); // 03_2(2-24) (№ шрифта-Размер) 0
         }
       }
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
       
     }
     // рисуем признак активного курсора (пока это 1 или 2)
@@ -2420,7 +2384,7 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     //        sprintf( Str,"xstr 387,0,12,16,3,RED,BLACK,0,1,1,\"A\"яяя"); // 0
     //    else 
     //        sprintf( Str,"xstr 387,0,12,16,3,BLUE,BLACK,0,1,1,\"B\"яяя"); // 0
-    //    NEX_Transmit(Str);
+    //    NEX_Transmit((void*)Str);
     // индикация масштабов
     sprintf(Stra,"Y-%.1f%s/div",(float)GetVerticalSize(IndexVerSize)/7000.0,MsgMass[47][1] );//дБ
     
@@ -2428,7 +2392,7 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
       sprintf( Str,"xstr 360,0,120,24,3,GREEN,BLACK,0,1,3,\"%s\"яяя",Stra); // 3_5(3-24) (№ шрифта-Размер) 0
     else
       sprintf( Str,"xstr 260,0,140,24,2,GREEN,BLACK,0,1,3,\"%s\"яяя",Stra); // 3_2(2-24) (№ шрифта-Размер) 0
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     CreatDelay (20000);
     
     sprintf(Stra,"X-1:%d",GetSetHorizontScale(0));// признак управления горизонтальным зумом
@@ -2436,7 +2400,7 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
       sprintf( Str,"xstr 360,24,120,24,3,GREEN,BLACK,0,1,3,\"%s\"яяя",Stra); // 3_5(24)  0
     else
       sprintf( Str,"xstr 260,16,140,24,2,GREEN,BLACK,0,1,3,\"%s\"яяя",Stra); // 3_2(24)  0
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     
     // если ЗУМ, перенесем сюда из кнопок
     if(ViewMode == SETSCALE)
@@ -2447,7 +2411,7 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
         sprintf( Str,"xstr 240,0,100,40,3,2047,BLACK,0,1,3,\"%s\"яяя",Stra); //3_5(40) 0 последнее поле вид Бэкграунда, 0- обрезка, 1- цельный , 2 -картинка, 3 -без Бэкграунда
       else
         sprintf( Str,"xstr 160,0,100,24,2,2047,BLACK,0,1,3,\"%s\"яяя",Stra); //3_2(24) 0 последнее поле вид Бэкграунда, 0- обрезка, 1- цельный , 2 -картинка, 3 -без Бэкграунда
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
     }
     
     g_NeedScr = 0; 
@@ -2455,7 +2419,7 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
   
   if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     switch (ReturnModeViewRefl)
     {
     case VIEWMEM:
@@ -2486,10 +2450,10 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
   //ClrKey (BNS_MASK);
   if (rawPressKeyS)// переход в редактор комментариев сохранения
   { 
-    Sound(10);
+    myBeep(10);
     SetMode(ModeKeyBoardOTDR);
     ModeDevice = MODEOTHER;
-    Sound(10);
+    myBeep(10);
     CheckCommOTDR ();// проверка и корректировка строки комментариев OTDR
 
 //    // подготовка строки комментария для редакции
@@ -2553,7 +2517,7 @@ void ModeEventsOTDR(void) // режим отображения событий рефлектограммы CHECK_OFF
   {
     if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==UP_SHORT_PRESSED)) // переход в режим просмотра с переключением зума
     {
-      Sound(10);
+      myBeep(10);
       GetSetHorizontScale (-6); // обнуляем масштаб
       GetSetHorizontScale (0); // устанавливаем масштаб = 4
       //ClrKey (BTN_LEFT);
@@ -2581,7 +2545,7 @@ void ModeEventsOTDR(void) // режим отображения событий рефлектограммы CHECK_OFF
   // перемещение курсора в право
   if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED)) 
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
     if (IndexEvents<NumCalkEvents)IndexEvents++;
     else 
@@ -2593,7 +2557,7 @@ void ModeEventsOTDR(void) // режим отображения событий рефлектограммы CHECK_OFF
   // перемещение курсора влево
   if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
     if (IndexEvents>0)IndexEvents--;
     else IndexEvents=NumCalkEvents; 
@@ -2608,29 +2572,29 @@ void ModeEventsOTDR(void) // режим отображения событий рефлектограммы CHECK_OFF
     // здесь заполняем данными поля нового индикатора
     // не требущие изменения при первичной инициализации
     sprintf(Str, "t0.txt=\"< %s >\"яяя", MsgMass[83][CurrLang]); // < событиe >
-    NEX_Transmit(Str);    //
+    NEX_Transmit((void*)Str);    //
     // далее в зависимости от указателя
     if(IndexEvents) // отображаем событие
     {
     sprintf(Str, "t1.txt=\"%s\"яяя", MsgMass[84][CurrLang]); //Type Event
-    NEX_Transmit(Str);    // 
+    NEX_Transmit((void*)Str);    // 
     sprintf(Str, "t2.txt=\"%s\"яяя", MsgMass[85][CurrLang]); // положение
-    NEX_Transmit(Str);    //
+    NEX_Transmit((void*)Str);    //
     sprintf(Str, "t3.txt=\"%s\"яяя", MsgMass[86][CurrLang]); //Затухание
-    NEX_Transmit(Str);    //
+    NEX_Transmit((void*)Str);    //
     sprintf(Str, "t8.txt=\"%s\"яяя", MsgMass[87][CurrLang]); // Отражение
-    NEX_Transmit(Str);    //
+    NEX_Transmit((void*)Str);    //
     }
     else // заголовок таблицы событий (результат линии)
     {
     sprintf(Str, "t1.txt=\"%s\"яяя", MsgMass[31][CurrLang]); //длинна линии
-    NEX_Transmit(Str);    // 
+    NEX_Transmit((void*)Str);    // 
     sprintf(Str, "t2.txt=\"%s\"яяя", MsgMass[93][CurrLang]); // полные потери
-    NEX_Transmit(Str);    //
+    NEX_Transmit((void*)Str);    //
     sprintf(Str, "t3.txt=\"ORL\"яяя" ); //ORL, если измерялось! 
-    NEX_Transmit(Str);    //
+    NEX_Transmit((void*)Str);    //
     sprintf(Str, "t8.txt=\" \"яяя" ); //Empty str
-    NEX_Transmit(Str);    //
+    NEX_Transmit((void*)Str);    //
       
     }
        
@@ -2646,12 +2610,12 @@ void ModeEventsOTDR(void) // режим отображения событий рефлектограммы CHECK_OFF
     // по результатам изменений вызваныйх обработчиком клавиатуры
     // счетчик указатель событий
     sprintf(Str, "t7.txt=\"%d/%d \"яяя", IndexEvents,NumCalkEvents); //Таблица событий
-    NEX_Transmit(Str);    //
+    NEX_Transmit((void*)Str);    //
     // далее в зависимости от указателя
     type_pic = 0;
           sprintf(Str,"p0.pic=%1dяяя",type_pic);//затираем картинку
       //sprintf(Str,"pic 330,70,%1dяяя",type_pic);//тип картинки
-      NEX_Transmit(Str);    // 
+      NEX_Transmit((void*)Str);    // 
       CreatDelay(5000);
 
     if(IndexEvents) // отображаем событие
@@ -2720,14 +2684,14 @@ void ModeEventsOTDR(void) // режим отображения событий рефлектограммы CHECK_OFF
     }
     // сначала текст потом картинку
       sprintf(Str,"t4.txt=\"%s\"яяя",s_orl);//км
-      NEX_Transmit(Str);    // 
+      NEX_Transmit((void*)Str);    // 
       if(type_pic)
       {
       CreatDelay(50000);
       // в Модуль картинки
       sprintf(Str,"p0.pic=%1dяяя",type_pic);//тип картинки
       //sprintf(Str,"pic 330,70,%1dяяя",type_pic);//тип картинки
-      NEX_Transmit(Str);    // 
+      NEX_Transmit((void*)Str);    // 
       CreatDelay(50000);
       // чуток надо потупить!
       }
@@ -2736,10 +2700,10 @@ void ModeEventsOTDR(void) // режим отображения событий рефлектограммы CHECK_OFF
         sprintf(Str,"t5.txt=\"%.3f%s\"яяя",fabs(GetPosLine(EvenTrace[IndexEvents-1].EPT)) ,MsgMass[20][CurrLang]);//км
       else
         sprintf(Str,"t5.txt=\"%.1f%s\"яяя",fabs((GetPosLine(EvenTrace[IndexEvents-1].EPT))*1000.0) ,MsgMass[78][CurrLang]);//м - метры
-      NEX_Transmit(Str);    // 
+      NEX_Transmit((void*)Str);    // 
       // затухание
       sprintf(Str, "t6.txt=\"%.2f%s\"яяя",(EvenTrace[IndexEvents-1].EL)/1000.0,MsgMass[47][CurrLang]); // дб
-      NEX_Transmit(Str);    //
+      NEX_Transmit((void*)Str);    //
       // отражение
       // 16/04/2015 прочерки при неотражающем событии
       if (EvenTrace[IndexEvents-1].ER !=0)
@@ -2750,29 +2714,29 @@ void ModeEventsOTDR(void) // режим отображения событий рефлектограммы CHECK_OFF
       {
         sprintf(Str, "t9.txt=\"------\"яяя"); // дб
       }
-      NEX_Transmit(Str);    //
+      NEX_Transmit((void*)Str);    //
       
     }
     else // заголовок таблицы событий (результат линии)
     {
       // зачистим область вывода картинки
      // sprintf(Str,"pic 330,70,0яяя");//пустая картинка
-     //NEX_Transmit(Str);    // 
+     //NEX_Transmit((void*)Str);    // 
       // чуток надо потупить!
      // CreatDelay(1000);
     if (GetIndexLN()) // не 2 км ( значит в км)
       sprintf(Str,"t4.txt=\"%.3f%s\"яяя",fabs(GetPosLine(EndEvenBlk.ELMP[1])) ,MsgMass[20][CurrLang]);//км
     else
       sprintf(Str,"t4.txt=\"%.1f%s\"яяя",fabs((GetPosLine(EndEvenBlk.ELMP[1]))*1000.0) ,MsgMass[78][CurrLang]);//м - метры
-    NEX_Transmit(Str);    // 
+    NEX_Transmit((void*)Str);    // 
     sprintf(Str, "t5.txt=\"%.2f%s\"яяя", (LogData[EndEvenBlk.ELMP[1]]-LogData[EndEvenBlk.ELMP[0]])/1000.0,MsgMass[47][CurrLang]); // дб
-    NEX_Transmit(Str);    //
+    NEX_Transmit((void*)Str);    //
     if(g_VolORL!=0)sprintf(s_orl,"%.1f",g_VolORL);
     else sprintf(s_orl,"???");
       sprintf(Str,"t6.txt=\"%s%s\"яяя",s_orl,MsgMass[47][CurrLang]);////ORL, если измерялось!
-    NEX_Transmit(Str);    // 
+    NEX_Transmit((void*)Str);    // 
     sprintf(Str, "t9.txt=\" \"яяя" ); //Empty str
-    NEX_Transmit(Str);    //
+    NEX_Transmit((void*)Str);    //
     }
     
                                            // код подсветки требуемой строки если есть есть маркер строки
@@ -2787,7 +2751,7 @@ void ModeEventsOTDR(void) // режим отображения событий рефлектограммы CHECK_OFF
       ReturnModeViewRefl = VIEWMEM;//SETPARAM -  чтобы вернуться в предпросмотр
       else
       ReturnModeViewRefl = SETPARAM;//-  чтобы вернуться в предпросмотр
-    Sound(10);
+    myBeep(10);
     // посылка команды переключения окна на DrawOTDRview (возврат)  
       CmdInitPage(18);
   }
@@ -2819,7 +2783,7 @@ void ModeKeyBoardOTDR(void) // режим отображения клавиатуры редактора комментари
     memcpy(StrI,CommentsOTDR,IndexCommOTDR+1); 
     StrI[IndexCommOTDR+1]=0;// No more 20 byte size
     sprintf(Str, "t1.txt=\"%s\"яяя",StrI); 
-    NEX_Transmit(Str);    // 1 строка комментарии
+    NEX_Transmit((void*)Str);    // 1 строка комментарии
     g_GetStr=1; // взведем признак  необходимости прочитать строчку! из индикатора.
     g_FirstScr = 0;
     g_NeedScr = 1;
@@ -2833,7 +2797,7 @@ void ModeKeyBoardOTDR(void) // режим отображения клавиатуры редактора комментари
           TimeSaveOTDR.RTC_Min,
           TimeSaveOTDR.RTC_Sec/10 );
     sprintf(StrI, "t0.txt=\"%s\"яяя", Str);
-    NEX_Transmit(StrI);    // Date/Time записи
+    NEX_Transmit((void*)StrI);    // Date/Time записи
     g_NeedScr=0;
   }
     if(g_GetStr==2) // УРА! что то приняли назад, можно переписать и сбросить признак
@@ -2856,11 +2820,11 @@ void ModeKeyBoardOTDR(void) // режим отображения клавиатуры редактора комментари
   if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
     // обработка кнопки Ок
   {
-    Sound(7);
+    myBeep(7);
       sprintf(Str, "click brok,1яяя"); // тест кнопка ок на клавиатуре
-    NEX_Transmit(Str);    //
+    NEX_Transmit((void*)Str);    //
       sprintf(Str, "click bok,1яяя"); // тест кнопка ок на клавиатуре
-    NEX_Transmit(Str);    //
+    NEX_Transmit((void*)Str);    //
   }
   // выход без сохранения
   if (((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))||(NeedReturn))
@@ -2868,7 +2832,7 @@ void ModeKeyBoardOTDR(void) // режим отображения клавиатуры редактора комментари
     SetMode(ModeDrawOTDR);
     ReturnModeViewRefl = SETPARAM;//VIEWMEM -  чтобы вернуться в в установки
     ModeDevice = MODEREFL;
-    Sound(10);
+    myBeep(10);
     // посылка команды переключения окна на DrawOTDRview (возврат)  
       CmdInitPage(18);
       NeedReturn = 0;
@@ -2893,7 +2857,7 @@ void ModeMemoryOTDR(void) // режим отображения сохраненных рефлектограмм и работ
   static BYTE DeleteTrace = 0; //признак удаления выбранной трассы
   static BYTE MsgDel = 0; //сообщения при удалении выбранной трассы
   BYTE NeedCallView = 0; //признак необходимости открыть окно просмотра рефлектограммы
-  BYTE NeedReStartMeasure = 0; //признак необходимости снова запустить измерение из окна предросмотра рефлектограмм
+  //BYTE NeedReStartMeasure = 0; //признак необходимости снова запустить измерение из окна предросмотра рефлектограмм
   // обработка клавиатуры  с изменениями
     if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED)&&!DeleteTrace)
     // обработка кнопки Ок (подтверждение перехода в окно просмотра рефлекторгаммы
@@ -2909,7 +2873,7 @@ void ModeMemoryOTDR(void) // режим отображения сохраненных рефлектограмм и работ
       ReturnModeViewRefl = SETPARAM;//-  чтобы вернуться в предпросмотр
         
       ModeDevice = MODEREFL;
-      Sound(10);
+      myBeep(10);
       NeedCallView = 1;
     }
   if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED)&&DeleteTrace)
@@ -2925,14 +2889,14 @@ void ModeMemoryOTDR(void) // режим отображения сохраненных рефлектограмм и работ
       MsgDel = 2;
       g_NeedScr = 1;
       DeleteTrace = 0;
-      Sound(20);
+      myBeep(20);
   }
   
   if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
   {
     if ( ModeMemDraw == VIEWSAVED) // можно удалять если выбрана рефлектограмма
     {
-      Sound(10);
+      myBeep(10);
       if ((Trace != 0)&&(GetNumTraceSaved(0)>0))
       {
         if (DeleteTrace == 0)
@@ -2948,7 +2912,7 @@ void ModeMemoryOTDR(void) // режим отображения сохраненных рефлектограмм и работ
   if ((PRESS(BTN_UP))&&((getStateButtons(BTN_UP)==SHORT_PRESSED)||(getStateButtons(BTN_UP)==INF_PRESSED)))
   {
     
-    Sound(5);
+    myBeep(5);
     DeleteTrace = 0;
     if(g_mem_param) g_mem_param = 0; // переключаем что рисуем про измерения
     else g_mem_param = 1;
@@ -2961,7 +2925,7 @@ void ModeMemoryOTDR(void) // режим отображения сохраненных рефлектограмм и работ
   if ((PRESS(BTN_LEFT))&&((getStateButtons(BTN_LEFT)==SHORT_PRESSED)||(getStateButtons(BTN_LEFT)==INF_PRESSED)))
   {
     
-    Sound(5);
+    myBeep(5);
     DeleteTrace = 0;
     if (Trace > 0) Trace--;
     else Trace = GetNumTraceSaved(0);
@@ -2971,7 +2935,7 @@ void ModeMemoryOTDR(void) // режим отображения сохраненных рефлектограмм и работ
   }
   if ((PRESS(BTN_RIGHT))&&((getStateButtons(BTN_RIGHT)==SHORT_PRESSED)||(getStateButtons(BTN_RIGHT)==INF_PRESSED)))
   {
-    Sound(5);
+    myBeep(5);
     DeleteTrace = 0;
     if (Trace < GetNumTraceSaved(0)) Trace++;
     else Trace =0;
@@ -2992,7 +2956,7 @@ void ModeMemoryOTDR(void) // режим отображения сохраненных рефлектограмм и работ
     DrawMemoryRefl(0, CurrLang, g_mem_param); //вызываем нулевую рефлектограмму и пишем сообщение о полной памяти 
     sprintf(Stra,"%s    %d/%d",MsgMass[63][CurrLang], GetNumTraceSaved(0), MAXMEMALL);//  "НЕТ ПАМЯТИ" 
     sprintf( Str,"xstr 200,150,200,40,2,2047,BLACK,0,1,3,\"%s\"яяя",Stra); // 0для обоих индикаторов 
-    NEX_Transmit(Str);//
+    NEX_Transmit((void*)Str);//
 
     ModeMemDraw = VIEWSAVED;
     break;
@@ -3028,13 +2992,13 @@ void ModeMemoryOTDR(void) // режим отображения сохраненных рефлектограмм и работ
     case 1:
       sprintf(Stra,"%s (Ok)", MsgMass[66][CurrLang]);//"удаляем?"
       sprintf( Str,"xstr 200,150,200,40,2,2047,BLACK,0,1,3,\"%s\"яяя",Stra); // 0для обоих индикаторов
-      NEX_Transmit(Str);// 
+      NEX_Transmit((void*)Str);// 
       MsgDel = 0;
       break;
     case 2:
       sprintf(Stra,"%s    %d/%d",MsgMass[67][CurrLang], GetNumTraceSaved(0), MAXMEMALL);
       sprintf( Str,"xstr 200,130,200,40,2,2047,BLACK,0,1,3,\"%s\"яяя",Stra); // 0для обоих индикаторов
-      NEX_Transmit(Str);//
+      NEX_Transmit((void*)Str);//
       MsgDel = 0;
       break;
     default:
@@ -3069,7 +3033,7 @@ void ModeMemoryOTDR(void) // режим отображения сохраненных рефлектограмм и работ
    DeleteTrace = 0;
    SetMode(ModeSelectMEM);
    ModeDevice = MODEOTHER;
-   Sound(10);
+   myBeep(10);
     // посылка команды переключения окна на Memory (возврат)  
       CmdInitPage(4);
     }
@@ -3082,7 +3046,7 @@ void ModeMemoryOTDR(void) // режим отображения сохраненных рефлектограмм и работ
       SetMode(ModeDrawOTDR);
       ReturnModeViewRefl = SETPARAM;//SETPARAM -  чтобы вернуться в предпросмотр
       ModeDevice = MODEREFL;
-      Sound(10);
+      myBeep(10);
     // посылка команды переключения окна на DrawOTDRview (возврат)  
     CmdInitPage(18);
       
@@ -3099,7 +3063,7 @@ void ModeMemoryOTDR(void) // режим отображения сохраненных рефлектограмм и работ
 //  {
     if (rawPressKeyS) // 17.11.2022 хотим запустить измерение
     {        
-      Sound(10);
+      myBeep(10);
       // если стартуем перепишем выбранную длину волны в соответствии с памяти
       SetIndxSeqLS();
        //g_SetModeLW = SettingRefl.SW_LW;
@@ -3118,7 +3082,7 @@ void ModeMemoryOTDR(void) // режим отображения сохраненных рефлектограмм и работ
       ReturnModeViewRefl = SETPARAM;//SETPARAM -  чтобы вернуться в установки
       //IndexVerSize  = 0;// установка вертикального размера отображения рефлектограммы ( самый крупный)
       SubModeMeasOTDR = SETPOWER;
-      SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
+      //123 SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
       rawPressKeyS=0;
       
       CreatDelay (30000); // 3.3 мС
@@ -3145,14 +3109,14 @@ void ModeSelectOLT(void) // режим выбора типа тестера CHECK_OFF
   //DWORD KeyP = SetBtnStates( KEYS_REG, 1 );
   if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     FrSelectOLT = ChangeFrSet (FrSelectOLT, 1+RedEye, 0, MINUS);// установка курсора в рамках заданных параметров
     g_NeedScr = 1; // Need reDraw Screen
     //ClrKey (BTN_UP);
   }
   if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     FrSelectOLT = ChangeFrSet (FrSelectOLT, 1+RedEye, 0, PLUS);// установка курсора в рамках заданных параметров
     g_NeedScr = 1; // Need reDraw Screen
     //ClrKey (BTN_DOWN);
@@ -3161,14 +3125,14 @@ void ModeSelectOLT(void) // режим выбора типа тестера CHECK_OFF
   {
     if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       SetModeRE(Str,INCR,CurrLang );
       //ClrKey (BTN_RIGHT);
     }
     if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       SetModeRE(Str,DECR,CurrLang );
       //ClrKey (BTN_LEFT);
@@ -3179,38 +3143,38 @@ void ModeSelectOLT(void) // режим выбора типа тестера CHECK_OFF
     // здесь заполняем данными поля нового индикатора
     // не требущие изменения при первичной инициализации
     sprintf(Str, "t0.txt=\"%s\"яяя", MsgMass[49][CurrLang]); // manual
-    NEX_Transmit(Str);    //
+    NEX_Transmit((void*)Str);    //
     
     sprintf(Str, "t1.txt=\"%s\"яяя", MsgMass[50][CurrLang]); // auto
-    NEX_Transmit(Str);    // 
+    NEX_Transmit((void*)Str);    // 
     // про красный глаз
     if(RedEye)
     {
       sprintf(Str,"t2.txt=\"VFL,    0.65 \"яяя"); // Red Eye
-      NEX_Transmit(Str);    // 
+      NEX_Transmit((void*)Str);    // 
       // ветвление в зависимости от типа индикатора
       if(TypeLCD) //3.5
       {
       sprintf(Str,"draw 272,113,384,156,BLACKяяя"); // Red Eye
-      NEX_Transmit(Str);    // 
+      NEX_Transmit((void*)Str);    // 
       sprintf(Str,"draw 271,112,385,157,BLACKяяя"); // Red Eye
-      NEX_Transmit(Str);    // 
+      NEX_Transmit((void*)Str);    // 
         
       }
       else
       {
       sprintf(Str,"draw 270,87,382,118,BLACKяяя"); // Red Eye
-      NEX_Transmit(Str);    // 
+      NEX_Transmit((void*)Str);    // 
       sprintf(Str,"draw 269,86,383,119,BLACKяяя"); // Red Eye
-      NEX_Transmit(Str); 
+      NEX_Transmit((void*)Str); 
       }   // 
     }
     else
     {
       sprintf(Str,"t2.txt=\" \"яяя"); // пустая строка
-      NEX_Transmit(Str);    // 
+      NEX_Transmit((void*)Str);    // 
       sprintf(Str,"t6.txt=\" \"яяя"); // пустая строка
-      NEX_Transmit(Str);    // 
+      NEX_Transmit((void*)Str);    // 
     }
     // индикация ошибки измериттеля
     if (ErrOLT)  //
@@ -3219,33 +3183,33 @@ void ModeSelectOLT(void) // режим выбора типа тестера CHECK_OFF
     }
     else
       sprintf(Str,"t5.txt=\" \"яяя"); // пустая строка
-    NEX_Transmit(Str);    // 
+    NEX_Transmit((void*)Str);    // 
     
     
     // совместимость с широкодиапазонным вариантом
     // индикация расширенного диапазона
-    if (!(FIO1PIN & WIDE_VER))  // если есть перемычка для расширенного диапазона
+    if (!(WIDE_VER))  // если есть перемычка для расширенного диапазона
     {
       // переключаем совместимость
       if (((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))||((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED)))
       {
-        Sound(10);
+        myBeep(10);
         if(SetJDSU.CompMode) SetJDSU.CompMode = 0;
         else SetJDSU.CompMode = 1;
       }
       sprintf(Str,"t3.txt=\"%s: %c\"яяя", MsgMass[117][CurrLang],(SetJDSU.CompMode)?('J'):('T')); // 
-      NEX_Transmit(Str);    // 
+      NEX_Transmit((void*)Str);    // 
       
       sprintf(Str,"t4.txt=\"W\"яяя"); // 
-      NEX_Transmit(Str);    // 
+      NEX_Transmit((void*)Str);    // 
       
     }
     else
     {
       sprintf(Str,"t3.txt=\" \"яяя"); // пустые строки
-      NEX_Transmit(Str);    // 
+      NEX_Transmit((void*)Str);    // 
       sprintf(Str,"t4.txt=\" \"яяя"); // 
-      NEX_Transmit(Str);    // 
+      NEX_Transmit((void*)Str);    // 
     }
     
     
@@ -3257,20 +3221,20 @@ void ModeSelectOLT(void) // режим выбора типа тестера CHECK_OFF
   {
     // закрасим бэкграунды  и установим требуемый
     sprintf(Str,"t0.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str,"t1.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str,"t2.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str,"t%d.bco=GREENяяя",FrSelectOLT); // зеленый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     
     // про красный глаз
     if(RedEye)
     {
       SetModeRE (Str, CURRENT, CurrLang);
       sprintf(StrI,"t6.txt=\"%s\"яяя",Str); //режим
-      NEX_Transmit(StrI);    // 
+      NEX_Transmit((void*)StrI);    // 
     }
     
     g_NeedScr=0;
@@ -3278,12 +3242,12 @@ void ModeSelectOLT(void) // режим выбора типа тестера CHECK_OFF
   }
   if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     SetMode(ModeMainMenu);
     POWDET(OFF); 
     SetupSource (0); // выключаем источник 
     ModeDevice = MODEMENU;
-    SSPInit_Any(MEM_FL1); // Востанавливаем Инициализацию SSP для управления внешней FLASH (порт 1 та что на плате отладочной)
+    //123 SSPInit_Any(MEM_FL1); // Востанавливаем Инициализацию SSP для управления внешней FLASH (порт 1 та что на плате отладочной)
     // посылка команды переключения окна на MainMenu (возврат)  
     CmdInitPage(1);
     
@@ -3293,36 +3257,36 @@ void ModeSelectOLT(void) // режим выбора типа тестера CHECK_OFF
     switch (FrSelectOLT)
     {
     case 0:
-      Sound(10);
+      myBeep(10);
       //POWDET(ON);
       SetMode(ModeMeasManualOLT);
-      enable_timer(3);  /* Enable Interrupt Timer3 */
-      enable_timer(1);  /* Enable  Timer1 JDSU */
+      //123 enable_timer(3);  /* Enable Interrupt Timer3 */
+      //123 enable_timer(1);  /* Enable  Timer1 JDSU */
       ModeDevice = MODETEST;
       ModePowerMeter = POWMANUAL;
-      SSPInit_Any(SPI_PM);      //Перевели SPI на АЦП
+      //123 SSPInit_Any(SPI_PM);      //Перевели SPI на АЦП
       // посылка команды переключения окна на Test_manual (вызов)  
       CmdInitPage(7);
       
       break;
     case 1: // автомат
-      Sound(10);
+      myBeep(10);
       //POWDET(ON);
       //UARTInit1 (1200);
       //VICINTENCLEAR | = 1 << UART1_INT; /* Disable Interrupt */
-      VICINTENABLE = 1 << UART1_INT;  /* Enable Interrupt */
+//123      VICINTENABLE = 1 << UART1_INT;  /* Enable Interrupt */
       SetMode(ModeMeasAutoOLT);
-      enable_timer(3);  /* Enable Interrupt Timer3 */
-      enable_timer(1);  /* Enable  Timer1 JDSU */
+//123      enable_timer(3);  /* Enable Interrupt Timer3 */
+//123      enable_timer(1);  /* Enable  Timer1 JDSU */
       ModeDevice = MODETEST;
       ModePowerMeter = POWAUTO;
       InitAutoPM (); // начальные установки измерителя автомата
-      SSPInit_Any(SPI_PM);      //Перевели SPI на АЦП
+//123      SSPInit_Any(SPI_PM);      //Перевели SPI на АЦП
       // посылка команды переключения окна на Test_auto (вызов)  
       CmdInitPage(8);
       break;
     }
-    P08_Init();
+//123    P08_Init();
   }
   
 }
@@ -3383,7 +3347,7 @@ void ModeMeasManualOLT(void) // режим работы тестера в ручном режиме CHECK_OFF
   case 1:   // Опора REF
     if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       SetTypeRslt(GetTypeRslt()+1);
     }
     if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
@@ -3393,7 +3357,7 @@ void ModeMeasManualOLT(void) // режим работы тестера в ручном режиме CHECK_OFF
     
     if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))// перепривязка на выбранной длине волны
     {
-      Sound(15);
+      myBeep(15);
       SetCurrLvldB(GetPMWavelenght(0),10*log10(tmp)); // здесь записываем в память
       SetTypeRslt(1); // set dB
       g_NeedScr = 1; // Need reDraw Screen
@@ -3403,7 +3367,7 @@ void ModeMeasManualOLT(void) // режим работы тестера в ручном режиме CHECK_OFF
     {
       if (GetRange() == 0)
       {
-      Sound(85);
+      myBeep(85);
       AcquireShZeroLowRng();                 // руная переустановка нуля на чувствительном диапазоне
       }
       //AcquireCoefStykRange(1);
@@ -3413,7 +3377,7 @@ void ModeMeasManualOLT(void) // режим работы тестера в ручном режиме CHECK_OFF
   case 2:// Изменение длины волны
     if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       GetCurrLvldB(GetPMWavelenght(-1));
     };
@@ -3426,7 +3390,7 @@ void ModeMeasManualOLT(void) // режим работы тестера в ручном режиме CHECK_OFF
     
     if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
     {    
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       GetCurrLvldB(GetPMWavelenght(1));
     }
@@ -3441,7 +3405,7 @@ void ModeMeasManualOLT(void) // режим работы тестера в ручном режиме CHECK_OFF
     
     if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
     {    
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       GetCurrLvldB(GetPMWavelenght(13));
     }
@@ -3460,7 +3424,7 @@ DrawSourceVFL (&FrManualOLT, Str, KeyP, CurrLang, 3, 1);
   
     SetStringPM(Str, tmp);           // устанавливает строку данных измерения
     sprintf(Stra, "t0.txt=\"%s\"яяя", Str);
-    NEX_Transmit(Stra);    // ORL
+    NEX_Transmit((void*)Stra);    // ORL
 
 
   
@@ -3470,28 +3434,28 @@ DrawSourceVFL (&FrManualOLT, Str, KeyP, CurrLang, 3, 1);
     // не требущие изменения при первичной инициализации
     
     sprintf(Str, "t2.txt=\"REF, %s\"яяя", MsgMass[48][CurrLang]);
-    NEX_Transmit(Str);    // REF
+    NEX_Transmit((void*)Str);    // REF
     
     sprintf(Str, "t4.txt=\"%s\"яяя", MsgMass[17][CurrLang]);
-    NEX_Transmit(Str);    // длина волны
+    NEX_Transmit((void*)Str);    // длина волны
     
     sprintf(Str, "t6.txt=\"%s\"яяя", MsgMass[68][CurrLang]);
-    NEX_Transmit(Str);    // источник
+    NEX_Transmit((void*)Str);    // источник
     
     sprintf(Str, "t8.txt=\"ORL, %s\"яяя", MsgMass[47][CurrLang]);
-    NEX_Transmit(Str);    // ORL
+    NEX_Transmit((void*)Str);    // ORL
     // пустышки
     // зачистим не РАБОЧИЕ поля
         sprintf(Str, "t10.txt=\"\"яяя");
-    NEX_Transmit(Str);    // 
+    NEX_Transmit((void*)Str);    // 
         sprintf(Str, "t13.txt=\"\"яяя");
-    NEX_Transmit(Str);    // 
+    NEX_Transmit((void*)Str);    // 
     // номер заполненой ячейки
   sprintf(Str,"t9.txt=\"№ %04d\"яяя",GetCellMem(0));
-  NEX_Transmit(Str);    // № ячейки
+  NEX_Transmit((void*)Str);    // № ячейки
     
     // индикация расширенного диапазона
-    if (!(FIO1PIN & WIDE_VER))  // если есть перемычка для расширенного диапазона
+    if (!(WIDE_VER))  // если есть перемычка для расширенного диапазона
     {
       sprintf(Str,"t12.txt=\"%c\"яяя",(SetJDSU.CompMode)?('J'):('T')); // 
     }
@@ -3499,7 +3463,7 @@ DrawSourceVFL (&FrManualOLT, Str, KeyP, CurrLang, 3, 1);
     {
       sprintf(Str, "t12.txt=\" \"яяя"); // пустая строка
     }
-    NEX_Transmit(Str);    // W
+    NEX_Transmit((void*)Str);    // W
     
     
     g_FirstScr = 0;
@@ -3510,42 +3474,42 @@ DrawSourceVFL (&FrManualOLT, Str, KeyP, CurrLang, 3, 1);
     // раскрашивание поля выбора 
     // закрасим бэкграунды  и установим требуемый
     sprintf(Str, "t2.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);//
+    NEX_Transmit((void*)Str);//
     sprintf(Str, "t4.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str, "t6.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str, "t8.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);//
+    NEX_Transmit((void*)Str);//
     sprintf(Str, "t10.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);//
+    NEX_Transmit((void*)Str);//
     sprintf(Str, "t%d.bco=GREENяяя", (FrManualOLT)<<1); // зеленый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     // здесь заполняем данными поля нового индикатора
     // по результатам изменений вызваныйх обработчиком клавиатуры
   sprintf(Str,"t1.txt=\"%2.3f\"яяя",GetCurrLvldB(0)); // dBm REF
-    NEX_Transmit(Str);    //
+    NEX_Transmit((void*)Str);    //
 
   sprintf(Str,"t3.txt=\"%d%s\"яяя",GetPMWavelenght(0),MsgMass[18][CurrLang]); // nm
-    NEX_Transmit(Str);    //
+    NEX_Transmit((void*)Str);    //
   
     if(g_VolORL!=0)sprintf(Str,"t7.txt=\"%.2f\"яяя",g_VolORL);
     else sprintf(Str,"t7.txt=\"???\"яяя");
-    NEX_Transmit(Str);    // значение ORL
+    NEX_Transmit((void*)Str);    // значение ORL
     
     // строка про источники ()
         sprintf(Str, "t6.txt=\"%s\"яяя", MsgMass[68][CurrLang]);// source
         SetModeLS (Strb, CURRENT, CurrLang); // получаем режим источника
         sprintf(Strc,"t5.txt=\"%s\"яяя",Strb);
-    NEX_Transmit(Str);    // источник
+    NEX_Transmit((void*)Str);    // источник
     
-    NEX_Transmit(Strc);    // источник
+    NEX_Transmit((void*)Strc);    // источник
     
     // запомним индекс длины волны источника
     MemIndexLW = GetPlaceLS(CURRENT);
     //NowIndexLW = MemIndexLW;
         sprintf(Stra,"t11.txt=\"%.2f\"яяя",GetLengthWaveLS (MemIndexLW)/1000.0);
-    NEX_Transmit(Stra);    // источник
+    NEX_Transmit((void*)Stra);    // источник
     
                                        // код подсветки требуемой строки если есть есть маркер строки
     g_NeedScr = 0;
@@ -3556,14 +3520,14 @@ DrawSourceVFL (&FrManualOLT, Str, KeyP, CurrLang, 3, 1);
   if(MemIndexLW != NowIndexLW)
   {
     sprintf(Stra,"t11.txt=\"%.2f\"яяя",GetLengthWaveLS (NowIndexLW)/1000.0);
-    NEX_Transmit(Stra);    // источник
+    NEX_Transmit((void*)Stra);    // источник
     MemIndexLW = NowIndexLW;
   }
 
   if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
   {
-    P08_IRQ_EN(OFF); // запрещаем прерывание по готовности АЦП
-    Sound(10);
+//123    P08_IRQ_EN(OFF); // запрещаем прерывание по готовности АЦП
+    myBeep(10);
     SetMode(ModeSelectOLT);
     ModeDevice = MODEOTHER;
     ModePowerMeter = NOTMODE;
@@ -3572,7 +3536,7 @@ DrawSourceVFL (&FrManualOLT, Str, KeyP, CurrLang, 3, 1);
   }
   if (rawPressKeyS) // key S первый заход в редактор сохр.
   {        
-    Sound(10);
+    myBeep(10);
     SetMode(ModeSaveOLT);
     SavePowerMeter(tmp);
     ReLoadCommOLT (); // перезагружаем комментарии для измерителя
@@ -3609,7 +3573,7 @@ void SetStringPM(char *Str, float mWatt)           // устанавливает строку данны
       sprintf(Str,"% 6.2f %s", mWatt*1e9, MsgMass[94][CurrLang]);       // Значение в пВт
       break;
     case 2:
-          if (FIO1PIN & WIDE_VER)  // если нет перемычки для расширенного диапазона
+          if (WIDE_VER)  // если нет перемычки для расширенного диапазона
           {
       if (mWatt<=1e-6)mWatt = 1e-6;                          //ограничение показаний на уровне 1nW 
       sprintf(Str,"<%6.2f %s", mWatt*1e6, MsgMass[95][CurrLang]);       // Значение в нВт
@@ -3638,7 +3602,7 @@ void SetStringPM(char *Str, float mWatt)           // устанавливает строку данны
       sprintf(Str,"%s %s", Str,MsgMass[48][CurrLang]); // Значение dBm
       break;
     case 2:
-          if (FIO1PIN & WIDE_VER)  // если нет перемычки для расширенного диапазона
+          if (WIDE_VER)  // если нет перемычки для расширенного диапазона
           {
             if (mWatt<=1e-6)
             {
@@ -3689,7 +3653,7 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
   /* */  
   if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==LONG_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     for (int i=0; i<5; i++)
     {
       if ( RPON[i]>-100.0)
@@ -3697,22 +3661,24 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
         SetNewLeveldB (RPON[i], GetIndxPON(LWPON[i])); // установка нового уровня привязки по принятым волнам
       }
     }
-    SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
-    FlashErasePage(CFG_USER); // чистим страницу установок пользователя прибора
-    FlashWritePageSM(CFG_USER, StructPtr(CFG_USER), StructSize(CFG_USER), 0);
-    SSPInit_Any(SPI_PM); // востановление SSP для управления PM (порт 1 та что на плате отладочной)
+    //123 SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
+    WriteNeedStruct (0x04); // перезапись страницу установок пользователя прибора
+    //FlashErasePage(CFG_USER); // чистим страницу установок пользователя прибора
+    //FlashWritePageSM(CFG_USER, StructPtr(CFG_USER), StructSize(CFG_USER), 0);
+    //123 SSPInit_Any(SPI_PM); // востановление SSP для управления PM (порт 1 та что на плате отладочной)
   }
   //SetRange(1);
   if (RSOptYes) // получаем длину волны кoторая сейчас будет излучаться
   {
-    TempNumWave = GetNumWaveOpt (); // получаем номер длины волны
+//123!!!    TempNumWave = GetNumWaveOpt (); // получаем номер длины волны
+    TempNumWave = 1310; // получаем номер длины волны
     if (TempNumWave)
     { 
       // 1. посчитаем к какому диапазону приходится волна 
        IndWavePON=GetIndxPON(TempNumWave);
        LWPON[IndWavePON]=TempNumWave; // запишем длину волны в ячейку (для индикации)
        LWCNT[IndWavePON] = 0; // clear cnt текущей волны
-      // Sound(5); //писк подтверждения приема
+      // myBeep(5); //писк подтверждения приема
       for (int i=0; i<5; i++)
       {
        if (LWPON[i] != 0) // если есть запись и совпадает с пришедшей
@@ -3776,7 +3742,7 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
         // test code
     //sprintf(Str, "t8.txt=\"%s\"яяя",wrd);
     //sprintf(Str, "t8.txt=\"%d %d\"яяя",TimerAutoPM,ModAutoPM);
-    //NEX_Transmit(Str);    // 
+    //NEX_Transmit((void*)Str);    // 
   
   tmpPOW =  GetPower(NumWave); // Получаем мощность в мВт
   switch (ModAutoPM)
@@ -3784,7 +3750,7 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
   case WAITING:
     if (TimerAutoPM > 1000) //~10S
     {
-      Sound(10);
+      myBeep(10);
       InitAutoPM();
     }
     
@@ -3814,10 +3780,10 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
     {
       //DrawLine(2,12*M_PON+5,114,12*M_PON+5,11,0); //чистка индикатора показаний
       sprintf(Str,"t%d.txt=\"%6.3f %s\"яяя",M_PON+1, RPON[i], MsgMass[47][CurrLang]);//дБ
-    NEX_Transmit(Str);    // значение
+    NEX_Transmit((void*)Str);    // значение
       //sprintf(Str,"t%d.txt=\"%d%s\"яяя",M_PON+4,CoeffPM.PointKalib[i], MsgMass[18][CurrLang]);//нм 1300
       sprintf(Str,"t%d.txt=\"%d%s\"яяя",M_PON+4,LWPON[i], MsgMass[18][CurrLang]);//нм
-    NEX_Transmit(Str);    // длина волны
+    NEX_Transmit((void*)Str);    // длина волны
       M_PON++;
     }
   }
@@ -3825,9 +3791,9 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
   {
     //DrawLine(2,i*12+5,114,i*12+5,11,0); //чистка индикатора показаний
     sprintf(Str,"t%d.txt=\"--------\"яяя",i+1);
-    NEX_Transmit(Str);    // значение
+    NEX_Transmit((void*)Str);    // значение
     sprintf(Str,"t%d.txt=\"----\"яяя",i+4);
-    NEX_Transmit(Str);    // длина волны
+    NEX_Transmit((void*)Str);    // длина волны
   }
   
   
@@ -3837,32 +3803,32 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
     // не требущие изменения при первичной инициализации
     
  //   sprintf(Str, "t2.txt=\"REF, %s\"яяя", MsgMass[48][CurrLang]);
- //   NEX_Transmit(Str);    // REF
+ //   NEX_Transmit((void*)Str);    // REF
     
  //   sprintf(Str, "t4.txt=\"%s\"яяя", MsgMass[17][CurrLang]);
- //   NEX_Transmit(Str);    // длина волны
+ //   NEX_Transmit((void*)Str);    // длина волны
     
     sprintf(Str, "t7.txt=\"%s\"яяя", MsgMass[68][CurrLang]);
-    NEX_Transmit(Str);    // источник
+    NEX_Transmit((void*)Str);    // источник
     
     sprintf(Str, "t8.txt=\"ORL, %s\"яяя", MsgMass[47][CurrLang]);
-    NEX_Transmit(Str);    // ORL
+    NEX_Transmit((void*)Str);    // ORL
     // пустышки
     // зачистим не РАБОЧИЕ поля
         sprintf(Str, "t9.txt=\"\"яяя");
-    NEX_Transmit(Str);    // 
+    NEX_Transmit((void*)Str);    // 
     // test code
     //memcpy(wrd ,RX_BufOpt,9);
         sprintf(Str, "t13.txt=\"\"яяя");
    //wrd[9]=0;
     //    sprintf(Str, "t13.txt=\"%s\"яяя",wrd);
-    NEX_Transmit(Str);    // 
+    NEX_Transmit((void*)Str);    // 
     // номер заполненой ячейки
   sprintf(Str,"t12.txt=\"№ %04d\"яяя",GetCellMem(0));
-  NEX_Transmit(Str);    // № ячейки
+  NEX_Transmit((void*)Str);    // № ячейки
     
     // индикация расширенного диапазона
-    if (!(FIO1PIN & WIDE_VER))  // если есть перемычка для расширенного диапазона
+    if (!(WIDE_VER))  // если есть перемычка для расширенного диапазона
     {
       sprintf(Str,"t0.txt=\"%c\"яяя",(SetJDSU.CompMode)?('J'):('T')); // 
     }
@@ -3870,7 +3836,7 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
     {
       sprintf(Str, "t0.txt=\" \"яяя"); // пустая строка
     }
-    NEX_Transmit(Str);    // W
+    NEX_Transmit((void*)Str);    // W
     
     
     g_FirstScr = 0;
@@ -3881,20 +3847,20 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
     // здесь заполняем данными поля нового индикатора
     // по результатам изменений вызваныйх обработчиком клавиатуры
  // sprintf(Str,"t1.txt=\"%2.2f\"яяя",GetCurrLvldB(0)); // dBm REF
- //   NEX_Transmit(Str);    //
+ //   NEX_Transmit((void*)Str);    //
 
  // sprintf(Str,"t3.txt=\"%d%s\"яяя",GetPMWavelenght(0),MsgMass[18][CurrLang]); // nm
- //   NEX_Transmit(Str);    //
+ //   NEX_Transmit((void*)Str);    //
     // раскрашивание поля выбора 
     // закрасим бэкграунды  и установим требуемый
     sprintf(Str, "t7.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);//
+    NEX_Transmit((void*)Str);//
     sprintf(Str, "t8.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str, "t9.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str, "t%d.bco=GREENяяя", (FrAutoOLT)+4); // зеленый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
                                        // код подсветки требуемой строки если есть есть маркер строки
   
     // строка про источники ()
@@ -3902,19 +3868,19 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
         //sprintf(Stra,"t14.txt=\"%.2f\"яяя",GetLengthWaveLS (GetPlaceLS(CURRENT))/1000.0);
         SetModeLS (Strb, CURRENT, CurrLang); // получаем режим источника
         sprintf(Strc,"t10.txt=\"%s\"яяя",Strb);
-    NEX_Transmit(Str);    // источник
+    NEX_Transmit((void*)Str);    // источник
     
-    //NEX_Transmit(Stra);    // источник
-    NEX_Transmit(Strc);    // источник
+    //NEX_Transmit((void*)Stra);    // источник
+    NEX_Transmit((void*)Strc);    // источник
   
     if(g_VolORL!=0)sprintf(Str,"t11.txt=\"%.2f\"яяя",g_VolORL);
     else sprintf(Str,"t11.txt=\"???\"яяя");
-    NEX_Transmit(Str);    // значение ORL
+    NEX_Transmit((void*)Str);    // значение ORL
     // запомним индекс длины волны источника
     MemIndexLW = GetPlaceLS(CURRENT);
     //NowIndexLW = MemIndexLW;
         sprintf(Stra,"t14.txt=\"%.2f\"яяя",GetLengthWaveLS (MemIndexLW)/1000.0);
-    NEX_Transmit(Stra);    // источник
+    NEX_Transmit((void*)Stra);    // источник
     
     
     g_NeedScr = 0;
@@ -3926,18 +3892,18 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
   if(MemIndexLW != NowIndexLW)
   {
     sprintf(Stra,"t14.txt=\"%.2f\"яяя",GetLengthWaveLS (NowIndexLW)/1000.0);
-    NEX_Transmit(Stra);    // источник
+    NEX_Transmit((void*)Stra);    // источник
     MemIndexLW = NowIndexLW;
   }
   
   
   if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     //UARTInit1(1200);//, OFF
-    VICINTENCLEAR  = 1 << UART1_INT; /* Disable Interrupt */
-    disable_timer(3); /* Disable Interrupt Timer3*/
-    disable_timer(1); /* Disable  Timer1 JDSU*/
+//123    VICINTENCLEAR  = 1 << UART1_INT; /* Disable Interrupt */
+//123    disable_timer(3); /* Disable Interrupt Timer3*/
+//123    disable_timer(1); /* Disable  Timer1 JDSU*/
     
     SetMode(ModeSelectOLT);
     ModeDevice = MODEOTHER;
@@ -3949,7 +3915,7 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
   
   if (rawPressKeyS) // key S 
   {        
-    Sound(10);
+    myBeep(10);
     SetMode(ModeSaveOLT);
     SavePowerMeter(tmpPOW);
     ReLoadCommOLT (); // перезагружаем комментарии для измерителя
@@ -3980,27 +3946,27 @@ void ModeSourceOnly(void) // режим работы тестера только источник CHECK_OFF
     // не требущие изменения при первичной инициализации
     GetDeviceLabel( Str, NameDB.Ena_DB  );
     sprintf(Stra, "t0.txt=\"%s\"яяя", Str);
-    NEX_Transmit(Stra);    // наименование прибора
+    NEX_Transmit((void*)Stra);    // наименование прибора
     
     sprintf(Str, "t2.txt=\"ORL, %s\"яяя", MsgMass[47][CurrLang]);
-    NEX_Transmit(Str);    // ORL
+    NEX_Transmit((void*)Str);    // ORL
     
     // красный глаз
     if(RedEye)
     {
       sprintf(Str,"t3.txt=\"VFL,    0.65 \"яяя"); // Red Eye
-      NEX_Transmit(Str);    // 
+      NEX_Transmit((void*)Str);    // 
       sprintf(Str,"draw 284,159,383,188,BLACKяяя"); // Red Eye
-      NEX_Transmit(Str);    // 
+      NEX_Transmit((void*)Str);    // 
       sprintf(Str,"draw 285,160,382,187,BLACKяяя"); // Red Eye
-      NEX_Transmit(Str);    // 
+      NEX_Transmit((void*)Str);    // 
     }
     else
     {
       sprintf(Str,"t3.txt=\" \"яяя"); // пустая строка
-      NEX_Transmit(Str);    // 
+      NEX_Transmit((void*)Str);    // 
       sprintf(Str,"t5.txt=\" \"яяя"); // пустая строка
-      NEX_Transmit(Str);    // 
+      NEX_Transmit((void*)Str);    // 
     }
     
     
@@ -4013,13 +3979,13 @@ void ModeSourceOnly(void) // режим работы тестера только источник CHECK_OFF
     // раскрашивание поля выбора 
     // закрасим бэкграунды  и установим требуемый
     sprintf(Str, "t1.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str, "t2.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);//
+    NEX_Transmit((void*)Str);//
     sprintf(Str, "t3.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);//
+    NEX_Transmit((void*)Str);//
     sprintf(Str, "t%d.bco=GREENяяя", (FrSourceOnly)); // зеленый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     // здесь заполняем данными поля нового индикатора
     // по результатам изменений вызваныйх обработчиком клавиатуры
     // строка про источники ()
@@ -4030,22 +3996,22 @@ void ModeSourceOnly(void) // режим работы тестера только источник CHECK_OFF
     sprintf(Stra,"t4.txt=\"%.2f\"яяя",GetLengthWaveLS (MemIndexLW)/1000.0);
     SetModeLS (Strb, CURRENT, CurrLang); // получаем режим источника
     sprintf(Strc,"t6.txt=\"%s\"яяя",Strb);
-    NEX_Transmit(Str);    // источник
+    NEX_Transmit((void*)Str);    // источник
     
-    NEX_Transmit(Stra);    // источник
-    NEX_Transmit(Strc);    // источник
+    NEX_Transmit((void*)Stra);    // источник
+    NEX_Transmit((void*)Strc);    // источник
     
     if(RedEye) // Red eye
     {
       SetModeRE (Strb, CURRENT, CurrLang);
       sprintf(Strc,"t5.txt=\"%s\"яяя",Strb);
-      NEX_Transmit(Strc);    // Red Eye
+      NEX_Transmit((void*)Strc);    // Red Eye
     }
     
     
     if(g_VolORL!=0)sprintf(Str,"t7.txt=\"%.2f\"яяя",g_VolORL);
     else sprintf(Str,"t7.txt=\"???\"яяя");
-    NEX_Transmit(Str);    // значение ORL
+    NEX_Transmit((void*)Str);    // значение ORL
     
     
     // код подсветки требуемой строки если есть есть маркер строки
@@ -4056,13 +4022,13 @@ void ModeSourceOnly(void) // режим работы тестера только источник CHECK_OFF
   if(MemIndexLW != NowIndexLW)
   {
     sprintf(Stra,"t4.txt=\"%.2f\"яяя",GetLengthWaveLS (NowIndexLW)/1000.0);
-    NEX_Transmit(Stra);    // источник
+    NEX_Transmit((void*)Stra);    // источник
     MemIndexLW = NowIndexLW;
   }
   
   if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     SetMode(ModeMainMenu);
     ModeDevice = MODEMENU;
     POWDET(OFF); 
@@ -4083,14 +4049,14 @@ void ModeSaveOLT(void) // режим сохранения результатов измерителя CHECK_OFF
   {
     if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       FrSaveOLT = ChangeFrSet (FrSaveOLT, 4, 1, MINUS);// установка курсора в рамках заданных параметров
       //ClrKey (BTN_UP);
     }
     if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       FrSaveOLT = ChangeFrSet (FrSaveOLT, 4, 1, PLUS);// установка курсора в рамках заданных параметров
       //ClrKey (BTN_DOWN);
@@ -4100,7 +4066,7 @@ void ModeSaveOLT(void) // режим сохранения результатов измерителя CHECK_OFF
     case 1: //вызов редактора комментария
       if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
       {
-        Sound(10);
+        myBeep(10);
         g_NeedScr = 1; // Need reDraw Screen
         SetMode(ModeKeyBoardOLT);
         ModeDevice = MODEOTHER;
@@ -4110,7 +4076,7 @@ void ModeSaveOLT(void) // режим сохранения результатов измерителя CHECK_OFF
     case 2: //изменение счетчика волокон
       if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
       {
-        Sound(10);
+        myBeep(10);
         g_NeedScr = 1; // Need reDraw Screen
         if (PONI.NumFix<9999)PONI.NumFix++;
         else PONI.NumFix = 0;
@@ -4118,7 +4084,7 @@ void ModeSaveOLT(void) // режим сохранения результатов измерителя CHECK_OFF
       }
       if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
       {
-        Sound(10);
+        myBeep(10);
         g_NeedScr = 1; // Need reDraw Screen
         if (PONI.NumFix>0)PONI.NumFix--;
         else PONI.NumFix = 9999;
@@ -4126,7 +4092,7 @@ void ModeSaveOLT(void) // режим сохранения результатов измерителя CHECK_OFF
       }
       if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==INF_PRESSED))
       {
-        Sound(10);
+        myBeep(10);
         g_NeedScr = 1; // Need reDraw Screen
         if (PONI.NumFix<9999)PONI.NumFix++;
         else PONI.NumFix = 0;
@@ -4134,7 +4100,7 @@ void ModeSaveOLT(void) // режим сохранения результатов измерителя CHECK_OFF
       }
       if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==INF_PRESSED))
       {
-        Sound(10);
+        myBeep(10);
         g_NeedScr = 1; // Need reDraw Screen
         if (PONI.NumFix>0)PONI.NumFix--;
         else PONI.NumFix = 9999;
@@ -4144,14 +4110,14 @@ void ModeSaveOLT(void) // режим сохранения результатов измерителя CHECK_OFF
     case 3: //перемена настройки автоинкремента
       if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
       {
-        Sound(10);
+        myBeep(10);
         g_NeedScr = 1; // Need reDraw Screen
         GetEnIncFiber(1);
         //ClrKey (BTN_RIGHT);
       }
       if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
       {
-        Sound(10);
+        myBeep(10);
         g_NeedScr = 1; // Need reDraw Screen
         GetEnIncFiber(1);
         //ClrKey (BTN_LEFT);
@@ -4160,7 +4126,7 @@ void ModeSaveOLT(void) // режим сохранения результатов измерителя CHECK_OFF
     case 4: //сброс счетчика 
       if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
       {
-        Sound(10);
+        myBeep(10);
         g_NeedScr = 1; // Need reDraw Screen
         PONI.NumFix = 0;
         //ClrKey (BTN_OK);
@@ -4180,15 +4146,15 @@ void ModeSaveOLT(void) // режим сохранения результатов измерителя CHECK_OFF
       {
         
         sprintf(Str, "t0.txt=\"%s\"яяя", MsgMass[36][CurrLang]);
-        NEX_Transmit(Str);    // В Н И М А Н И Е
+        NEX_Transmit((void*)Str);    // В Н И М А Н И Е
         sprintf(Str, "t1.txt=\"%s\"яяя", MsgMass[59][CurrLang]);
-        NEX_Transmit(Str);    // " Запись невозможна"
+        NEX_Transmit((void*)Str);    // " Запись невозможна"
         sprintf(Str, "t2.txt=\"%s\"яяя", MsgMass[60][CurrLang]);
-        NEX_Transmit(Str);    // "нет свободной памяти"
+        NEX_Transmit((void*)Str);    // "нет свободной памяти"
         sprintf(Str, "t3.txt=\"%s\"яяя", MsgMass[38][CurrLang]);
-        NEX_Transmit(Str);    // "  для продолжения  "
+        NEX_Transmit((void*)Str);    // "  для продолжения  "
         sprintf(Str, "t4.txt=\"%s < S >\"яяя", MsgMass[39][CurrLang]);
-        NEX_Transmit(Str);    // "    нажмите \"S\"   "
+        NEX_Transmit((void*)Str);    // "    нажмите \"S\"   "
         g_FirstScr = 0;
       }
       
@@ -4202,25 +4168,25 @@ void ModeSaveOLT(void) // режим сохранения результатов измерителя CHECK_OFF
     // не требущие изменения при первичной инициализации
     
     sprintf(Str, "t0.txt=\"%s\"яяя",PONI.CommUserPM);
-    NEX_Transmit(Str);    // 1 строка комментарии
+    NEX_Transmit((void*)Str);    // 1 строка комментарии
     
     sprintf(Str, "t1.txt=\"%04d\"яяя", PONI.NumFix);
-    NEX_Transmit(Str);    // номер записи
+    NEX_Transmit((void*)Str);    // номер записи
     
     sprintf(Str, "t2.txt=\"%s\"яяя", MsgMass[54][CurrLang]);
-    NEX_Transmit(Str);    // комментариим
+    NEX_Transmit((void*)Str);    // комментариим
     
     sprintf(Str, "t3.txt=\"%s\"яяя", MsgMass[61][CurrLang]);
-    NEX_Transmit(Str);    // номер волокна
+    NEX_Transmit((void*)Str);    // номер волокна
     
     sprintf(Str, "t4.txt=\"%s\"яяя", MsgMass[55][CurrLang]);
-    NEX_Transmit(Str);    // тип счетчика волокона
+    NEX_Transmit((void*)Str);    // тип счетчика волокона
     
     sprintf(Str, "t5.txt=\"%s\"яяя", MsgMass[58][CurrLang]);
-    NEX_Transmit(Str);    // Сброс счетчика
+    NEX_Transmit((void*)Str);    // Сброс счетчика
     
     sprintf(Str, "t8.txt=\"№ %04d\"яяя", GetCellMem(0));
-    NEX_Transmit(Str);    // Сброс счетчика
+    NEX_Transmit((void*)Str);    // Сброс счетчика
     
     g_FirstScr = 0;
     g_NeedScr = 1;
@@ -4233,25 +4199,25 @@ void ModeSaveOLT(void) // режим сохранения результатов измерителя CHECK_OFF
     // раскрашивание поля выбора 
     // закрасим бэкграунды  и установим требуемый
     sprintf(Str, "t2.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str); //
+    NEX_Transmit((void*)Str); //
     sprintf(Str, "t3.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str, "t4.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);//
+    NEX_Transmit((void*)Str);//
     sprintf(Str, "t5.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);//
+    NEX_Transmit((void*)Str);//
     sprintf(Str, "t%d.bco=GREENяяя", FrSaveOLT+1); // зеленый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     
     sprintf(Str, "t1.txt=\"%04d\"яяя", PONI.NumFix);
-    NEX_Transmit(Str);    // номер записи
+    NEX_Transmit((void*)Str);    // номер записи
     
     sprintf(Str, "t6.txt=\"%04d\"яяя",PONI.NumFix);
-    NEX_Transmit(Str);    ////счетчик волокна
+    NEX_Transmit((void*)Str);    ////счетчик волокна
     
     if (!GetEnIncFiber(0))  sprintf(Str,"t7.txt=\"%s\"яяя", MsgMass[56][CurrLang]);//ручной
     else   sprintf(Str,"t7.txt=\"%s\"яяя", MsgMass[57][CurrLang]);//авто
-    NEX_Transmit(Str);    //
+    NEX_Transmit((void*)Str);    //
     
     // код подсветки требуемой строки если есть есть маркер строки
     
@@ -4261,13 +4227,13 @@ void ModeSaveOLT(void) // режим сохранения результатов измерителя CHECK_OFF
   
   if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
     ReturnToTester (0); // возврат в измеритель
   }
   if (rawPressKeyS) // key S
   {        
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
     memcpy (PONI.CommUserPM, CommentsOLT,16);
     WriteMemPow(); // от туда же возвращаемся в измеритель
@@ -4308,12 +4274,12 @@ void ModeKeyBoardOLT(void) // режим отображения клавиатуры редактора комментарие
             TimeSaveOLT.RTC_Sec );
     
     sprintf(StrI, "t0.txt=\"%s\"яяя", Str);
-    NEX_Transmit(StrI);    // Date/Time записи
+    NEX_Transmit((void*)StrI);    // Date/Time записи
     // надо обрезать до последнего пробела....
     memcpy(StrI,CommentsOLT,IndexCommOLT+1); 
     StrI[IndexCommOLT+1]=0;// No more 16 byte size
     sprintf(Str, "t1.txt=\"%s\"яяя",StrI); 
-    NEX_Transmit(Str);    // 1 строка комментарии
+    NEX_Transmit((void*)Str);    // 1 строка комментарии
     g_GetStr=1; // взведем признак  необходимости прочитать строчку! из индикатора.
     g_FirstScr = 0;
     g_NeedScr = 1;
@@ -4327,7 +4293,7 @@ void ModeKeyBoardOLT(void) // режим отображения клавиатуры редактора комментарие
     SetMode(ModeSaveOLT);
     ModeDevice = MODEOTHER;
     NeedReturn = 1;
-    Sound(10);
+    myBeep(10);
   }
   if(g_GetStr==2) // УРА! что то приняли назад, можно переписать и сбросить признак
   {
@@ -4371,7 +4337,7 @@ void ModeKeyBoardPrefix(void) // режим отображения клавиатуры редактора prefixNa
     memcpy(StrI,PrefixFileNm,IndexPrefix+1); 
     StrI[IndexPrefix+1]=0;// No more 11 byte size
     sprintf(Str, "t1.txt=\"%s\"яяя",StrI); 
-    NEX_Transmit(Str);    // 1 строка комментарии
+    NEX_Transmit((void*)Str);    // 1 строка комментарии
     g_GetStr=1; // взведем признак  необходимости прочитать строчку! из индикатора.
     g_FirstScr = 0;
     g_NeedScr = 1;
@@ -4394,7 +4360,7 @@ void ModeKeyBoardPrefix(void) // режим отображения клавиатуры редактора prefixNa
   
   if (((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))||(NeedReturn))
   {
-    Sound(10);
+    myBeep(10);
     SetMode(ModeSetupOTDR);  //  переход в режим установок рефлектометра (было)
     ModeDevice = MODESETREFL;
     SubModeMeasOTDR = NOTMODE;
@@ -4421,14 +4387,14 @@ void ModeSelectMEM(void) // режим выбора работы с памятью CHECK_OFF
   //DWORD KeyP = SetBtnStates( KEYS_REG, 1 );
   if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
     FrSelectMEM = ChangeFrSet (FrSelectMEM, 2+PowerMeter, 1, MINUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_UP);
   }
   if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
     FrSelectMEM = ChangeFrSet (FrSelectMEM, 2+PowerMeter, 1, PLUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_DOWN);
@@ -4441,38 +4407,38 @@ void ModeSelectMEM(void) // режим выбора работы с памятью CHECK_OFF
     // не требущие изменения при первичной инициализации
     // Здесь практичски все поля 
     sprintf(Str, "t0.txt=\"%s\"яяя", MsgMass[42][CurrLang]);
-    NEX_Transmit(Str);    // Память
+    NEX_Transmit((void*)Str);    // Память
 
     sprintf(Str, "t1.txt=\"%s\"яяя", MsgMass[43][CurrLang]);
-    NEX_Transmit(Str);    // свободно
+    NEX_Transmit((void*)Str);    // свободно
 
     sprintf(Str, "t2.txt=\"%s\"яяя", MsgMass[7][CurrLang]);
-    NEX_Transmit(Str);    // РЕФЛЕКТОМЕТР
+    NEX_Transmit((void*)Str);    // РЕФЛЕКТОМЕТР
 
     sprintf(Str, "t3.txt=\"%4d\"яяя", MAXMEMALL-GetNumTraceSaved(0));
-    NEX_Transmit(Str);    // сколько свободно
+    NEX_Transmit((void*)Str);    // сколько свободно
     
   if (PowerMeter) // есть измеритель
   {
 
     sprintf(Str, "t4.txt=\"%s\"яяя", MsgMass[74][CurrLang]);
-    NEX_Transmit(Str);    // ИЗМЕРИТЕЛЬ
+    NEX_Transmit((void*)Str);    // ИЗМЕРИТЕЛЬ
 
     sprintf(Str, "t5.txt=\"%4d\"яяя",MaxMemPM-GetCellMem(0));
-    NEX_Transmit(Str);    // ИЗМЕРИТЕЛЬ (число ячеек)
+    NEX_Transmit((void*)Str);    // ИЗМЕРИТЕЛЬ (число ячеек)
 
     sprintf(Str, "t6.txt=\"%s\"яяя", MsgMass[44][CurrLang]);
-    NEX_Transmit(Str);    // ОЧИСТКА
+    NEX_Transmit((void*)Str);    // ОЧИСТКА
   }
   else  // измерителя нет
   {
     sprintf(Str, "t4.txt=\"%s\"яяя", MsgMass[44][CurrLang]);
-    NEX_Transmit(Str);    // ОЧИСТКА
+    NEX_Transmit((void*)Str);    // ОЧИСТКА
     sprintf(Str, "t5.txt=\"\"яяя");
-    NEX_Transmit(Str);    // пустые
+    NEX_Transmit((void*)Str);    // пустые
 
     sprintf(Str, "t6.txt=\"\"яяя");
-    NEX_Transmit(Str);    // пустые
+    NEX_Transmit((void*)Str);    // пустые
     
   }
     
@@ -4487,13 +4453,13 @@ void ModeSelectMEM(void) // режим выбора работы с памятью CHECK_OFF
     // раскрашивание поля выбора 
     // закрасим бэкграунды  и установим требуемый
     sprintf(Str, "t2.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);//
+    NEX_Transmit((void*)Str);//
     sprintf(Str, "t4.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str, "t6.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);//
+    NEX_Transmit((void*)Str);//
     sprintf(Str, "t%d.bco=GREENяяя", FrSelectMEM<<1); // зеленый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
                                        // код подсветки требуемой строки если есть есть маркер строки
     g_NeedScr = 0;
   }
@@ -4503,7 +4469,7 @@ void ModeSelectMEM(void) // режим выбора работы с памятью CHECK_OFF
     switch (FrSelectMEM) // выбор по кнопке "ОК"
     {
     case 1: // переход в память рефлектограмм
-      Sound(10);
+      myBeep(10);
 
       SetMode(ModeMemoryOTDR);
       ModeDevice = MODEMEMR;
@@ -4520,10 +4486,10 @@ void ModeSelectMEM(void) // режим выбора работы с памятью CHECK_OFF
         // go to wiev memPM
         if (GetCellMem(0))
         {
-       ReadCellIzm(GetCellMem(0)-1,(unsigned char*)&PONI);//  читаем из памяти(flash) в PONI ячейку сохранения измерителя
+//123!!!       ReadCellIzm(GetCellMem(0)-1,(unsigned char*)&PONI);//  читаем из памяти(flash) в PONI ячейку сохранения измерителя
        
        Sec2Date (PONI.TotalTimeCell, &TimeSaveOLT);
-       Sound(10);
+       myBeep(10);
        NumCellIzm = GetCellMem(0)-1;
        SetMode(ModeViewMemOLT);
        SetModeDevice(MODETESTMEM);
@@ -4533,7 +4499,7 @@ void ModeSelectMEM(void) // режим выбора работы с памятью CHECK_OFF
       }
       else
       {
-        Sound(10);
+        myBeep(10);
         SetMode(ModeClearMEM);
         FrClearMEM = 2 + PowerMeter;
          // посылка команды переключения окна на Select_MEM_Clr(вызов)  
@@ -4542,7 +4508,7 @@ void ModeSelectMEM(void) // режим выбора работы с памятью CHECK_OFF
       }
       break;
     case 3: // переход в режим выбора стирания памяти
-      Sound(10);
+      myBeep(10);
       SetMode(ModeClearMEM);
       FrClearMEM = 2 + PowerMeter;
          // посылка команды переключения окна на Select_MEM_Clr(вызов)  
@@ -4554,7 +4520,7 @@ void ModeSelectMEM(void) // режим выбора работы с памятью CHECK_OFF
   }
   if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     SetMode(ModeMainMenu);
     ModeDevice = MODEMENU;
             // посылка команды переключения окна на MainMenu (возврат)  
@@ -4575,7 +4541,7 @@ void ModeClearMEM(void) // режим освобождения памяти измерителя CHECK_OFF
     {
     case 1: // refl
       DeletingAllTrace (); // "Удаление"всех рефлектограммы, просто обнуляем счетчик сохранения
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       NeedReturn = 4; // индекс окна возврата
       //SetMode(ModeSelectMEM);
@@ -4584,21 +4550,21 @@ void ModeClearMEM(void) // режим освобождения памяти измерителя CHECK_OFF
       if (PowerMeter)
       {
         DeletedAllCell (); // удаление всех записей измерителя
-        Sound(10);
+        myBeep(10);
         g_NeedScr = 1; // Need reDraw Screen
         NeedReturn = 4; // индекс окна возврата
         //SetMode(ModeSelectMEM);
       }
       else
       {
-        Sound(10);
+        myBeep(10);
         g_NeedScr = 1; // Need reDraw Screen
         NeedReturn = 4; // индекс окна возврата
        // SetMode(ModeSelectMEM);
       }
       break;
     case 3:
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       NeedReturn = 4; // индекс окна возврата
       //SetMode(ModeSelectMEM);
@@ -4607,14 +4573,14 @@ void ModeClearMEM(void) // режим освобождения памяти измерителя CHECK_OFF
   }
   if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
     FrClearMEM = ChangeFrSet (FrClearMEM, 2+PowerMeter, 1, MINUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_UP);
   }
   if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
     FrClearMEM = ChangeFrSet (FrClearMEM, 2+PowerMeter, 1, PLUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_DOWN);
@@ -4625,25 +4591,25 @@ void ModeClearMEM(void) // режим освобождения памяти измерителя CHECK_OFF
     // здесь заполняем данными поля нового индикатора
     // не требущие изменения при первичной инициализации     
     sprintf(Str, "t0.txt=\"%s\"яяя", MsgMass[45][CurrLang]); 
-    NEX_Transmit(Str);    // Очистка памяти
+    NEX_Transmit((void*)Str);    // Очистка памяти
                                                              
     sprintf(Str, "t1.txt=\"%s\"яяя", MsgMass[7][CurrLang]);
-    NEX_Transmit(Str);    // РЕФЛЕКТОМЕТР 
+    NEX_Transmit((void*)Str);    // РЕФЛЕКТОМЕТР 
 
           if (PowerMeter)
           {
     sprintf(Str, "t2.txt=\"%s\"яяя", MsgMass[74][CurrLang]);
-    NEX_Transmit(Str);    // ИЗМЕРИТЕЛЬ     
+    NEX_Transmit((void*)Str);    // ИЗМЕРИТЕЛЬ     
 
     sprintf(Str, "t3.txt=\"%s\"яяя", MsgMass[46][CurrLang]); 
-    NEX_Transmit(Str);    // ОТМЕНА
+    NEX_Transmit((void*)Str);    // ОТМЕНА
           }
           else
           {
     sprintf(Str, "t2.txt=\"%s\"яяя", MsgMass[46][CurrLang]); 
-    NEX_Transmit(Str);    // ОТМЕНА
+    NEX_Transmit((void*)Str);    // ОТМЕНА
     sprintf(Str, "t3.txt=\"\"яяя");
-    NEX_Transmit(Str);    // Empty string    
+    NEX_Transmit((void*)Str);    // Empty string    
 
           }
     g_FirstScr = 0;
@@ -4657,21 +4623,21 @@ void ModeClearMEM(void) // режим освобождения памяти измерителя CHECK_OFF
     // раскрашивание поля выбора 
     // закрасим бэкграунды  и установим требуемый
     sprintf(Str, "t1.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str, "t2.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str, "t3.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);//
+    NEX_Transmit((void*)Str);//
 
     sprintf(Str, "t%d.bco=GREENяяя", FrClearMEM); // зеленый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
                                        // код подсветки требуемой строки если есть есть маркер строки
     g_NeedScr = 0;
   }
 
   if (((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))||(NeedReturn))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
     SetMode(ModeSelectMEM);
     if(!NeedReturn) NeedReturn = 4;
@@ -4691,20 +4657,20 @@ void ModeViewMemOLT(void) // режим просмотра памяти измерителя CHECK_OFF
       {
         if (NumCellIzm > 0) NumCellIzm--;
         else NumCellIzm = GetCellMem(0)-1;
-       ReadCellIzm(NumCellIzm,(unsigned char*)&PONI);//  читаем из памяти(flash) в PONI ячейку сохранения измерителя
+//123!!!       ReadCellIzm(NumCellIzm,(unsigned char*)&PONI);//  читаем из памяти(flash) в PONI ячейку сохранения измерителя
        Sec2Date (PONI.TotalTimeCell, &TimeSaveOLT);
        g_NeedScr = 1; // для вызова заполнения значений
-       Sound(10);
+       myBeep(10);
         
       }
   if ((PRESS(BTN_RIGHT))&&((getStateButtons(BTN_RIGHT)==SHORT_PRESSED)||(getStateButtons(BTN_RIGHT)==INF_PRESSED)))
       {
         if (NumCellIzm < GetCellMem(0)-1) NumCellIzm++;
         else NumCellIzm =0;
-       ReadCellIzm(NumCellIzm,(unsigned char*)&PONI);//  читаем из памяти(flash) в PONI ячейку сохранения измерителя
+//123!!!       ReadCellIzm(NumCellIzm,(unsigned char*)&PONI);//  читаем из памяти(flash) в PONI ячейку сохранения измерителя
        Sec2Date (PONI.TotalTimeCell, &TimeSaveOLT);
        g_NeedScr = 1; // для вызова заполнения значений
-       Sound(10);
+       myBeep(10);
       }
   
   if (g_FirstScr)
@@ -4712,25 +4678,25 @@ void ModeViewMemOLT(void) // режим просмотра памяти измерителя CHECK_OFF
     // здесь заполняем данными поля нового индикатора
     // не требущие изменения при первичной инициализации   
     sprintf(Str, "t0.txt=\"%s\"яяя", MsgMass[0][CurrLang]); // 
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str, "t1.txt=\"%s\"яяя", MsgMass[0][CurrLang]); // 
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str, "t2.txt=\"%s\"яяя", MsgMass[17][CurrLang]); // Длина волны
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str, "t3.txt=\"%s\"яяя", MsgMass[0][CurrLang]); //  
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str, "t4.txt=\"%s\"яяя", MsgMass[0][CurrLang]); //
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str, "t5.txt=\"%s\"яяя", MsgMass[52][CurrLang]); // Потери  
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str, "t6.txt=\"%s\"яяя", MsgMass[24][CurrLang]); // нм
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str, "t7.txt=\"%s\"яяя", MsgMass[0][CurrLang]); //
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str, "t8.txt=\"%s\"яяя", MsgMass[0][CurrLang]); //
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str, "t9.txt=\"%s\"яяя", MsgMass[47][CurrLang]); // дБ
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
 
 
     g_NeedScr = 1; // для вызова заполнения значений
@@ -4749,68 +4715,68 @@ void ModeViewMemOLT(void) // режим просмотра памяти измерителя CHECK_OFF
           TimeSaveOLT.RTC_Sec,
           NumCellIzm+1); // поправлено 23.04.2013 - номер в памяти и порядковый номер сохранения 
     sprintf(StrO, "t0.txt=\"%s\"яяя", Str); // 
-   NEX_Transmit(StrO);// 
+   NEX_Transmit((void*)StrO);// 
   sprintf(Str,"%s",PONI.CommUserPM);
     sprintf(StrO, "t1.txt=\"%s\"яяя", Str); // 
-   NEX_Transmit(StrO);// 
+   NEX_Transmit((void*)StrO);// 
   sprintf(Str,"%04d",PONI.NumFix);
     sprintf(StrO, "t10.txt=\"%s\"яяя", Str); // 
-   NEX_Transmit(StrO);// 
+   NEX_Transmit((void*)StrO);// 
   switch (PONI.Rez) // далее рисуем в зависимости от того какая каритнка
   {
   case MANUAL:
     sprintf(Str,"%s", MsgMass[17][CurrLang]);//Длина волны
     sprintf(StrO, "t2.txt=\"%s\"яяя", Str); // 
-   NEX_Transmit(StrO);// 
+   NEX_Transmit((void*)StrO);// 
     sprintf(Str,"%d%s",PONI.LenWaveMeas,MsgMass[18][CurrLang]);//нм
     sprintf(StrO, "t6.txt=\"%s\"яяя", Str); // 
-   NEX_Transmit(StrO);// 
+   NEX_Transmit((void*)StrO);// 
     sprintf(Str,"%s", MsgMass[51][CurrLang]);//Уровень, 
     sprintf(StrO, "t3.txt=\"%s\"яяя", Str); // 
-   NEX_Transmit(StrO);// 
+   NEX_Transmit((void*)StrO);// 
     DrawLevelStr(Str); //???? вывод признака в чем выводим W/ dB/ dBm
     sprintf(StrO, "t7.txt=\"%s\"яяя", Str); // 
-   NEX_Transmit(StrO);// 
+   NEX_Transmit((void*)StrO);// 
     sprintf(Str,"REF,     %s", MsgMass[48][CurrLang]);//дБм
     sprintf(StrO, "t4.txt=\"%s\"яяя", Str); // 
-   NEX_Transmit(StrO);// 
+   NEX_Transmit((void*)StrO);// 
     sprintf(Str,"%.2f",PONI.BaseLvl[0]);
     sprintf(StrO, "t8.txt=\"%s\"яяя", Str); // 
-   NEX_Transmit(StrO);// 
+   NEX_Transmit((void*)StrO);// 
     sprintf(Str,"%s,  %s", MsgMass[52][CurrLang], MsgMass[47][CurrLang]);//Потери,  дБ
     sprintf(StrO, "t5.txt=\"%s\"яяя", Str); // 
-   NEX_Transmit(StrO);// 
+   NEX_Transmit((void*)StrO);// 
     sprintf(Str,"%.2f",PONI.PowLevel[1]);
     sprintf(StrO, "t9.txt=\"%s\"яяя", Str); // 
-   NEX_Transmit(StrO);// 
+   NEX_Transmit((void*)StrO);// 
     
     break;
   case AUTO:
     sprintf(Str,"%s", MsgMass[53][CurrLang]);//Дл.волны    
     sprintf(StrO, "t2.txt=\"%s\"яяя", Str); // 
-   NEX_Transmit(StrO);// 
+   NEX_Transmit((void*)StrO);// 
     sprintf(Str,"%s", MsgMass[52][CurrLang]);//  Потери
     sprintf(StrO, "t6.txt=\"%s\"яяя", Str); // 
-   NEX_Transmit(StrO);// 
+   NEX_Transmit((void*)StrO);// 
         for (int i=0; i<3; i++)
         {
           if (PONI.PowLevel[i]>-100.0)
           {
     sprintf(Str,"%04d %s  ",PONI.LenWaveKlb[i], MsgMass[18][CurrLang]);
     sprintf(StrO, "t%01d.txt=\"%s\"яяя",3+i, Str); // 
-   NEX_Transmit(StrO);// 
+   NEX_Transmit((void*)StrO);// 
     sprintf(Str,"%.2f %s",PONI.PowLevel[i], MsgMass[47][CurrLang]);
     sprintf(StrO, "t%01d.txt=\"%s\"яяя",7+i, Str); // 
-   NEX_Transmit(StrO);// 
+   NEX_Transmit((void*)StrO);// 
           }
     else 
     {
     sprintf(Str,"-------");
     sprintf(StrO, "t%01d.txt=\"%s\"яяя",3+i, Str); // 
-   NEX_Transmit(StrO);// 
+   NEX_Transmit((void*)StrO);// 
     sprintf(Str,"--------");
     sprintf(StrO, "t%01d.txt=\"%s\"яяя",7+i, Str); // 
-   NEX_Transmit(StrO);// 
+   NEX_Transmit((void*)StrO);// 
     }      
 
         }
@@ -4825,7 +4791,7 @@ void ModeViewMemOLT(void) // режим просмотра памяти измерителя CHECK_OFF
 
     if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     SetMode(ModeSelectMEM);
     ModeDevice = MODEOTHER;
     // посылка команды переключения окна на Memory (возврат)  
@@ -4844,14 +4810,14 @@ void ModeSetting(void)// режим установок прибора CHECK_IN
   //DWORD KeyP = SetBtnStates( KEYS_REG, 1 );
   if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
     FrSetting = ChangeFrSet (FrSetting, (ENAOLDLCD)?(4):(3), 0, MINUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_UP);
   }
   if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
     FrSetting = ChangeFrSet (FrSetting, (ENAOLDLCD)?(4):(3), 0, PLUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_DOWN);
@@ -4861,7 +4827,7 @@ void ModeSetting(void)// режим установок прибора CHECK_IN
   case 0: // Data_Time_Set
   if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
     PosCurr = 6;
     SetMode(ModeDateTimeSET);
@@ -4878,30 +4844,28 @@ void ModeSetting(void)// режим установок прибора CHECK_IN
   case 4: // BlackLight (1)
   if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
-    Light(GetTimeLight(SetIndexLight(1)));
     //ClrKey (BTN_RIGHT);
   }
   if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
-    Light(GetTimeLight(SetIndexLight(-1)));
     //ClrKey (BTN_LEFT);
   }
   break;// BlackLight
   case 1: // Language (2)
   if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_FirstScr = 1; // Need reDraw Screen
     CurrLang=GetLang(INCR);
     //ClrKey (BTN_RIGHT);
   }
   if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_FirstScr = 1; // Need reDraw Screen
     CurrLang=GetLang(DECR);
     //ClrKey (BTN_LEFT);
@@ -4910,7 +4874,7 @@ void ModeSetting(void)// режим установок прибора CHECK_IN
   case 2: //рефлектометр (3)
   if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     SetMode(ModeSetOTDRprm);
     NeedDrawCRC = 1;
     ModeDevice = MODEOTDRPRM;
@@ -4924,47 +4888,47 @@ void ModeSetting(void)// режим установок прибора CHECK_IN
   case 3: //Contrast (4)
   if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
-    ChangeUserContr (1); // изменеие пользовательской контрастности
+//xxx    ChangeUserContr (1); // изменеие пользовательской контрастности
     //ClrKey (BTN_RIGHT);
   }
   if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
-    ChangeUserContr (-1); // изменеие пользовательской контрастности
+//xxx    ChangeUserContr (-1); // изменеие пользовательской контрастности
     //ClrKey (BTN_LEFT);
   }
   if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==INF_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
-    ChangeUserContr (1); // изменеие пользовательской контрастности
+//xxx    ChangeUserContr (1); // изменеие пользовательской контрастности
     //ClrKey (BTN_RIGHT);
   }
   if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==INF_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
-    ChangeUserContr (-1); // изменеие пользовательской контрастности
+//xxx    ChangeUserContr (-1); // изменеие пользовательской контрастности
     //ClrKey (BTN_LEFT);
   }
 //  if (((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==LONG_PRESSED))&&(ChangeUserContr (0)==66))
 //  {
-//    Sound(10);
+//    myBeep(10);
 //    SetMode(TetrisGame);
 //    InitTetris();
 //  }
 //  if (((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==LONG_PRESSED))&&(ChangeUserContr (0)==67))
 //  {
-//    Sound(10);
+//    myBeep(10);
 //    SetMode(ArcanoidGame);
 //    InitArcanoid();
 //  }
 //  if (((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==LONG_PRESSED))&&(ChangeUserContr (0)==68))
 //  {
-//    Sound(10);
+//    myBeep(10);
 //    SetMode(KeyTestGame);
 //    
 //  }
@@ -4977,17 +4941,17 @@ void ModeSetting(void)// режим установок прибора CHECK_IN
     // здесь заполняем данными поля нового индикатора
     // не требущие изменения при первичной инициализации
     sprintf(Str, "t0.txt=\"%s\"яяя", MsgMass[1][CurrLang]);
-    NEX_Transmit(Str);    // Дата / Время
+    NEX_Transmit((void*)Str);    // Дата / Время
   
   
     sprintf(Str, "t1.txt=\"Language\"яяя"); //!
-    NEX_Transmit(Str);    // Язык
+    NEX_Transmit((void*)Str);    // Язык
   
     sprintf(Str, "t2.txt=\"%s\"яяя", MsgMass[100][CurrLang]); //!
-    NEX_Transmit(Str);    // OTDR Params
+    NEX_Transmit((void*)Str);    // OTDR Params
   
     sprintf(Str, "t3.txt=\"%s\"яяя", MsgMass[121][CurrLang]); //!
-    NEX_Transmit(Str);    // Яркость
+    NEX_Transmit((void*)Str);    // Яркость
   
     g_FirstScr = 0;
     g_NeedScr = 1;
@@ -4997,25 +4961,25 @@ void ModeSetting(void)// режим установок прибора CHECK_IN
     // здесь заполняем данными поля нового индикатора
     // по результатам изменений вызваныйх обработчиком клавиатуры
     sprintf(Str, "t6.txt=\"%s\"яяя", MsgMass[0][CurrLang]);
-    NEX_Transmit(Str);    // English
+    NEX_Transmit((void*)Str);    // English
   
-    sprintf(Str, "t7.txt=\"%d\"яяя",  ChangeUserContr (0));
-    NEX_Transmit(Str);    // ???
+    sprintf(Str, "t7.txt=\"%d\"яяя", 55);
+    NEX_Transmit((void*)Str);    // ???
   
     // раскрашивание поля выбора 
     // закрасим бэкграунды  и установим требуемый
     sprintf(Str, "t0.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str, "t1.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str, "t2.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str, "t3.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);//
+    NEX_Transmit((void*)Str);//
     sprintf(Str, "t4.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);//
+    NEX_Transmit((void*)Str);//
     sprintf(Str, "t%d.bco=GREENяяя", FrSetting); // зеленый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
   
   									 // код подсветки требуемой строки если есть есть маркер строки
     g_NeedScr = 0;
@@ -5029,8 +4993,8 @@ void ModeSetting(void)// режим установок прибора CHECK_IN
  }
     if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
   {
-    Sound(10);
-    SaveUserConfig();
+    myBeep(10);
+    WriteNeedStruct(0x04);//SaveUserConfig();
     SetMode(ModeMainMenu);
     ModeDevice = MODEMENU;
         // посылка команды переключения окна на MainMenu (возврат)  
@@ -5048,14 +5012,14 @@ void ModeSetOTDRprm(void)// режим установок параметров рефлектометра прибора CHE
   //DWORD KeyP = SetBtnStates( KEYS_REG, 1 );
   if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
     FrSetOTDRprm = ChangeFrSet (FrSetOTDRprm, 2, 0, MINUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_UP);
   }
   if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
     FrSetOTDRprm = ChangeFrSet (FrSetOTDRprm, 2, 0, PLUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_DOWN);
@@ -5065,14 +5029,14 @@ void ModeSetOTDRprm(void)// режим установок параметров рефлектометра прибора CHE
   case 0: // установка разрешения отображениея и счета событий
   if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
     GetSetEnaEvents(1);
     //ClrKey (BTN_RIGHT);
   }
   if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
     GetSetEnaEvents(1);
     //ClrKey (BTN_LEFT);
@@ -5081,7 +5045,7 @@ void ModeSetOTDRprm(void)// режим установок параметров рефлектометра прибора CHE
   case 1: // установка порогов белкора
   if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     SetMode(SetBELCORE);
     ModeDevice = MODEOTHER;
         // посылка команды переключения окна на Set_OTDR_event(вызов)  
@@ -5104,14 +5068,14 @@ void ModeSetOTDRprm(void)// режим установок параметров рефлектометра прибора CHE
 //  case 3:
 //  if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
 //  {
-//    Sound(10);
+//    myBeep(10);
 //    if (FltrMod<NumFiltrs) FltrMod++;
 //    else FltrMod=0;
 //    //ClrKey (BTN_RIGHT);
 //  }
 //  if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
 //  {
-//    Sound(10);
+//    myBeep(10);
 //    if (FltrMod>0) FltrMod--;
 //    else FltrMod=NumFiltrs;
 //    //ClrKey (BTN_LEFT);
@@ -5125,13 +5089,13 @@ void ModeSetOTDRprm(void)// режим установок параметров рефлектометра прибора CHE
 	  // здесь заполняем данными поля нового индикатора
 	  // не требущие изменения при первичной инициализации
 	  sprintf(Str, "t0.txt=\"%s\"яяя", MsgMass[111][CurrLang]);
-	  NEX_Transmit(Str);    // запись событий
+	  NEX_Transmit((void*)Str);    // запись событий
 
 	  sprintf(Str, "t1.txt=\"%s\"яяя", MsgMass[112][CurrLang]);
-	  NEX_Transmit(Str);    // параметры поиска
+	  NEX_Transmit((void*)Str);    // параметры поиска
 
 	  sprintf(Str, "t2.txt=\"%s\"яяя", MsgMass[5][CurrLang]);
-	  NEX_Transmit(Str);    // калибровка
+	  NEX_Transmit((void*)Str);    // калибровка
 
 	  g_FirstScr = 0;
 	  g_NeedScr = 1;
@@ -5144,18 +5108,18 @@ void ModeSetOTDRprm(void)// режим установок параметров рефлектометра прибора CHE
 	  sprintf(Str, "t3.txt=\"%s\"яяя", MsgMass[113][CurrLang]);
   else
 	  sprintf(Str, "t3.txt=\"%s\"яяя", MsgMass[114][CurrLang]);
-	  NEX_Transmit(Str);// 
+	  NEX_Transmit((void*)Str);// 
 
 	  // раскрашивание поля выбора 
 	  // закрасим бэкграунды  и установим требуемый
 	  sprintf(Str, "t0.bco=WHITEяяя"); // белый
-	  NEX_Transmit(Str);// 
+	  NEX_Transmit((void*)Str);// 
 	  sprintf(Str, "t1.bco=WHITEяяя"); // белый
-	  NEX_Transmit(Str);// 
+	  NEX_Transmit((void*)Str);// 
 	  sprintf(Str, "t2.bco=WHITEяяя"); // белый
-	  NEX_Transmit(Str);// 
+	  NEX_Transmit((void*)Str);// 
 	  sprintf(Str, "t%d.bco=GREENяяя", FrSetOTDRprm); // зеленый
-	  NEX_Transmit(Str);// 
+	  NEX_Transmit((void*)Str);// 
 		// код подсветки требуемой строки если есть есть маркер строки
 	  g_NeedScr = 0;
   }
@@ -5167,7 +5131,7 @@ void ModeSetOTDRprm(void)// режим установок параметров рефлектометра прибора CHE
   }
   if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))// возврат в установки
   {
-    Sound(10);
+    myBeep(10);
     SetMode(ModeSetting);
     ModeDevice = MODESETUP;
         // посылка команды переключения окна на Settings (возврат)  
@@ -5185,14 +5149,14 @@ void SetBELCORE (void)
   //DWORD KeyP = SetBtnStates( KEYS_REG, 1 );
   if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
     FrSetBelcore = ChangeFrSet (FrSetBelcore, 3, 0, MINUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_UP);
   }
   if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
     FrSetBelcore = ChangeFrSet (FrSetBelcore, 3, 0, PLUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_DOWN);
@@ -5202,13 +5166,13 @@ void SetBELCORE (void)
   case 0: // коэффициент обратного рассеяния
     if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       GetSet_BC (0.1);
     }
     if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       GetSet_BC (-0.1);
     }
@@ -5229,13 +5193,13 @@ void SetBELCORE (void)
   case 1: // порог контроля затухания в соединении
     if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       GetSet_LT (0.1);
     }
     if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       GetSet_LT (-0.1);
     }
@@ -5255,13 +5219,13 @@ void SetBELCORE (void)
   case 2: // порог контроля отражающего события
     if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       GetSet_RT (1.0);
     }
     if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       GetSet_RT (-1.0);
     }
@@ -5281,13 +5245,13 @@ void SetBELCORE (void)
   case 3: // порог контроля определения конца линии
     if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       GetSet_ET (0.1);
     }
     if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       GetSet_ET (-0.1);
     }
@@ -5310,16 +5274,16 @@ if (g_FirstScr)
   // здесь заполняем данными поля нового индикатора
   // не требущие изменения при первичной инициализации
   sprintf(Str, "t0.txt=\"%s\"яяя", MsgMass[103][CurrLang]);
-  NEX_Transmit(Str);                         // (BC) обратное рассеяние
+  NEX_Transmit((void*)Str);                         // (BC) обратное рассеяние
   
   sprintf(Str, "t1.txt=\"%s\"яяя", MsgMass[105][CurrLang]);
-  NEX_Transmit(Str);                         // (LT) потери в стыке
+  NEX_Transmit((void*)Str);                         // (LT) потери в стыке
   
   sprintf(Str, "t2.txt=\"%s\"яяя", MsgMass[107][CurrLang]);
-  NEX_Transmit(Str);                         // (RT) Коэфф. обратного отражения
+  NEX_Transmit((void*)Str);                         // (RT) Коэфф. обратного отражения
   
   sprintf(Str, "t3.txt=\"%s\"яяя", MsgMass[109][CurrLang]);
-  NEX_Transmit(Str);                         // (ET) конец линии
+  NEX_Transmit((void*)Str);                         // (ET) конец линии
   
   
   g_FirstScr = 0;
@@ -5332,46 +5296,48 @@ if (g_NeedScr)
 
   OutSign = GetSet_BC(0.0)/10.0;
   sprintf(Str, "t4.txt=\"%2.1f%s\"яяя",OutSign, MsgMass[47][CurrLang]);
-  NEX_Transmit(Str);                         // ...
+  NEX_Transmit((void*)Str);                         // ...
   
   OutSign = GetSet_LT(0.0)/1000.0;
   sprintf(Str, "t5.txt=\"%2.2f%s\"яяя", OutSign, MsgMass[47][CurrLang]);
-  NEX_Transmit(Str);                         // ...
+  NEX_Transmit((void*)Str);                         // ...
   
   OutSign = GetSet_RT(0.0)/1000.0;
   sprintf(Str, "t6.txt=\"%2.1f%s\"яяя",-OutSign, MsgMass[47][CurrLang]);
-  NEX_Transmit(Str);                         // ..
+  NEX_Transmit((void*)Str);                         // ..
   
   OutSign = GetSet_ET(0.0)/1000.0;
   sprintf(Str, "t7.txt=\"%2.2f%s\"яяя",OutSign, MsgMass[47][CurrLang]);
-  NEX_Transmit(Str);                         // ..
+  NEX_Transmit((void*)Str);                         // ..
   // раскрашивание поля выбора 
   // закрасим бэкграунды  и установим требуемый
   sprintf(Str, "t0.bco=WHITEяяя"); // белый
-  NEX_Transmit(Str);// 
+  NEX_Transmit((void*)Str);// 
   sprintf(Str, "t1.bco=WHITEяяя"); // белый
-  NEX_Transmit(Str);// 
+  NEX_Transmit((void*)Str);// 
   sprintf(Str, "t2.bco=WHITEяяя"); // белый
-  NEX_Transmit(Str);// 
+  NEX_Transmit((void*)Str);// 
   sprintf(Str, "t3.bco=WHITEяяя"); // белый
-  NEX_Transmit(Str);//
+  NEX_Transmit((void*)Str);//
   sprintf(Str, "t%d.bco=GREENяяя", FrSetBelcore); // зеленый
-  NEX_Transmit(Str);// 
+  NEX_Transmit((void*)Str);// 
   
   								   // код подсветки требуемой строки если есть есть маркер строки
   g_NeedScr = 0;
 }
   if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))// возврат в установки
   {
-    Sound(10);
+    myBeep(10);
     CheckReflParam ();  // Проверка пользовательских настроек 
-    FlashErasePage(EVEN_SET); // чистим страницу установок пользователя прибора
-    FlashWritePageSM(EVEN_SET, StructPtr(EVEN_SET), StructSize(EVEN_SET), 0);
+    
+    //FlashErasePage(EVEN_SET); // чистим страницу установок пользователя прибора
+    //FlashWritePageSM(EVEN_SET, StructPtr(EVEN_SET), StructSize(EVEN_SET), 0);
+    WriteNeedStruct(0x08);
     SetMode(ModeSetOTDRprm);
     ModeDevice = MODEOTDRPRM;
         // посылка команды переключения окна на Set_OTDRparams (возврат)  
     CmdInitPage(10);
-    //Sound(10); // убрал, замечание 3
+    //myBeep(10); // убрал, замечание 3
   }
   
 }
@@ -5389,7 +5355,7 @@ void ModeDateTimeSET(void) // режим установок времени CHECK_IN
 
   if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // надо перерисовать что то на новом индикаторе
     if (PosCurr>0) PosCurr--;
     else PosCurr=5;
@@ -5397,7 +5363,7 @@ void ModeDateTimeSET(void) // режим установок времени CHECK_IN
   }
   if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // надо перерисовать что то на новом индикаторе
     if (PosCurr<5) PosCurr++;
     else PosCurr=0;
@@ -5406,7 +5372,7 @@ void ModeDateTimeSET(void) // режим установок времени CHECK_IN
   // установка величин
   if ((PRESS(BTN_UP))&&((getStateButtons(BTN_UP)==SHORT_PRESSED)||(getStateButtons(BTN_UP)==INF_PRESSED)))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // надо перерисовать что то на новом индикаторе
     switch (PosCurr)
     {
@@ -5439,7 +5405,7 @@ void ModeDateTimeSET(void) // режим установок времени CHECK_IN
   }
   if ((PRESS(BTN_DOWN))&&((getStateButtons(BTN_DOWN)==SHORT_PRESSED)||(getStateButtons(BTN_DOWN)==INF_PRESSED)))
   {
-    Sound(10);
+    myBeep(10);
     g_NeedScr = 1; // надо перерисовать что то на новом индикаторе
     switch (PosCurr)
     {
@@ -5473,7 +5439,7 @@ void ModeDateTimeSET(void) // режим установок времени CHECK_IN
   
   if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
   {
-  Sound(10);
+  myBeep(10);
   g_NeedScr = 1; // надо перерисовать что то на новом индикаторе
   RTCSetTime( NowTime );
 //  if (GetID_Dev()==0)
@@ -5501,21 +5467,21 @@ if(g_FirstScr)
   // здесь заполняем данными поля нового индикатора
   // не требущие изменения при первичной инициализации
       sprintf(Str,"t0.txt=\"%s\"яяя", MsgMass[65][CurrLang]); // "Дата"" 
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
       sprintf(Str,"t1.txt=\"%s\"яяя", MsgMass[15][CurrLang]); // "Время"
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
       sprintf(Str,"t2.txt=\"/\"яяя"); // "слэшь"
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
       sprintf(Str,"t3.txt=\"/\"яяя"); // "слэшь"
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str,"t4.txt=\":\"яяя"); // "двоеточие"
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str,"t5.txt=\":\"яяя"); // "двоеточие"
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str,"t6.txt=\" \"яяя"); // "пустая строка (пробел)"
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str,"t7.txt=\" \"яяя"); // "пустая строка (пробел)"
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
 
   g_FirstScr=0;
   g_NeedScr=1;
@@ -5525,17 +5491,17 @@ if(g_NeedScr)
    // здесь заполняем данными поля нового индикатора
   // по результатам изменений вызваныйх обработчиком клавиатуры
     sprintf(Str,"n5.val=%dяяя",NowTime.RTC_Year%100); // "Год"
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str,"n4.val=%dяяя",NowTime.RTC_Mon); // "месяц"
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str,"n3.val=%dяяя",NowTime.RTC_Mday); // "день"
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str,"n2.val=%dяяя",NowTime.RTC_Hour); // "часы"
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str,"n1.val=%dяяя",NowTime.RTC_Min); // "минуты"
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str,"n0.val=%dяяя",NowTime.RTC_Sec); // "секунды"
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
  
     
  
@@ -5543,37 +5509,37 @@ if(g_NeedScr)
     // закрасим бэкграунды  и установим требуемый
   // забеляем поля редактирования
     sprintf(Str,"n0.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str,"n1.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str,"n2.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str,"n3.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str,"n4.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str,"n5.bco=WHITEяяя"); // белый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
   if(PosCurr<6)
   {
     sprintf(Str,"n%d.bco=GREENяяя",PosCurr); // зеленый
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
   }
   g_NeedScr = 0;
   if(PosCurr==7)
   {
       GetNumVer(St);
     sprintf(Str,"t6.txt=\"v%s (%04X)\"яяя",St, CalkCheckSum()); // "версия и контрольная сумма"
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
     sprintf(Str,"t7.txt=\"%s\"яяя", MsgMass[64][CurrLang]); // Up-to DATE"
-    NEX_Transmit(Str);// 
+    NEX_Transmit((void*)Str);// 
 
   }
 }
   
   if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
   {
-    Sound(10);
+    myBeep(10);
     SetMode(ModeSetting);
     ModeDevice = MODESETUP;
         // посылка команды переключения окна на Settings (возврат)  
@@ -5590,10 +5556,13 @@ void ModeCalibrate(void) // режим установки начального смещения
   PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
   PointInPeriod = 0;
   memset( RawData, 0, RAWSIZE * sizeof(DWORD) );
-  Sound(0);
-  disable_timer ( 0 );
-    reset_timer(2);
-    enable_timer(2);
+  myBeep(0);
+//123  disable_timer ( 0 );
+//123    reset_timer(2);
+//123    enable_timer(2);
+  CurrTimeAccum = 0;
+  EnaTimerAccum = 1;
+  
   Averaging(200,0,0);// включение питания и запуск прогревочного накопления 
   for (int i=0; i<NUMSHIFTZONE; ++i)
   {
@@ -5610,8 +5579,11 @@ void ModeCalibrate(void) // режим установки начального смещения
     }
     PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
     memset( RawData, 0, RAWSIZE * sizeof(DWORD) );
-    reset_timer(2); // необходимо пересбрасывать таймер!
-    enable_timer(2);
+//123    reset_timer(2); // необходимо пересбрасывать таймер!
+    //123 enable_timer(2);
+    CurrTimeAccum = 0;
+    EnaTimerAccum = 1;
+    
     Averaging(300,0,0);// включение питания и запуск прогревочного накопления 
     DWORD Data = SetBegShiftZone (i, SearchShiftBeg (500));// запись мертвой зоны по индексу
     DrawCalibrating(Data);
@@ -5622,17 +5594,17 @@ void ModeCalibrate(void) // режим установки начального смещения
   SetIndexIM (0);
   HV_LOW(ON); //ON LOW HIGH VOLT
   HV_SW(OFF); // OFF HIGH VOLT
-  POWALT(OFF);
   POWDET(OFF);
   POWREF (OFF);
-  SSPInit_Any(MEM_FL1); // Востанавливаем Инициализацию SSP для управления внешней FLASH (порт 1 та что на плате отладочной)
-  FlashErasePage(CFG_USER); // чистим страницу установок пользователя прибора
-  FlashWritePageSM(CFG_USER, StructPtr(CFG_USER), StructSize(CFG_USER), 0);
+  //123 SSPInit_Any(MEM_FL1); // Востанавливаем Инициализацию SSP для управления внешней FLASH (порт 1 та что на плате отладочной)
+  WriteNeedStruct (0x04);
+//123  FlashErasePage(CFG_USER); // чистим страницу установок пользователя прибора
+//123  FlashWritePageSM(CFG_USER, StructPtr(CFG_USER), StructSize(CFG_USER), 0);
   SetMode(ModeSetOTDRprm);
   ModeDevice = MODEOTDRPRM;
-  Sound(20);
+  myBeep(20);
   SubModeMeasOTDR = NOTMODE;
-  enable_timer ( 0 );
+  //123 enable_timer ( 0 );
   // возврат в окно Установки для рефлектометра
           // посылка команды переключения окна на Set_datetime (вызов)  
   CmdInitPage(10);
@@ -5640,51 +5612,51 @@ void ModeCalibrate(void) // режим установки начального смещения
   //ClrKey (BNS_MASK); // сброс нажатых клавиш
 }
 
-// Большая рамка
-void FrBig(unsigned char SW,  char Add)
-{
-    //  char CmdBuf[30];
-    //  DrawLine(0,0+SW*12,76,0+SW*12,12,0,screen); // очистка окна ,большого
-    // DrawLine(80,0+SW*12,124,0+SW*12,12,0,screen);
-    if (((76+Add)>127)||((76+Add)<0)) Add = 0;
-
-    DrawLine(0,4+SW*12,76+Add,4+SW*12,1,1);
-    DrawLine(0,4+SW*12,0,15+SW*12,1,1);
-    DrawLine(0,15+SW*12,76+Add,15+SW*12,1,1);
-    DrawLine(76+Add,4+SW*12,76+Add,15+SW*12,1,1);
-    // по приколу порисуем рамку на индикаторе
-    //1. очистим 2. нарисуем рамку
-  //sprintf( CmdBuf,"cls WHITEяяя"); // 0xff
-  //NEX_Transmit(CmdBuf);// 
-  //sprintf( CmdBuf,"page 0яяя"); // 0xff
-  //NEX_Transmit(CmdBuf);// 
-  //sprintf( CmdBuf,"draw %d,%d,%d,%d,REDяяя",0,4+SW*12,76+Add,15+SW*12); // 0xff
-  //NEX_Transmit(CmdBuf);// 
-
-}
-// Маленькая рамка
-void FrSmall(unsigned char SW ,  char Add) // до самого края (09.10.2013)
-{
-    if (((80+Add)>127)||((80+Add)<0)) Add = 0;
-    DrawLine(80+Add,4+SW*12,127,4+SW*12,1,1);
-    DrawLine(80+Add,4+SW*12,80+Add,15+SW*12,1,1);
-    DrawLine(80+Add,15+SW*12,127,15+SW*12,1,1);
-    DrawLine(127,4+SW*12,127,15+SW*12,1,1);
-}
-// рамка произвольного размера и места
-void FrFree(unsigned char SW ,  int X, int Size)
-{
-    if (((X+Size)>0)&&((X+Size)<128))
-    {
-    DrawLine(X,4+SW*12,X+Size,4+SW*12,1,1);
-    DrawLine(X,4+SW*12,X,15+SW*12,1,1);
-    DrawLine(X,15+SW*12,X+Size,15+SW*12,1,1);
-    DrawLine(X+Size,4+SW*12,X+Size,15+SW*12,1,1);
-    }
-  
-
-}
-
+//// Большая рамка
+//void FrBig(unsigned char SW,  char Add)
+//{
+//    //  char CmdBuf[30];
+//    //  DrawLine(0,0+SW*12,76,0+SW*12,12,0,screen); // очистка окна ,большого
+//    // DrawLine(80,0+SW*12,124,0+SW*12,12,0,screen);
+//    if (((76+Add)>127)||((76+Add)<0)) Add = 0;
+//
+//    DrawLine(0,4+SW*12,76+Add,4+SW*12,1,1);
+//    DrawLine(0,4+SW*12,0,15+SW*12,1,1);
+//    DrawLine(0,15+SW*12,76+Add,15+SW*12,1,1);
+//    DrawLine(76+Add,4+SW*12,76+Add,15+SW*12,1,1);
+//    // по приколу порисуем рамку на индикаторе
+//    //1. очистим 2. нарисуем рамку
+//  //sprintf( CmdBuf,"cls WHITEяяя"); // 0xff
+//  //NEX_Transmit((void*)CmdBuf);// 
+//  //sprintf( CmdBuf,"page 0яяя"); // 0xff
+//  //NEX_Transmit((void*)CmdBuf);// 
+//  //sprintf( CmdBuf,"draw %d,%d,%d,%d,REDяяя",0,4+SW*12,76+Add,15+SW*12); // 0xff
+//  //NEX_Transmit((void*)CmdBuf);// 
+//
+//}
+//// Маленькая рамка
+//void FrSmall(unsigned char SW ,  char Add) // до самого края (09.10.2013)
+//{
+//    if (((80+Add)>127)||((80+Add)<0)) Add = 0;
+//    DrawLine(80+Add,4+SW*12,127,4+SW*12,1,1);
+//    DrawLine(80+Add,4+SW*12,80+Add,15+SW*12,1,1);
+//    DrawLine(80+Add,15+SW*12,127,15+SW*12,1,1);
+//    DrawLine(127,4+SW*12,127,15+SW*12,1,1);
+//}
+//// рамка произвольного размера и места
+//void FrFree(unsigned char SW ,  int X, int Size)
+//{
+//    if (((X+Size)>0)&&((X+Size)<128))
+//    {
+//    DrawLine(X,4+SW*12,X+Size,4+SW*12,1,1);
+//    DrawLine(X,4+SW*12,X,15+SW*12,1,1);
+//    DrawLine(X,15+SW*12,X+Size,15+SW*12,1,1);
+//    DrawLine(X+Size,4+SW*12,X+Size,15+SW*12,1,1);
+//    }
+//  
+//
+//}
+//
 BYTE ChangeFrSet (BYTE FrSet, BYTE MaxSet, BYTE MinSet, BYTE DirSet)// установка курсора в рамках заданных параметров
 {
   if (DirSet) // вверх
@@ -5711,21 +5683,21 @@ BYTE DrawSourceVFL (BYTE* frameInx, char* Str, DWORD KeyP, BYTE Lang, BYTE FrmMa
     case 0: // Source
       if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
       {
-        Sound(10);
+        myBeep(10);
         g_NeedScr = 1; // Need reDraw Screen
         GetPlaceLS(NEXT);
         //ClrKey (BTN_RIGHT);
       }
       if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
       {
-        Sound(10);
+        myBeep(10);
         g_NeedScr = 1; // Need reDraw Screen
         SetModeLS(Str,INCR,Lang );
         //ClrKey (BTN_RIGHT);
       }
       if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
       {
-        Sound(10);
+        myBeep(10);
         g_NeedScr = 1; // Need reDraw Screen
         SetModeLS(Str,DECR,Lang );
         //ClrKey (BTN_LEFT);
@@ -5734,14 +5706,14 @@ BYTE DrawSourceVFL (BYTE* frameInx, char* Str, DWORD KeyP, BYTE Lang, BYTE FrmMa
     case 1: // VFL
       if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
       {
-        Sound(10);
+        myBeep(10);
         g_NeedScr = 1; // Need reDraw Screen
         SetModeRE(Str,INCR,Lang );
         //ClrKey (BTN_RIGHT);
       }
       if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
       {
-        Sound(10);
+        myBeep(10);
         g_NeedScr = 1; // Need reDraw Screen
         SetModeRE(Str,DECR,Lang );
         //ClrKey (BTN_LEFT);
@@ -5750,14 +5722,14 @@ BYTE DrawSourceVFL (BYTE* frameInx, char* Str, DWORD KeyP, BYTE Lang, BYTE FrmMa
     }
     if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       *frameInx = ChangeFrSet (*frameInx, FrmMax+RedEye, FrmMin, MINUS);// ????????? ??????? ? ?????? ???????? ??????????
       //ClrKey (BTN_UP);
     }
     if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       *frameInx = ChangeFrSet (*frameInx, FrmMax+RedEye, FrmMin, PLUS);// ????????? ??????? ? ?????? ???????? ??????????
       //ClrKey (BTN_DOWN);
@@ -5776,19 +5748,19 @@ BYTE DrawSourceVFL (BYTE* frameInx, char* Str, DWORD KeyP, BYTE Lang, BYTE FrmMa
     case 0: // Source
       if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
       {
-        Sound(10);
+        myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       GetPlaceLS(NEXT);
       }
       if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
       {
-        Sound(10);
+        myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
           SetModeLS(Str,INCR,Lang );
       }
       if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
       {
-        Sound(10);
+        myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
           SetModeLS(Str,DECR,Lang );
       }
@@ -5796,7 +5768,7 @@ BYTE DrawSourceVFL (BYTE* frameInx, char* Str, DWORD KeyP, BYTE Lang, BYTE FrmMa
     case 1: // теперь как бы только ORL здесь
       if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
       {
-        Sound(20);
+        myBeep(20);
         GetPlaceLS(CURRENT);
         PreSetModeLS(0); // вроде как выключаем источник!
         SetModeLS(Str,0,Lang ); // прорисовываем индикацию
@@ -5804,7 +5776,7 @@ BYTE DrawSourceVFL (BYTE* frameInx, char* Str, DWORD KeyP, BYTE Lang, BYTE FrmMa
         // Здесь функция измерения ORL 
         g_VolORL = MeasORL (1000, 1);
       g_NeedScr = 1; // Need reDraw Screen
-        Sound(20);
+        myBeep(20);
       }
       //    }
       break;
@@ -5813,13 +5785,13 @@ BYTE DrawSourceVFL (BYTE* frameInx, char* Str, DWORD KeyP, BYTE Lang, BYTE FrmMa
       {
         if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
         {
-          Sound(10);
+          myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
           SetModeRE(Str,INCR,Lang );
         }
         if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
         {
-          Sound(10);
+          myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
           SetModeRE(Str,DECR,Lang );
         }
@@ -5828,7 +5800,7 @@ BYTE DrawSourceVFL (BYTE* frameInx, char* Str, DWORD KeyP, BYTE Lang, BYTE FrmMa
     }
     if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
         if(FrmMax==1)
    *frameInx = ChangeFrSet (*frameInx, FrmMax+1+RedEye, FrmMin, MINUS);// ????????? ??????? ? ?????? ???????? ??????????
@@ -5837,7 +5809,7 @@ BYTE DrawSourceVFL (BYTE* frameInx, char* Str, DWORD KeyP, BYTE Lang, BYTE FrmMa
     }
     if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
     {
-      Sound(10);
+      myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
         if(FrmMax==1)
    *frameInx = ChangeFrSet (*frameInx, FrmMax+1+RedEye, FrmMin, PLUS);// ????????? ??????? ? ?????? ???????? ??????????
@@ -5893,16 +5865,16 @@ void DrawCalibrating (DWORD Data)// рисование окна калибровки
     // здесь заполняем данными поля нового индикатора
     // не требущие изменения при первичной инициализации
     sprintf(Str, "t0.txt=\"%s\"яяя", MsgMass[28][CurrLang]);
-    NEX_Transmit(Str);    // 
+    NEX_Transmit((void*)Str);    // 
   
     sprintf(Str, "t1.txt=\"%s\"яяя", MsgMass[40][CurrLang]);
-    NEX_Transmit(Str);    // 
+    NEX_Transmit((void*)Str);    // 
   
     sprintf(Str, "t2.txt=\"%s\"яяя", MsgMass[19][CurrLang]); //!
-    NEX_Transmit(Str);    // 
+    NEX_Transmit((void*)Str);    // 
   
     sprintf(Str, "t3.txt=\"%s\"яяя", MsgMass[22][CurrLang]); //!
-    NEX_Transmit(Str);    // 
+    NEX_Transmit((void*)Str);    // 
   
   
     g_FirstScr = 0;
@@ -5914,13 +5886,13 @@ void DrawCalibrating (DWORD Data)// рисование окна калибровки
     // по результатам изменений вызваныйх обработчиком клавиатуры
     
     sprintf(Str, "t4.txt=\"%d%s\"яяя", GetLengthLine(GetIndexLN()),MsgMass[20][CurrLang]); //!
-    NEX_Transmit(Str);    // 
+    NEX_Transmit((void*)Str);    // 
     
      sprintf(Str, "t5.txt=\"%d%s\"яяя", GetWidthPulse(GetIndexIM()),MsgMass[23][CurrLang]); //!
-    NEX_Transmit(Str);    // 
+    NEX_Transmit((void*)Str);    // 
   
     sprintf(Str, "t6.txt=\"%d\"яяя",Data);
-    NEX_Transmit(Str);    // 
+    NEX_Transmit((void*)Str);    // 
   
   
   									 // код подсветки требуемой строки если есть есть маркер строки
@@ -6062,10 +6034,9 @@ BYTE SetModeDevice (BYTE Mode) // принудительная установка режима прибора
     ModeDevice = MODESETREFL;
     HV_LOW(ON); //ON LOW HIGH VOLT
     HV_SW(OFF); // OFF HIGH VOLT
-    POWALT(OFF);
     POWREF (OFF);
     POWDET(OFF);
-    SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
+//123    SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
       CmdInitPage(2);// посылка команды переключения окна на OTDR
     
     break;
@@ -6080,10 +6051,9 @@ BYTE SetModeDevice (BYTE Mode) // принудительная установка режима прибора
     ModeDevice = MODEREFL;
     HV_LOW(ON); //ON LOW HIGH VOLT
     HV_SW(OFF); // OFF HIGH VOLT
-    POWALT(OFF);
     POWREF (OFF);
     POWDET(OFF);
-    SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
+//123    SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
     CmdInitPage(18);// посылка команды переключения окна на OTDR просмотр
     break;
   case MODEMEMR:// режим работы с памятью рефлектограмм
@@ -6095,10 +6065,9 @@ BYTE SetModeDevice (BYTE Mode) // принудительная установка режима прибора
     ModeMemDraw = VIEWNEXT;
     HV_LOW(ON); //ON LOW HIGH VOLT
     HV_SW(OFF); // OFF HIGH VOLT
-    POWALT(OFF);
     POWREF (OFF);
     POWDET(OFF);
-    SSPInit_Any(MEM_FL1); // Инициализация SSP для FLASH (порт 1 та что на плате отладочной)
+    //123 SSPInit_Any(MEM_FL1); // Инициализация SSP для FLASH (порт 1 та что на плате отладочной)
       CmdInitPage(13);// посылка команды переключения окна на OTDR память
     break;
   case MODETEST:// режим ТЕСТЕРА
@@ -6114,14 +6083,14 @@ BYTE SetModeDevice (BYTE Mode) // принудительная установка режима прибора
           CmdInitPage(7);// посылка команды переключения окна на ТЕСТЕР
     }
     ModeDevice = MODETEST;
-    SSPInit_Any(SPI_PM); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
+    //123 SSPInit_Any(SPI_PM); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
     break;
   case MODETESTMEM:// режим ТЕСТЕРА память
     if (GetCfgPM ())
     {
       POWDET(ON); // включаем питание измерителя
       SetMode(ModeViewMemOLT);
-      SSPInit_Any(MEM_FL1); // Инициализация SSP для FLASH (порт 1 та что на плате отладочной)
+      //123 SSPInit_Any(MEM_FL1); // Инициализация SSP для FLASH (порт 1 та что на плате отладочной)
       ModeDevice = MODETESTMEM;
       CmdInitPage(20);// посылка команды переключения окна на память тестера
     }
@@ -6129,7 +6098,6 @@ BYTE SetModeDevice (BYTE Mode) // принудительная установка режима прибора
     {
     HV_LOW(ON); //ON LOW HIGH VOLT
     HV_SW(OFF); // OFF HIGH VOLT
-    POWALT(OFF);
     POWREF (OFF);
     POWDET(OFF);
     SetMode(ModeMainMenu);
@@ -6140,12 +6108,11 @@ BYTE SetModeDevice (BYTE Mode) // принудительная установка режима прибора
   case MODESETUP:// режим установок пользователя
     HV_LOW(ON); //ON LOW HIGH VOLT
     HV_SW(OFF); // OFF HIGH VOLT
-    POWALT(OFF);
     POWREF (OFF);
     POWDET(OFF);
     SetMode(ModeSetting);
     ModeDevice = MODESETUP;
-    SSPInit_Any(MEM_FL1); // Инициализация SSP для FLASH (порт 1 та что на плате отладочной)
+    //123 SSPInit_Any(MEM_FL1); // Инициализация SSP для FLASH (порт 1 та что на плате отладочной)
       CmdInitPage(5);// посылка команды переключения окна на Setting
 
     break;
@@ -6159,18 +6126,17 @@ BYTE SetModeDevice (BYTE Mode) // принудительная установка режима прибора
     SubModeMeasOTDR = SETPOWER;
     SetMode(ModeStartOTDR);
     ModeDevice = MODEMEASURE;
-    SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
+    //123 SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
     
     break;
   default:// режим МЕНЮ
     HV_LOW(ON); //ON LOW HIGH VOLT
     HV_SW(OFF); // OFF HIGH VOLT
-    POWALT(OFF);
     POWREF (OFF);
     POWDET(OFF);
     SetMode(ModeMainMenu);
     ModeDevice = MODEMENU;
-    SSPInit_Any(MEM_FL1); // Инициализация SSP для FLASH (порт 1 та что на плате отладочной)
+    //123 SSPInit_Any(MEM_FL1); // Инициализация SSP для FLASH (порт 1 та что на плате отладочной)
     //  CmdInitPage(1);// посылка команды переключения окна на MainMenu
     CmdInitPage(1);// посылка команды переключения окна MainMenu
     break;
@@ -6180,14 +6146,14 @@ BYTE SetModeDevice (BYTE Mode) // принудительная установка режима прибора
 
 void StartSettingBegShift (void) // старт измерения мертвых зон
 {
-        Sound(10);
+        myBeep(10);
         SlowON();
         HV_LOW(ON); //ON LOW HIGH VOLT
         HV_SW(ON); // ON HIGH VOLT
         //POWALT(ON);
         //POWREF (ON);
         //POWDET(ON);
-        SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
+        //123 SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
         SetIndexIM (0);
         SetIndexLN (0);
         PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
@@ -6280,32 +6246,34 @@ case POWMANUAL:
     break;
     
   }
-    SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
-    FlashErasePage(CFG_USER); // чистим страницу установок пользователя прибора
-    FlashWritePageSM(CFG_USER, StructPtr(CFG_USER), StructSize(CFG_USER), 0);
-    SSPInit_Any(SPI_PM); // востановление SSP для управления PM (порт 1 та что на плате отладочной)
+    //123 SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
+    //123 FlashErasePage(CFG_USER); // чистим страницу установок пользователя прибора
+    //123 FlashWritePageSM(CFG_USER, StructPtr(CFG_USER), StructSize(CFG_USER), 0);
+    //123 SSPInit_Any(SPI_PM); // востановление SSP для управления PM (порт 1 та что на плате отладочной)
+  WriteNeedStruct(0x04);
 }
 
 void WriteMemPow(void) // запись в память непосредственно
 {
   WORD TmpCellMem = GetCellMem(0);
-    SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
+    //123 SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
   
 if (TmpCellMem < MaxMemPM)
       {
-      WriteCellIzm(TmpCellMem, (unsigned char*)&PONI);
+//123!!!      WriteCellIzm(TmpCellMem, (unsigned char*)&PONI);
       if (TmpCellMem < MaxMemPM) GetCellMem(1);
       if (GetEnIncFiber(0))    // это надо делать только когда сохраняем
       {
         if (PONI.NumFix<9999) PONI.NumFix++;
         else PONI.NumFix=0;
       }
-    FlashErasePage(CFG_USER); // чистим страницу установок пользователя прибора
-    FlashWritePageSM(CFG_USER, StructPtr(CFG_USER), StructSize(CFG_USER), 0);
+    //FlashErasePage(CFG_USER); // чистим страницу установок пользователя прибора
+    //FlashWritePageSM(CFG_USER, StructPtr(CFG_USER), StructSize(CFG_USER), 0);
+    WriteNeedStruct(0x04);
       }
-    else Sound(20);          
+    else myBeep(20);          
     ReturnToTester (1); // возврат в измеритель
-    SSPInit_Any(SPI_PM); // востановление SSP для управления PM (порт 1 та что на плате отладочной)
+    //123 SSPInit_Any(SPI_PM); // востановление SSP для управления PM (порт 1 та что на плате отладочной)
   
 }
 
@@ -6414,7 +6382,8 @@ WORD CheckLevelBattery (void) // контроль заряда баттареи
 {
   static volatile WORD BufProcBat[10]={100,100,100,100,100,100,100,100,100,100};
   WORD ProcBatMed, ProcBatSum;
-  ADCData = ADC0Read(BAT_ADC);
+//123  ADCData = ADC0Read(BAT_ADC);//новое правило получения данных АЦП батарейки
+  ADCData = 2048;
   Ubat = ADCData * GetSetBatStep(0)* 3 ; // так как делитель на 3, может не надо -0.3- 0.3
     if (Ubat > 5.1) ProcBat = 100;
   //else if (Ubat >= 4.0) ProcBat = (WORD)((Ubat-4.0)*90.91);//  1.1в = 100%
@@ -6424,9 +6393,9 @@ WORD CheckLevelBattery (void) // контроль заряда баттареи
   {
     ProcBat = 0; // плохая батарея
   }
-  if (!(FIO2PIN & EXT_POW)) ProcBat = 100; // если внешне питание подсветку включаем
+  if (!(EXT_POW)) ProcBat = 100; // если внешне питание подсветку включаем
 
-  SetContrast (Ubat, GetUserContr());
+//123  SetContrast (Ubat, GetUserContr()); // возможно не нужна!
   ProcBatSum=0;
   for (int i=9;i>0;--i)
   {
@@ -6449,14 +6418,15 @@ int GetBateryADC (void)
   return  ADCData;
 }
 
-void SetContrast (float Data, WORD UserContr) // установка авто контроаста с учетом пользовательских установок
-{
-  static unsigned int NewContrast = 0;
-  if (Data < 5.0) NewContrast = PeriodPWM/2;
-  else if (Data < 5.8) NewContrast = (unsigned int)(PeriodPWM/2 + (Data - 5.0)*6000);
-  else  NewContrast = 15000; 
-    ChangeLenPWM (NewContrast + ((50-UserContr)*USERSTEPONTR));
-}
+//123
+//void SetContrast (float Data, WORD UserContr) // установка авто контроаста с учетом пользовательских установок
+//{
+//  static unsigned int NewContrast = 0;
+//  if (Data < 5.0) NewContrast = PeriodPWM/2;
+//  else if (Data < 5.8) NewContrast = (unsigned int)(PeriodPWM/2 + (Data - 5.0)*6000);
+//  else  NewContrast = 15000; 
+//    ChangeLenPWM (NewContrast + ((50-UserContr)*USERSTEPONTR));
+//}
 
 void BadBattery(void) // плохая баттарейка CHECK_OFF
 { 
@@ -6466,37 +6436,35 @@ void BadBattery(void) // плохая баттарейка CHECK_OFF
   REDEYE(0); // выключаем красный лазер
   HV_LOW(ON); //ON LOW HIGH VOLT
   HV_SW(OFF); // OFF HIGH VOLT
-  POWALT(OFF);
   POWREF (OFF);
   POWDET(OFF);
   SubModeMeasOTDR = NOTMODE;
   SetMode(ModeMainMenu);
   ModeDevice = MODEMENU;
-  Light(0); // выключаем подсветку
     CmdInitPage(27);// MainMenu
 
   // Выделим блок для выключения если LCD не пользуем
   // заполним индикатор Nextion
     sprintf (F_name,"t0.txt=\"%s\"яяя",MsgMass[71][CurrLang]); // 
-    NEX_Transmit(F_name);    sprintf (F_name,"t1.txt=\"%s\"яяя",MsgMass[72][CurrLang]); // 
-    NEX_Transmit(F_name);//
+    NEX_Transmit((void*)F_name);    sprintf (F_name,"t1.txt=\"%s\"яяя",MsgMass[72][CurrLang]); // 
+    NEX_Transmit((void*)F_name);//
     sprintf (F_name,"t2.txt=\"%s\"яяя",MsgMass[73][CurrLang]); // 
-    NEX_Transmit(F_name);//
+    NEX_Transmit((void*)F_name);//
   
   LevelBat = CheckLevelBattery();
-  while((LevelBat < 60)&&(FIO2PIN & EXT_POW)) // если подключили внешнее питание то переключимся  в норм режим
+  while((LevelBat < 60)&&(EXT_POW)) // если подключили внешнее питание то переключимся  в норм режим
   {
-    if (CntOff++%60 == 0) Sound(3);
+    if (CntOff++%60 == 0) myBeep(3);
      // читаем состояние батареи
     LevelBat = CheckLevelBattery();
     // ProcBatInd
     //sprintf(F_name,"BAT = %d%%", LevelBat );
     sprintf (F_name,"t3.txt=\"BAT = %d%%(%1.2f)\"яяя",ProcBatInd,Ubat); // 
-    NEX_Transmit(F_name);//
+    NEX_Transmit((void*)F_name);//
     
   }
   CmdInitPage(1);// MainMenu
-  Sound(25);
+  myBeep(25);
 
 }
 
@@ -6507,21 +6475,19 @@ void UploadFW_Nextion(void) // обновление индикатора NEXTION
   REDEYE(0); // выключаем красный лазер
   HV_LOW(ON); //ON LOW HIGH VOLT
   HV_SW(OFF); // OFF HIGH VOLT
-  POWALT(OFF);
   POWREF (OFF);
   POWDET(OFF);
-  Light(0); // выключаем подсветку
-  enable_timer ( 0 );
+  //123 enable_timer ( 0 );
     // здесь порисуем для нового индиктора
     if (g_FirstScr)
   {
     // здесь заполняем данными поля нового индикатора
     // не требущие изменения при первичной инициализации
     sprintf(Str, "t0.txt=\"%s\"яяя", MsgMass[119][CurrLang]);
-    NEX_Transmit(Str);    // 
+    NEX_Transmit((void*)Str);    // 
   
     sprintf(Str, "t1.txt=\"%s\"яяя", MsgMass[120][CurrLang]);
-    NEX_Transmit(Str);    // 
+    NEX_Transmit((void*)Str);    // 
   
     CreatDelay(500000);// чуть потупим
     ProgFW_LCD = 1; // переключим режим работы UART только здесь когда все заслали
@@ -6532,7 +6498,7 @@ void UploadFW_Nextion(void) // обновление индикатора NEXTION
 
   if(ProgFW_LCD==2) // если сбросисли признак программирования то переключимся  в норм режим
   {
-  enable_timer( 0 );
+  //123 enable_timer( 0 );
   GetSysTick(1); // получение тиков 10 мС. 0 - получение счетчика от предыдущего сброса 1- сброс
   ProgFW_LCD=0;  
   SubModeMeasOTDR = NOTMODE;
@@ -6543,7 +6509,7 @@ void UploadFW_Nextion(void) // обновление индикатора NEXTION
   CreatDelay(5000000);
 
   CmdInitPage(1);
-  Sound(25);
+  myBeep(25);
   }
 
 }
@@ -6552,25 +6518,25 @@ void KeybCntrl (void) // переключатель указателя в клавиатуре
 {
      if ((PRESS(BTN_UP))&&((getStateButtons(BTN_UP)==SHORT_PRESSED)||(getStateButtons(BTN_UP)==INF_PRESSED)))
       {
-        Sound(7);
+        myBeep(7);
         if (KbPosY > 0) KbPosY--;
         else KbPosY =3;
       }
     if ((PRESS(BTN_DOWN))&&((getStateButtons(BTN_DOWN)==SHORT_PRESSED)||(getStateButtons(BTN_DOWN)==INF_PRESSED)))
       {
-        Sound(7);
+        myBeep(7);
         if (KbPosY < 3) KbPosY++;
         else KbPosY =0;
       }
     if ((PRESS(BTN_LEFT))&&((getStateButtons(BTN_LEFT)==SHORT_PRESSED)||(getStateButtons(BTN_LEFT)==INF_PRESSED)))
       {
-        Sound(7);
+        myBeep(7);
         if (KbPosX > 0) KbPosX--;
         else KbPosX =11;
       }
     if ((PRESS(BTN_RIGHT))&&((getStateButtons(BTN_RIGHT)==SHORT_PRESSED)||(getStateButtons(BTN_RIGHT)==INF_PRESSED)))
       {
-        Sound(7);
+        myBeep(7);
         if (KbPosX < 11) KbPosX++;
         else KbPosX =0;
       }
@@ -6606,7 +6572,7 @@ BYTE CheckPONI (WORD TmpCellMem) // проверка текущей ячейки и ее презапись если 
   PONI.NumFix=0;
   PONI.Rez=0;
   PONI.TotalTimeCell = 10*YearSecV-1;
-  WriteCellIzm(TmpCellMem, (unsigned char*)&PONI);
+//123!!!  WriteCellIzm(TmpCellMem, (unsigned char*)&PONI);
   
   }
   return Err;
@@ -6639,7 +6605,7 @@ int SaveNewOTDRTrace (BYTE Mode)
   SetMode(ModeMemoryOTDR);
   ModeDevice = MODEMEMR;
   TimeSaveOTDR = RTCGetTime(); // сохраняем время сбора
-  Sound(10);
+  myBeep(10);
   Ret = SaveTrace();
   //sprintf(txtout,"%s %d\r",CommentsOTDR,Ret);//c
   //      UARTSend0 ((BYTE*)txtout, strlen (txtout));
@@ -6650,7 +6616,7 @@ int SaveNewOTDRTrace (BYTE Mode)
   {
     if (Ret) sprintf(BufStrOut,"Trace saved %d\r",Ret);//c
     else sprintf(BufStrOut,"Mem full\r");//c
-    UARTSend0 ((BYTE*)BufStrOut, strlen (BufStrOut));
+    UARTSendExt ((BYTE*)BufStrOut, strlen (BufStrOut));
     
   }
       // посылка команды переключения окна на Mem_OTDR_graph (возврат)  
@@ -6658,10 +6624,10 @@ int SaveNewOTDRTrace (BYTE Mode)
   // 07.11.2022 (148)
       CreatDelay(100000);
       CmdInitPage(13);
-//  Sound(10);
+//  myBeep(10);
 //      CreatDelay(200000);
 //      CmdInitPage(13);
-//  Sound(10);
+//  myBeep(10);
 
  return Ret; 
 }
@@ -6681,7 +6647,7 @@ void CalkPreEvents (DWORD* array, unsigned short PII)
           Correlations = CalkCorelation32(array, i, PII, 0); // расчет коррреляции неотражающего затухания
       // модуль вывода вспомогательной информации по определению событий  
       sprintf (OutText, "%d %d %0.3f %0.6f\n",i,array[i],log10(array[i]),Correlations);
-      UARTSend0 ((BYTE*)OutText, strlen (OutText));
+      UARTSendExt ((BYTE*)OutText, strlen (OutText));
       
   }
 }
@@ -6703,9 +6669,9 @@ void PrintEventTbl (void) // вывод по RS таблицы событий
    unsigned short  NumEventOut =  (CalkEventsKeys (LogData, PointsInImpulse(0), 1)); 
    
    sprintf(OutText,"%.1f %s; ",fabs((GetPosLine(EndEvenBlk.ELMP[1]))*1000.0) ,MsgMass[78][CurrLang]);//м - метры
-      UARTSend0 ((BYTE*)OutText, strlen (OutText));
+      UARTSendExt ((BYTE*)OutText, strlen (OutText));
     sprintf(OutText,"%.2f %s; ",(LogData[EndEvenBlk.ELMP[1]]-LogData[EndEvenBlk.ELMP[0]])/1000.0,MsgMass[47][CurrLang]);//дБ
-      UARTSend0 ((BYTE*)OutText, strlen (OutText));
+      UARTSendExt ((BYTE*)OutText, strlen (OutText));
       //
       for (int i=1; i<=NumEventOut;++i)
       {
@@ -6714,15 +6680,15 @@ void PrintEventTbl (void) // вывод по RS таблицы событий
       //sprintf(OutText,"%s ",EvenTrace[i-1].COMM_EVN);//комментарий
       //UARTSend0 ((BYTE*)OutText, strlen (OutText));
       sprintf(OutText,"Evnt %d %.1f ; ",i,fabs((GetPosLine(EvenTrace[i-1].EPT))*1000.0) );//м - метры
-      UARTSend0 ((BYTE*)OutText, strlen (OutText));
+      UARTSendExt ((BYTE*)OutText, strlen (OutText));
       sprintf(OutText,"%.2f ; ",(EvenTrace[i-1].EL)/1000.0);//дБ
-      UARTSend0 ((BYTE*)OutText, strlen (OutText));
+      UARTSendExt ((BYTE*)OutText, strlen (OutText));
       sprintf(OutText,"%.2f ; ",EvenTrace[i-1].ER/1000.0);//дБ
-      UARTSend0 ((BYTE*)OutText, strlen (OutText));
+      UARTSendExt ((BYTE*)OutText, strlen (OutText));
         }
       }
       sprintf(OutText,"\n");//
-      UARTSend0 ((BYTE*)OutText, strlen (OutText));
+      UARTSendExt ((BYTE*)OutText, strlen (OutText));
       SetGetMonEna(0);
 }
 // Программа сшивки рефлектограммы при перегрузке
@@ -6857,10 +6823,11 @@ unsigned short SpliceProg (unsigned short PII)
 }
 
 // функция установки уровня DAC на выходе P0.26
-void SetLvlDAC (unsigned int DAC)
-{
-  DACR = (unsigned long)((DAC&0x7)<<9);
-}
+//123
+//void SetLvlDAC (unsigned int DAC)
+//{
+//  DACR = (unsigned long)((DAC&0x7)<<9);
+//}
 
 // установка заголовка файла передачи необработанных данных
 void SetHeadFileRaw (DWORD NAV)
@@ -6915,9 +6882,9 @@ void SetMODESettingRef (void)
      if (IndexSmall==0)GetSetHorizontScale (-2);
      // устанавливаем для 2 км 
      ModeDevice = MODESETREFL;
-     SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
+     //123 SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
      
-     PWM_LMOD_Init (OFF); // выключаем LMOD от PWM 0 - OFF, 1- 270Hz 2-2kHz  
+//123     PWM_LMOD_Init (OFF); // выключаем LMOD от PWM 0 - OFF, 1- 270Hz 2-2kHz  
 
 }
 // расчет ORL по массиву необработанных данных от измерения в режиме 16км 40 нс (03/05/2017)
@@ -6932,43 +6899,49 @@ float MeasORL(int NumAvrgThis, int EnaReport)
   double CurrDat, MaxNoise=0.;
   double SumBeg = 0, Mnozhitel = 1.0; // выравнивающий множитель
   int NumPereg = 0, pSu = 0; // счетчик перегрузки, число точек суммирования, AllPereg = 0
-  FIO1PIN |=LEDSTART;//On  LED
-  //Sound(10);
+  LED_START(1);//On  LED
+  //myBeep(10);
   SlowON();
   HV_LOW(OFF); //ON HIGH VOLT
   HV_SW(ON); // ON HIGH VOLT
   //POWALT(ON);
   //POWREF (ON);
   //POWDET(ON);
+  //123
+  //теперь нет в этом необходимости
         if (EnaReport)//типа измеряли из под измерителя
         {
-  SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
-  disable_timer ( 0 );
-  reset_timer(2);
-  enable_timer(2);
+//  SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
+//  disable_timer ( 0 );
+//  reset_timer(2);
+//  enable_timer(2);
+          CurrTimeAccum = 0;
+          EnaTimerAccum = 1;
         }
   SetIndexIM (1); // 40 ns
   SetIndexLN (3); // 16 km
   PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
   PointInPeriod = 0;
   memset( RawData, 0, RAWSIZE * sizeof(DWORD) );
-  SetNumAccumPerSec (NumAvrgThis);// установка значения числа накоплений
+//123  SetNumAccumPerSec (NumAvrgThis);// установка значения числа накоплений
   CreatDelay (9000000*EnaReport); // 33 мС
   //        ModeDevice = MODEOTHER;
   //
   Averaging(100,0,0);// включение питания и запуск накопления 
    SetNumAccumPerSec (NumAvrgThis);// установка значения числа накоплений
-  FIO1PIN &=~LEDSTART;//Off  LED
+  LED_START(0);//Off  LED
   //        ModeDevice = MODEOTHER;
   //
   //disable_timer ( 0 );
-  Sound(0); // выкл. писк
+  myBeep(0); // выкл. писк
   CreatDelay (9000000*EnaReport); // 33 мС
   CntNumAvrg = 0; // обнуляем счетчик накоплений
   memset( RawData, 0, RAWSIZE * sizeof(DWORD) );
-  reset_timer(2);
-  enable_timer(2);
-  FIO1PIN |=LEDSTART;//On  LED
+//123  reset_timer(2);
+//123  enable_timer(2);
+  CurrTimeAccum = 0;
+  EnaTimerAccum = 1;
+  LED_START(0);//On  LED
   Averaging(NumAvrgThis,0,0);// включение питания и запуск накопления c увеличенным интервалом
   //g_UpGrdB, g_kLog, g_OffSetdB)
   //  SetMode(ModeSetOTDRprm);
@@ -7005,7 +6978,7 @@ float MeasORL(int NumAvrgThis, int EnaReport)
 #if 0
 //        {
           sprintf(BufStr,"--p-%d\n", NumPereg);// ORL
-  UARTSend0 ((BYTE*)BufStr, strlen (BufStr));
+  UARTSendExt ((BYTE*)BufStr, strlen (BufStr));
 //        }
 #endif
     NumPereg=0;
@@ -7030,14 +7003,13 @@ float MeasORL(int NumAvrgThis, int EnaReport)
           SetIndexIM (0);
           HV_LOW(ON); //ON LOW HIGH VOLT
           HV_SW(OFF); // OFF HIGH VOLT
-          POWALT(OFF);
           //POWDET(OFF);
           POWREF (OFF);
           POWDET(ON); // включаем питание измерителя
-          enable_timer(3);  /* Enable Interrupt Timer3 */
-          enable_timer(1);  /* Enable  Timer1 JDSU */
-          SSPInit_Any(SPI_PM);      //Перевели SPI на АЦП
-          SetupSource (GetModeLS()); // востанавливаем режим работы лазера  
+//123          enable_timer(3);  /* Enable Interrupt Timer3 */
+//123          enable_timer(1);  /* Enable  Timer1 JDSU */
+//123          SSPInit_Any(SPI_PM);      //Перевели SPI на АЦП
+//123          SetupSource (GetModeLS()); // востанавливаем режим работы лазера  
           // по следам версии 175, здесь тоже сделаем небольшую задержку
           CreatDelay (350000); //
           
@@ -7062,7 +7034,7 @@ float MeasORL(int NumAvrgThis, int EnaReport)
   SubModeMeasOTDR = NOTMODE;
   //}
 #endif
-  FIO1PIN &=~LEDSTART;//Off  LED
+  LED_START(0);//Off  LED
   return Result;
 }
 
@@ -7076,7 +7048,7 @@ float MeasORL(int NumAvrgThis, int EnaReport)
 //  if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
 //  {
 //    SetMode(ModeMainMenu);
-//    Sound(10);
+//    myBeep(10);
 //    ModeDevice = MODEMENU;
 //  }
 //    PaintLCD();
@@ -7085,14 +7057,8 @@ float MeasORL(int NumAvrgThis, int EnaReport)
 // функция инициализации страницы по номеру в NEXTION
 void CmdInitPage(int Num)
 {
-      NEX_Transmit(CmdNextion[Num]);
+      NEX_Transmit((void*)CmdNextion[Num]);
       g_FirstScr=1;
-      SetPinsKeyB(); // переустановка клавиатуры
-      //UARTSend0 ((BYTE*)CmdNextion[Num], strlen (CmdNextion[Num])); // тест проверка
-      //UARTSend0 ((BYTE*)"\r", 1);
-      //CreatDelay(20000);//800000 9 февраля поправил на 400000 - глючит при считывании файлов после измерения на компе
-      //CreatDelay(20000);// 173
-      //CreatDelay(200000);// 176
       CreatDelay(20000);// 177 как в 173
 }
 
@@ -7100,21 +7066,9 @@ void SlowON (void) // медленное включение питания
 {
   // сделал с проверкой уже включенных, для ускорения...
   
-  if(!(FIO3PIN & POW_REF_ON))
-  {
   POWREF (ON);
-  CreatDelay (8000000); // 0.7 С (с этой задержкой вроде работает от USB, без акк)
-  }
-  if(!(FIO2PIN & POW_DET_ON))
-  {
+  HAL_Delay (700); // 0.7 С (с этой задержкой вроде работает от USB, без акк)
   POWDET(ON);
-  CreatDelay (4000000); // 0.3 С
-  }
-  if(!(FIO4PIN & V_ALT_ON))
-  {
-  POWALT(ON);
-  CreatDelay (4000000); // 0.3 мС
-  }
   // а так по старому
 //  POWALT(ON);
 //  CreatDelay (40000); // 3.3 мС
@@ -7138,7 +7092,7 @@ void CreatDelay (unsigned long a) { while (a--!=0); }
 //  if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
 //  {
 //    SetMode(ModeMainMenu);
-//    Sound(10);
+//    myBeep(10);
 //    ModeDevice = MODEMENU;
 //  }
 //    PaintLCD();
@@ -7156,7 +7110,7 @@ void CreatDelay (unsigned long a) { while (a--!=0); }
 //        POWDET(OFF);
 //
 //    SetMode(ModeMainMenu);
-//    Sound(10);
+//    myBeep(10);
 //    ModeDevice = MODEMENU;
 //  }
 //    PaintLCD();

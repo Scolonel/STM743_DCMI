@@ -64,7 +64,7 @@ CFG_USR UserSet;
 //  float BatStep; // шаг АЦП батарейки
 //} CFG_DEV;
 
-char CommentsOTDR[20] = {"                   \0"}; //комментарии рефлектометра перенесено из modes.c
+//char CommentsOTDR[20] = {"                   \0"}; //комментарии рефлектометра перенесено из modes.c
 uint8_t StrTXOpt[64]; // буффер передачи данных по оптике
 
 uint8_t TxOptBusy=0; // признак занятости UatrOptic

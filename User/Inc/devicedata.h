@@ -276,8 +276,6 @@ BYTE GetSetNumLS (BYTE a);
 unsigned long GetSetCntFiles (BYTE Dir);
 void SetCurCntFiles (void);
 
-extern RTCTime TimeSaveOTDR; // время сохраненной рефлектограммы T7kAR перетащил из modes.h
-extern RTCTime TimeSaveOLT; // время сохраненной рефлектограммы
 
 // структура настройки рефлектометра ( текущего измерения)
 extern REFL_SET SettingRefl;

@@ -82,10 +82,10 @@ void Mode(void); // режим установок прибора
 void ModeDateTimeSET(void); // режим установок времени
 void ModeCalibrate(void); // режим установки начального смещения
 
-void FrBig(unsigned char SW,  char Add); //Большая рамка
-void FrSmall(unsigned char SW,  char Add);// Маленькая рамка
+//void FrBig(unsigned char SW,  char Add); //Большая рамка
+//void FrSmall(unsigned char SW,  char Add);// Маленькая рамка
 // рамка произвольного размера и места
-void FrFree(unsigned char SW ,  int X, int Size);
+//void FrFree(unsigned char SW ,  int X, int Size);
 
 BYTE ChangeFrSet (BYTE FrSet, BYTE MaxSet, BYTE MinSet, BYTE DirSet);// установка курсора в рамках заданных параметров
 // Рисуем источник и красный глаз
@@ -121,12 +121,11 @@ void ReLoadCommOLT (void); // перезагружаем комментарии для измерителя
 void KeybCntrl (void); // переключатель указателя в клавиатуре
 
 WORD CheckLevelBattery (void); // контроль заряда баттареи
-void SetContrast (float Data, WORD UserContr); // установка авто контроаста с учетом пользовательских установок
+//123 void SetContrast (float Data, WORD UserContr); // установка авто контроаста с учетом пользовательских установок
 void BadBattery(void); // плохая баттарейка
 // переключимся в режим программирования индикатора (пока на паузу  и сигнал
 void UploadFW_Nextion(void); //
 
-void SetPinsKeyB (void);
 BYTE CheckPONI (WORD TmpCellMem);  // проверка текущей ячейки и ее презапись если что не так
 //void TestScreen (void); // 
 // предрасчет сообытий по необработанным данным
@@ -145,7 +144,7 @@ void PrintEventTbl (void); // вывод по RS таблицы событий
 // расчет склейки
 unsigned short SpliceProg (unsigned short PII);
 // функция установки уровня DAC на выходе P0.26
-void SetLvlDAC (unsigned int DAC);
+//123 void SetLvlDAC (unsigned int DAC); // не нужна!
 // установка заголовка файла передачи необработанных данных
 void SetHeadFileRaw (DWORD NAV);
 // переход в режим установки параметров рефлектометра из меню или при включении если ТАБЛЕТКА
