@@ -139,14 +139,26 @@ uint8_t CntCMD;
 uint32_t RecievUSB=0 ; // признак принятия данных по USB, число данных в буфере
 
 // перенос переменных из MAIN.c from T7kAR
+unsigned int CheckErrMEM; 
+
 Measuring_Stat Head_RAW;
 // из modes.c - надо вернуть обратно
-char VerFW_LCD[25] = {"No version LCD          \0"}; //версия ПО индикатора NEXION
-volatile BYTE TypeLCD = 0; // тип индикатора в идентификаторе v-3.2(=0) s-3.5(=1) 
-volatile BYTE g_NeedChkAnsvNEX=0; // признак получения строки из редактора.и ее проверка
+//char VerFW_LCD[25] = {"No version LCD          \0"}; //версия ПО индикатора NEXION
+//volatile BYTE TypeLCD = 0; // тип индикатора в идентификаторе v-3.2(=0) s-3.5(=1) 
+//volatile BYTE g_NeedChkAnsvNEX=0; // признак получения строки из редактора.и ее проверка
 
 uint8_t WIDE_VER=1; // 1- обычный диапазон 0 - расширенный
-
+DWORD TimeBegin; // время начала, для контроля начальной заставки
+DWORD CountTimerPA = 0;
+// Группа основных перемнных участвующих в накоплении
+DWORD RawData[RAWSIZE]; // блок накопления в основной памяти
+unsigned char NexData[NEXSIZE]; // блок данных в памяти USB для индикатора 4096 byte
+unsigned int PointsPerPeriod; // Число точек в периоде 
+unsigned int PointInPeriod = 0; // указатель точки в периоде при накоплении
+BYTE CurrLang; // текущий язык
+BYTE CheckIDMEM=0; // какая флэшь стоит? (0- 16 , 1- 32)//01/02/2013
+// счетчик частотты преобразования JDSU
+unsigned int TimerValueJDSU; // текущее значение частоты приемника RS
 
 /* USER CODE END PV */
 
@@ -215,7 +227,7 @@ int main(void)
   // так как появилось I2C - конфигурация прибора и управление клавиатурой 
   // будет первым настраиваться
   // так как повторяем конфигурацию из 7kAR, то скомбинируем из DataDevice MemFlash(у нас PCA955x)
-  ErrCheck =   BeginConfig();
+  CheckErrMEM =   BeginConfig();
   // Start Uart3 - внешний мир
   uint16_t  Dummy = huart3.Instance->RDR ; // чистим буффер приема от SIM
   HAL_UART_Receive_IT(&huart3, RxBufExt,1); // ждем принятия первого байта из внешнего мира
@@ -337,6 +349,17 @@ int main(void)
   HAL_Delay(100);
 
   InitBtns(); 
+  
+  // начало работы..
+  TimeBegin = HAL_GetTick();
+  
+    CmdInitPage(0);// вызов окна заставки
+  CreatDelay (1000000);
+
+  SetMode (ModeWelcome);
+  CmdInitPage(0);// посылка команды переключения окна на Welcome и установка признака первого входа
+
+  
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -352,6 +375,8 @@ int main(void)
       // управление красным лазером
       // управление лазерами в режиме CW*
       // поконтролить батарейку
+      // инекремент таймаре PA
+      CountTimerPA++;
     }
     // проверка приема по UART EXT
           if (RSDecYes) // вызов программы обработки комманды принятой по UART
@@ -359,6 +384,7 @@ int main(void)
         DecodeCommandRS();
       }
 
+    ModeFuncTmp(); // прорисовка текущего режима 
     
     //test проверим кнопку
     if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
@@ -690,6 +716,12 @@ uint32_t GetSysTick( int Mode) // получение тиков 1 мС. 0 - получение счетчика о
   return HAL_GetTick()-MemTick;
 }
 
+// управление таймером в измерителе АВТОМАТЕ
+WORD TimerPA (BYTE Set)
+{
+  if (Set) CountTimerPA = 0;
+  return CountTimerPA;
+}
 
 
 /* 

@@ -138,8 +138,8 @@ extern uint32_t CountEndCMI ; // число прерываний совершенных циклов DMA по DCMI
 #define STLINK_RX_GPIO_Port GPIOD
 #define STLINK_TX_Pin GPIO_PIN_9
 #define STLINK_TX_GPIO_Port GPIOD
-#define USB_OTG_FS_PWR_EN_Pin GPIO_PIN_10
-#define USB_OTG_FS_PWR_EN_GPIO_Port GPIOD
+#define PWR_EXT_Pin GPIO_PIN_10
+#define PWR_EXT_GPIO_Port GPIOD
 #define SW_SD_Pin GPIO_PIN_4
 #define SW_SD_GPIO_Port GPIOG
 #define PM_DOUT_Pin GPIO_PIN_6

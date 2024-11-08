@@ -18,7 +18,7 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include "system.h"
+#include "rtc.h"
 
 /* USER CODE BEGIN 0 */
 
@@ -29,6 +29,7 @@
 
 RTCTime TimeSaveOTDR;
 RTCTime TimeSaveOLT;
+RTCTime current_time;
 
 /* USER CODE END 0 */
 
@@ -233,7 +234,27 @@ RTCTime RTCGetTime( void )
   LocalTime.RTC_Year = CsDate.Year;
   return ( LocalTime );
 }
- 
+ //
+void RTCSetTime( RTCTime Time )
+{
+  RTC_TimeTypeDef CsTime = {0};
+  RTC_DateTypeDef CsDate = {0};
+  
+  CsTime.Seconds = Time.RTC_Sec;
+  CsTime.Minutes = Time.RTC_Min;
+  CsTime.Hours = Time.RTC_Hour;
+  CsDate.Date = Time.RTC_Mday;
+  CsDate.WeekDay = Time.RTC_Wday;
+  //DOY = Time.RTC_Yday;
+  CsDate.Month = Time.RTC_Mon;
+  CsDate.Year = Time.RTC_Year;
+  
+  k_SetTime(&CsTime);
+  k_SetDate(&CsDate);
+  
+  return;
+}
+
 
 uint32_t get_fattime_RTC (void)
 {

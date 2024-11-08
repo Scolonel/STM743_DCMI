@@ -212,6 +212,9 @@ void SysTick_Handler(void)
     beepTick = 0;
     HAL_GPIO_WritePin(Beep_GPIO_Port, Beep_Pin, GPIO_PIN_RESET);
   }
+  // Timer for Accum
+  if(EnaTimerAccum)
+    CurrTimeAccum++;
   // контроль счетчика ожидания окончания приема
   if(CountTimerUart2) // подождали посмотрим что приняли
   {

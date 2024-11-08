@@ -1273,6 +1273,9 @@
             <group>
                 <name>User</name>
                 <file>
+                    <name>$PROJ_DIR$\..\User\Src\Accum.c</name>
+                </file>
+                <file>
                     <name>$PROJ_DIR$\..\User\Src\buttons.c</name>
                 </file>
                 <file>
@@ -1282,10 +1285,22 @@
                     <name>$PROJ_DIR$\..\User\Src\DeviceData.c</name>
                 </file>
                 <file>
+                    <name>$PROJ_DIR$\..\User\Src\drawfunctions.c</name>
+                </file>
+                <file>
                     <name>$PROJ_DIR$\..\User\Src\events.c</name>
                 </file>
                 <file>
+                    <name>$PROJ_DIR$\..\User\Src\MemFlash.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\User\Src\modes.c</name>
+                </file>
+                <file>
                     <name>$PROJ_DIR$\..\User\Src\msgs.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\User\Src\OTDR_Measure.c</name>
                 </file>
                 <file>
                     <name>$PROJ_DIR$\..\User\Src\PCA955x.c</name>
@@ -1294,7 +1309,7 @@
                     <name>$PROJ_DIR$\..\User\Src\PM.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\User\Inc\UartEXT.c</name>
+                    <name>$PROJ_DIR$\..\User\Src\UartEXT.c</name>
                 </file>
                 <file>
                     <name>$PROJ_DIR$\..\User\Src\UartNEX.c</name>

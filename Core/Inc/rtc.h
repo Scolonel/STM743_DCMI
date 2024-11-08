@@ -46,6 +46,9 @@ typedef struct {
     DWORD RTC_Yday;    /* Day of year value - [1,365] */
 } RTCTime;
 
+extern RTCTime current_time;
+extern RTCTime TimeSaveOTDR; // время сохраненной рефлектограммы
+extern RTCTime TimeSaveOLT; // время сохраненной рефлектограммы
 
 /* USER CODE END Private defines */
 
@@ -60,6 +63,8 @@ void k_SetTime  (RTC_TimeTypeDef *Time);
 void k_GetTime  (RTC_TimeTypeDef *Time);
 void k_SetDate  (RTC_DateTypeDef *Date);
 void k_GetDate  (RTC_DateTypeDef *Date);
+
+void RTCSetTime( RTCTime Time );
 
 RTCTime RTCGetTime(void); // получение времени в формате T7kAR из рабочих регистров
 uint32_t get_fattime_RTC (void);
