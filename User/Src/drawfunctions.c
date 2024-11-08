@@ -456,8 +456,9 @@ void SendDrawNex (unsigned char* array, int ID_lcd, int Points)
   NEX_Transmit((void*)CmdBuf);//
   while(!((g_WtRdyNEX)||(ReadyNEX==2)));
   // надо ждать получени€ ответа
-  //array[390]=255;  
-    CreatDelay (400000); // 300000-глючило на 3.5
+  //array[390]=255; 
+  //  CreatDelay (400000); // 300000-глючило на 3.5
+  HAL_Delay(40);
   array[Points+1]=255;  
   array[Points+2]=255;  
   array[Points+3]=255; 
@@ -473,6 +474,6 @@ void SendDrawNex (unsigned char* array, int ID_lcd, int Points)
   // также ждать получение ответа
   while(!((g_WtRdyNEX)||(ReadyNEX==1)));
   
-    CreatDelay (800000); // 70 м— - пока без ответа (подтверждени€)
-
+   // CreatDelay (800000); // 70 м— - пока без ответа (подтверждени€)
+  HAL_Delay(80);
 }

@@ -354,7 +354,7 @@ int main(void)
   TimeBegin = HAL_GetTick();
   
     CmdInitPage(0);// вызов окна заставки
-  CreatDelay (1000000);
+  HAL_Delay(100);
 
   SetMode (ModeWelcome);
   CmdInitPage(0);// посылка команды переключения окна на Welcome и установка признака первого входа

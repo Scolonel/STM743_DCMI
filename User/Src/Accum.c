@@ -127,7 +127,7 @@ void DrawPictureMeas (BYTE EnDraw) // рисование картинки при измерении
     
     
     SendDrawNex(NexData,2,rct.right);
-    CreatDelay (10000);
+    HAL_Delay (1);
     
   }
   

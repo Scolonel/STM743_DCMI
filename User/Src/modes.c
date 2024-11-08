@@ -259,7 +259,7 @@ void SetPlaceNew(int Mode)
 // звуковой сигнал типа аварии (проба) 04.04.2024
 void AlarmSignal(int type)
 {
-   CreatDelay(2000);
+   HAL_Delay(2);
  for (int i=0; i<type; i++)
  {
    LED_START(1);//On  LED
@@ -487,8 +487,8 @@ void ModeMainMenu(void) // режим основного МЕНЮ
     sprintf(Str,"t4.txt=\"%s\"яяя",MsgMass[10][CurrLang]);
     //LCD_LIGHT(ON);
     NEX_Transmit((void*)Str);//
-    CreatDelay (3000000); // 168 мС - пока без ответа (подтверждения) 83nS*30000 надо приблизительно 2 мС
-    // попробуем запросить код версии индикатора
+    //CreatDelay (3000000); // 168 мС - пока без ответа (подтверждения) 83nS*30000 надо приблизительно 2 мС
+    HAL_Delay(300);    // попробуем запросить код версии индикатора
     StartRecievNEX (80);
     sprintf(Str,"get t6.txtяяя");
     NEX_Transmit((void*)Str);//
@@ -1196,8 +1196,9 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
 //123    SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
     rawPressKeyS=0;
     CntLS=0;
-    CreatDelay (30000); // 3.3 мС
-    CmdInitPage(16);// посылка команды переключения окна на начало измерения Measuring
+    //CreatDelay (30000); // 3.3 мС
+  HAL_Delay(3);
+  CmdInitPage(16);// посылка команды переключения окна на начало измерения Measuring
   }
   if(NeedKeyB ) // необходимость переключения в клавиатуру для редактирования PreFix
   {
@@ -1270,8 +1271,9 @@ void ModeErrorOTDR(void) // режим отображения "Излучение на входе" CHECK_OFF
     CmdInitPage(2);
     
   }
-  CreatDelay (400000); // 3.3 мС
-  
+  //CreatDelay (400000); // 3.3 мС
+    HAL_Delay(40);
+
 }
 
 #pragma optimize=none  
@@ -2273,12 +2275,14 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     // теперь нарисуем курсор в рамках Y=0..210
     CurrRed = (CurrSM & 0xffff);
     CurrBlue = (CurrSM>>16);
-    CreatDelay (20000);
-    
+    //CreatDelay (20000);
+      HAL_Delay(2);
+
     SendDrawNex(NexData,2, rct.right);
     
-    CreatDelay (30000); // на большом индикаторе с 30000 "глючило"
-    // Main Cursor
+    //CreatDelay (30000); // на большом индикаторе с 30000 "глючило"
+      HAL_Delay(3);
+// Main Cursor
     if (GetIndexLN()) // не 2 км ( значит в км)
     {
       if (GetIndexLN()==6) // 128 km? 2 sign
@@ -2354,7 +2358,8 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     {
       sprintf( Str,"line %d,0,%d,%d,REDяяя",CurrRed,CurrRed,(int)(rct.bottom*CursorScale)-1); // 0
       NEX_Transmit((void*)Str);// 
-      CreatDelay (20000);
+      //CreatDelay (20000);
+      HAL_Delay(2);
       if(CurrBlue<rct.right)
       {
         sprintf( Str,"line %d,0,%d,%d,BLUEяяя",CurrBlue,CurrBlue,(int)(rct.bottom*CursorScale)-1); // 0
@@ -2393,8 +2398,9 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     else
       sprintf( Str,"xstr 260,0,140,24,2,GREEN,BLACK,0,1,3,\"%s\"яяя",Stra); // 3_2(2-24) (№ шрифта-Размер) 0
     NEX_Transmit((void*)Str);// 
-    CreatDelay (20000);
-    
+    //CreatDelay (20000);
+      HAL_Delay(2);
+
     sprintf(Stra,"X-1:%d",GetSetHorizontScale(0));// признак управления горизонтальным зумом
     if(TypeLCD)
       sprintf( Str,"xstr 360,24,120,24,3,GREEN,BLACK,0,1,3,\"%s\"яяя",Stra); // 3_5(24)  0
@@ -2429,7 +2435,9 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
       // посылка команды переключения окна на Mem_OTDR_graph (возврат)  
       CmdInitPage(13);
       //надо время что бы переключится
-      CreatDelay(1000000);
+      //CreatDelay(1000000);
+        HAL_Delay(100);
+
       break;
     case VIEWEVNT:
       SetMode(ModeEventsOTDR);
@@ -2616,7 +2624,8 @@ void ModeEventsOTDR(void) // режим отображения событий рефлектограммы CHECK_OFF
           sprintf(Str,"p0.pic=%1dяяя",type_pic);//затираем картинку
       //sprintf(Str,"pic 330,70,%1dяяя",type_pic);//тип картинки
       NEX_Transmit((void*)Str);    // 
-      CreatDelay(5000);
+      //CreatDelay(5000);
+  HAL_Delay(1);
 
     if(IndexEvents) // отображаем событие
     {
@@ -2687,12 +2696,14 @@ void ModeEventsOTDR(void) // режим отображения событий рефлектограммы CHECK_OFF
       NEX_Transmit((void*)Str);    // 
       if(type_pic)
       {
-      CreatDelay(50000);
+      //CreatDelay(50000);
+  HAL_Delay(5);
       // в Модуль картинки
       sprintf(Str,"p0.pic=%1dяяя",type_pic);//тип картинки
       //sprintf(Str,"pic 330,70,%1dяяя",type_pic);//тип картинки
       NEX_Transmit((void*)Str);    // 
-      CreatDelay(50000);
+      //CreatDelay(50000);
+  HAL_Delay(5);
       // чуток надо потупить!
       }
       // вывод других полей
@@ -3085,7 +3096,8 @@ void ModeMemoryOTDR(void) // режим отображения сохраненных рефлектограмм и работ
       //123 SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
       rawPressKeyS=0;
       
-      CreatDelay (30000); // 3.3 мС
+      //CreatDelay (30000); // 3.3 мС
+  HAL_Delay(4);
       CmdInitPage(16);// посылка команды переключения окна на начало измерения Measuring
     }
 //    NeedReStartMeasure = 0;
@@ -3094,7 +3106,8 @@ void ModeMemoryOTDR(void) // режим отображения сохраненных рефлектограмм и работ
       // сделаем "тупую задержку"
     // похоже задержка слишком велика, пропускаем команды по UART 13.02.2024?
     // ставил 20000 - не поменялось
-    CreatDelay (20000); //173 и 176,177
+    //CreatDelay (20000); //173 и 176,177
+  HAL_Delay(3);
 
 }
 
@@ -4477,7 +4490,8 @@ void ModeSelectMEM(void) // режим выбора работы с памятью CHECK_OFF
       ReturnMemView = 1; // надо вернуться сюда же по ESC
          // посылка команды переключения окна на Mem_OTDR_garaph (вызов)  
       CmdInitPage(13);
-       CreatDelay(1000000);
+       //CreatDelay(1000000);
+  HAL_Delay(100);
     
       break;
     case 2: // переход в  памяти измерителя
@@ -6489,7 +6503,8 @@ void UploadFW_Nextion(void) // обновление индикатора NEXTION
     sprintf(Str, "t1.txt=\"%s\"яяя", MsgMass[120][CurrLang]);
     NEX_Transmit((void*)Str);    // 
   
-    CreatDelay(500000);// чуть потупим
+    //CreatDelay(500000);// чуть потупим
+  HAL_Delay(50);
     ProgFW_LCD = 1; // переключим режим работы UART только здесь когда все заслали
 
     g_FirstScr = 0;
@@ -6506,7 +6521,8 @@ void UploadFW_Nextion(void) // обновление индикатора NEXTION
   ModeDevice = MODEMENU;
       // посылка команды переключения окна на MainMenu (возврат)  
   // вызовем новое окно!
-  CreatDelay(5000000);
+  //CreatDelay(5000000);
+  HAL_Delay(50);
 
   CmdInitPage(1);
   myBeep(25);
@@ -6622,7 +6638,8 @@ int SaveNewOTDRTrace (BYTE Mode)
       // посылка команды переключения окна на Mem_OTDR_graph (возврат)  
   // возможно бы тут надо бы ПОТУПИТЬ
   // 07.11.2022 (148)
-      CreatDelay(100000);
+     // CreatDelay(100000);
+  HAL_Delay(10);
       CmdInitPage(13);
 //  myBeep(10);
 //      CreatDelay(200000);
@@ -6924,7 +6941,8 @@ float MeasORL(int NumAvrgThis, int EnaReport)
   PointInPeriod = 0;
   memset( RawData, 0, RAWSIZE * sizeof(DWORD) );
 //123  SetNumAccumPerSec (NumAvrgThis);// установка значения числа накоплений
-  CreatDelay (9000000*EnaReport); // 33 мС
+  //CreatDelay (9000000*EnaReport); // 33 мС
+  HAL_Delay(900*EnaReport);
   //        ModeDevice = MODEOTHER;
   //
   Averaging(100,0,0);// включение питания и запуск накопления 
@@ -6934,7 +6952,8 @@ float MeasORL(int NumAvrgThis, int EnaReport)
   //
   //disable_timer ( 0 );
   myBeep(0); // выкл. писк
-  CreatDelay (9000000*EnaReport); // 33 мС
+  //CreatDelay (9000000*EnaReport); // 33 мС
+  HAL_Delay(900*EnaReport);
   CntNumAvrg = 0; // обнуляем счетчик накоплений
   memset( RawData, 0, RAWSIZE * sizeof(DWORD) );
 //123  reset_timer(2);
@@ -7011,7 +7030,8 @@ float MeasORL(int NumAvrgThis, int EnaReport)
 //123          SSPInit_Any(SPI_PM);      //Перевели SPI на АЦП
 //123          SetupSource (GetModeLS()); // востанавливаем режим работы лазера  
           // по следам версии 175, здесь тоже сделаем небольшую задержку
-          CreatDelay (350000); //
+          //CreatDelay (350000); //
+  HAL_Delay(35);
           
         }
   // отладочная инфа
@@ -7059,7 +7079,8 @@ void CmdInitPage(int Num)
 {
       NEX_Transmit((void*)CmdNextion[Num]);
       g_FirstScr=1;
-      CreatDelay(20000);// 177 как в 173
+      //CreatDelay(20000);// 177 как в 173
+  HAL_Delay(3);
 }
 
 void SlowON (void) // медленное включение питания
