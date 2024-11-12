@@ -901,7 +901,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
         if (NumFiber>10) NumFiber=NumFiber-10;
         else NumFiber=990;
       }
-      //ClrKey (BTN_LEFT);
+      ClrKey (BTN_LEFT);
     }
     if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
     {

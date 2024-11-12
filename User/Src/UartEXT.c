@@ -171,7 +171,10 @@ void DecodeCommandRS (void)
   //char BufString[225];
   char StartStr[7]={"#48419\0"}; // 4-х значные номера!!!
   //VICINTENCLEAR  = 1 << UART0_INT; /* Disable Interrupt */
-  
+  char NeedTransmit = 0; //
+  // 0 - команда не обработана надо выслать Err
+  // 1 - передаем буффер BufString
+  // 2 - уже передали  (бинарный блок, ничего не передаем
   if (Reciev==END_UART)                //Ежели приём команды закончен - обработка
   {
     for (int i=0; ((i<CntRX)&&(RX_Buf[i]!=0x20)); i++ )
@@ -181,8 +184,8 @@ void DecodeCommandRS (void)
     switch (RX_Buf[0])
     {
     case '*':
-//123      if (GetModeDevice() != MODEMEASURE)
-    if(1)
+      //123      if (GetModeDevice() != MODEMEASURE)
+      if(1)
       {
         // приняли признак *IDN -  идентификатор
         //-----------------
@@ -190,51 +193,58 @@ void DecodeCommandRS (void)
           //if ((RX_Buf[1]=='I')&&(RX_Buf[2]=='D')&&(RX_Buf[3]=='N')&&(RX_Buf[4]=='?'))
         {
           GetDeviceName( BufString ); // запрос сторки идентификатора
+          NeedTransmit = 1;
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
         }
         if (!memcmp ((void*)RX_Buf, "*IDHW",5)) // идентификатор "железной" реализации
           //if ((RX_Buf[1]=='I')&&(RX_Buf[2]=='D')&&(RX_Buf[3]=='N')&&(RX_Buf[4]=='?'))
         {
           GetDeviceHW( BufString ); // запрос сторки идентификатора
+          NeedTransmit = 1;
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
         }
         if (!memcmp ((void*)RX_Buf, "*IDLCD",6)) // идентификатор ПО "LCD"
           //if ((RX_Buf[1]=='I')&&(RX_Buf[2]=='D')&&(RX_Buf[3]=='N')&&(RX_Buf[4]=='?'))
         {
           sprintf(BufString,"%s\r", VerFW_LCD);
+          NeedTransmit = 1;
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
         }
         if (!memcmp ((void*)RX_Buf, "*ALARM",6)) // сброс памяти рефлектограмм при плохой флэшке!
         {
           InitReflSet (); // инициализация установок рефлектометра
           GetPlaceLS (NEXT); // устанавливаем заведомо существующий лазер
-//123          AlarmReWriteTrace();
-//123          SetNumTrace (0);  
+          //123          AlarmReWriteTrace();
+          //123          SetNumTrace (0); 
+          sprintf(BufString,"AlarmReset\r");
+          NeedTransmit = 1;
           UARTSendExt ((BYTE*)"AlarmReset\r", 11);
         }
       }
       break;
     case ';':
-//      // выдать экран 
-//      if (!memcmp ((void*)RX_Buf, ";SCR?",5)) // возможно уже не нужна!
-//      {
-//        // приняли признак ;SCR? - 
-//        // ;scr?  - получить файл картинки
-//        // начинаем передачу картинки (Заголовок)
-//        sprintf (StartStr, "#41024");
-//        UARTSendExt ((BYTE*)StartStr, 6);
-//        UARTSendExt ((BYTE*)GetScreen(), 1024);
-//      }
+      //      // выдать экран 
+      //      if (!memcmp ((void*)RX_Buf, ";SCR?",5)) // возможно уже не нужна!
+      //      {
+      //        // приняли признак ;SCR? - 
+      //        // ;scr?  - получить файл картинки
+      //        // начинаем передачу картинки (Заголовок)
+      //        sprintf (StartStr, "#41024");
+      //        UARTSendExt ((BYTE*)StartStr, 6);
+      //        UARTSendExt ((BYTE*)GetScreen(), 1024);
+      //      }
       
       if (!memcmp ((void*)RX_Buf, ";CFGSAV",7))
       { // сохраняем конфигурацию установленную
         WriteNeedStruct (0x01);
+        NeedTransmit = 1;
         UARTSendExt ((BYTE*)"OK\r", 3);
       }
       //  ;syst:uart:hi установка скорости UART 460800 ответ уже на большой скорости
       if (!memcmp ((void*)RX_Buf, ";SYST:UART:HI",13)) //
       {
         UARTSendExt ((BYTE*)"OK\r", 3);
+        NeedTransmit = 1;
         // отсылаем на старой скорости 
         //while ( !(UART0TxEmpty & 0x01) ); // ждем конца передачи только после этого перестраиваемся
         huart3.Init.BaudRate = 460800;
@@ -248,15 +258,16 @@ void DecodeCommandRS (void)
       if (!memcmp ((void*)RX_Buf, ";SYST:UART:ME",13)) //115200
       {
         UARTSendExt ((BYTE*)"OK\r", 3);
+        NeedTransmit = 1;
         // отсылаем на старой скорости
         //while ( !(UART0TxEmpty & 0x01) ); // ждем конца передачи только после этого перестраиваемся
         
-                huart3.Init.BaudRate = 115200;
+        huart3.Init.BaudRate = 115200;
         if (HAL_UART_Init(&huart3) != HAL_OK)
         {
           Error_Handler();
         }
-
+        
         
       }
       //  ;syst:uart:lo установка скорости UART 57600 ответ уже на меньшей скорости
@@ -264,6 +275,7 @@ void DecodeCommandRS (void)
       {
         UARTSendExt ((BYTE*)"OK\r", 3);
         // отсылаем на старой скорости
+        NeedTransmit = 1;
         //while ( !(UART0TxEmpty & 0x01) ); // ждем конца передачи только после этого перестраиваемся
         
         huart3.Init.BaudRate = 57600;
@@ -277,236 +289,236 @@ void DecodeCommandRS (void)
       // другая конфигурация хранения , возможно изменение
       //123
       // !!!!ACHTUNG!!!!
-//      if (!memcmp ((void*)RX_Buf, ";MMEM:LOAD:FILE? ",17)) //RX_Buf[17] - номер рефл
-//      {
-//        //        unsigned long NowEND;
-//        //        unsigned long NowBEG;
-//        unsigned short NumEventNow = GetNumEvents();
-//        unsigned short NumTr = (unsigned short)(atoi((char*)&RX_Buf[17]));
-//        if (NumTr > GetNumTraceSaved(0)) NumTr = 0; // заданная рефлектограмма не существует
-//        SetNumTrace (NumTr); // установка номера трассы
-//        SetModeDevice (MODEMEMR); // принудительная установка режима прибора 
-//        // надо прочитать указанную рефлектограмму
-//        // первое заполнение надо прочитать файл
-//        if (GetNumTrace()) // если не нулевая то читаем по таблице
-//          TraceREAD(GetNumTraceSaved(GetNumTrace()));//  читаем файл который надо передать// 27/01/2011 неадекватно считывала рефлектограмму
-//        else  TraceREAD(0);
-//        // ищем события в линии (25.05.2011 пока конец линии)
-//        InitEventsTable (); // инициализация структур событий
-//        // признак разрешения событий при передаче
-//        if (GetSetEnaEvents (0)) // проверяем признак разрешения событий
-//        {
-//          // ищем события и заполняем файл
-//          NumEventNow =  (CalkEventsKeys (LogData, PointsInImpulse(0), 1)); 
-//          // расчет погонного затухания если есть точка
-//          /**/
-//          if (NumEventNow)          //имеем события - 
-//          {
-//            if (EndEvenBlk.ELMP[0]!=EndEvenBlk.ELMP[1]) // есть линия! занесем параметры
-//            {
-//              TmpACI = GetPosLine(EvenTrace[0].EPT);
-//              //TmpACI = ;
-//              TmpACI = (LogData[EvenTrace[0].EPT]-LogData[0])/TmpACI;//GetPosLine(EvenTrace[0].EPT);
-//              EvenTrace[0].ACI = (short int)TmpACI;
-//              EndEvenBlk.ELMP[1] = CalkEPT (EndEvenBlk.ELMP[1]); // расчет значений ELMP для конца линии от положения курсора
-//              
-//            }
-//            // цикл заполнения событий 
-//            if (NumEventNow>1)
-//            {
-//              for (int i=1;i<NumEventNow;++i)
-//              {
-//                TmpACI = GetPosLine(EvenTrace[i].EPT-EvenTrace[i-1].EPT);
-//                TmpACI = (LogData[EvenTrace[i].EPT]-(LogData[EvenTrace[i-1].EPT]+EvenTrace[i-1].EL))/TmpACI;
-//                EvenTrace[i].ACI = (short int)TmpACI;
-//                //EvenTrace[i].ACI = (LogData[EvenTrace[i].EPT]-(LogData[EvenTrace[i-1].EPT]+EvenTrace[i-1].EL))/GetPosLine(EvenTrace[i].EPT-EvenTrace[i-1].EPT);
-//                
-//                //EvenTrace[i-1].EPT = CalkEPT (EvenTrace[i-1].EPT); // расчет значений EPT для событий от положения курсора
-//              }
-//            }
-//            // Заполнение события и конец линии
-//            
-//            for (int i=0;i<NumEventNow;++i)
-//            {
-//              EvenTrace[i].EPT = CalkEPT (EvenTrace[i].EPT); // расчет значений EPT для событий от положения курсора
-//            }
-//          }
-//          
-//        }
-//        // тест загрузка формирование событий
-//        //NumEventNow = 9;
-//        //TestLoadEvents (NumEventNow);
-//        // начинаем передачу трассы (Заголовок)
-//        sprintf (StartStr, "#4%4d",8419 + ((NumEventNow)?(NumEventNow*32+40):(0)));
-//        UARTSendExt ((BYTE*)StartStr, 6);
-//        // Мар страница белкора с учетом Таблицы событий (блок 0)
-//        // если есть таблица событий....
-//        GetHeaderBelcore (BufString, 0, NumEventNow); // заполняем шапку белкора первые 56 байт Block=0
-//        UARTSendExt ((BYTE*)BufString, 56+16*((NumEventNow)?(1):(0)));
-//        unsigned short old_crc = 0xffff; 
-//        unsigned short new_crc = 0xffff;
-//        c = (unsigned char*)&BufString;
-//        for (int i=0;i<56+16*((NumEventNow)?(1):(0));i++)
-//        {
-//          /* первый вариант подсчета контрольной суммы - табличный                                             */		
-//          value = *c;
-//          new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-//          old_crc = new_crc;
-//          c++;
-//        }
-//        // заполняем шапку белкора  62 байт Block=1 (продолжение Мар блока + GenParams)
-//        GetHeaderBelcore (BufString, 1, NumEventNow); 
-//        UARTSendExt ((BYTE*)BufString, 62);
-//        c = (unsigned char*)&BufString;
-//        for (int i=0;i<62;i++)
-//        {
-//          /* Считаем контрольную сумму переданного блока                                             */		
-//          value = *c;
-//          new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-//          old_crc = new_crc;
-//          c++;
-//        }
-//        // заполняем шапку белкора  94 байт Block=2 - (SupParams FxdParam)
-//        GetHeaderBelcore (BufString, 2, NumEventNow); 
-//        UARTSendExt ((BYTE*)BufString, 95);
-//        c = (unsigned char*)&BufString;
-//        for (int i=0;i<95;i++)
-//        {
-//          /* Считаем контрольную сумму переданного блока                                             */		
-//          value = *c;
-//          new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-//          old_crc = new_crc;
-//          c++;
-//        }
-//        // Проверяем и передаем блок событий если он есть (блок событий)
-//        if (NumEventNow) // если есть события 2 байта +
-//          // события в фиксированном размере для каждого 32 байта  +  22 байт общее для всего блока
-//        {
-//          // передаем  число событий  2 байта
-//          UARTSendExt ((BYTE*)&NumEventNow, 2);
-//          c = (unsigned char*)&NumEventNow;
-//          for (int i=0;i<2;i++)
-//          {
-//            /* Считаем контрольную сумму переданного блока                                             */		
-//            value = *c;
-//            new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-//            old_crc = new_crc;
-//            c++;
-//          }
-//          // передаем информационные блоки событий  N*32
-//          for (int s=0; s<NumEventNow; s++)
-//          {
-//            UARTSendExt ((BYTE*)&EvenTrace[s], 32);
-//            c = (unsigned char*)&EvenTrace[s];
-//            for (int i=0;i<32;i++)
-//            {
-//              /* Считаем контрольную сумму переданного блока                                             */		
-//              value = *c;
-//              new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-//              old_crc = new_crc;
-//              c++;
-//            }
-//            
-//          }
-//          // передаем конечный блок событий 22 байта
-//          UARTSendExt ((BYTE*)&EndEvenBlk, 22);
-//          c = (unsigned char*)&EndEvenBlk;
-//          for (int i=0;i<22;i++)
-//          {
-//            /* Считаем контрольную сумму переданного блока                                             */		
-//            value = *c;
-//            new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-//            old_crc = new_crc;
-//            c++;
-//          }
-//        }
-//        
-//        // заполняем шапку белкора 12 байт Block=3 (DataPts)
-//        GetHeaderBelcore (BufString, 3, NumEventNow); 
-//        UARTSendExt ((BYTE*)BufString, 12);
-//        c = (unsigned char*)&BufString;
-//        for (int i=0;i<12;i++)
-//        {
-//          /* Считаем контрольную сумму переданного блока                                             */		
-//          value = *c;
-//          new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-//          old_crc = new_crc;
-//          c++;
-//        }
-//        
-//        // блок данных 
-//        UARTSendExt ((BYTE*)LogData, OUTSIZE*2);
-//        c = (unsigned char*)&LogData;
-//        for (int i=0;i<OUTSIZE*2;i++)
-//        {
-//          /* первый вариант подсчета контрольной суммы - табличный                                             */		
-//          value = *c;
-//          new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-//          old_crc = new_crc;
-//          c++;
-//        }
-//        
-//        UARTSendExt ((BYTE*)&new_crc, 2);
-//        
-//        
-//        //ClearScreen(screen);
-//        
-//      }
-//123      
-//      // ;MEMM:NAME? -  чтение комментариев сохраненных рефлектограмм
-//      if (!memcmp ((void*)RX_Buf, ";MMEM:NAME?",11)) //
-//      {
-//        char BufStringIn[24];
-//        for (int i = 1 ; i <= GetNumTraceSaved(0); i++)
-//        {
-//          unsigned long PorNom = FlashReadCommTrace (i, (unsigned char*)BufStringIn);
-//          memcpy( &BufStringIn[19], "\0", 1 ); // 
-//          sprintf((char*)BufString,"(%03d)%s\n",i, BufStringIn);
-//          UARTSendExt ((BYTE*)BufString, strlen (BufString));
-//        }
-//        
-//        
-//        sprintf(BufString,"\r");
-//        UARTSendExt ((BYTE*)BufString, 1);
-//      }
-//123
-// другая организация хранения необходимо изменеие      
-//      // ;MEMM:NFIL? -  чтение имен файлов сохраненных рефлектограмм
-//      if (!memcmp ((void*)RX_Buf, ";MMEM:NFIL?",11)) //
-//      {
-//        for (int i = 1 ; i <= GetNumTraceSaved(0); i++)
-//        {
-//          unsigned long PorNom = FlashReadTimeTrace (i);
-//          // 
-//          sprintf((char*)BufString,"(%03d)%s\n", i, NameReadFile);
-//          UARTSendExt ((BYTE*)BufString, strlen (BufString));
-//        }
-//        
-//        
-//        sprintf(BufString,"\r");
-//        UARTSendExt ((BYTE*)BufString, 1);
-//      }
-//123
+      //      if (!memcmp ((void*)RX_Buf, ";MMEM:LOAD:FILE? ",17)) //RX_Buf[17] - номер рефл
+      //      {
+      //        //        unsigned long NowEND;
+      //        //        unsigned long NowBEG;
+      //        unsigned short NumEventNow = GetNumEvents();
+      //        unsigned short NumTr = (unsigned short)(atoi((char*)&RX_Buf[17]));
+      //        if (NumTr > GetNumTraceSaved(0)) NumTr = 0; // заданная рефлектограмма не существует
+      //        SetNumTrace (NumTr); // установка номера трассы
+      //        SetModeDevice (MODEMEMR); // принудительная установка режима прибора 
+      //        // надо прочитать указанную рефлектограмму
+      //        // первое заполнение надо прочитать файл
+      //        if (GetNumTrace()) // если не нулевая то читаем по таблице
+      //          TraceREAD(GetNumTraceSaved(GetNumTrace()));//  читаем файл который надо передать// 27/01/2011 неадекватно считывала рефлектограмму
+      //        else  TraceREAD(0);
+      //        // ищем события в линии (25.05.2011 пока конец линии)
+      //        InitEventsTable (); // инициализация структур событий
+      //        // признак разрешения событий при передаче
+      //        if (GetSetEnaEvents (0)) // проверяем признак разрешения событий
+      //        {
+      //          // ищем события и заполняем файл
+      //          NumEventNow =  (CalkEventsKeys (LogData, PointsInImpulse(0), 1)); 
+      //          // расчет погонного затухания если есть точка
+      //          /**/
+      //          if (NumEventNow)          //имеем события - 
+      //          {
+      //            if (EndEvenBlk.ELMP[0]!=EndEvenBlk.ELMP[1]) // есть линия! занесем параметры
+      //            {
+      //              TmpACI = GetPosLine(EvenTrace[0].EPT);
+      //              //TmpACI = ;
+      //              TmpACI = (LogData[EvenTrace[0].EPT]-LogData[0])/TmpACI;//GetPosLine(EvenTrace[0].EPT);
+      //              EvenTrace[0].ACI = (short int)TmpACI;
+      //              EndEvenBlk.ELMP[1] = CalkEPT (EndEvenBlk.ELMP[1]); // расчет значений ELMP для конца линии от положения курсора
+      //              
+      //            }
+      //            // цикл заполнения событий 
+      //            if (NumEventNow>1)
+      //            {
+      //              for (int i=1;i<NumEventNow;++i)
+      //              {
+      //                TmpACI = GetPosLine(EvenTrace[i].EPT-EvenTrace[i-1].EPT);
+      //                TmpACI = (LogData[EvenTrace[i].EPT]-(LogData[EvenTrace[i-1].EPT]+EvenTrace[i-1].EL))/TmpACI;
+      //                EvenTrace[i].ACI = (short int)TmpACI;
+      //                //EvenTrace[i].ACI = (LogData[EvenTrace[i].EPT]-(LogData[EvenTrace[i-1].EPT]+EvenTrace[i-1].EL))/GetPosLine(EvenTrace[i].EPT-EvenTrace[i-1].EPT);
+      //                
+      //                //EvenTrace[i-1].EPT = CalkEPT (EvenTrace[i-1].EPT); // расчет значений EPT для событий от положения курсора
+      //              }
+      //            }
+      //            // Заполнение события и конец линии
+      //            
+      //            for (int i=0;i<NumEventNow;++i)
+      //            {
+      //              EvenTrace[i].EPT = CalkEPT (EvenTrace[i].EPT); // расчет значений EPT для событий от положения курсора
+      //            }
+      //          }
+      //          
+      //        }
+      //        // тест загрузка формирование событий
+      //        //NumEventNow = 9;
+      //        //TestLoadEvents (NumEventNow);
+      //        // начинаем передачу трассы (Заголовок)
+      //        sprintf (StartStr, "#4%4d",8419 + ((NumEventNow)?(NumEventNow*32+40):(0)));
+      //        UARTSendExt ((BYTE*)StartStr, 6);
+      //        // Мар страница белкора с учетом Таблицы событий (блок 0)
+      //        // если есть таблица событий....
+      //        GetHeaderBelcore (BufString, 0, NumEventNow); // заполняем шапку белкора первые 56 байт Block=0
+      //        UARTSendExt ((BYTE*)BufString, 56+16*((NumEventNow)?(1):(0)));
+      //        unsigned short old_crc = 0xffff; 
+      //        unsigned short new_crc = 0xffff;
+      //        c = (unsigned char*)&BufString;
+      //        for (int i=0;i<56+16*((NumEventNow)?(1):(0));i++)
+      //        {
+      //          /* первый вариант подсчета контрольной суммы - табличный                                             */		
+      //          value = *c;
+      //          new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+      //          old_crc = new_crc;
+      //          c++;
+      //        }
+      //        // заполняем шапку белкора  62 байт Block=1 (продолжение Мар блока + GenParams)
+      //        GetHeaderBelcore (BufString, 1, NumEventNow); 
+      //        UARTSendExt ((BYTE*)BufString, 62);
+      //        c = (unsigned char*)&BufString;
+      //        for (int i=0;i<62;i++)
+      //        {
+      //          /* Считаем контрольную сумму переданного блока                                             */		
+      //          value = *c;
+      //          new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+      //          old_crc = new_crc;
+      //          c++;
+      //        }
+      //        // заполняем шапку белкора  94 байт Block=2 - (SupParams FxdParam)
+      //        GetHeaderBelcore (BufString, 2, NumEventNow); 
+      //        UARTSendExt ((BYTE*)BufString, 95);
+      //        c = (unsigned char*)&BufString;
+      //        for (int i=0;i<95;i++)
+      //        {
+      //          /* Считаем контрольную сумму переданного блока                                             */		
+      //          value = *c;
+      //          new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+      //          old_crc = new_crc;
+      //          c++;
+      //        }
+      //        // Проверяем и передаем блок событий если он есть (блок событий)
+      //        if (NumEventNow) // если есть события 2 байта +
+      //          // события в фиксированном размере для каждого 32 байта  +  22 байт общее для всего блока
+      //        {
+      //          // передаем  число событий  2 байта
+      //          UARTSendExt ((BYTE*)&NumEventNow, 2);
+      //          c = (unsigned char*)&NumEventNow;
+      //          for (int i=0;i<2;i++)
+      //          {
+      //            /* Считаем контрольную сумму переданного блока                                             */		
+      //            value = *c;
+      //            new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+      //            old_crc = new_crc;
+      //            c++;
+      //          }
+      //          // передаем информационные блоки событий  N*32
+      //          for (int s=0; s<NumEventNow; s++)
+      //          {
+      //            UARTSendExt ((BYTE*)&EvenTrace[s], 32);
+      //            c = (unsigned char*)&EvenTrace[s];
+      //            for (int i=0;i<32;i++)
+      //            {
+      //              /* Считаем контрольную сумму переданного блока                                             */		
+      //              value = *c;
+      //              new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+      //              old_crc = new_crc;
+      //              c++;
+      //            }
+      //            
+      //          }
+      //          // передаем конечный блок событий 22 байта
+      //          UARTSendExt ((BYTE*)&EndEvenBlk, 22);
+      //          c = (unsigned char*)&EndEvenBlk;
+      //          for (int i=0;i<22;i++)
+      //          {
+      //            /* Считаем контрольную сумму переданного блока                                             */		
+      //            value = *c;
+      //            new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+      //            old_crc = new_crc;
+      //            c++;
+      //          }
+      //        }
+      //        
+      //        // заполняем шапку белкора 12 байт Block=3 (DataPts)
+      //        GetHeaderBelcore (BufString, 3, NumEventNow); 
+      //        UARTSendExt ((BYTE*)BufString, 12);
+      //        c = (unsigned char*)&BufString;
+      //        for (int i=0;i<12;i++)
+      //        {
+      //          /* Считаем контрольную сумму переданного блока                                             */		
+      //          value = *c;
+      //          new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+      //          old_crc = new_crc;
+      //          c++;
+      //        }
+      //        
+      //        // блок данных 
+      //        UARTSendExt ((BYTE*)LogData, OUTSIZE*2);
+      //        c = (unsigned char*)&LogData;
+      //        for (int i=0;i<OUTSIZE*2;i++)
+      //        {
+      //          /* первый вариант подсчета контрольной суммы - табличный                                             */		
+      //          value = *c;
+      //          new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+      //          old_crc = new_crc;
+      //          c++;
+      //        }
+      //        
+      //        UARTSendExt ((BYTE*)&new_crc, 2);
+      //        
+      //        
+      //        //ClearScreen(screen);
+      //        
+      //      }
+      //123      
+      //      // ;MEMM:NAME? -  чтение комментариев сохраненных рефлектограмм
+      //      if (!memcmp ((void*)RX_Buf, ";MMEM:NAME?",11)) //
+      //      {
+      //        char BufStringIn[24];
+      //        for (int i = 1 ; i <= GetNumTraceSaved(0); i++)
+      //        {
+      //          unsigned long PorNom = FlashReadCommTrace (i, (unsigned char*)BufStringIn);
+      //          memcpy( &BufStringIn[19], "\0", 1 ); // 
+      //          sprintf((char*)BufString,"(%03d)%s\n",i, BufStringIn);
+      //          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+      //        }
+      //        
+      //        
+      //        sprintf(BufString,"\r");
+      //        UARTSendExt ((BYTE*)BufString, 1);
+      //      }
+      //123
+      // другая организация хранения необходимо изменеие      
+      //      // ;MEMM:NFIL? -  чтение имен файлов сохраненных рефлектограмм
+      //      if (!memcmp ((void*)RX_Buf, ";MMEM:NFIL?",11)) //
+      //      {
+      //        for (int i = 1 ; i <= GetNumTraceSaved(0); i++)
+      //        {
+      //          unsigned long PorNom = FlashReadTimeTrace (i);
+      //          // 
+      //          sprintf((char*)BufString,"(%03d)%s\n", i, NameReadFile);
+      //          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+      //        }
+      //        
+      //        
+      //        sprintf(BufString,"\r");
+      //        UARTSendExt ((BYTE*)BufString, 1);
+      //      }
+      //123
       // контроль свободной памяти рефлектограмм
       // сейчас возможно не АКТУАЛЬНО
-//      // ;MEMM:FREE?
-//      if (!memcmp ((void*)RX_Buf, ";MMEM:FREE?",11)) //
-//      {
-//        //sprintf(BufString,"%d,%d\r", GetNumTraceSaved(0), ((CheckIDMEM)?(MaxMemOTDR+MaxMemOTDRExt):(MaxMemOTDR)));
-//        sprintf(BufString,"%d,%d\r", GetNumTraceSaved(0), MAXMEMALL);
-//        UARTSendExt ((BYTE*)BufString, strlen (BufString));
-//      }
-//123      
-//      // ;MEMM:INIT -  удаление рефлектограмм
-//      
-//      if (!memcmp ((void*)RX_Buf, ";MMEM:INIT",10)) //
-//      {
-//        // зачистим таблицу , то есть полностью переиндекируем, для "грязных" флэшек
-//        SetNumTrace (0); // установка номера трассы
-//        SetModeDevice (MODEMEMR); // принудительная установка режима прибора       
-//        sprintf(BufString,"%d deleted\r", DeletingAllTrace ());
-//        UARTSendExt ((BYTE*)BufString, strlen (BufString));
-//      }
+      //      // ;MEMM:FREE?
+      //      if (!memcmp ((void*)RX_Buf, ";MMEM:FREE?",11)) //
+      //      {
+      //        //sprintf(BufString,"%d,%d\r", GetNumTraceSaved(0), ((CheckIDMEM)?(MaxMemOTDR+MaxMemOTDRExt):(MaxMemOTDR)));
+      //        sprintf(BufString,"%d,%d\r", GetNumTraceSaved(0), MAXMEMALL);
+      //        UARTSendExt ((BYTE*)BufString, strlen (BufString));
+      //      }
+      //123      
+      //      // ;MEMM:INIT -  удаление рефлектограмм
+      //      
+      //      if (!memcmp ((void*)RX_Buf, ";MMEM:INIT",10)) //
+      //      {
+      //        // зачистим таблицу , то есть полностью переиндекируем, для "грязных" флэшек
+      //        SetNumTrace (0); // установка номера трассы
+      //        SetModeDevice (MODEMEMR); // принудительная установка режима прибора       
+      //        sprintf(BufString,"%d deleted\r", DeletingAllTrace ());
+      //        UARTSendExt ((BYTE*)BufString, strlen (BufString));
+      //      }
       //      // ;MEMM:REAN -  попытка реанимации рефлектграмм
       //      if (!memcmp ((void*)RX_Buf, ";MMEM:REAN",10)) //
       //      {
@@ -559,6 +571,7 @@ void DecodeCommandRS (void)
       {
         sprintf(BufString,"%01d\r",GetCurrentModeDevice ());// получение текущего режима прибора
         UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        NeedTransmit = 1;
       }
       //  ;syst:mode N
       if (!memcmp ((void*)RX_Buf, ";SYST:MODE ",11)) //
@@ -567,8 +580,9 @@ void DecodeCommandRS (void)
         if(NumMode > 6) NumMode = 0;
         SetModeDevice (NumMode); // принудительная установка режима прибора
         
-        //sprintf(BufString,"%01d\r",GetCurrentModeDevice ());// получение текущего режима прибора
-        //UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        sprintf(BufString,"%01d\r",GetCurrentModeDevice ());// получение текущего режима прибора
+        UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        NeedTransmit = 1;
       }
       // запрос установленных лазеров 
       //  ;syst:ava?
@@ -577,6 +591,7 @@ void DecodeCommandRS (void)
         
         sprintf(BufString,"%d,%d,%d\r",GetLengthWaveLS (0),GetLengthWaveLS (1),GetLengthWaveLS (2)); // получение длины волны от индекса установочного места
         UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        NeedTransmit = 1;
       }
       // запрос конфигурации OLT (измерителя ) 
       //  ;syst:olt?
@@ -585,6 +600,7 @@ void DecodeCommandRS (void)
         
         sprintf(BufString,"%d\r",GetCfgPM ()); // получение установки измерителя); // 
         UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        NeedTransmit = 1;
       }
       // запрос конфигурации VFL (красного глаза) 
       //  ;syst:vfl?
@@ -593,6 +609,7 @@ void DecodeCommandRS (void)
         
         sprintf(BufString,"%d\r",GetCfgRE ()); // получение установки Redeye); // 
         UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        NeedTransmit = 1;
       }
       // запрос значений мертвых зон
       //  ;syst:mzn?
@@ -613,6 +630,7 @@ void DecodeCommandRS (void)
                                       ,GetBegShiftZone(11)
                                         ,GetBegShiftZone(12));
         UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        NeedTransmit = 1;
       }
       // ;syst:date dd,mm,yyyy - установка даты
       if (!memcmp ((void*)RX_Buf, ";SYST:DATE ",11)) //
@@ -638,6 +656,13 @@ void DecodeCommandRS (void)
         SetNewTime.RTC_Year = Num;
         
         RTCSetTime( SetNewTime ); // запишем новую дату
+        //New
+        sprintf(BufString,"%d-%d-%d\r" // выдаем дату
+                ,SetNewTime.RTC_Year
+                  ,SetNewTime.RTC_Mon
+                    ,SetNewTime.RTC_Mday);
+        UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        NeedTransmit = 1;
         
       }
       // ;syst:time hh,mm,ss - установка времени
@@ -664,7 +689,12 @@ void DecodeCommandRS (void)
         SetNewTime.RTC_Sec = Num;
         
         RTCSetTime( SetNewTime ); // запишем новое время
-        
+        sprintf(BufString,"%d:%d:%d\r" // выдаем дату
+                ,SetNewTime.RTC_Hour
+                  ,SetNewTime.RTC_Min
+                    ,SetNewTime.RTC_Sec);
+        UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        NeedTransmit = 1;
       }
       // ;syst:key ss -  имитация нажатия кнопки
       if (!memcmp ((void*)RX_Buf, ";SYST:KEY ",10)) //
@@ -676,6 +706,9 @@ void DecodeCommandRS (void)
         nBtn = Num%10;
         nSts = (Num/10)%10;
         SetKeyMd (nBtn, nSts);
+        sprintf(BufString,"%d\r",Num); // выдаем // 
+        UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        NeedTransmit = 1;
       }
       
       //===== КОМАНДЫ РЕЖИМА РЕФЛЕКТОМЕТРА УСТАНОВОК и ПРОСМОТРА ======================    
@@ -692,7 +725,7 @@ void DecodeCommandRS (void)
         UARTSendExt ((BYTE*)&Head_RAW.Head[sm], sizeof(Head_RAW)-sm);// 
         // надо передать 2 блока заголовок и дамп
         UARTSendExt ((BYTE*)&RawData, sizeof(RawData));// 
-        
+        NeedTransmit = 1;
       }
       if (GetCurrentModeDevice()==MODEMEASURE)
       {
@@ -702,7 +735,7 @@ void DecodeCommandRS (void)
           rawPressKeyS = 1;
           sprintf(BufString,"OK\r"); // 
           UARTSendExt ((BYTE*)BufString, strlen (BufString));// 
-          
+          NeedTransmit = 1;
         }
       }
       if ((GetCurrentModeDevice()==MODESETREFL)||(GetCurrentModeDevice()==MODEREFL))
@@ -725,6 +758,7 @@ void DecodeCommandRS (void)
           memcpy( &BufString[11], "\r", 1 );
           
           UARTSendExt ((BYTE*)BufString, 12);
+          NeedTransmit = 1;
         }
         //;SYST:SET #18 - установка рефлектометра по команде
         if (!memcmp ((void*)RX_Buf, ";SYST:SET #18",13)) //
@@ -745,12 +779,18 @@ void DecodeCommandRS (void)
           SetSubModRefl (MANUAL); // установка режима рефлектометра 
           SetModeDevice (MODESETREFL); // принудительная установка режима прибора -  установка рефлектометра
           SendCfgOTDR (BufString); // передача конфигурации рефлектометра (настройки)
+          NeedTransmit = 1;
           //UARTSendExt ((BYTE*)BufString, 12);
         }
         // ;syst:set:kpr  - коэфф преломления
         if (!memcmp ((void*)RX_Buf, ";SYST:SET:KPR ",14)) //
         {
-          SetIndexWAV(atof((char*)&RX_Buf[14]));
+          float Data;
+          Data = atof((char*)&RX_Buf[14]);
+          SetIndexWAV(Data);
+          sprintf(BufString,"%.4f\r",Data); // получение установки Redeye); // 
+          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          NeedTransmit = 1;
           
         }
         // ;syst:set:cfg  - установка ASCII коменда
@@ -772,11 +812,14 @@ void DecodeCommandRS (void)
           SetModeDevice (MODESETREFL); // принудительная установка режима прибора -  установка рефлектометра
           // надо может чуток потупить?
           SendCfgOTDR (BufString); // передача конфигурации рефлектометра (настройки)
+          NeedTransmit = 1;
+          
         }
-        // ;syst:set:cfg?  - запрос установок рефлектометра ASCII коменда
-        if (!memcmp ((void*)RX_Buf, ";SYST:SET:CFG?",14)) //
+        // ;syst:get:cfg?  - запрос установок рефлектометра ASCII коменда
+        if (!memcmp ((void*)RX_Buf, ";SYST:GET:CFG?",14)) //
         {
           SendCfgOTDR (BufString); // передача конфигурации рефлектометра (настройки)
+          NeedTransmit = 1;
         }
         // ;INIT
         if (!memcmp ((void*)RX_Buf, ";INIT",5)) //
@@ -794,6 +837,7 @@ void DecodeCommandRS (void)
           sprintf(BufString,"%d\r", GetTimeAvrg(GetIndexVRM())+5);//c
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
           SetModeDevice (MODEMEASURE); // принудительная установка режима прибора -  запкск рефлектометрии с установленными параметрами
+          NeedTransmit = 1;
           //else  sprintf(BufString,"Not stopрed\r");
         }
         // получение необработанных данных
@@ -806,7 +850,7 @@ void DecodeCommandRS (void)
           }
           sprintf(BufString,"\r");//c
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
-          
+          NeedTransmit = 1;
         }
         // получение логарифмических данных
         if (!memcmp ((void*)RX_Buf, ";GET:LOG:DATA",13)) //
@@ -818,7 +862,7 @@ void DecodeCommandRS (void)
           }
           sprintf(BufString,"\r");//c
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
-          
+          NeedTransmit = 1;
         }
         // 11.10.2011 - команда установки комментариев внешней программой
         // ;syst:set:comm text  - изменение коментариев сохранения рефлектограммы
@@ -841,14 +885,15 @@ void DecodeCommandRS (void)
           UARTSendExt ((BYTE*)CommentsOTDR, strlen (CommentsOTDR));
           sprintf(BufString,"\r");//c
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
-          
+          NeedTransmit = 1;
         }
         // 11.10.2011 - команда принудительного сохранения рефлектограммы
         // ;save:trace  - сохранениe рефлектограммы 0
         if (!memcmp ((void*)RX_Buf, ";SAVE:TRACE",11)) //
         {
           // сохранение рефлектограммы по команде от UART)
-          SaveNewOTDRTrace (1);
+          SaveNewOTDRTrace (1); // ответ в функции т.к. = 1
+          NeedTransmit = 1;
           
         }
         // команды управления OTDR конфигурация 
@@ -873,7 +918,7 @@ void DecodeCommandRS (void)
             Data  = GetLengthLine(GetIndexLN());
             sprintf(BufString,"%d, %d\r",Data,Head_RAW.ValDS); // 
             UARTSendExt ((BYTE*)BufString, strlen (BufString));// 
-            
+            NeedTransmit = 1;
           }
           // установка зондирующего импульса
           if (!memcmp ((void*)&RX_Buf[10], "ZI",2)) //
@@ -889,7 +934,7 @@ void DecodeCommandRS (void)
             SetHeadFileRaw(0); // устанавливаем параметры съема в Заголовок файла необработанных данных
             sprintf(BufString,"%d\r",Data); // 
             UARTSendExt ((BYTE*)BufString, strlen (BufString));// 
-            
+            NeedTransmit = 1;
           }
         }
         
@@ -900,6 +945,7 @@ void DecodeCommandRS (void)
       {
         sprintf(BufString,"ORL=%.1f\nUPdB=%.1f\nkLog=%.1f\nOffdB=%.1f\r", g_VolORL, g_UpGrdB, g_kLog, g_OffSetdB);//c
         UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        NeedTransmit = 1;
       }
       if (!memcmp ((void*)RX_Buf, ";SET:ORL:P",10)) //
       {
@@ -921,6 +967,7 @@ void DecodeCommandRS (void)
         } 
         sprintf(BufString,"ORL=%.2f\nUPdB=%.2f\nkLog=%.2f\nOffdB=%.2f\r", g_VolORL, g_UpGrdB, g_kLog, g_OffSetdB);//c
         UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        NeedTransmit = 1;
       }
       
       //===== КОМАНДЫ РЕЖИМА УСТАНОВОК ======================    
@@ -932,49 +979,87 @@ void DecodeCommandRS (void)
         {
           Data = (WORD)atoi((char*)&RX_Buf[9]);
           SetNumDevice(Data); // установка номера  прибора      
+          sprintf(BufString,"%d\r",Data);//c
+          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          NeedTransmit = 1;
         }
         // ;set:smX XXXX // посадочные места лазеров - длины волн
         if (!memcmp ((void*)RX_Buf, ";SET:SM",7)) //
         {
           Data = (WORD)atoi((char*)&RX_Buf[9]);
-          SetupWavePlaceLS((BYTE)(RX_Buf[7]-'1'),Data); // установка длин волн лазеров в посадочные места     
+          SetupWavePlaceLS((BYTE)(RX_Buf[7]-'1'),Data); // установка длин волн лазеров в посадочные места 
+          sprintf(BufString,"%d %d\r",RX_Buf[7],Data);//c
+          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          NeedTransmit = 1;
+          
         }
         // ;set:LW  - число и тип источников
         if (!memcmp ((void*)RX_Buf, ";SET:LW ",8)) //
         {
-          SetTypeDevice ((BYTE)atoi((char*)&RX_Buf[8])); // установка типа прибора для ТОПАЗОВ
+          BYTE Data = (BYTE)atoi((char*)&RX_Buf[8]);
+          SetTypeDevice (Data); // установка типа прибора для ТОПАЗОВ
+          sprintf(BufString,"%d\r",Data);//c
+          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          NeedTransmit = 1;
         }
         // ;set:sf  - наличие или вид измерителя
         if (!memcmp ((void*)RX_Buf, ";SET:SF ",8)) //
         {
-          SetCfgPM  ((BYTE)atoi((char*)&RX_Buf[8])); // установка наличия измерителя
+          BYTE Data =(BYTE)atoi((char*)&RX_Buf[8]);
+          SetCfgPM  (Data); // установка наличия измерителя
+          sprintf(BufString,"%d\r",Data);//c
+          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          NeedTransmit = 1;
         }
         // ;set:re  - Признак красного глаза
         if (!memcmp ((void*)RX_Buf, ";SET:RE ",8)) //
         {
-          SetCfgRE  ((BYTE)atoi((char*)&RX_Buf[8])); // установка наличия красного глаза
+          BYTE Data =(BYTE)atoi((char*)&RX_Buf[8]);
+          SetCfgRE  (Data); // установка наличия измерителя
+          sprintf(BufString,"%d\r",Data);//c
+          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          NeedTransmit = 1;
         }
         // ;set:ap  - установка признака лавинного фотдиода
         if (!memcmp ((void*)RX_Buf, ";SET:AP ",8)) //
         {
-          SetupApdiSet  ((BYTE)atoi((char*)&RX_Buf[8])); // установка наличия лавинного фотодиода
+          BYTE Data =(BYTE)atoi((char*)&RX_Buf[8]);
+          SetupApdiSet  (Data); // установка наличия измерителя
+          sprintf(BufString,"%d\r",Data);//c
+          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          NeedTransmit = 1;
         }
         // пишем мертвые зоны    
         if (!memcmp ((void*)RX_Buf, ";SET:MZ",7)) //
         {
+          //UserSet.BegShiftZone
+          uint8_t Nans = 0;
           // ;set:MZS  - установка мертвых зон
           if (RX_Buf[7] == 'S') // запуск измерения мертвых зон
           {
             StartSettingBegShift (); // старт измерения мертвых зон
+            Nans = 1;
           }
           // ;set:MZy 
           else
           {
             SetBegShiftZone ((BYTE)atoi((char*)&RX_Buf[7]), atoi((char*)&RX_Buf[9]));// запись мертвой зоны по индексу
-//123            SSPInit_Any(MEM_FL1); // Востанавливаем Инициализацию SSP для управления внешней FLASH (порт 1 та что на плате отладочной)
-//123            FlashErasePage(CFG_USER); // чистим страницу установок пользователя прибора
-//123            FlashWritePageSM(CFG_USER, StructPtr(CFG_USER), StructSize(CFG_USER), 0);
+            //123            SSPInit_Any(MEM_FL1); // Востанавливаем Инициализацию SSP для управления внешней FLASH (порт 1 та что на плате отладочной)
+            //123            FlashErasePage(CFG_USER); // чистим страницу установок пользователя прибора
+            //123            FlashWritePageSM(CFG_USER, StructPtr(CFG_USER), StructSize(CFG_USER), 0);
             WriteNeedStruct(0x04);
+            Nans = 1;
+          }
+          if(Nans)
+          {
+            for (int i = 0; i<NUMSHIFTZONE;++i)
+            {
+              sprintf(BufString,"%d\n", UserSet.BegShiftZone[i]);//c
+              UARTSendExt ((BYTE*)BufString, strlen (BufString));
+            }
+            sprintf(BufString,"\r");//c
+            UARTSendExt ((BYTE*)BufString, strlen (BufString));
+            NeedTransmit = 1;
           }
         }
         // ;set:db*  dbt & dbs
@@ -987,14 +1072,15 @@ void DecodeCommandRS (void)
           if (Data <= 1 ) // запуск 
           {
             NameDB.Ena_DB = Data;  
-//123            SSPInit_Any(MEM_FL1); // Востанавливаем Инициализацию SSP для управления внешней FLASH (порт 1 та что на плате отладочной)
-//123            FlashErasePage(DBNAMESTRUCT); // чистим страницу установок alternate name прибора
-//123            FlashWritePageSM(DBNAMESTRUCT, StructPtr(DBNAMESTRUCT), StructSize(DBNAMESTRUCT), 0);
+            //123            SSPInit_Any(MEM_FL1); // Востанавливаем Инициализацию SSP для управления внешней FLASH (порт 1 та что на плате отладочной)
+            //123            FlashErasePage(DBNAMESTRUCT); // чистим страницу установок alternate name прибора
+            //123            FlashWritePageSM(DBNAMESTRUCT, StructPtr(DBNAMESTRUCT), StructSize(DBNAMESTRUCT), 0);
             WriteNeedStruct(0x10);
             sprintf(BufString,"OK %d\r",Data ); // 
             
           }
           UARTSendExt ((BYTE*)BufString, strlen (BufString));// Возвращает ответ на команду
+          NeedTransmit = 1;
         }
         // ;set:DBT text  - изменение alernate name device
         if (!memcmp ((void*)RX_Buf, ";SET:DBT ",9)) //
@@ -1008,14 +1094,14 @@ void DecodeCommandRS (void)
             else break;
           }
           NameDB.AltName[i] = 0;
-//123          SSPInit_Any(MEM_FL1); // Востанавливаем Инициализацию SSP для управления внешней FLASH (порт 1 та что на плате отладочной)
-//123          FlashErasePage(DBNAMESTRUCT); // чистим страницу установок alternate name прибора
-//123          FlashWritePageSM(DBNAMESTRUCT, StructPtr(DBNAMESTRUCT), StructSize(DBNAMESTRUCT), 0);
+          //123          SSPInit_Any(MEM_FL1); // Востанавливаем Инициализацию SSP для управления внешней FLASH (порт 1 та что на плате отладочной)
+          //123          FlashErasePage(DBNAMESTRUCT); // чистим страницу установок alternate name прибора
+          //123          FlashWritePageSM(DBNAMESTRUCT, StructPtr(DBNAMESTRUCT), StructSize(DBNAMESTRUCT), 0);
           WriteNeedStruct(0x10);
           UARTSendExt ((BYTE*)NameDB.AltName, strlen ((void*)NameDB.AltName));
           sprintf(BufString,"\r");//c
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
-          
+          NeedTransmit = 1;
         }
         if (!memcmp ((void*)RX_Buf, ";SET:DB?",8)) //проверка конфигурации альтернативного имени
         {
@@ -1025,7 +1111,7 @@ void DecodeCommandRS (void)
           UARTSendExt ((BYTE*)NameDB.AltName, strlen((void*)NameDB.AltName));
           sprintf(BufString,"\r");//c
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
-          
+          NeedTransmit = 1;
         }
         //        if (!memcmp ((void*)RX_Buf, ";SET:DB0 ",9)) //устанавливаем поправочный коэфф для длины волны (пока 850) на простых фотодиодах (носатые)
         //        {
@@ -1047,40 +1133,40 @@ void DecodeCommandRS (void)
         
         
         // ;set:ubat  -установка калибровка батареи
-//        if (!memcmp ((void*)RX_Buf, ";SET:UBAT",9)) //
-//        {
-//          int i =0;
-//          float Data=0.0;
-//          if (RX_Buf[9] == 'S') // установка принудительно коэффициента баттареи
-//          {
-//            float Data = (atof((char*)&RX_Buf[11])); // получение значения оэффициента баттареи
-//            if (Data == 0.0)           Data = GetSetBatStep (0);
-//            else
-//              Data = GetSetBatStep (Data); 
-//            sprintf(BufString,"%f %0.2f\r",Data, Data*1024); // Читает данные из АЦП измерителя/
-//            UARTSendExt ((BYTE*)BufString, strlen (BufString));// Возвращает текущий диапазон работы измерительного усилителя
-//          }
-//          else
-//          {
-//            if((FIO2PIN & EXT_POW)==0) // внешний источник подключен
-//            {
-//              for (i=0;i<10;i++)
-//              {
-//                Data +=(float)ADC0Read(BAT_ADC);
-//              }
-//              Data = Data/10.0;
-//              Data = (4.54/Data)/3; // якобы привнешнем питании на контроль попадает 4.54В питание 5В - Udiod(0.46)???
-//              Data = GetSetBatStep (Data);
-//              sprintf(BufString,"%f %0.2f\r",Data, Data*1024); // Читает данные из АЦП измерителя/
-//              UARTSendExt ((BYTE*)BufString, strlen (BufString));// Возвращает значение шага и уровень опоры
-//            }
-//            else
-//            {
-//              sprintf(BufString,"Not Set ExtPower\r"); 
-//              UARTSendExt ((BYTE*)BufString, strlen (BufString));
-//            }
-//          }
-//        }
+        //        if (!memcmp ((void*)RX_Buf, ";SET:UBAT",9)) //
+        //        {
+        //          int i =0;
+        //          float Data=0.0;
+        //          if (RX_Buf[9] == 'S') // установка принудительно коэффициента баттареи
+        //          {
+        //            float Data = (atof((char*)&RX_Buf[11])); // получение значения оэффициента баттареи
+        //            if (Data == 0.0)           Data = GetSetBatStep (0);
+        //            else
+        //              Data = GetSetBatStep (Data); 
+        //            sprintf(BufString,"%f %0.2f\r",Data, Data*1024); // Читает данные из АЦП измерителя/
+        //            UARTSendExt ((BYTE*)BufString, strlen (BufString));// Возвращает текущий диапазон работы измерительного усилителя
+        //          }
+        //          else
+        //          {
+        //            if((FIO2PIN & EXT_POW)==0) // внешний источник подключен
+        //            {
+        //              for (i=0;i<10;i++)
+        //              {
+        //                Data +=(float)ADC0Read(BAT_ADC);
+        //              }
+        //              Data = Data/10.0;
+        //              Data = (4.54/Data)/3; // якобы привнешнем питании на контроль попадает 4.54В питание 5В - Udiod(0.46)???
+        //              Data = GetSetBatStep (Data);
+        //              sprintf(BufString,"%f %0.2f\r",Data, Data*1024); // Читает данные из АЦП измерителя/
+        //              UARTSendExt ((BYTE*)BufString, strlen (BufString));// Возвращает значение шага и уровень опоры
+        //            }
+        //            else
+        //            {
+        //              sprintf(BufString,"Not Set ExtPower\r"); 
+        //              UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        //            }
+        //          }
+        //        }
         // ;set:tstscr  - проверка работы индикатора
         if (!memcmp ((void*)RX_Buf, ";SET:TSTSCR",11)) //
         {
@@ -1089,6 +1175,7 @@ void DecodeCommandRS (void)
           //TestScreen (); // выполнение теста - зарисовка экрана попиксельно, черным затем белым
           sprintf(BufString,"Test End\r"); // 
           UARTSendExt ((BYTE*)BufString, strlen (BufString));// Возвращает текущий диапазон работы измерительного усилителя
+          NeedTransmit = 1;
         }
         // ;set:enevents  - установка признака разрешения выдачи событий
         if (!memcmp ((void*)RX_Buf, ";SET:ENEVENTS ",14)) //
@@ -1107,6 +1194,7 @@ void DecodeCommandRS (void)
             sprintf(BufString,"Events Disable\r"); // 
           }
           UARTSendExt ((BYTE*)BufString, strlen (BufString));// 
+          NeedTransmit = 1;
         }
         // ;syst:set:blcr - проверка и установка параметров Bellcore
         if (!memcmp ((void*)RX_Buf, ";SYST:SET:BLCR",14)) //
@@ -1149,12 +1237,12 @@ void DecodeCommandRS (void)
             {
               ReflParam.ET = ((unsigned short)atoi((char*)&RX_Buf[17])); // 
             }
-//123            CheckReflParam ();  // Проверка пользовательских настроек 
-//123            FlashErasePage(EVEN_SET); // чистим страницу установок пользователя прибора
-//123            FlashWritePageSM(EVEN_SET, StructPtr(EVEN_SET), StructSize(EVEN_SET), 0);
+            CheckReflParam ();  // Проверка пользовательских настроек 
+            //123            FlashErasePage(EVEN_SET); // чистим страницу установок пользователя прибора
+            //123            FlashWritePageSM(EVEN_SET, StructPtr(EVEN_SET), StructSize(EVEN_SET), 0);
             WriteNeedStruct(0x08);
             SendBelcoreSet (); // посылает установки белкора
-            
+            NeedTransmit = 1;
           }
           
         }
@@ -1191,19 +1279,21 @@ void DecodeCommandRS (void)
         //        }
         if (!memcmp ((void*)RX_Buf, ";SET:FWLCDON",12)) //
         {
-          sprintf(BufString,"OK\r"); // 
-          UARTSendExt ((BYTE*)BufString, strlen (BufString));//
           SetMode(UploadFW_Nextion);
           CmdInitPage(26); // переключаемся на режим индикации сообщения что в режиме программирования
           //ProgFW_LCD = 1; // перенесем в First обработку что бы "правильно" работало
-          UART2Count = 0;
-          UART0Count = 0;
+          //123          //UART2Count = 0;
+          //123          //UART0Count = 0;
+          sprintf(BufString,"OK\r"); // 
+          UARTSendExt ((BYTE*)BufString, strlen (BufString));//
+          NeedTransmit = 1;
         }
         if (!memcmp ((void*)RX_Buf, ";SET:FWLCDOFF",13)) //
         {
           sprintf(BufString,"OK\r"); // 
           UARTSendExt ((BYTE*)BufString, strlen (BufString));//
           ProgFW_LCD = 2;
+          NeedTransmit = 1;
         }
         
       }
@@ -1216,12 +1306,16 @@ void DecodeCommandRS (void)
           BYTE Mode = ((BYTE)atoi((char*)&RX_Buf[11])); // установка режима работы измерителя
           SetSwitchPMMode(Mode);          // Устанавливает режим переключения 
           // коэффициентов усиления измерителя мощности (ручной или автоматический)
+          sprintf(BufString,"%d",Mode); // 
+          UARTSendExt ((BYTE*)BufString, strlen (BufString));//
+          NeedTransmit = 1;
         }
         // ;SRCT:ADC?
         if (!memcmp ((void*)RX_Buf, ";SRCT:ADC?",10)) //
         {
           sprintf(BufString,"%d %d\r",GetPMData(),GetRange()); // Читает данные из АЦП измерителя/
           UARTSendExt ((BYTE*)BufString, strlen (BufString));// Возвращает текущий диапазон работы измерительного усилителя
+          NeedTransmit = 1;
           // запрос  режима работы измерителя
         }
         
@@ -1248,15 +1342,17 @@ void DecodeCommandRS (void)
           if ((Data < 0.03)&&(Data > -0.03)) // установим коэфф 
           {
             NameDB.ph_A[0] = Data;  
-//123            SSPInit_Any(MEM_FL1); // Востанавливаем Инициализацию SSP для управления внешней FLASH (порт 1 та что на плате отладочной)
-//123            FlashErasePage(DBNAMESTRUCT); // чистим страницу установок alternate name прибора
-//123            FlashWritePageSM(DBNAMESTRUCT, StructPtr(DBNAMESTRUCT), StructSize(DBNAMESTRUCT), 0);
-//123            SSPInit_Any(SPI_PM); // востановление SSP для управления PM (порт 1 та что на плате отладочной)
+            //123            SSPInit_Any(MEM_FL1); // Востанавливаем Инициализацию SSP для управления внешней FLASH (порт 1 та что на плате отладочной)
+            //123            FlashErasePage(DBNAMESTRUCT); // чистим страницу установок alternate name прибора
+            //123            FlashWritePageSM(DBNAMESTRUCT, StructPtr(DBNAMESTRUCT), StructSize(DBNAMESTRUCT), 0);
+            //123            SSPInit_Any(SPI_PM); // востановление SSP для управления PM (порт 1 та что на плате отладочной)
             WriteNeedStruct(0x10);
             sprintf(BufString,"OK %f\r",Data ); // 
             
+
           }
           UARTSendExt ((BYTE*)BufString, strlen (BufString));// Возвращает ответ на команду
+          NeedTransmit = 1;
         }
         // КОМАНДЫ ДЛЯ РУЧНОГО РЕЖИМА ИЗМЕРИТЕЛЯ
         if (1)
@@ -1268,6 +1364,9 @@ void DecodeCommandRS (void)
             BYTE Mode = ((BYTE)atoi((char*)&RX_Buf[10])); // установка режима работы измерителя
             if (Mode > 3) Mode = 3; // самый грубый
             SetRange(Mode);    // Установка ключей согласно выбранного диапазона (для ручного режима)
+            sprintf(BufString,"%d",Mode); // Запуск измерния
+            UARTSendExt ((BYTE*)BufString, strlen (BufString));// Возвращает текущий диапазон работы измерительного усилителя
+            NeedTransmit = 1;
           }
           // ;SRCT:ZERO
           if (!memcmp ((void*)RX_Buf, ";SRCT:ZERO",10)) //
@@ -1281,17 +1380,18 @@ void DecodeCommandRS (void)
             {
               sprintf(BufString,"%d ",CoeffPM.ShZeroRng[x]); // начальные смещения диапазонов
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
-            }  
+            }
+
             // сохраняем полученные коэфф. 
-//123            SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
+            //123            SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
             
-//123            FlashErasePage(COEF_PM); // чистим страницу хранящую спектральные коэфф. прибора
-//123            FlashWritePageSM(COEF_PM, StructPtr(COEF_PM), StructSize(COEF_PM), 0);
-//123            SSPInit_Any(SPI_PM); // востановление SSP для управления PM (порт 1 та что на плате отладочной)
+            //123            FlashErasePage(COEF_PM); // чистим страницу хранящую спектральные коэфф. прибора
+            //123            FlashWritePageSM(COEF_PM, StructPtr(COEF_PM), StructSize(COEF_PM), 0);
+            //123            SSPInit_Any(SPI_PM); // востановление SSP для управления PM (порт 1 та что на плате отладочной)
             WriteNeedStruct(0x02);
             sprintf(BufString,"End\r"); // завершение измерения
             UARTSendExt ((BYTE*)BufString, strlen (BufString));//
-            
+            NeedTransmit = 1;
           }
           // ;SRCT:STYK x
           if (!memcmp ((void*)RX_Buf, ";SRCT:STYK ",11)) //
@@ -1309,14 +1409,15 @@ void DecodeCommandRS (void)
             sprintf(BufString,"K_St_Range[%d]=%f ",Mode,CoeffPM.CoefStykRange[Mode+1]); //  диапазонов
             UARTSendExt ((BYTE*)BufString, strlen (BufString));
             // сохраняем полученные коэфф. 
-//123            SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
+            //123            SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
             
-//123            FlashErasePage(COEF_PM); // чистим страницу хранящую спектральные коэфф. прибора
-//123            FlashWritePageSM(COEF_PM, StructPtr(COEF_PM), StructSize(COEF_PM), 0);
-//123            SSPInit_Any(SPI_PM); // востановление SSP для управления PM (порт 1 та что на плате отладочной)
+            //123            FlashErasePage(COEF_PM); // чистим страницу хранящую спектральные коэфф. прибора
+            //123            FlashWritePageSM(COEF_PM, StructPtr(COEF_PM), StructSize(COEF_PM), 0);
+            //123            SSPInit_Any(SPI_PM); // востановление SSP для управления PM (порт 1 та что на плате отладочной)
             WriteNeedStruct(0x02);
             sprintf(BufString,"End\r"); // завершение измерения
             UARTSendExt ((BYTE*)BufString, strlen (BufString));// 
+            NeedTransmit = 1;
           }
           // ;SRCT:KKx
           if (!memcmp ((void*)RX_Buf, ";SRCT:KK",8)) //
@@ -1327,14 +1428,15 @@ void DecodeCommandRS (void)
             CoeffPM.CoefPointKlb[Mode] =1.0;
             // запуск режима измерения коэффициентов привязки длинн волн калибровки
             Data = GetCoefSpctrKlb(Mode, Data);     // Возвращает спектральный коэффициент для калибровочных длин волн
-//123            SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
+            //123            SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
             
-//123            FlashErasePage(COEF_PM); // чистим страницу хранящую спектральные коэфф. прибора
-//123            FlashWritePageSM(COEF_PM, StructPtr(COEF_PM), StructSize(COEF_PM), 0);
-//123            SSPInit_Any(SPI_PM); // востановление SSP для управления PM (порт 1 та что на плате отладочной)
+            //123            FlashErasePage(COEF_PM); // чистим страницу хранящую спектральные коэфф. прибора
+            //123            FlashWritePageSM(COEF_PM, StructPtr(COEF_PM), StructSize(COEF_PM), 0);
+            //123            SSPInit_Any(SPI_PM); // востановление SSP для управления PM (порт 1 та что на плате отладочной)
             WriteNeedStruct(0x02);
             sprintf(BufString,"%f\r",  Data);     // // завершение измерения Возвращает спектральный коэффициент для текущей длины волны
             UARTSendExt ((BYTE*)BufString, strlen (BufString));// 
+            NeedTransmit = 1;
           }
           // ;SRCT:KSx
           if (!memcmp ((void*)RX_Buf, ";SRCT:KS",8)) //
@@ -1383,13 +1485,14 @@ void DecodeCommandRS (void)
               CoeffPM.CoefSpctrH[Mode] = Data;  
               break;
             }
-//123            SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
-//123            FlashErasePage(COEF_PM); // чистим страницу хранящую спектральные коэфф. прибора
-//123            FlashWritePageSM(COEF_PM, StructPtr(COEF_PM), StructSize(COEF_PM), 0);
-//123            SSPInit_Any(SPI_PM); // востановление SSP для управления PM (порт 1 та что на плате отладочной)
+            //123            SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
+            //123            FlashErasePage(COEF_PM); // чистим страницу хранящую спектральные коэфф. прибора
+            //123            FlashWritePageSM(COEF_PM, StructPtr(COEF_PM), StructSize(COEF_PM), 0);
+            //123            SSPInit_Any(SPI_PM); // востановление SSP для управления PM (порт 1 та что на плате отладочной)
             WriteNeedStruct(0x02);
             sprintf(BufString,"%f\r",  Data);     // // завершение измерения Возвращает спектральный коэффициент для текущей длины волны
             UARTSendExt ((BYTE*)BufString, strlen (BufString));// 
+            NeedTransmit = 1;
           }
           
         } // от комманд ручного режима
@@ -1402,35 +1505,42 @@ void DecodeCommandRS (void)
           {
             sprintf(BufString,"%d\n",CoeffPM.ShZeroRng[x]); // начальные смещения диапазонов
             UARTSendExt ((BYTE*)BufString, strlen (BufString));
+            
           }  
           for (int x=0; x<4; ++x)
           {
             sprintf(BufString,"%f\n",CoeffPM.CoefStykRange[x]); // коэфф. стыковки диапазонов
             UARTSendExt ((BYTE*)BufString, strlen (BufString));
+            
           }  
           for (int x=0; x<WAVE_LENGTHS_NUM; ++x)
           {
             sprintf(BufString,"%f\n",CoeffPM.CoefPointKlb[x]); // коэффициенты привязки длин волн калибровки={}
             UARTSendExt ((BYTE*)BufString, strlen (BufString));
+            
           }  
           for (int x=0; x<6; ++x)
           {
             sprintf(BufString,"%f\n",CoeffPM.CoefSpctrL[x]); // коэффициенты спектральной харр. 800-900={}
             UARTSendExt ((BYTE*)BufString, strlen (BufString));
+            
           }  
           for (int x=0; x<10; ++x)
           {
             sprintf(BufString,"%f\n",CoeffPM.CoefSpctrM[x]); // коэффициенты спектральной харр. 1210-1390={}
             UARTSendExt ((BYTE*)BufString, strlen (BufString));
+            
           }  
           
           for (int x=0; x<13; ++x)
           {
             sprintf(BufString,"%f\n",CoeffPM.CoefSpctrH[x]); // коэффициенты спектральной харр. 1410-1650={}
             UARTSendExt ((BYTE*)BufString, strlen (BufString));
+            
           } 
           sprintf(BufString,"\r");    
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          NeedTransmit = 1;
         }
         // -=-=-=-=-=- КОМАНДЫ УСТАНОВКИ частот совместимости JDSU В РУЧНУЮ
         // ;SLWV:
@@ -1446,13 +1556,14 @@ void DecodeCommandRS (void)
             {
               SetJDSU.FreqLambda[Indx]= Data;
               myBeep(5);
-//123              SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
-//123              FlashErasePage(JDSUSTRUCT); // чистим страницу хранящую параметры ОВЫГ совместимости
-//123              FlashWritePageSM(JDSUSTRUCT, StructPtr(JDSUSTRUCT), StructSize(JDSUSTRUCT), 0);
-//123              SSPInit_Any(SPI_PM); // востановление SSP для управления PM (порт 1 та что на плате отладочной)
+              //123              SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
+              //123              FlashErasePage(JDSUSTRUCT); // чистим страницу хранящую параметры ОВЫГ совместимости
+              //123              FlashWritePageSM(JDSUSTRUCT, StructPtr(JDSUSTRUCT), StructSize(JDSUSTRUCT), 0);
+              //123              SSPInit_Any(SPI_PM); // востановление SSP для управления PM (порт 1 та что на плате отладочной)
               WriteNeedStruct(0x20);
               sprintf(BufString,"Ok\r");    
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
+              NeedTransmit = 1;
             }
             
           }
@@ -1468,6 +1579,7 @@ void DecodeCommandRS (void)
           } 
           sprintf(BufString,"\r");    
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          NeedTransmit = 1;
         }
         // -=-=-=-=-=- КОМАНДЫ УСТАНОВКИ КОЭФФИЦИЕНТОВ В РУЧНУЮ
         // ;SPCT:
@@ -1551,13 +1663,14 @@ void DecodeCommandRS (void)
           if (NeedSave) // надо сохранить изменения
           {
             myBeep(5);
-//123            SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
-//123            FlashErasePage(COEF_PM); // чистим страницу хранящую спектральные коэфф. прибора
-//123            FlashWritePageSM(COEF_PM, StructPtr(COEF_PM), StructSize(COEF_PM), 0);
-//123            SSPInit_Any(SPI_PM); // востановление SSP для управления PM (порт 1 та что на плате отладочной)
+            //123            SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
+            //123            FlashErasePage(COEF_PM); // чистим страницу хранящую спектральные коэфф. прибора
+            //123            FlashWritePageSM(COEF_PM, StructPtr(COEF_PM), StructSize(COEF_PM), 0);
+            //123            SSPInit_Any(SPI_PM); // востановление SSP для управления PM (порт 1 та что на плате отладочной)
             WriteNeedStruct(0x02);
             sprintf(BufString,"Ok\r");    
             UARTSendExt ((BYTE*)BufString, strlen (BufString));
+            NeedTransmit = 1;
           }
         }
         //                if (!memcmp ((void*)RX_Buf, ";SPCT:DB0 ",10)) //устанавливаем поправочный коэфф для длины волны (пока 850) на простых фотодиодах (носатые)
@@ -1593,6 +1706,7 @@ void DecodeCommandRS (void)
               if (((NumLW<800)||(NumLW>1650))||((NumLW>900)&&(NumLW<1210))) NumLW=1310;
               sprintf(BufString,"%4d nm\r",SetPMWavelenght(NumLW));// передаем слово о начале измерения
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
+              NeedTransmit = 1;
               
             }
             if (!memcmp ((void*)&RX_Buf[8], "MD ",3)) //установка режима работы измерителя (dB,dBm, mW)
@@ -1603,6 +1717,7 @@ void DecodeCommandRS (void)
               SetStringPM(Str,GetLastPower ());           // устанавливает строку данных измерения
               sprintf(BufString,"%s\r",Str);// передаем слово о начале измерения
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
+              NeedTransmit = 1;
             }
             if (!memcmp ((void*)&RX_Buf[8], "REFF",4)) //привязка на текущей длине волны
             {
@@ -1611,6 +1726,7 @@ void DecodeCommandRS (void)
               SetTypeRslt(1); // set dB
               sprintf(BufString,"%.2f dBm\r",GetCurrLvldB(0));// передаем слово о начале измерения
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
+              NeedTransmit = 1;
             }
             if (!memcmp ((void*)&RX_Buf[8], "REF ",4)) //принудительная установка привязки
             {
@@ -1621,12 +1737,14 @@ void DecodeCommandRS (void)
               SetStringPM(Str,GetLastPower ());           // устанавливает строку данных измерения
               sprintf(BufString,"%s\r",Str);// передаем слово о начале измерения
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
+              NeedTransmit = 1;
             }
             if (!memcmp ((void*)&RX_Buf[8], "CUR",3)) //запрос измерителя в формате длина волны и мощность
             {
               //  float LvlmW = GetLastPower ();
               sprintf(BufString,"%4d, %.6e\r",GetPMWavelenght(0),GetLastPower()*0.001);// передаем длину волны и мощность в ватах
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
+              NeedTransmit = 1;
             }
             
           }
@@ -1636,6 +1754,7 @@ void DecodeCommandRS (void)
             SetStringPM(Str,GetLastPower ());           // устанавливает строку данных измерения
             sprintf(BufString,"%4d nm, %s, %.2f dBm\r",GetPMWavelenght(0),Str,GetCurrLvldB(0));// передаем слово о начале измерения
             UARTSendExt ((BYTE*)BufString, strlen (BufString));
+            NeedTransmit = 1;
           }
         }
       } // команды измерителя // только в режиме измерителя
@@ -1652,31 +1771,32 @@ void DecodeCommandRS (void)
             if (!memcmp ((void*)&RX_Buf[9], "WRN",3)) //
             { // запись следующей, только если установлен режим измерителя
               //if (GetStateADC() == FREEADC)
-//              WORD WatchDog = 0;
-//              while (GetStateADC() == BUSYADC)
-//              {
-//                WatchDog++;
-//                if (WatchDog>20000)
-//                {
-//                  SSP_FlashTransmit(1, 0);
-//                  SSP_FlashTransmit(1, 0);
-//                  SSP_FlashTransmit(1, 0);  
-//                  CreatDelay (10); // задержка 0,8 мкс чтобы сосчитать все
-//                  SetStateADC (FREEADC); // установка режима АЦП
-//                  PM_CS(1);
-//                  break;
-//                }
-//              }
+              //              WORD WatchDog = 0;
+              //              while (GetStateADC() == BUSYADC)
+              //              {
+              //                WatchDog++;
+              //                if (WatchDog>20000)
+              //                {
+              //                  SSP_FlashTransmit(1, 0);
+              //                  SSP_FlashTransmit(1, 0);
+              //                  SSP_FlashTransmit(1, 0);  
+              //                  CreatDelay (10); // задержка 0,8 мкс чтобы сосчитать все
+              //                  SetStateADC (FREEADC); // установка режима АЦП
+              //                  PM_CS(1);
+              //                  break;
+              //                }
+              //              }
               {
                 //REDEYE(1);
                 //NeedSaveOLT = 1; // установка признака необходимости сохранить данные
-//123                SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
+                //123                SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
                 ReLoadCommOLT (); // перезагружаем комментарии для измерителя
                 SavePowerMeter(GetLastPower()); // Получаем мощность в мВт)функция сохранения в памяти ИЗмерений
                 WriteMemPow(); // запись в память непосредственно
-//123                SSPInit_Any(SPI_PM); // востановление SSP для управления PM (порт 1 та что на плате отладочной)
+                //123                SSPInit_Any(SPI_PM); // востановление SSP для управления PM (порт 1 та что на плате отладочной)
                 sprintf(BufString,"%d,%d\r",GetCellMem(0),MaxMemPM); // сколько занято ячеек
                 UARTSendExt ((BYTE*)BufString, strlen (BufString));
+                NeedTransmit = 1;
                 //REDEYE(0);
               }
               //else
@@ -1688,17 +1808,19 @@ void DecodeCommandRS (void)
             if (!memcmp ((void*)&RX_Buf[9], "CLR",3)) //
             { // удаляем ячейки
               
-//              P08_IRQ_EN(OFF); // запрещаем прерывание по готовности АЦП
-//              PM_CS(1); // рвем сбор данных если был
+              //              P08_IRQ_EN(OFF); // запрещаем прерывание по готовности АЦП
+              //              PM_CS(1); // рвем сбор данных если был
               DeletedAllCell (); // удаление всех записей измерителя   
               SetModeDevice(MODETESTMEM);
               sprintf(BufString,"%d,%d\r",GetCellMem(0),MaxMemPM); // сколько занято ячеек
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
+              NeedTransmit = 1;
             }
             if (!memcmp ((void*)&RX_Buf[9], "FR",2)) //
             { // читаем сколько ячеек занято
               sprintf(BufString,"%d,%d\r",GetCellMem(0),MaxMemPM); // сколько занято ячеек
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
+              NeedTransmit = 1;
             }
             if (!memcmp ((void*)&RX_Buf[9], "LD? ",4)) //
             { // читаем ячейку памяти
@@ -1706,14 +1828,14 @@ void DecodeCommandRS (void)
               if ((Num_f <= GetCellMem(0))&&(Num_f>0))
               {
                 Num_f= Num_f-1;
-//                P08_IRQ_EN(OFF); // запрещаем прерывание по готовности АЦП
-//                PM_CS(1); // рвем сбор данных если был
-//                SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
+                //                P08_IRQ_EN(OFF); // запрещаем прерывание по готовности АЦП
+                //                PM_CS(1); // рвем сбор данных если был
+                //                SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
                 SetNumCellIzm (Num_f);
-//123!!!                ReadCellIzm(Num_f,(unsigned char*)&PONI);//  читаем из памяти(flash) в PONI ячейку сохранения измерителя
+                //123!!!                ReadCellIzm(Num_f,(unsigned char*)&PONI);//  читаем из памяти(flash) в PONI ячейку сохранения измерителя
                 Sec2Date (PONI.TotalTimeCell, &TimeSaveOLT);
                 SetModeDevice(MODETESTMEM);
-//123                SSPInit_Any(SPI_PM); // востановление SSP для управления PM (порт 1 та что на плате отладочной)
+                //123                SSPInit_Any(SPI_PM); // востановление SSP для управления PM (порт 1 та что на плате отладочной)
                 // приняли признак ;LD? -  выдаем файл
                 //#265
                 // ЗАГОЛОВОК
@@ -1721,6 +1843,7 @@ void DecodeCommandRS (void)
                 memcpy( &BufString[4], &PONI, 64 ); // 
                 memcpy( &BufString[68], "\r", 1 );
                 UARTSendExt ((BYTE*)BufString, 69);
+                NeedTransmit = 1;
               }
             }
           }
@@ -1738,6 +1861,7 @@ void DecodeCommandRS (void)
             {
               sprintf(BufString,"%4d %d\r",GetLengthWaveLS (GetPlaceLS(CURRENT)), SetModeLS(Str,CURRENT,CurrLang ));// передаем слово о начале измерения
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
+              NeedTransmit = 1;
             }
             if (!memcmp ((void*)&RX_Buf[7], ":MD ",4)) //
             {
@@ -1748,6 +1872,7 @@ void DecodeCommandRS (void)
                 SetModeLS(Str,CURRENT,CurrLang );  
               sprintf(BufString,"%s\r",Str);// 
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
+              NeedTransmit = 1;
               
             }
             if (!memcmp ((void*)&RX_Buf[7], ":LW ",4)) //
@@ -1757,6 +1882,7 @@ void DecodeCommandRS (void)
               GetPlaceLS(Indx-GetPlaceLS(CURRENT));
               sprintf(BufString,"%4d nm\r",GetLengthWaveLS (GetPlaceLS(CURRENT)));// передаем слово о начале измерения
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
+              NeedTransmit = 1;
             }
             
           }
@@ -1773,6 +1899,7 @@ void DecodeCommandRS (void)
             {
               sprintf(BufString,"%d\r",SetModeRE(Str,CURRENT,CurrLang ));// 
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
+              NeedTransmit = 1;
             }
             if (!memcmp ((void*)&RX_Buf[7], ":MD ",4)) //установить режим красного глаза
             {
@@ -1782,11 +1909,18 @@ void DecodeCommandRS (void)
                 SetModeRE(Str,CURRENT,CurrLang );  
               sprintf(BufString,"%s\r",Str);// 
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
+              NeedTransmit = 1;
             }
           }
         }
       }
       break; // от ;
+      if(NeedTransmit==0)
+      {
+        sprintf(BufString,"Err\r");// 
+        UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        
+      }
     }
   }
   RSDecYes = 0;

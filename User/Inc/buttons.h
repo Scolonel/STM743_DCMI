@@ -31,13 +31,13 @@
 #define LONG_TIME 25
 #define INF_TIME 30
 
-#define BTN_UP  0x08
-#define BTN_DOWN  0x20
-#define BTN_LEFT  0x40
-#define BTN_RIGHT  0x02
+#define BTN_UP  0x20
+#define BTN_DOWN  0x01
+#define BTN_LEFT  0x08
+#define BTN_RIGHT  0x04
 #define BTN_START  0x04
 #define BTN_OK      0x10
-#define BTN_MENU    0x01
+#define BTN_MENU    0x02
 #define PRESS( a ) (KeyP & a)
 
 
