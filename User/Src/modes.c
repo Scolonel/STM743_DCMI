@@ -6522,9 +6522,9 @@ void UploadFW_Nextion(void) // обновление индикатора NEXTION
       // посылка команды переключения окна на MainMenu (возврат)  
   // вызовем новое окно!
   //CreatDelay(5000000);
-  HAL_Delay(50);
-
-  CmdInitPage(1);
+  HAL_Delay(500);// индикатор после сброса, время не понятно!
+  SetModeDevice (0); // принудительная установка режима прибора
+  //CmdInitPage(1);
   myBeep(25);
   }
 
@@ -7080,7 +7080,7 @@ void CmdInitPage(int Num)
       NEX_Transmit((void*)CmdNextion[Num]);
       g_FirstScr=1;
       //CreatDelay(20000);// 177 как в 173
-  HAL_Delay(3);
+  HAL_Delay(30);
 }
 
 void SlowON (void) // медленное включение питания

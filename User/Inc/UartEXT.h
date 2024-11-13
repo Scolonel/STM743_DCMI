@@ -13,7 +13,7 @@
 
 #
 #define BUFSIZE   0x80
-#define BUFSIZEUART1   0x40
+#define BUFSIZEUART1   0x80
 #define BUFSIZEUART2   0x80
 
 #define STOP_UART  0

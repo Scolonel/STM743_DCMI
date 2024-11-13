@@ -66,78 +66,87 @@ void StartRecievNEX (uint32_t TimeOut) // подготовка ожидания ответа от Nextionв
 // Прием байта по UART2 LCD
 void RS_LCD (BYTE temp)
 {
+  //     CDC_Transmit(0, (uint8_t*)(TRD), 1); // echo back on same channel
+  
   //GetRstTMUart2(1); // сбросим таймер Uart2
   CountTimerUart2 = 50;// уСТАНВЛИВАЕМ ВРЕМЯ ЗАДЕРЖКИ в mS ожидание следующего байта
-  switch (RecievNEX)
+  if(ProgFW_LCD)
   {
-  case STOP_UART:                    //Состояние готовности к приёму новой команды
-    if (temp)  // что-то приняли попробуем начать прием
-    {
-      CntRXNEX=0;
-      RX_BufNEX[CntRXNEX]=temp;
-      RecievNEX=START_UART;
-      CntRXNEX++;
-      if(temp == 0xa4) // это от ответа индикаторана ОК
-        g_NeedChkAnsvNEX=1; // начало приема ответа от индикатора по ОК 
-    }
-    break;
-  case START_UART:                   //Состояние приёма текущей команды (исправлено V <-> W) 02/09/03
-    {
-      switch (temp)
-      {
-      case 0xa7:                 //Ежели приняли 
-        RX_BufNEX[CntRXNEX++]=temp;
-        if(g_NeedChkAnsvNEX == 1) // принимаем ответ от ндикатора
-        {
-          g_NeedChkAnsvNEX = 2; // конец приема можно обработать
-        }
-        break;
-      case 'я':                 //Ежели приняли 
-        //CntRXOpt=0;
-        RX_BufNEX[CntRXNEX++]=temp;
-        if ((CntRXNEX>3)&&(!memcmp ((void*)&RX_BufNEX[CntRXNEX-3], "яяя",3)))
-        {
-          RecievNEX=END_UART;
-          RX_BufNEX[CntRXNEX]=0x0;
-          Uart2DecYes = 1;            //Команда принята полностью, поэтому надо обработать установим признакRSDecode();
-          switch(RX_BufNEX[0])
-          {
-          case 0xFD: // завершили передачу блока!
-            ReadyNEX = 1;
-            break;
-          case 0xFE: // готов принять блок
-            ReadyNEX = 2;
-            break;
-          case 0x1A: // error
-            ReadyNEX = 3;
-            break;
-          case 0x70: // text block
-            ReadyNEX = 4;
-            break;
-          case 'c': // text block ответа на connect
-            ReadyNEX = 5;
-            break;
-          default:
-            break;
-          }
-        }//
-        
-        break;
-      default:                  //Продолжение приёма команды
-        RX_BufNEX[CntRXNEX]=temp;
-        CntRXNEX++;
-        if (CntRXNEX > 30)
-        {
-          CntRXNEX=0;
-          RecievNEX=STOP_UART;
-        }
-        break;
-      }
-    }
-  case END_UART:                     //Состояние принятой полностью команды
-    break;                      //Предыдущая команда не отработана - поэтому ничего не делать
+    RX_BufNEX[CntRXNEX]=temp;
+    CntRXNEX++;
   }
-  
+  else // обычная работа
+  {
+    switch (RecievNEX)
+    {
+    case STOP_UART:                    //Состояние готовности к приёму новой команды
+      if (temp)  // что-то приняли попробуем начать прием
+      {
+        CntRXNEX=0;
+        RX_BufNEX[CntRXNEX]=temp;
+        RecievNEX=START_UART;
+        CntRXNEX++;
+        if(temp == 0xa4) // это от ответа индикаторана ОК
+          g_NeedChkAnsvNEX=1; // начало приема ответа от индикатора по ОК 
+      }
+      break;
+    case START_UART:                   //Состояние приёма текущей команды (исправлено V <-> W) 02/09/03
+      {
+        switch (temp)
+        {
+        case 0xa7:                 //Ежели приняли 
+          RX_BufNEX[CntRXNEX++]=temp;
+          if(g_NeedChkAnsvNEX == 1) // принимаем ответ от ндикатора
+          {
+            g_NeedChkAnsvNEX = 2; // конец приема можно обработать
+          }
+          break;
+        case 'я':                 //Ежели приняли 
+          //CntRXOpt=0;
+          RX_BufNEX[CntRXNEX++]=temp;
+          if ((CntRXNEX>3)&&(!memcmp ((void*)&RX_BufNEX[CntRXNEX-3], "яяя",3)))
+          {
+            RecievNEX=END_UART;
+            RX_BufNEX[CntRXNEX]=0x0;
+            Uart2DecYes = 1;            //Команда принята полностью, поэтому надо обработать установим признакRSDecode();
+            switch(RX_BufNEX[0])
+            {
+            case 0xFD: // завершили передачу блока!
+              ReadyNEX = 1;
+              break;
+            case 0xFE: // готов принять блок
+              ReadyNEX = 2;
+              break;
+            case 0x1A: // error
+              ReadyNEX = 3;
+              break;
+            case 0x70: // text block
+              ReadyNEX = 4;
+              break;
+            case 'c': // text block ответа на connect
+              ReadyNEX = 5;
+              break;
+            default:
+              break;
+            }
+          }//
+          
+          break;
+        default:                  //Продолжение приёма команды
+          RX_BufNEX[CntRXNEX]=temp;
+          CntRXNEX++;
+          if (CntRXNEX > 30)
+          {
+            CntRXNEX=0;
+            RecievNEX=STOP_UART;
+          }
+          break;
+        }
+      }
+    case END_UART:                     //Состояние принятой полностью команды
+      break;                      //Предыдущая команда не отработана - поэтому ничего не делать
+    }
+  }
 }
 
 

@@ -48,7 +48,7 @@
 
 // для управления всякими UART
 #define BUFSIZE   0x80
-#define BUFSIZEUART1   0x40
+#define BUFSIZEUART1   0x80
 #define BUFSIZEUART2   0x80
 
 #define STOP_UART  0
@@ -73,7 +73,8 @@
 #include "rtc.h" // 
 //#include "fonts.h"
 #include "pca955x.h"
-#include "buttons.h"      
+#include "buttons.h"   
+
 //#include "usbd_cdc_acm_if.h"
 #include "OTDR_Meas.h" //from T7kAR
 //#include "HardSetDevice.h" // функции управления "железом" 
@@ -164,7 +165,8 @@ extern volatile BYTE RX_BufNEX[BUFSIZEUART2];
 extern char VerFW_LCD[25]; //версия ПО индикатора NEXION
 extern char NameReadFile[32]; // глобальная имя файла при чтении в сохранении
 
-extern volatile BYTE RSDecYes;
+extern volatile DWORD CntRXNEX;
+extern volatile uint32_t RSDecYes; // здесь и признак приема по UART и чиcло байт при приеме от USB
 extern volatile BYTE Uart2DecYes;
 extern volatile DWORD RecievNEX;
 extern volatile BYTE ReadyNEX; // готовность управления NEXTION

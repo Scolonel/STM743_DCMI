@@ -31,7 +31,7 @@
 #include "usbd_cdc_acm.h"
 
 /* USER CODE BEGIN INCLUDE */
-
+#include "UartNEX.h"
 /* USER CODE END INCLUDE */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -94,7 +94,13 @@ extern USBD_CDC_ACM_ItfTypeDef  USBD_CDC_ACM_fops;
 
 /* USER CODE BEGIN EXPORTED_VARIABLES */
 //extern uint8_t RX_Buffer[NUMBER_OF_CDC][APP_RX_DATA_SIZE];
-extern uint32_t RecievUSB ; // признак принятия данных по USB, число данных в буфере
+//extern uint32_t RecievUSB ; // признак принятия данных по USB, число данных в буфере
+extern volatile uint32_t RSDecYes; // здесь и признак приема по UART и чиcло байт при приеме от USB
+extern volatile BYTE RX_Buf[BUFSIZEUART1];
+extern volatile BYTE ProgFW_LCD; // признак программирования индикатора Nexion
+extern UART_HandleTypeDef huart7;
+extern volatile DWORD Reciev;
+extern volatile DWORD CntRX;
 
 /* USER CODE END EXPORTED_VARIABLES */
 

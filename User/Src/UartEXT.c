@@ -56,7 +56,7 @@ volatile DWORD UART0Count = 0;
 volatile DWORD Reciev = STOP_UART;
 volatile BYTE RX_Buf[BUFSIZEUART1];
 volatile DWORD CntRX = 0;
-volatile BYTE RSDecYes = 0;
+volatile uint32_t RSDecYes = 0;
 char NameReadFile[32]; // глобальна€ им€ файла при чтении в сохранении
 char BufString[225];
 
@@ -171,10 +171,11 @@ void DecodeCommandRS (void)
   //char BufString[225];
   char StartStr[7]={"#48419\0"}; // 4-х значные номера!!!
   //VICINTENCLEAR  = 1 << UART0_INT; /* Disable Interrupt */
-  char NeedTransmit = 0; //
+  char NeedTransmit; //
   // 0 - команда не обработана надо выслать Err
   // 1 - передаем буффер BufString
   // 2 - уже передали  (бинарный блок, ничего не передаем
+  NeedTransmit = 0;
   if (Reciev==END_UART)                //≈жели приЄм команды закончен - обработка
   {
     for (int i=0; ((i<CntRX)&&(RX_Buf[i]!=0x20)); i++ )
@@ -1915,13 +1916,14 @@ void DecodeCommandRS (void)
         }
       }
       break; // от ;
-      if(NeedTransmit==0)
+    }
+      if(NeedTransmit == 0)
       {
         sprintf(BufString,"Err\r");// 
         UARTSendExt ((BYTE*)BufString, strlen (BufString));
         
       }
-    }
+    
   }
   RSDecYes = 0;
   Reciev = STOP_UART;

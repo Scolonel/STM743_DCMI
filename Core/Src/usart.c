@@ -21,7 +21,8 @@
 #include "usart.h"
 
 /* USER CODE BEGIN 0 */
-#define ENAUSBCOM 0  // признак работы внешнего uART 0 - uart3 1 - USB-COM
+//#include "usbd_cdc_acm_if.h"
+#define ENAUSBCOM 1  // признак работы внешнего uART 0 - uart3 1 - USB-COM
 uint8_t RxBufExt[64]; // буффер что приняли извне
 
 /* USER CODE END 0 */
@@ -435,6 +436,9 @@ void SendUartTX (uint8_t *Str_mas)
 void NEX_Transmit(uint8_t *Str)
 {
   uint16_t Size = strlen((void*)Str);
- HAL_UART_Transmit(&huart7,(void*)Str, Size,(uint32_t)(Size/1));  
+    HAL_UART_Transmit_DMA(&huart7, (void*)Str,Size); // выдаем 
+
+ //HAL_UART_Transmit(&huart7,(void*)Str, Size,(uint32_t)(Size/8));
+ HAL_Delay(Size/8);
 }
 /* USER CODE END 1 */

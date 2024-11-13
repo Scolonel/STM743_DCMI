@@ -90,8 +90,8 @@
 
 /* USER CODE BEGIN PRIVATE_VARIABLES */
 
-#define APP_RX_DATA_SIZE 128
-#define APP_TX_DATA_SIZE 128
+#define APP_RX_DATA_SIZE 4096
+#define APP_TX_DATA_SIZE 4096
 
 /** RX buffer for USB */
 uint8_t RX_Buffer[NUMBER_OF_CDC][APP_RX_DATA_SIZE];
@@ -422,8 +422,30 @@ static int8_t CDC_Receive(uint8_t cdc_ch, uint8_t *Buf, uint32_t *Len)
 {
   /* USER CODE BEGIN 6 */
   //HAL_UART_Transmit_DMA(CDC_CH_To_UART_Handle(cdc_ch), Buf, *Len);
-  RecievUSB = *Len;
-  CDC_Transmit(cdc_ch, Buf, *Len); // echo back on same channel
+  // надо проверить если пишем индикатор то просто транслируем блок
+  Buf[(*Len)]= 0;
+  if(ProgFW_LCD)
+  {
+    StartRecievNEX (5000);// врем€ ожидани€ начала ответов от индикатора
+            //    // вдруг это команда сборса...
+          if (((*Len)>=7)&&(!memcmp ((void*)&Buf[(*Len)-7], "rest€€€",7)))
+          {
+      ProgFW_LCD = 2;
+          }
+
+    HAL_UART_Transmit(&huart7,(void *)Buf, *Len,(uint32_t)(*Len/8));  
+  }
+  else // переписываем буффер в строку приема
+  {
+    RSDecYes = (*Len);
+    CntRX = RSDecYes;
+    memcpy((void*)RX_Buf,(void*)Buf,*Len);
+    Reciev = 2;
+    
+  }
+       
+  
+  //CDC_Transmit(cdc_ch, Buf, *Len); // echo back on same channel
 
   USBD_CDC_SetRxBuffer(cdc_ch, &hUsbDevice, &Buf[0]);
   USBD_CDC_ReceivePacket(cdc_ch, &hUsbDevice);

@@ -26,6 +26,7 @@
 #include "adc.h"
 #include "dcmi.h"
 #include "system.h"
+#include "usbd_cdc_acm_if.h"
 //#include "dac.h"
 /* USER CODE END Includes */
 
@@ -424,13 +425,22 @@ void UART5_IRQHandler(void)
   */
 void UART7_IRQHandler(void)
 {
+  uint8_t TRD;
   /* USER CODE BEGIN UART7_IRQn 0 */
         /* Check if RXNE flag is set */
   // это ответы из индикатора
       if (__HAL_UART_GET_FLAG(&huart7, UART_FLAG_RXNE))
   {
   Dummy = (uint16_t)(huart7.Instance->RDR); // 
-  RS_LCD((BYTE)Dummy); 
+//  TRD = (uint8_t)(Dummy); 
+//  if(ProgFW_LCD)
+//  {
+//     CDC_Transmit(0, (uint8_t*)(TRD), 1); // echo back on same channel
+//  }
+//  else // 
+//  {
+   RS_LCD((BYTE)Dummy); 
+//  }
   }
   /* USER CODE END UART7_IRQn 0 */
   HAL_UART_IRQHandler(&huart7);
