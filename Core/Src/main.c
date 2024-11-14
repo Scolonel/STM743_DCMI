@@ -317,20 +317,20 @@ int main(void)
   // test SD_Card
   //SDMMC_SDCard_Test(999);
   // перенастроим UART1
-//  huart7.Init.BaudRate = 9600;
-//  if (HAL_UART_Init(&huart7) != HAL_OK)
-//  {
-//    Error_Handler();
-//  }
-//  HAL_Delay(100);
-//  sprintf((void*)Str,"bauds=115200€€€");
-//  NEX_Transmit(Str);// 
-//  HAL_Delay(100);
-//  huart7.Init.BaudRate = 115200;
-//  if (HAL_UART_Init(&huart7) != HAL_OK)
-//  {
-//    Error_Handler();
-//  }
+  huart7.Init.BaudRate = 9600;
+  if (HAL_UART_Init(&huart7) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  HAL_Delay(100);
+  sprintf((void*)Str,"bauds=115200€€€");
+  NEX_Transmit(Str);// 
+  HAL_Delay(100);
+  huart7.Init.BaudRate = 115200;
+  if (HAL_UART_Init(&huart7) != HAL_OK)
+  {
+    Error_Handler();
+  }
   
   
   
