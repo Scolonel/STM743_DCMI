@@ -125,6 +125,7 @@ uint32_t Sm_Shift = 0; // текущее значение сдвига Зонд.Импульса
 // 10 накоплений, 
 uint32_t CntIzmer = 0;// число совершенных измерений
 
+uint8_t MeasureNow = 0; // признак работы накопителя, для обхода, основного цикла
 uint8_t EnaNextAvrg = 0;// признак начала текущего накопления ( старт ДМА с текущими параметрами)
 
 uint8_t EnaStartRun = 0;// признак разрешения импульса и преобразования, пока от кнопки
@@ -397,8 +398,11 @@ int main(void)
       }
       Uart2DecYes=0;
     }
-       
+     
+    if(!MeasureNow)
+    {
     ModeFuncTmp(); // прорисовка текущего режима 
+    }
     //test проверим кнопку
     if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
       // обработка кнопки Ок
@@ -460,115 +464,126 @@ int main(void)
     
     // начало измерения устанавливаем исходные параметры измерения, 
     // число проходов, шаг изменения положения зонд импульса
-    if(EnaStartRun) //
-    {
-      //LED_Y(1);
-      // при старте накоплений надо, перестроить таймеры в соответствии с заданными параметрами измерений
-      // счетчик TIM2 - период повторения зондирующих импульсов
-      // зависит от установленной длинны линии, шаг задали 1мкС 
-      // все таймеры останавливаем и сбрасываем
-      memset(&BufADC, 0, sizeof(BufADC));
-      memset(&BufADD, 0, sizeof(BufADD));
-      memset(&BufNAK, 0, sizeof(BufNAK));
-      TIM4->CR1 &=~TIM_CR1_CEN;
-      TIM2->CR1 &=~TIM_CR1_CEN;
-      TIM3->CR1 &=~TIM_CR1_CEN;
-      TIM4->CNT =30000;
-      TIM2->CNT =0;
-      TIM3->CNT =0;
-      Sm_Shift = 0; // текущее значение сдвига Зонд.Импульса
-      CountDMA = 0; //clear count DMA
-      //HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, (uint32_t *)CodeDAC, SizeBuf_DAC, DAC_ALIGN_12B_R);
-      StartTime++;
-      // считаем сколько нам сравнивать 
-      SumNumNak = NumNak*NumRepit;
-      // ВНИМАНИЕ! Здесь надо перенастроить TIM1 для устаногвленного режима прореживания
-      // тайминг TIM1 = 1uS Соотв для коротких линий ставим не менее 100 далее кратно 
-      // отношению МаксРепит к текущему  ставим TIM1 (MAXREPIT/NumRepit)
-      SW_TIM1 = (MAXREPIT/NumRepit);
-      TIM1->ARR = 300;
-      if(SW_TIM1>1)
-      {
-        //for ADC MS9280 
-        //( NumRepit == 8 => 240 MHz ~0.4 m , max = 3.2 km => )
-        //( NumRepit == 4 => 120 MHz ~0.8 m , max = 6.4 km)
-        //( NumRepit == 2 =>  60 MHz ~1.6 m , max = 12.8 km)
-        //( NumRepit == 1 =>  30 MHz ~3.2 m , max = 25.6 km)
-        TIM1->ARR = 50*SW_TIM1;
-      } 
-      TIM1->CCR1 = TIM1->ARR - 5;
-      TIM1->CNT = TIM1->CCR1 - 5;
-      TIM1->CR1 |=TIM_CR1_CEN;
-      EnaStartRun = 0;
-      
-      //HAL_DCMI_Start_DMA(&hdcmi,DCMI_MODE_SNAPSHOT,(uint32_t)BufADD,SizeBlockNakVar);
-      
-      PressKey=1;
-      // тест по счетчикам прерываний
-      CountCC4 = 0 ; // число совершенных прерываний по TIM4_CH4
-      CountEndCMI = 0;
-      SizeBlockNak = (uint32_t)(SizeBuf_ADC/NumRepit);
-      HAL_DCMI_Start_DMA(&hdcmi,DCMI_MODE_SNAPSHOT,(uint32_t)BufADD,SizeBlockNak);
-      
-      //DCMI->CR|=DCMI_CR_CAPTURE;          // DCMI capture enable
-      
-      
-      // ВНИМАНИЕ! первый съем будет при сдвиге 1 сразу, 
-      //надо учесть чтобы дособрать последний на 0 сдвиге!
-      //LED_Y(0);
-      //HAL_Delay(100);
-    }
-    // суммирование текущего накопления , параметры должны быть установленны заранее
-    // нужно посчитать число проходов ДМА - возможно это размер массива деленный на число повторений
-    // если накопили до конца отключаем основной таймер и тормозим все остаальные
-    // если суммируем перустанавливаем основной таймер в пред окончание и его запускаем
+    if(EnaStartRun)
+      {//
+      StartRunFirst();
+      EnaStartRun=0;
+      }
+//    {
+//      MeasureNow =1; 
+//      //LED_Y(1);
+//      // при старте накоплений надо, перестроить таймеры в соответствии с заданными параметрами измерений
+//      // счетчик TIM2 - период повторения зондирующих импульсов
+//      // зависит от установленной длинны линии, шаг задали 1мкС 
+//      // все таймеры останавливаем и сбрасываем
+//      memset(&BufADC, 0, sizeof(BufADC));
+//      memset(&BufADD, 0, sizeof(BufADD));
+//      memset(&BufNAK, 0, sizeof(BufNAK));
+//      TIM4->CR1 &=~TIM_CR1_CEN;
+//      TIM2->CR1 &=~TIM_CR1_CEN;
+//      TIM3->CR1 &=~TIM_CR1_CEN;
+//      TIM4->CNT =30000;
+//      TIM2->CNT =0;
+//      TIM3->CNT =0;
+//      Sm_Shift = 0; // текущее значение сдвига Зонд.Импульса
+//      CountDMA = 0; //clear count DMA
+//      //HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, (uint32_t *)CodeDAC, SizeBuf_DAC, DAC_ALIGN_12B_R);
+//      StartTime++;
+//      // считаем сколько нам сравнивать 
+//      SumNumNak = NumNak*NumRepit;
+//      // ВНИМАНИЕ! Здесь надо перенастроить TIM1 для устаногвленного режима прореживания
+//      // тайминг TIM1 = 1uS Соотв для коротких линий ставим не менее 100 далее кратно 
+//      // отношению МаксРепит к текущему  ставим TIM1 (MAXREPIT/NumRepit)
+//      SW_TIM1 = (MAXREPIT/NumRepit);
+//      TIM1->ARR = 300;
+//      if(SW_TIM1>1)
+//      {
+//        //for ADC MS9280 
+//        //( NumRepit == 8 => 240 MHz ~0.4 m , max = 3.2 km => )
+//        //( NumRepit == 4 => 120 MHz ~0.8 m , max = 6.4 km)
+//        //( NumRepit == 2 =>  60 MHz ~1.6 m , max = 12.8 km)
+//        //( NumRepit == 1 =>  30 MHz ~3.2 m , max = 25.6 km)
+//        TIM1->ARR = 50*SW_TIM1;
+//      } 
+//      TIM1->CCR1 = TIM1->ARR - 5;
+//      TIM1->CNT = TIM1->CCR1 - 5;
+//      TIM1->CR1 |=TIM_CR1_CEN;
+//      EnaStartRun = 0;
+//      
+//      //HAL_DCMI_Start_DMA(&hdcmi,DCMI_MODE_SNAPSHOT,(uint32_t)BufADD,SizeBlockNakVar);
+//      
+//      PressKey=1;
+//      // тест по счетчикам прерываний
+//      CountCC4 = 0 ; // число совершенных прерываний по TIM4_CH4
+//      CountEndCMI = 0;
+//      SizeBlockNak = (uint32_t)(SizeBuf_ADC/NumRepit);
+//      HAL_DCMI_Start_DMA(&hdcmi,DCMI_MODE_SNAPSHOT,(uint32_t)BufADD,SizeBlockNak);
+//      // тут полетело накопление, по окончании сбора
+//      // попадем в прерывание где сформируем повый запуск если необхоимо
+//      
+//      //DCMI->CR|=DCMI_CR_CAPTURE;          // DCMI capture enable
+//      
+//      
+//      // ВНИМАНИЕ! первый съем будет при сдвиге 1 сразу, 
+//      //надо учесть чтобы дособрать последний на 0 сдвиге!
+//      //LED_Y(0);
+//      //HAL_Delay(100);
+//    }
+//    // суммирование текущего накопления , параметры должны быть установленны заранее
+//    // нужно посчитать число проходов ДМА - возможно это размер массива деленный на число повторений
+//    // если накопили до конца отключаем основной таймер и тормозим все остаальные
+//    // если суммируем перустанавливаем основной таймер в пред окончание и его запускаем
     if(EnaNextAvrg)
     {
-      
-      LED_G(1);
-      StopAllTIM(1);
-      // CountDMA указывает на смещение в индексе куда суммируем текущий съем
-      //Sm_Shift = (CountDMA)&(NumRepit-1);
-      Cnt2Timer[CountDMA%128]=CurrCnt2Timer;
-      //uint32_t PointDMA = (CountDMA&(NumRepit-1));
-      uint32_t PointDMA = (CountDMA%(NumRepit));
-      for(int i=0;i<SizeBlockNak; i++)
-      {
-        //BufNAK[NumRepit*i+PointDMA] +=BufADC[i]; 
-        // for ADC MS9280 buffer BufADD
-        BufNAK[NumRepit*i+PointDMA] +=BufADD[i]; 
-        //BufNAK[NumRepit*i+PointDMA] +=(BufADC[i]+BufADD[i-1])/2; 
-        // BufNAK[2*(NumRepit*i+PointDMA)+1] +=BufADC[i]; 
-        //BufNAK[2*(NumRepit*i+PointDMA)] +=BufADD[i-1]; 
-        TIM1->CNT = TIM1->CCR1 - 5; 
-      }
-      if(++CountDMA<SumNumNak)
-      {
-        if(SW_TIM1>2)
-        {
-          TIM1->CNT = TIM1->CCR1 - 5;
-          // переустанвливаем основной таймер ближе к окончанию счета
-          
-        }
-        // и продолжаем его для запуска следующего сбора
-        //TIM1->CNT =990;
-        TIM1->CR1 |=TIM_CR1_CEN;
-        
-      }
-      else
-      {
-        TIM1->CR1 &=~TIM_CR1_CEN;
-        //  останавливаем основной таймер для прекращения накопления
-        // установим признак окончания измерения для вывода результатов
-        // можно тормознуть все остальные таймеры, и даже сбросить
-        
-        EnaPrintRes = 1;
-      }
-      
+      ContNextAvrg();
       EnaNextAvrg = 0;
-      LED_G(0);
-      
     }
+//    {
+//      
+//      LED_START(1);
+//      StopAllTIM(1);
+//      // CountDMA указывает на смещение в индексе куда суммируем текущий съем
+//      //Sm_Shift = (CountDMA)&(NumRepit-1);
+//      Cnt2Timer[CountDMA%128]=CurrCnt2Timer;
+//      //uint32_t PointDMA = (CountDMA&(NumRepit-1));
+//      uint32_t PointDMA = (CountDMA%(NumRepit));
+//      for(int i=0;i<SizeBlockNak; i++)
+//      {
+//        //BufNAK[NumRepit*i+PointDMA] +=BufADC[i]; 
+//        // for ADC MS9280 buffer BufADD
+//        BufNAK[NumRepit*i+PointDMA] +=BufADD[i]; 
+//        //BufNAK[NumRepit*i+PointDMA] +=(BufADC[i]+BufADD[i-1])/2; 
+//        // BufNAK[2*(NumRepit*i+PointDMA)+1] +=BufADC[i]; 
+//        //BufNAK[2*(NumRepit*i+PointDMA)] +=BufADD[i-1]; 
+//        TIM1->CNT = TIM1->CCR1 - 5; 
+//      }
+//      if(++CountDMA<SumNumNak)
+//      {
+//        if(SW_TIM1>2)
+//        {
+//          TIM1->CNT = TIM1->CCR1 - 5;
+//          // переустанвливаем основной таймер ближе к окончанию счета
+//          
+//        }
+//        // и продолжаем его для запуска следующего сбора
+//        //TIM1->CNT =990;
+//        TIM1->CR1 |=TIM_CR1_CEN;
+//        
+//      }
+//      else
+//      {
+//        TIM1->CR1 &=~TIM_CR1_CEN;
+//        //  останавливаем основной таймер для прекращения накопления
+//        // установим признак окончания измерения для вывода результатов
+//        // можно тормознуть все остальные таймеры, и даже сбросить
+//        
+//        EnaPrintRes = 1;
+//      }
+//      
+//      EnaNextAvrg = 0;
+//      LED_START(0);
+//      
+//    }
     //здесь когда закончили очередной DMA можно проссумировать 
     // с параметром смещения зондирующего импульса,
     // по окнчании ссумрования можно перезустить новый ДМА
@@ -597,6 +612,7 @@ int main(void)
         HAL_Delay(200);
         //LED_R(0); //delete
         PressKey =0;
+        MeasureNow =0; //выключаем ограничение на прорисовку режима
       }
       // остановим таймер для ЦАП
       //HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 0x0);
@@ -792,7 +808,7 @@ void StopAllTIM(int Ext)  // остановка таймеров (OTDR)
       // устанавливаем положение зондирующего импульса
       // !!!ВНИМАНИЕ НАДО ПОДРОБНО РАССЧИТАТЬ МЕСТО УСТАНОВКИ!!!
       TIM3->ARR = BeginSet + Sm_Shift + ZondImpulse; //расчетное первое положение ипульса в съеме 50+макссдвиг(40)+импульс(2)=90
-      // реално снимаем на 97 при плотном 
+      // реально снимаем на 97 при плотном 
       TIM3->CCR4 = BeginSet + Sm_Shift;
       // Можно не стартовать ДМА, потом перезапустим по таймеру TIM4_CH4
       //HAL_ADC_Start_DMA(&hadc1,
@@ -1311,6 +1327,122 @@ void SDMMC_SDCard_Test(int Num)
       HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
   }
 }
+    // начало измерения устанавливаем исходные параметры измерения, 
+    // число проходов, шаг изменения положения зонд импульса
+    void StartRunFirst(void ) //
+    {
+      MeasureNow = 1; 
+      //LED_Y(1);
+      // при старте накоплений надо, перестроить таймеры в соответствии с заданными параметрами измерений
+      // счетчик TIM2 - период повторения зондирующих импульсов
+      // зависит от установленной длинны линии, шаг задали 1мкС 
+      // все таймеры останавливаем и сбрасываем
+      memset(&BufADC, 0, sizeof(BufADC));
+      memset(&BufADD, 0, sizeof(BufADD));
+      memset(&BufNAK, 0, sizeof(BufNAK));
+      TIM4->CR1 &=~TIM_CR1_CEN;
+      TIM2->CR1 &=~TIM_CR1_CEN;
+      TIM3->CR1 &=~TIM_CR1_CEN;
+      TIM4->CNT =30000;
+      TIM2->CNT =0;
+      TIM3->CNT =0;
+      Sm_Shift = 0; // текущее значение сдвига Зонд.Импульса
+      CountDMA = 0; //clear count DMA
+      //HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, (uint32_t *)CodeDAC, SizeBuf_DAC, DAC_ALIGN_12B_R);
+      StartTime++;
+      // считаем сколько нам сравнивать 
+      SumNumNak = NumNak*NumRepit;
+      // ВНИМАНИЕ! Здесь надо перенастроить TIM1 для устаногвленного режима прореживания
+      // тайминг TIM1 = 1uS Соотв для коротких линий ставим не менее 100 далее кратно 
+      // отношению МаксРепит к текущему  ставим TIM1 (MAXREPIT/NumRepit)
+      SW_TIM1 = (MAXREPIT/NumRepit);
+      TIM1->ARR = 300;
+      if(SW_TIM1>1)
+      {
+        //for ADC MS9280 
+        //( NumRepit == 8 => 240 MHz ~0.4 m , max = 3.2 km => )
+        //( NumRepit == 4 => 120 MHz ~0.8 m , max = 6.4 km)
+        //( NumRepit == 2 =>  60 MHz ~1.6 m , max = 12.8 km)
+        //( NumRepit == 1 =>  30 MHz ~3.2 m , max = 25.6 km)
+        TIM1->ARR = 50*SW_TIM1;
+      } 
+      TIM1->CCR1 = TIM1->ARR - 5;
+      TIM1->CNT = TIM1->CCR1 - 5;
+      TIM1->CR1 |=TIM_CR1_CEN;
+      //EnaStartRun = 0;
+      
+      //HAL_DCMI_Start_DMA(&hdcmi,DCMI_MODE_SNAPSHOT,(uint32_t)BufADD,SizeBlockNakVar);
+      
+      PressKey=1;
+      // тест по счетчикам прерываний
+      CountCC4 = 0 ; // число совершенных прерываний по TIM4_CH4
+      CountEndCMI = 0;
+      SizeBlockNak = (uint32_t)(SizeBuf_ADC/NumRepit);
+      HAL_DCMI_Start_DMA(&hdcmi,DCMI_MODE_SNAPSHOT,(uint32_t)BufADD,SizeBlockNak);
+      // тут полетело накопление, по окончании сбора
+      // попадем в прерывание где сформируем повый запуск если необхоимо
+      
+      //DCMI->CR|=DCMI_CR_CAPTURE;          // DCMI capture enable
+      
+      
+      // ВНИМАНИЕ! первый съем будет при сдвиге 1 сразу, 
+      //надо учесть чтобы дособрать последний на 0 сдвиге!
+      //LED_Y(0);
+      //HAL_Delay(100);
+    }
+
+
+    // суммирование текущего накопления , параметры должны быть установленны заранее
+    // нужно посчитать число проходов ДМА - возможно это размер массива деленный на число повторений
+    // если накопили до конца отключаем основной таймер и тормозим все остаальные
+    // если суммируем перустанавливаем основной таймер в пред окончание и его запускаем
+    void ContNextAvrg(void)
+    {
+      
+      LED_START(1);
+      StopAllTIM(1);
+      // CountDMA указывает на смещение в индексе куда суммируем текущий съем
+      //Sm_Shift = (CountDMA)&(NumRepit-1);
+      Cnt2Timer[CountDMA%128]=CurrCnt2Timer;
+      //uint32_t PointDMA = (CountDMA&(NumRepit-1));
+      uint32_t PointDMA = (CountDMA%(NumRepit));
+      for(int i=0;i<SizeBlockNak; i++)
+      {
+        //BufNAK[NumRepit*i+PointDMA] +=BufADC[i]; 
+        // for ADC MS9280 buffer BufADD
+        BufNAK[NumRepit*i+PointDMA] +=BufADD[i]; 
+        //BufNAK[NumRepit*i+PointDMA] +=(BufADC[i]+BufADD[i-1])/2; 
+        // BufNAK[2*(NumRepit*i+PointDMA)+1] +=BufADC[i]; 
+        //BufNAK[2*(NumRepit*i+PointDMA)] +=BufADD[i-1]; 
+        TIM1->CNT = TIM1->CCR1 - 5; 
+      }
+      if(++CountDMA<SumNumNak)
+      {
+        if(SW_TIM1>2)
+        {
+          TIM1->CNT = TIM1->CCR1 - 5;
+          // переустанвливаем основной таймер ближе к окончанию счета
+          
+        }
+        // и продолжаем его для запуска следующего сбора
+        //TIM1->CNT =990;
+        TIM1->CR1 |=TIM_CR1_CEN;
+        
+      }
+      else
+      {
+        TIM1->CR1 &=~TIM_CR1_CEN;
+        //  останавливаем основной таймер для прекращения накопления
+        // установим признак окончания измерения для вывода результатов
+        // можно тормознуть все остальные таймеры, и даже сбросить
+        
+        EnaPrintRes = 1;
+      }
+      
+      //EnaNextAvrg = 0;
+      LED_START(0);
+      
+    }
 
 /* USER CODE END 4 */
 
