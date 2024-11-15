@@ -445,7 +445,7 @@ static int8_t CDC_Receive(uint8_t cdc_ch, uint8_t *Buf, uint32_t *Len)
   }
        
   
-  //CDC_Transmit(cdc_ch, Buf, *Len); // echo back on same channel
+  //CDC_Transmit(cdc_ch, Buf, *Len); // echo back on same channel  RecievUSB = *Len;
 
   USBD_CDC_SetRxBuffer(cdc_ch, &hUsbDevice, &Buf[0]);
   USBD_CDC_ReceivePacket(cdc_ch, &hUsbDevice);

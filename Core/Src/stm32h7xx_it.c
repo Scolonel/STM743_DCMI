@@ -425,7 +425,6 @@ void UART5_IRQHandler(void)
   */
 void UART7_IRQHandler(void)
 {
-  uint8_t TRD;
   /* USER CODE BEGIN UART7_IRQn 0 */
         /* Check if RXNE flag is set */
   // это ответы из индикатора

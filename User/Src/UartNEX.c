@@ -56,7 +56,9 @@ void StartRecievNEX (uint32_t TimeOut) // подготовка ожидания ответа от Nextionв
   g_WtRdyNEX = 0;// чистим признак окончания ожидания по таймауту
   ReadyNEX = 0; // чистим признак принятой команды с дешифровкой ( если разпознали ответ установливаем его номер)
   CountTimerUart2 = TimeOut;// уСТАНВЛИВАЕМ ВРЕМЯ ЗАДЕРЖКИ в mS 
-  
+  uint16_t  Dummy = huart7.Instance->RDR ; // чистим буффер приема от NEXTION
+  HAL_UART_Receive_IT(&huart7, RxBufExt,1); // ждем принятия первого байта из внешнего мира
+
 }
 
 
@@ -135,7 +137,7 @@ void RS_LCD (BYTE temp)
         default:                  //Продолжение приёма команды
           RX_BufNEX[CntRXNEX]=temp;
           CntRXNEX++;
-          if (CntRXNEX > 30)
+          if (CntRXNEX > 80)
           {
             CntRXNEX=0;
             RecievNEX=STOP_UART;

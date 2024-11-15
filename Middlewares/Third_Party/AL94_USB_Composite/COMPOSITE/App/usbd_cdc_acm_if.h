@@ -31,7 +31,8 @@
 #include "usbd_cdc_acm.h"
 
 /* USER CODE BEGIN INCLUDE */
-#include "UartNEX.h"
+#include "UartNEX.h"   
+   
 /* USER CODE END INCLUDE */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -101,7 +102,6 @@ extern volatile BYTE ProgFW_LCD; // признак программирования индикатора Nexion
 extern UART_HandleTypeDef huart7;
 extern volatile DWORD Reciev;
 extern volatile DWORD CntRX;
-
 /* USER CODE END EXPORTED_VARIABLES */
 
 /**

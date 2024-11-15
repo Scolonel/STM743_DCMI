@@ -217,11 +217,11 @@ int main(void)
   MX_DCMI_Init();
   MX_SDMMC2_SD_Init();
   MX_FATFS_Init();
-  MX_RTC_Init();
-  MX_USB_OTG_FS_PCD_Init();
   MX_I2C2_Init();
+  MX_RTC_Init();
   MX_UART7_Init();
   MX_UART5_Init();
+  MX_USB_OTG_FS_PCD_Init();
   MX_DAC1_Init();
   /* USER CODE BEGIN 2 */
   MX_USB_DEVICE_Init();
@@ -403,64 +403,64 @@ int main(void)
     {
     ModeFuncTmp(); // прорисовка текущего режима 
     }
-    //test проверим кнопку
-    if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
-      // обработка кнопки ќк
-    {
-      myBeep(55);
-      HAL_ADC_Stop_DMA(&hadc1); 
-      if (HAL_ADC_Start_DMA(&hadc1,
-                            (uint32_t *)BufADC,
-                            SizeBuf_ADC_int
-                              ) != HAL_OK)
-      {
-        Error_Handler();
-      }
-      CntCMD++;
-      sprintf((void*)Str,"%s",CmdNextion[CntCMD%0xF]);// 
-      //sprintf((void*)Str,"page %d€€€",CntCMD%0xF);// 
-      NEX_Transmit(Str);//
-      sprintf((void*)Str,"t1.txt=\"%d\"€€€",CntCMD);
-      NEX_Transmit(Str);//
-      if((CntCMD%0xF)==1)
-      {
-        StartRecievNEX (80);
-        sprintf((void*)Str,"get t6.txt€€€");
-        NEX_Transmit(Str);//
-        while(!((g_WtRdyNEX)||(ReadyNEX==4)));
-        // здесь просто можем повиснуть не дождавшись ответов от индикатора
-        // это плохо при плохих индикаторах
-        if(RX_BufNEX[0] == 0x70) // есть ответ! перепишем буффер
-        {
-          for(int i=0;i<25;++i)VerFW_LCD[i]=RX_BufNEX[i+1];
-          VerFW_LCD[23]=0;
-          // здесь получим идентификатор индикатора (если его прочтем)
-          // он нужен дл€ вариантов отображени€ при просмотре рефлектограмм и в пам€ти
-          switch(VerFW_LCD[3])
-          {
-          case '2':
-            TypeLCD=0;
-            //KnowLCD = 1;
-            break;
-          case '5':
-            TypeLCD=1;
-            //KnowLCD = 1;
-            break;
-          default:
-            TypeLCD=0;
-            //KnowLCD = 0;
-            break;
-          }
-        }
-      sprintf((void*)Str,"t2.txt=\"%s\"€€€",VerFW_LCD);
-      NEX_Transmit(Str);//
-        
-      }
-      //uint32_t DAC_CODE = BufADC[0]>>2;
-      HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_2, DAC_ALIGN_12B_R, ((CntCMD%0xF)<<8));
-      KeyP &=~BTN_OK;
-      
-    }
+    //test проверим кнопку, надо убрать
+//    if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
+//      // обработка кнопки ќк
+//    {
+//      myBeep(55);
+//      HAL_ADC_Stop_DMA(&hadc1); 
+//      if (HAL_ADC_Start_DMA(&hadc1,
+//                            (uint32_t *)BufADC,
+//                            SizeBuf_ADC_int
+//                              ) != HAL_OK)
+//      {
+//        Error_Handler();
+//      }
+//      CntCMD++;
+//      sprintf((void*)Str,"%s",CmdNextion[CntCMD%0xF]);// 
+//      //sprintf((void*)Str,"page %d€€€",CntCMD%0xF);// 
+//      NEX_Transmit(Str);//
+//      sprintf((void*)Str,"t1.txt=\"%d\"€€€",CntCMD);
+//      NEX_Transmit(Str);//
+//      if((CntCMD%0xF)==1)
+//      {
+//        StartRecievNEX (80);
+//        sprintf((void*)Str,"get t6.txt€€€");
+//        NEX_Transmit(Str);//
+//        while(!((g_WtRdyNEX)||(ReadyNEX==4)));
+//        // здесь просто можем повиснуть не дождавшись ответов от индикатора
+//        // это плохо при плохих индикаторах
+//        if(RX_BufNEX[0] == 0x70) // есть ответ! перепишем буффер
+//        {
+//          for(int i=0;i<25;++i)VerFW_LCD[i]=RX_BufNEX[i+1];
+//          VerFW_LCD[23]=0;
+//          // здесь получим идентификатор индикатора (если его прочтем)
+//          // он нужен дл€ вариантов отображени€ при просмотре рефлектограмм и в пам€ти
+//          switch(VerFW_LCD[3])
+//          {
+//          case '2':
+//            TypeLCD=0;
+//            //KnowLCD = 1;
+//            break;
+//          case '5':
+//            TypeLCD=1;
+//            //KnowLCD = 1;
+//            break;
+//          default:
+//            TypeLCD=0;
+//            //KnowLCD = 0;
+//            break;
+//          }
+//        }
+//      sprintf((void*)Str,"t2.txt=\"%s\"€€€",VerFW_LCD);
+//      NEX_Transmit(Str);//
+//        
+//      }
+//      //uint32_t DAC_CODE = BufADC[0]>>2;
+//      HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_2, DAC_ALIGN_12B_R, ((CntCMD%0xF)<<8));
+//      KeyP &=~BTN_OK;
+//      
+//    }
     
     // начало измерени€ устанавливаем исходные параметры измерени€, 
     // число проходов, шаг изменени€ положени€ зонд импульса

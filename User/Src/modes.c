@@ -489,7 +489,7 @@ void ModeMainMenu(void) // режим основного ћ≈Ќё
     NEX_Transmit((void*)Str);//
     //CreatDelay (3000000); // 168 м— - пока без ответа (подтверждени€) 83nS*30000 надо приблизительно 2 м—
     HAL_Delay(300);    // попробуем запросить код версии индикатора
-    StartRecievNEX (80);
+    StartRecievNEX (500);
     sprintf(Str,"get t6.txt€€€");
     NEX_Transmit((void*)Str);//
     //NEX_Transmit((void*)CmdBuf);//
@@ -6522,10 +6522,10 @@ void UploadFW_Nextion(void) // обновление индикатора NEXTION
       // посылка команды переключени€ окна на MainMenu (возврат)  
   // вызовем новое окно!
   //CreatDelay(5000000);
+  SetModeDevice (MODEMENU); // принудительна€ установка режима прибора
+  CmdInitPage(1);
   HAL_Delay(500);// индикатор после сброса, врем€ не пон€тно!
-  SetModeDevice (0); // принудительна€ установка режима прибора
-  //CmdInitPage(1);
-  myBeep(25);
+  myBeep(125);
   }
 
 }
