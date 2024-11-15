@@ -66,7 +66,13 @@ void MX_RTC_Init(void)
   }
 
   /* USER CODE BEGIN Check_RTC_BKUP */
-
+    // HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+    //            HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+       // время в структуре
+    unsigned int CurTime = TotalSec (RTCGetTime()); 
+   //  1731664800 - 15 nov 2024 10.00.00
+  if(CurTime < 1731664800)
+  {
   /* USER CODE END Check_RTC_BKUP */
 
   /** Initialize RTC and set the Time and Date
@@ -81,8 +87,8 @@ void MX_RTC_Init(void)
     Error_Handler();
   }
   sDate.WeekDay = RTC_WEEKDAY_MONDAY;
-  sDate.Month = RTC_MONTH_JUNE;
-  sDate.Date = 28;
+  sDate.Month = RTC_MONTH_NOVEMBER;
+  sDate.Date = 15 ;
   sDate.Year = 24;
 
   if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK)
@@ -90,7 +96,7 @@ void MX_RTC_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN RTC_Init 2 */
-
+  }
   /* USER CODE END RTC_Init 2 */
 
 }
@@ -231,7 +237,7 @@ RTCTime RTCGetTime( void )
   LocalTime.RTC_Wday = CsDate.WeekDay;
   LocalTime.RTC_Yday = 200;
   LocalTime.RTC_Mon = CsDate.Month;
-  LocalTime.RTC_Year = CsDate.Year;
+  LocalTime.RTC_Year = CsDate.Year+2000;
   return ( LocalTime );
 }
  //
@@ -247,7 +253,7 @@ void RTCSetTime( RTCTime Time )
   CsDate.WeekDay = Time.RTC_Wday;
   //DOY = Time.RTC_Yday;
   CsDate.Month = Time.RTC_Mon;
-  CsDate.Year = Time.RTC_Year;
+  CsDate.Year = Time.RTC_Year%100;
   
   k_SetTime(&CsTime);
   k_SetDate(&CsDate);

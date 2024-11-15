@@ -439,6 +439,6 @@ void NEX_Transmit(uint8_t *Str)
     HAL_UART_Transmit_DMA(&huart7, (void*)Str,Size); // גûהאול 
 
  //HAL_UART_Transmit(&huart7,(void*)Str, Size,(uint32_t)(Size/8));
- HAL_Delay(Size/10);
+ HAL_Delay((Size/10)+1);
 }
 /* USER CODE END 1 */

@@ -45,8 +45,8 @@ void MX_FATFS_Init(void)
 DWORD get_fattime(void)
 {
   /* USER CODE BEGIN get_fattime */
-  return 0;
-  //return get_fattime_RTC();
+  //return 0;
+  return get_fattime_RTC();
   //return 1719499750;//Thu Jun 27 2024 17:49:10 UTC+0300 (Москва, стандартное время)
   /* USER CODE END get_fattime */
 }

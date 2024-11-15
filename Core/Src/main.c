@@ -335,19 +335,19 @@ int main(void)
   
   
   
-  HAL_Delay(100);
-    sprintf((void*)Str,"page 1ÿÿÿ");
-  NEX_Transmit(Str);// 
-  HAL_Delay(100);
-  HAL_Delay(100);
-    sprintf((void*)Str,"page 1ÿÿÿ");
-  NEX_Transmit(Str);// 
-  HAL_Delay(100);
-    myBeep(100);
-
-    sprintf((void*)Str,"page 23ÿÿÿ");
-  NEX_Transmit(Str);// 
-  HAL_Delay(100);
+//  HAL_Delay(100);
+//    sprintf((void*)Str,"page 1ÿÿÿ");
+//  NEX_Transmit(Str);// 
+//  HAL_Delay(100);
+//  HAL_Delay(100);
+//    sprintf((void*)Str,"page 1ÿÿÿ");
+//  NEX_Transmit(Str);// 
+//  HAL_Delay(100);
+//    myBeep(100);
+//
+//    sprintf((void*)Str,"page 23ÿÿÿ");
+//  NEX_Transmit(Str);// 
+//  HAL_Delay(100);
 
   InitBtns(); 
   

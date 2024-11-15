@@ -653,7 +653,7 @@ void DecodeCommandRS (void)
         if (RX_Buf[i] != ',') i++;
         i++;
         Num = atoi((char*)&RX_Buf[i]); // год
-        if ((Num>2040)||(Num<2024)) Num = 2024;
+        if ((Num>2050)||(Num<2024)) Num = 2024;
         SetNewTime.RTC_Year = Num;
         
         RTCSetTime( SetNewTime ); // запишем новую дату

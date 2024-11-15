@@ -523,7 +523,14 @@ void ModeMainMenu(void) // режим основного ћ≈Ќё
     if(!KnowLCD)
       // возможно индикатор "больной" надо просигнализировать и попытатьс€ работать дальше
       AlarmSignal(3);
-    
+  //сюда перенесем установки QR code
+        if(TypeLCD)
+    sprintf(Str,"qr0.pco=BLACK€€€"); // QR черный
+    else
+    sprintf(Str,"qr0.pco=BLUE€€€"); // QR синий
+      
+    NEX_Transmit((void*)Str);// 
+
     g_FirstScr = 0;
     g_NeedScr = 1;
     OnlyBat=1;
@@ -542,12 +549,12 @@ void ModeMainMenu(void) // режим основного ћ≈Ќё
     NEX_Transmit((void*)Str);//
     sprintf(Str,"t%d.bco=GREEN€€€",FrSetMainMenu); // зеленый
     NEX_Transmit((void*)Str);// 
-    if(TypeLCD)
-    sprintf(Str,"qr0.pco=BLACK€€€"); // QR черный
-    else
-    sprintf(Str,"qr0.pco=BLUE€€€"); // QR синий
-      
-    NEX_Transmit((void*)Str);// 
+//    if(TypeLCD)
+//    sprintf(Str,"qr0.pco=BLACK€€€"); // QR черный
+//    else
+//    sprintf(Str,"qr0.pco=BLUE€€€"); // QR синий
+//      
+//    NEX_Transmit((void*)Str);// 
     
     g_NeedScr=0;
   }
@@ -5363,9 +5370,17 @@ void ModeDateTimeSET(void) // режим установок времени CHECK_IN
   static RTCTime NowTime;
   char Str[32];
   char St[5];
+  static DWORD old_sec;
+  static DWORD new_sec;
   //BYTE CurrLang=GetLang(CURRENT);
   //DWORD KeyP = SetBtnStates( KEYS_REG, 1 );
   if (PosCurr == 6)  NowTime=RTCGetTime(); // фиксируем врем€
+  new_sec = NowTime.RTC_Sec;
+  if(new_sec != old_sec)
+  {
+   old_sec = new_sec;
+   g_NeedScr = 1;
+  }
 
   if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
   {
@@ -5411,8 +5426,8 @@ void ModeDateTimeSET(void) // режим установок времени CHECK_IN
       else NowTime.RTC_Mon = 1;
       break;
     case 5:// –едактор  года
-      if (NowTime.RTC_Year<2032) NowTime.RTC_Year++;
-      else NowTime.RTC_Year = 2017;
+      if (NowTime.RTC_Year<2050) NowTime.RTC_Year++;
+      else NowTime.RTC_Year = 2024;
       break;
     }
     //ClrKey (BTN_UP);
@@ -5444,8 +5459,8 @@ void ModeDateTimeSET(void) // режим установок времени CHECK_IN
       else NowTime.RTC_Mon = 12;
       break;
     case 5:// –едактор  года
-      if (NowTime.RTC_Year>2018) NowTime.RTC_Year--;
-      else NowTime.RTC_Year = 2032;
+      if (NowTime.RTC_Year>2025) NowTime.RTC_Year--;
+      else NowTime.RTC_Year = 2050;
       break;
     }
     //ClrKey (BTN_DOWN);
