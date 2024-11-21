@@ -489,7 +489,11 @@ void ModeMainMenu(void) // режим основного ћ≈Ќё
     NEX_Transmit((void*)Str);//
     //CreatDelay (3000000); // 168 м— - пока без ответа (подтверждени€) 83nS*30000 надо приблизительно 2 м—
     HAL_Delay(300);    // попробуем запросить код версии индикатора
-    StartRecievNEX (500);
+    // выключим опрос индикатора всегда 
+     TypeLCD=1;
+     
+#if 0
+     StartRecievNEX (500);
     sprintf(Str,"get t6.txt€€€");
     NEX_Transmit((void*)Str);//
     //NEX_Transmit((void*)CmdBuf);//
@@ -523,7 +527,9 @@ void ModeMainMenu(void) // режим основного ћ≈Ќё
     if(!KnowLCD)
       // возможно индикатор "больной" надо просигнализировать и попытатьс€ работать дальше
       AlarmSignal(3);
-  //сюда перенесем установки QR code
+#endif
+
+      //сюда перенесем установки QR code
         if(TypeLCD)
     sprintf(Str,"qr0.pco=BLACK€€€"); // QR черный
     else
@@ -5580,8 +5586,8 @@ if(g_NeedScr)
 
 void ModeCalibrate(void) // режим установки начального смещени€
 {
-  SetIndexIM (3);
-  SetIndexLN (0);
+  SetIndexIM (3); // устанавливаем индекс длительности импульса с корректировкой по длинне (500нс
+  SetIndexLN (0); // коротка€ лини€ (2км)
   PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
   PointInPeriod = 0;
   memset( RawData, 0, RAWSIZE * sizeof(DWORD) );

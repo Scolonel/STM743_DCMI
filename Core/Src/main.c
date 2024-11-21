@@ -138,6 +138,8 @@ uint16_t KeyP; // клавиши нажатые
 uint8_t CntCMD;
 //variable USB
 uint32_t RecievUSB=0 ; // признак принятия данных по USB, число данных в буфере
+uint8_t BusyUSB=0 ; // признак передачи данных по USB, с SD картой
+// при приеме передаче взводим на 10 мС , и перезаводим при следующей передаче/приеме
 
 // перенос переменных из MAIN.c from T7kAR
 unsigned int CheckErrMEM; 
@@ -224,7 +226,6 @@ int main(void)
   MX_USB_OTG_FS_PCD_Init();
   MX_DAC1_Init();
   /* USER CODE BEGIN 2 */
-  MX_USB_DEVICE_Init();
   // так как появилось I2C - конфигурация прибора и управление клавиатурой 
   // будет первым настраиваться
   // так как повторяем конфигурацию из 7kAR, то скомбинируем из DataDevice MemFlash(у нас PCA955x)
@@ -253,39 +254,40 @@ int main(void)
   __HAL_UART_DISABLE_IT(&huart5, UART_IT_PE);
   /* disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
   __HAL_UART_DISABLE_IT(&huart5, UART_IT_ERR);
-  
-  // необходимо запустить таймеры, но они работают от мастера TIM1, 
-  // в прерывании которго они могут перекофигурироваться и запускатся по его Перезаписи чуть позже!
-  HAL_TIM_PWM_Start_IT (&htim1, TIM_CHANNEL_1 ); // мастер таймер Период повторения 
-  HAL_TIM_PWM_Start (&htim3, TIM_CHANNEL_4 ); // Зондир.Импульс Тетсовый вроде как надо запустить таймеры
-  HAL_TIM_PWM_Start (&htim4, TIM_CHANNEL_4 ); // запускаем таймер обеспечения перезапуска синхро таймера для ADC 
-  HAL_TIM_PWM_Start (&htim2, TIM_CHANNEL_1 ); // для подсчета времени выполнения ДМА с заданными параметрами
-  //HAL_TIM_PWM_Start (&htim12, TIM_CHANNEL_2 ); // запускаем таймер синхронизации ЦАП 
+ 
+   //HAL_TIM_PWM_Start (&htim12, TIM_CHANNEL_2 ); // запускаем таймер синхронизации ЦАП 
   //HAL_TIM_Base_Start(&htim4); // запускаем таймер для DAC и DAC 
   // прочитаем клавиатуру
   
   //
-  myBeep(100);
-  HAL_Delay(10);
-  
+ // myBeep(100);
+//  HAL_Delay(500);
   
   if (HAL_ADCEx_Calibration_Start(&hadc1, ADC_CALIB_OFFSET_LINEARITY, ADC_SINGLE_ENDED) != HAL_OK)
   {
+      myBeep(100);
+
     Error_Handler();
-  }
+   }
   //  if (HAL_ADCEx_Calibration_Start(&hadc2, ADC_CALIB_OFFSET_LINEARITY, ADC_SINGLE_ENDED) != HAL_OK)
   //  {
   //    Error_Handler();
   //  }
   
+//  myBeep(100);
+//  HAL_Delay(500);
   
   if (HAL_ADC_Start_DMA(&hadc1,
                         (uint32_t *)BufADC,
                         SizeBuf_ADC_int
                           ) != HAL_OK)
   {
+      myBeep(100);
+
     Error_Handler();
   }
+//  myBeep(100);
+//  HAL_Delay(500);
   //DCMI->CR|=DCMI_CR_CAPTURE;          // DCMI capture enable
   
   //  if (HAL_ADC_Start_DMA(&hadc2,
@@ -317,7 +319,7 @@ int main(void)
   
   // test SD_Card
   //SDMMC_SDCard_Test(999);
-  // перенастроим UART1
+  // перенастроим UART7  для NEXTION
   huart7.Init.BaudRate = 9600;
   if (HAL_UART_Init(&huart7) != HAL_OK)
   {
@@ -325,16 +327,28 @@ int main(void)
   }
   HAL_Delay(100);
   sprintf((void*)Str,"bauds=115200яяя");
-  NEX_Transmit(Str);// 
-  HAL_Delay(100);
+  HAL_UART_Transmit(&huart7, (void*)Str,strlen((void*)Str),20); // выдаем 
+
+  //NEX_Transmit(Str);// 
+   HAL_Delay(100);
   huart7.Init.BaudRate = 115200;
   if (HAL_UART_Init(&huart7) != HAL_OK)
   {
     Error_Handler();
   }
+ //  myBeep(100);
+  HAL_Delay(100);
+
   
-  
-  
+ // необходимо запустить таймеры, но они работают от мастера TIM1, 
+  // в прерывании которго они могут перекофигурироваться и запускатся по его Перезаписи чуть позже!
+  HAL_TIM_PWM_Start_IT (&htim1, TIM_CHANNEL_1 ); // мастер таймер Период повторения 
+  HAL_TIM_PWM_Start (&htim3, TIM_CHANNEL_4 ); // Зондир.Импульс Тетсовый вроде как надо запустить таймеры
+  HAL_TIM_PWM_Start (&htim4, TIM_CHANNEL_4 ); // запускаем таймер обеспечения перезапуска синхро таймера для ADC 
+  HAL_TIM_PWM_Start (&htim2, TIM_CHANNEL_1 ); // для подсчета времени выполнения ДМА с заданными параметрами
+  HAL_Delay(10);
+  StopAllTIM(1);  // остановка таймеров (OTDR)
+ 
 //  HAL_Delay(100);
 //    sprintf((void*)Str,"page 1яяя");
 //  NEX_Transmit(Str);// 
@@ -351,16 +365,21 @@ int main(void)
 
   InitBtns(); 
   
+  //myBeep(100);
+  //HAL_Delay(100);
   // начало работы..
   TimeBegin = HAL_GetTick();
   
     CmdInitPage(0);// вызов окна заставки
   HAL_Delay(100);
-
   SetMode (ModeWelcome);
   CmdInitPage(0);// посылка команды переключения окна на Welcome и установка признака первого входа
+  MX_USB_DEVICE_Init();
 
-  
+//  MX_USB_DEVICE_Init(); //инициализация USB - долгий процесс
+  // повисим возможно сдесь если подключены  к линии писаноем туда сообщение
+  // здесь запускается "долгий" процесс связи с компьютером, и мешает инициализации, стоит
+  // что-то предпринять
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -1399,7 +1418,7 @@ void SDMMC_SDCard_Test(int Num)
     void ContNextAvrg(void)
     {
       
-      LED_START(1);
+      //LED_START(1);
       StopAllTIM(1);
       // CountDMA указывает на смещение в индексе куда суммируем текущий съем
       //Sm_Shift = (CountDMA)&(NumRepit-1);
@@ -1440,7 +1459,7 @@ void SDMMC_SDCard_Test(int Num)
       }
       
       //EnaNextAvrg = 0;
-      LED_START(0);
+      //LED_START(0);
       
     }
 

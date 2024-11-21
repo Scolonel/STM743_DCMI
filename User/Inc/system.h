@@ -227,6 +227,7 @@ extern BYTE mg_SetModeLW; // 16.11.2022 запоминаем установочную конфигурацию по 
 
 extern BYTE MemTable[MaxMemOTDR+1]; // таблица рефлектограмм €чейки пам€ти мен€етс€ в пам€ти до MaxMemOTDR
 extern BYTE MemTableExt[MaxMemOTDRExt+1]; // таблица рефлектограмм расширенной €чейки пам€ти мен€етс€ в пам€ти до MaxMemOTDRExt
+extern uint8_t BusyUSB ; // признак передачи данных по USB, с SD картой
 
 
 #endif

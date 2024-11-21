@@ -16,7 +16,8 @@ const char *VerFW[2] = {",SW_rev \0",",SW_rev \0"};
 const char *Device[2][2][2] = {{{"ТОПАЗ-7\0","ТОПАЗ-9\0"},{"TOPAZ-7\0","TOPAZ-9\0"}},{{"MOT-700\0","MOT-950\0"},{"MOT-700\0","MOT-950\0"}}};
 
 const char *PMset[6] = {"10\0","31\0","32\0","-PMH\0","-VFL\0","AR\0"};
-const DWORD NumPointsPeriod[LENGTH_LINE_NUM]= {48,24,12,6,3,2,1};// число точек на период
+const DWORD MultIndex[LENGTH_LINE_NUM]= {1,1,1,1,2,4,8};//множитель уменьшения частоты съема
+const DWORD NumPointsPeriod[LENGTH_LINE_NUM]= {8,4,2,1,1,1,1};// число точек на период
 const DWORD LengthLine[LENGTH_LINE_NUM]= {2,4,8,16,32,64,128};
 const DWORD DelayPeriod[LENGTH_LINE_NUM]= {700,1200,4000,8000,10000,0,0};// задержка периода в тиках CreatDelay()~ 83.33 нс
 const WORD WidthPulse[2][WIDTH_PULSE_NUM]= {{20,40,150,500,1000,3000,10000,20000},{10,40,150,500,1000,3000,10000,20000}};
