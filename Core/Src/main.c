@@ -103,7 +103,7 @@ uint8_t Str[64];
 
 uint32_t BeginShift = 152; // начальное смещение для рассчета 
 uint32_t BeginSet = 200; // место установки начала зондир импульса при различных режимах прореживания (
-uint32_t NumRepit = 8;// число повторений, для самого плотного 
+uint32_t NumRepit = 1;// число повторений, для самого плотного = 8
 //И него получаем шаг изменения в сдвиге зонд импульса
 int SW_TIM1 = 1;
 uint32_t CountCC4 = 0; // число совершенных прерываний по TIM4_CH4
@@ -115,7 +115,7 @@ uint32_t SizeBlockNakVar = 100; // текущее значение размера блока ДМА ( в зависи
 uint32_t EnaSumm = 0; // признак начала  разрешения суммирования при накоплении, зависит от 
 // длины линии
 uint32_t CurrentNak = 0; // число накоплений 
-uint32_t NumNak = 1000; // число накоплений 
+uint32_t NumNak = 2; // число накоплений 
 uint32_t SumNumNak = 0; // суммарное число проходов при данном числе накоплений
 uint32_t Sm_Shift = 0; // текущее значение сдвига Зонд.Импульса
 // 11.04.2024 - Делаем следующее
@@ -685,12 +685,17 @@ void SystemClock_Config(void)
 
   while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
 
+  /** Configure LSE Drive Capability
+  */
+  HAL_PWR_EnableBkUpAccess();
+  __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
+
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE|RCC_OSCILLATORTYPE_LSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
+  RCC_OscInitStruct.LSEState = RCC_LSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 4;
@@ -809,7 +814,7 @@ void StopAllTIM(int Ext)  // остановка таймеров (OTDR)
     {
       //SizeBlockNak = (uint32_t)(SizeBuf_ADC/NumRepit);
       //HAL_DCMI_Start_DMA(&hdcmi,DCMI_MODE_SNAPSHOT,(uint32_t)BufADD,SizeBlockNakVar);
-      DMA1_Stream2->NDTR = SizeBlockNak; // размер блока данных DMA 
+      DMA1_Stream2->NDTR = SizeBlockNak/2-1; // размер блока данных DMA 
       DMA1_Stream2->CR |= DMA_SxCR_EN; // запускаем новый цикл ДМА for DCMI
       DCMI->CR|=DCMI_CR_ENABLE;          // DCMI capture enable
       DCMI->CR|=DCMI_CR_CAPTURE;          // DCMI capture enable
@@ -1369,13 +1374,13 @@ void SDMMC_SDCard_Test(int Num)
       CountDMA = 0; //clear count DMA
       //HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, (uint32_t *)CodeDAC, SizeBuf_DAC, DAC_ALIGN_12B_R);
       StartTime++;
-      // считаем сколько нам сравнивать 
+      // считаем сколько нам сравнивать при прореживании число проходов увеличивается кратно числу повторений
       SumNumNak = NumNak*NumRepit;
       // ВНИМАНИЕ! Здесь надо перенастроить TIM1 для устаногвленного режима прореживания
       // тайминг TIM1 = 1uS Соотв для коротких линий ставим не менее 100 далее кратно 
       // отношению МаксРепит к текущему  ставим TIM1 (MAXREPIT/NumRepit)
       SW_TIM1 = (MAXREPIT/NumRepit);
-      TIM1->ARR = 300;
+      TIM1->ARR = 1000;
       if(SW_TIM1>1)
       {
         //for ADC MS9280 
@@ -1383,12 +1388,11 @@ void SDMMC_SDCard_Test(int Num)
         //( NumRepit == 4 => 120 MHz ~0.8 m , max = 6.4 km)
         //( NumRepit == 2 =>  60 MHz ~1.6 m , max = 12.8 km)
         //( NumRepit == 1 =>  30 MHz ~3.2 m , max = 25.6 km)
-        TIM1->ARR = 50*SW_TIM1;
+        TIM1->ARR = 100*SW_TIM1;
       } 
       TIM1->CCR1 = TIM1->ARR - 5;
       TIM1->CNT = TIM1->CCR1 - 5;
-      TIM1->CR1 |=TIM_CR1_CEN;
-      //EnaStartRun = 0;
+       //EnaStartRun = 0;
       
       //HAL_DCMI_Start_DMA(&hdcmi,DCMI_MODE_SNAPSHOT,(uint32_t)BufADD,SizeBlockNakVar);
       
@@ -1397,7 +1401,10 @@ void SDMMC_SDCard_Test(int Num)
       CountCC4 = 0 ; // число совершенных прерываний по TIM4_CH4
       CountEndCMI = 0;
       SizeBlockNak = (uint32_t)(SizeBuf_ADC/NumRepit);
-      HAL_DCMI_Start_DMA(&hdcmi,DCMI_MODE_SNAPSHOT,(uint32_t)BufADD,SizeBlockNak);
+      HAL_DCMI_Start_DMA(&hdcmi,DCMI_MODE_SNAPSHOT,(uint32_t)BufADD,SizeBlockNak/2-1);
+      LED_START(1);
+     TIM1->CR1 |=TIM_CR1_CEN;
+
       // тут полетело накопление, по окончании сбора
       // попадем в прерывание где сформируем повый запуск если необхоимо
       
@@ -1414,17 +1421,21 @@ void SDMMC_SDCard_Test(int Num)
     // суммирование текущего накопления , параметры должны быть установленны заранее
     // нужно посчитать число проходов ДМА - возможно это размер массива деленный на число повторений
     // если накопили до конца отключаем основной таймер и тормозим все остаальные
-    // если суммируем перустанавливаем основной таймер в пред окончание и его запускаем
-    void ContNextAvrg(void)
+    // если суммируем перустанавливаем основной таймер в пред окончание и его запуск
+
+//#pragma optimize=speed
+
+void ContNextAvrg(void)
     {
       
-      //LED_START(1);
       StopAllTIM(1);
       // CountDMA указывает на смещение в индексе куда суммируем текущий съем
       //Sm_Shift = (CountDMA)&(NumRepit-1);
       Cnt2Timer[CountDMA%128]=CurrCnt2Timer;
       //uint32_t PointDMA = (CountDMA&(NumRepit-1));
       uint32_t PointDMA = (CountDMA%(NumRepit));
+      //LED_START(1);
+      LED_START(0);
       for(int i=0;i<SizeBlockNak; i++)
       {
         //BufNAK[NumRepit*i+PointDMA] +=BufADC[i]; 
@@ -1433,8 +1444,10 @@ void SDMMC_SDCard_Test(int Num)
         //BufNAK[NumRepit*i+PointDMA] +=(BufADC[i]+BufADD[i-1])/2; 
         // BufNAK[2*(NumRepit*i+PointDMA)+1] +=BufADC[i]; 
         //BufNAK[2*(NumRepit*i+PointDMA)] +=BufADD[i-1]; 
-        TIM1->CNT = TIM1->CCR1 - 5; 
+        //TIM1->CNT = TIM1->CCR1 - 5; // так как он остановлен
       }
+       //LED_START(1);
+     //LED_START(0);
       if(++CountDMA<SumNumNak)
       {
         if(SW_TIM1>2)
@@ -1450,16 +1463,17 @@ void SDMMC_SDCard_Test(int Num)
       }
       else
       {
+             StopAllTIM(1);
+
         TIM1->CR1 &=~TIM_CR1_CEN;
         //  останавливаем основной таймер для прекращения накопления
         // установим признак окончания измерения для вывода результатов
         // можно тормознуть все остальные таймеры, и даже сбросить
         
-        EnaPrintRes = 1;
+        //EnaPrintRes = 1;
       }
       
       //EnaNextAvrg = 0;
-      //LED_START(0);
       
     }
 

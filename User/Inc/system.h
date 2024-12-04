@@ -40,7 +40,7 @@
 #define FLTSIZE    5 // размерность фильтра
 // массивы из первичной проверки...перекликаются с размерами объявленными ранее
 #define SizeBuf_ADC_int 8
-#define SizeBuf_ADC 8192
+#define SizeBuf_ADC 6912//8192
 #define SizeLogBuf 8000
 #define SizeBuf_DAC 75
 #define ResolutionADC  10
