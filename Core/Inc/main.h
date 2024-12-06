@@ -103,6 +103,8 @@ void myBeep (unsigned sound);
       extern uint32_t Cnt2Timer[128]; // время тамера 2 по окончании цикла ДМА
       extern uint32_t CountDMA; // число совершенных циклов DMA 
       extern uint32_t CurrCnt2Timer; // время тамера 2 по окончании цикла ДМА
+extern uint32_t CountKeyS; // число нажатых кнопок
+
 extern uint32_t CountCC4 ; // число совершенных прерываний по TIM4_CH4
 extern uint32_t CountEndCMI ; // число прерываний совершенных циклов DMA по DCMI
       

@@ -297,7 +297,7 @@ void DMA1_Stream2_IRQHandler(void)
     //while(DCMI->CR&0X01);               // Waiting for transmission to complete
     //DMA1_Stream2->CR &= ~DMA_SxCR_EN; // выключаем цикл ДМА for DCMI
     //DMA1_Stream2->CR |= DMA_SxCR_EN; // запускаем новый цикл ДМА for DCMI
-    TIM1->CR1 &= ~TIM_CR1_CEN; // притупим таймер основной
+    //TIM1->CR1 &= ~TIM_CR1_CEN; // притупим таймер основной
     CurrCnt2Timer = TIM1->CNT;
     //HAL_DCMI_Stop(&hdcmi);
     DMA1_Stream2->CR &=~DMA_SxCR_EN; // запрещаем  ДМА for DCMI
@@ -307,6 +307,12 @@ void DMA1_Stream2_IRQHandler(void)
     //LED_Y(0); // закончили текущий цикл ДМА 
     DMA1->LIFCR |= (uint32_t)(DMA_LIFCR_CTCIF2);
     EnaNextAvrg = 1;
+    // возможно здесь не надо тормозить таймер, так как это втянем в цикл без выхода в остонвной цикл
+    // чисто накопление бе отвлечений
+    // ПОКА сюда попадаем когда закончисли цикл накопления и выйдем в основной цикл 
+    // где подцепим признак продолжения накопления
+    //TIM2->CR1 &= ~TIM_CR1_CEN; // притупим таймер основной
+
   }
   /* USER CODE END DMA1_Stream2_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_dcmi);
@@ -399,11 +405,17 @@ void USART3_IRQHandler(void)
 void EXTI15_10_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI15_10_IRQn 0 */
+  if (__HAL_GPIO_EXTI_GET_IT(BUT_START_Pin) != 0x00U)
+  {
+EnaStartRun = 1;
+CountKeyS++; // число нажатых кнопок
+    
+  }
   /* USER CODE END EXTI15_10_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_13);
   HAL_GPIO_EXTI_IRQHandler(BUT_START_Pin);
   /* USER CODE BEGIN EXTI15_10_IRQn 1 */
-EnaStartRun = 1;
+
   /* USER CODE END EXTI15_10_IRQn 1 */
 }
 
