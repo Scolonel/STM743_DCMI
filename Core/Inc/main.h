@@ -103,6 +103,11 @@ void myBeep (unsigned sound);
       extern uint32_t Cnt2Timer[128]; // время тамера 2 по окончании цикла ДМА
       extern uint32_t CountDMA; // число совершенных циклов DMA 
       extern uint32_t CurrCnt2Timer; // время тамера 2 по окончании цикла ДМА
+      
+extern volatile  uint8_t Ena_AVRG; // разрешаем накопления, пока циклимся в while
+extern volatile uint8_t Ena_CFG;// ждем начала установк перед стартом ТИМ1
+extern volatile uint8_t Ena_SUMM ; // можно запускать суммирование ( зависит от линии) выбор времени начала суммирования
+
 extern uint32_t CountKeyS; // число нажатых кнопок
 
 extern uint32_t CountCC4 ; // число совершенных прерываний по TIM4_CH4

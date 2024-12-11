@@ -56,31 +56,31 @@ unsigned GetSetHorizontScale (int Dir)//получение горизонтального масштаба отобр
 DWORD CalkZondImpuls (void)
 {
     DWORD Imp=0;
-  switch (GetIndexIM()) //шаг 13.88 нс
+  switch (GetIndexIM()) //шаг 4.166666 нс
   {
-    case 0: // 10нс- (real 13 ns)
+    case 0: // 10нс- (real 8.33 ns)
     Imp=0x1;
     break;
     case 1: // 40нс (real 39,9 ns)
-    Imp=0x3;
+    Imp=0x9;//10
     break;
     case 2: // 150нс (real 152.68)
-    Imp=0xB;
+    Imp=35;//36
     break;
     case 3: // 500нс (485.8ns)
-    Imp=0x23;
+    Imp=119;//120
     break;
     case 4: // 1000нс (999.36ns)
-    Imp=0x48;
+    Imp=239;//240
     break;
-    case 5:
-    Imp=0x6C; //3000  (2998.08) шаг 13.88*2=27.76
+    case 5:  //3000  (2998.08) шаг 13.88*2=27.76
+    Imp=719; //720
     break;
-    case 6:
-    Imp=0x5C; //10000  (10215.68) шаг 13.88*8=111.4
+    case 6://10000  (10215.68) шаг 13.88*8=111.4
+    Imp=2399; //2400
     break;
-    case 7:
-    Imp=0x7f; //10000  (10215.68) шаг 13.88*8=111.4
+    case 7://20000  (10215.68) шаг 13.88*8=111.4
+    Imp=4799; //4800
     break;
     default:
     Imp=0;

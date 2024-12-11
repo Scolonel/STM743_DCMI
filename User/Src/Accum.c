@@ -251,5 +251,61 @@ void RUN_SUM (DWORD* RawDataI)//
     
   }
 }
+// сумматор должен работать быстро
+ void ContNextAvrg(void)
+{
+  // быстро суммируем и продолжаем, по таймеру Т1, запустится новый цикл сбора
+  //StopAllTIM(0);// останавливаем таймеры которые считают
+    //TIM1->CR1 &=~TIM_CR1_CEN;
+  // CountDMA указывает на смещение в индексе куда суммируем текущий съем
+  //Sm_Shift = (CountDMA)&(NumRepit-1);
+  Cnt2Timer[CountDMA%128]=CurrCnt2Timer;
+  //uint32_t PointDMA = (CountDMA&(NumRepit-1));
+  uint32_t PointDMA = (CountDMA%(NumRepit));
+  LED_START(1);
+  //LED_START(0);
+  for(int i=0;i<SizeBlockNak; i++)
+  {
+    //BufNAK[NumRepit*i+PointDMA] +=BufADC[i]; 
+    // for ADC MS9280 buffer BufADD
+    BufNAK[NumRepit*i+PointDMA] +=BufADD[i]; 
+    //BufNAK[NumRepit*i+PointDMA] +=(BufADC[i]+BufADD[i-1])/2; 
+    // BufNAK[2*(NumRepit*i+PointDMA)+1] +=BufADC[i]; 
+    //BufNAK[2*(NumRepit*i+PointDMA)] +=BufADD[i-1]; 
+    //TIM1->CNT = TIM1->CCR1 - 5; // так как он остановлен
+  }
+  //LED_START(1);
+    //TIM1->CR1 |=TIM_CR1_CEN;
+  LED_START(0);
+    StopAllTIM(0);// останавливаем таймеры которые считают
 
- 
+  //if(++CountDMA<SumNumNak)
+  if((++CountDMA) >= SumNumNak)// паора заканчивать накопления
+  {
+    StopAllTIM(1);
+    
+    TIM1->CR1 &=~TIM_CR1_CEN;
+    //  останавливаем основной таймер для прекращения накопления
+    // установим признак окончания измерения для вывода результатов
+    // можно тормознуть все остальные таймеры, и даже сбросить
+    Ena_AVRG = 0;
+    EnaPrintRes = 1;
+    
+  }
+  //еще не донакопили, надо понять как установить новый запуск
+  // по таймеру Т1 который установлен
+  //        if(SW_TIM1>2)
+  //        {
+  //          TIM1->CNT = TIM1->CCR1 - 5;
+  //          // переустанвливаем основной таймер ближе к окончанию счета
+  //          
+  //        }
+  //        // и продолжаем его для запуска следующего сбора
+  //        //TIM1->CNT =990;
+  //        TIM1->CR1 |=TIM_CR1_CEN;
+  
+  //EnaNextAvrg = 0;
+    Ena_SUMM = 1;
+    Ena_CFG = 1;
+  
+}

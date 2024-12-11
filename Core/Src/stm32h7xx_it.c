@@ -64,6 +64,7 @@ unsigned beepTick = 0;
 extern DMA_HandleTypeDef hdma_adc1;
 extern DMA_HandleTypeDef hdma_dcmi;
 extern TIM_HandleTypeDef htim1;
+extern TIM_HandleTypeDef htim5;
 extern DMA_HandleTypeDef hdma_uart5_tx;
 extern DMA_HandleTypeDef hdma_uart7_tx;
 extern DMA_HandleTypeDef hdma_usart3_tx;
@@ -306,12 +307,14 @@ void DMA1_Stream2_IRQHandler(void)
     // и вызвать само суммирование
     //LED_Y(0); // закончили текущий цикл ДМА 
     DMA1->LIFCR |= (uint32_t)(DMA_LIFCR_CTCIF2);
-    EnaNextAvrg = 1;
+    
+    //EnaNextAvrg = 1;
     // возможно здесь не надо тормозить таймер, так как это втянем в цикл без выхода в остонвной цикл
     // чисто накопление бе отвлечений
     // ПОКА сюда попадаем когда закончисли цикл накопления и выйдем в основной цикл 
     // где подцепим признак продолжения накопления
     //TIM2->CR1 &= ~TIM_CR1_CEN; // притупим таймер основной
+       // StopAllTIM(2);
 
   }
   /* USER CODE END DMA1_Stream2_IRQn 0 */
@@ -368,9 +371,9 @@ void TIM1_CC_IRQHandler(void)
     // и там же пробуем предустановить новый цикл ДМА АЦП
     CreateNextAvrg();      
     // продолжим тики основного генератора
+    CountCC4++;
     
     TIM1->CR1 |= TIM_CR1_CEN; // снова разрешим
-    CountCC4++;
     //LED_Y(1); // начало одного накопления, старт текущего цикла ДМА
     
   }
@@ -420,12 +423,27 @@ CountKeyS++; // число нажатых кнопок
 }
 
 /**
+  * @brief This function handles TIM5 global interrupt.
+  */
+void TIM5_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM5_IRQn 0 */
+  if (__HAL_TIM_GET_FLAG(&htim5, TIM_FLAG_CC4) != RESET)
+     Ena_SUMM=0;
+
+  /* USER CODE END TIM5_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim5);
+  /* USER CODE BEGIN TIM5_IRQn 1 */
+
+  /* USER CODE END TIM5_IRQn 1 */
+}
+
+/**
   * @brief This function handles UART5 global interrupt.
   */
 void UART5_IRQHandler(void)
 {
   /* USER CODE BEGIN UART5_IRQn 0 */
-
   /* USER CODE END UART5_IRQn 0 */
   HAL_UART_IRQHandler(&huart5);
   /* USER CODE BEGIN UART5_IRQn 1 */

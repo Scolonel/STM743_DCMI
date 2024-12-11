@@ -139,8 +139,17 @@ extern Measuring_Stat Head_RAW;
     // нужно посчитать число проходов ДМА - возможно это размер массива деленный на число повторений
     // если накопили до конца отключаем основной таймер и тормозим все остаальные
     // если суммируем перустанавливаем основной таймер в пред окончание и его запускаем
+// сумматор должен работать быстро
     void ContNextAvrg(void);
+    // for Accum
+extern uint32_t SizeBlockNak; // текущее значение размера блока ДМА ( в зависимости от прореживания)
+extern uint32_t NumRepit;// число повторений, для самого плотного = 8
+extern uint16_t BufADD[SizeBuf_ADC]; // буфер 2АЦП, в него пишем при съеме DMA, размер до 8192
+extern uint32_t BufNAK[SizeBuf_ADC]; // буфер накопления, в него добавляем из буфера АЦП
+extern uint32_t SumNumNak; // суммарное число проходов при данном числе накоплений
 
+//void GetPointInPeriod
+DWORD CalkZondImpuls (void); // расчет длительности импульса
 
 //const DWORD NumPointsPeriod[LENGTH_LINE_NUM]= {48,24,12,6,3,2,1};// число точек на период
 void Averaging (int NumAccum,unsigned DelayAfterAvrg, BYTE EnDrawGraph );// функция накопления с установкой задержки после накопления
