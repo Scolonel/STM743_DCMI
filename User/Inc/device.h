@@ -60,6 +60,13 @@
 // Test signal
 #define TEST_PIN1         (0x04)  // P2 (FREE6) 
 #define TST_P1(a)    ((a>0)?(CtrlExpand (TEST_PIN1, TEST_PIN1)):(CtrlExpand (0, TEST_PIN1)))  /* set SSEL P1.20 to high/low */
+// пины разрешения зонд импульса
+#define PIN_EN_ZI1         (0x4000)  // P14 (EN_ZI1) 
+#define PIN_EN_ZI2         (0x2000)  // P13 (EN_ZI2) 
+#define PIN_EN_ZI3         (0x8000)  // P15 (EN_ZI3) 
+#define ENZ1(a)    ((a>0)?(CtrlExpand (PIN_EN_ZI1, PIN_EN_ZI1)):(CtrlExpand (0, PIN_EN_ZI1)))  /* set EN_ZI1 to high/low */
+#define ENZ2(a)    ((a>0)?(CtrlExpand (PIN_EN_ZI2, PIN_EN_ZI2)):(CtrlExpand (0, PIN_EN_ZI2)))  /* set EN_ZI1 to high/low */
+#define ENZ3(a)    ((a>0)?(CtrlExpand (PIN_EN_ZI3, PIN_EN_ZI3)):(CtrlExpand (0, PIN_EN_ZI3)))  /* set EN_ZI1 to high/low */
 
 #define PM_CS(a)    ((a>0)?(PM_CS_GPIO_Port->BSRR = PM_CS_Pin):(PM_CS_GPIO_Port->BSRR = (uint32_t)PM_CS_Pin << 16))  /* set CS_PM PB.04 to high/low */
 #define PM_CLK(a)    ((a>0)?(PM_SCLK_GPIO_Port->BSRR = PM_SCLK_Pin):(PM_SCLK_GPIO_Port->BSRR = (uint32_t)PM_SCLK_Pin << 16))  /* set CLK_PM PB.08 to high/low */

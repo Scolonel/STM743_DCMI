@@ -55,6 +55,8 @@
 #define START_UART  1
 #define END_UART  2
 
+#define BEG_ADD  64 // добавка для определения начала зонд импульса для разных диапазонов
+
 //
 #define LENGTH_LINE_NUM 7 // число длин линий (диапазонов)
 
@@ -134,7 +136,7 @@ extern Measuring_Stat Head_RAW;
 // новые функции сборщика перетащенные из MAIN
     // начало измерения устанавливаем исходные параметры измерения, 
     // число проходов, шаг изменения положения зонд импульса
-    void StartRunFirst(void ); //
+    void StartRunFirst(unsigned AddIndx); //
     // суммирование текущего накопления , параметры должны быть установленны заранее
     // нужно посчитать число проходов ДМА - возможно это размер массива деленный на число повторений
     // если накопили до конца отключаем основной таймер и тормозим все остаальные
@@ -147,12 +149,14 @@ extern uint32_t NumRepit;// число повторений, для самого плотного = 8
 extern uint16_t BufADD[SizeBuf_ADC]; // буфер 2АЦП, в него пишем при съеме DMA, размер до 8192
 extern uint32_t BufNAK[SizeBuf_ADC]; // буфер накопления, в него добавляем из буфера АЦП
 extern uint32_t SumNumNak; // суммарное число проходов при данном числе накоплений
+extern uint8_t MeasureNow; // признак работы накопителя, для обхода, основного цикла
+extern uint32_t Sm_Shift ; // текущее значение сдвига Зонд.Импульса
 
 //void GetPointInPeriod
 DWORD CalkZondImpuls (void); // расчет длительности импульса
 
 //const DWORD NumPointsPeriod[LENGTH_LINE_NUM]= {48,24,12,6,3,2,1};// число точек на период
-void Averaging (int NumAccum,unsigned DelayAfterAvrg, BYTE EnDrawGraph );// функция накопления с установкой задержки после накопления
+void Averaging (int NumAccum,unsigned AddIndexLN, BYTE EnDrawGraph );// функция накопления с установкой задержки после накопления
 void DrawPictureMeas (BYTE EnDraw); // рисование картинки при измерении
 void FiltrWOW (DWORD* array, unsigned Avrgs );
 // check Speed Uart2

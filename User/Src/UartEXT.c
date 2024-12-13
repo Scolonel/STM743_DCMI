@@ -817,7 +817,7 @@ void DecodeCommandRS (void)
           
         }
         // ;syst:get:cfg?  - запрос установок рефлектометра ASCII коменда
-        if (!memcmp ((void*)RX_Buf, ";SYST:GET:CFG?",14)) //
+        if (!memcmp ((void*)RX_Buf, ";SYST:SET:CFG?",14)) //
         {
           SendCfgOTDR (BufString); // передача конфигурации рефлектометра (настройки)
           NeedTransmit = 1;

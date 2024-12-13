@@ -14,30 +14,63 @@ void RUN_SUM (DWORD* RawDataI);//
 
 void SUMMER (DWORD* RawDataS)//
 {
-  //char Str[5];
-  //static int CntAccumulat=0; // счетчик накоплений
-  // DWORD* pRawData = RawData;
-  // WORD* pDataADC = &DataADC;
-   
-  unsigned int i;
-  unsigned int Step;
-  //if (CntAccumulat==0)CntAccumulat++;// первое измерение не пропустить
-  Step = PointsPerPeriod-1-PointInPeriod; // Считаем индекс первой записи массива для счета с прореживанием!!!!!!!!!!! 
-  //ADC_DATA_EN(0); // Устанавливаем строб для работы АЦП               !!!!!!!!!!!
-  //STARTPP(0); // устанавливаем в "0" START                            !!!!!!!!!!!  
-   for (i=Step;i<RAWSIZE;i+=PointsPerPeriod)                                  // !!!!!!!!!!! 
-    RawDataS[i] += 1;     // суммирование с шины данных непосредственно (есть тики для АЦП) !!!!!!!!!!!
+  //надо запустить измерение с утановленными параметрами
+      memset(&BufADD, 0, sizeof(BufADD));
+      memset(&BufNAK, 0, sizeof(BufNAK));
+  // запустим накопление 
+  TIM1->CR1 |=TIM_CR1_CEN;
+
+  // Это будет одно измерение с учетом прореживания
+         // первое прерывание от TIM1_CCR1 пред начало счета ТИМ1
+      while(Ena_AVRG)
+      {
+        //CountWait=0;
+        //LED_START(1);
+        while(Ena_CFG) // ждем установок для измерения
+        {
+        //  CountWait++;
+        asm("NOP");
+        }
+       // LED_START(0);
+       // BufNAK[0] = CountWait;
+       // CountWait=0;
+       // LED_START(1);
+        while(Ena_SUMM)
+        {
+       //   CountWait++;
+        asm("NOP");
+        }
+       // LED_START(0);
+       // BufNAK[1] = CountWait;
+             ContNextAvrg();
+      }
+    //StopAllTIM(1); // stop all timers
+  // в буффере BufNAK лежит одно накопление 
+   for (int i=0;i<RAWSIZE;i++)                                  // !!!!!!!!!!! 
+    RawDataS[i] += BufNAK[i];     // суммирование с шины данных непосредственно (есть тики для АЦП) !!!!!!!!!!!
+    // другой способ копирования
+    //    memcpy( RawDataS, BufNAK, RAWSIZE * sizeof(DWORD) );
+
   //STARTPP(1); // устанавливаем в "1" START                            !!!!!!!!!!!
   //ADC_DATA_EN(1);// снимаем строб                            !!!!!!!!!!!
-  PointInPeriod ++;    // инкремент прореживания 
-  
+  //PointInPeriod ++;    // инкремент прореживания 
+      Sm_Shift = 0; // текущее значение сдвига Зонд.Импульса
+      CountDMA = 0; //clear count DMA
+
+      Ena_AVRG = 1; // для цикла накоплений
+      Ena_CFG = 1; // для установок цикла одного накопления
+      Ena_SUMM = 1; // для ожидания начала суммирования накоплений
+
+  asm("NOP");
 }
 
 
-void Averaging (int NumAccum,unsigned DelayAfterAvrg, BYTE EnDrawGraph )// функция накопления с установкой задержки после накопления
+void Averaging (int NumAccum,unsigned AddIndexLN, BYTE EnDrawGraph )// функция накопления с установкой задержки после накопления
 // дополнительно устанавливаются: PointsPerPeriod - число точек на период, зависит от длины измерения
 // NumAccumPerSec - число накоплений в данном фрэйме
-
+// AddIndexLN - индекс по которому устанавливается период сбора для особых случаев
+// исходно 0 - устанвливаем период согласно выбранного диапазона
+// не 0 - устанвливает период согластно индекса диапазона оценивается в StartRunFirst
 { 
   //    CntPointPick=0;
 
@@ -53,15 +86,30 @@ void Averaging (int NumAccum,unsigned DelayAfterAvrg, BYTE EnDrawGraph )// функц
   // устанавливаются число реальных (проходов)накоплений равное числу установленных накоплений умноженное на число прореживаний
   // !!! Важно правильно установить период повторения имульсов, через таймер ТИМ1 (с заявленым тиком 1 мкС)
   // по прерыванию окончания цикла ДМА DCMI , первый съем, устанавливается признак вызова запуска
- SendSetALT (CalkSetALT(PointsPerPeriod, PointInPeriod=0)); // передача слова в Альтеру, первое поэтому чистим PointInPeriod
-   if (CntAccumulat==0)CntAccumulat++;// первое измерение не пропустить
+   // это не надо SendSetALT (CalkSetALT(PointsPerPeriod, PointInPeriod=0)); // передача слова в Альтеру, первое поэтому чистим PointInPeriod
+  // установим параметры измерения  перед запуском
+  // в основном это установка (конфигурация таймеров) для измерения
+  StartRunFirst(AddIndexLN);// установлены таймеры достаточно запустить таймер TIM1 - 
+  if (CntAccumulat==0)CntAccumulat++;// первое измерение не пропустить
   //SetParamMeasure();
   while (CntAccumulat)
   {
+    // здесь циклимся пока не накопим нужное число накоплений или по времени???
+    // RUN_SUM цикл в котором вызывается\ однократное ссумирование - ОДНО
+    // SUMMER - если с прореживанием то повторяется несколько раз, когда заканчивается
+    // цикл перебора прореживания, инкрмент счетчика накоплений
+    //( У НАС можно сразу снять одно накопление с прореживанием)
+    // всегда перенастаивается альтера - унас не надо!
+    // надо заменить SUMMER на НАШ цикл одного измерения без очстки буффеов
+    // из 
+    // проверяется 
+
     RUN_SUM(RawData);//34-67-130-260-510-770-1540~ max 34*48=1632 uS 1632/1540=
-    CreatDelay (DelayAfterAvrg);
-    SendSetALT (CalkSetALT(PointsPerPeriod, PointInPeriod)); // (14 uS)передача слова в Альтеру
+    //CreatDelay (DelayAfterAvrg);
+    //SendSetALT (CalkSetALT(PointsPerPeriod, PointInPeriod)); // (14 uS)передача слова в Альтеру
   }
+  MeasureNow =0; //выключаем ограничение на прорисовку режима
+
   if (!RemoutCtrl)
   DrawPictureMeas (EnDrawGraph); // (28 mS) рисование картинки при измерении
 }
@@ -150,6 +198,7 @@ void RUN_SUM (DWORD* RawDataI)//
   // WORD* pDataADC = &DataADC;
   //--U0IER &= ~IER_RBR ;// | IER_THRE | IER_RLS/* Disable UART0 interrupt */
   //  TST_P1 (1); // set LED
+
   SUMMER(RawDataI); // 
   
   //SUMMER(RawDataI,   PointsPerPeriod-1-PointInPeriod); // Считаем индекс первой записи массива для счета с прореживанием!!!!!!!!!!! 
@@ -167,22 +216,18 @@ void RUN_SUM (DWORD* RawDataI)//
   //  STARTPP(1); // устанавливаем в "1" START                            !!!!!!!!!!!
   //  ADC_DATA_EN(1);// снимаем строб                            !!!!!!!!!!!
   //  PointInPeriod ++;     // инкремент прореживания 
-  if (PointInPeriod > PointsPerPeriod-1) // проверка на конец цикла прореживания
-  {
-    PointInPeriod = 0;
+  //  PointInPeriod = 0;
     CntAccumulat ++;  // инкремент счетчика накоплений
-    // совершено циклическое накопление, можно проверить время накопления и сделать выводы
-    //CurrTimeAccum = HAL_GetTick(); // фиксируем время текущее при накоплении
-  }
-  // разрешаем запись в регистр данных ЦАП, вроде не важно....!!!
-  //SetLvlDAC ((unsigned int)CntAccumulat);
-  if ((CurrTimeAccum - OldTimeAccum) > 2500) // более 2.5 сек
-  {
-  }
+    
+//  if ((CurrTimeAccum - OldTimeAccum) > 2500) // более 2.5 сек
+//  {
+//  }
   //if (CntAccumulat > GetNumAccumPerSec())//получение значения накоплений в данном режиме по числу накоплений
   if ((CntAccumulat > GetNumAccumPerSec())||((CurrTimeAccum/1000)>GetTimeAvrg(GetIndexVRM())))//получение значения накоплений в данном режиме по числу накоплений
     
   { // Закончили цикл накоплений можно по числу а можно и по времени!?
+        StopAllTIM(1);
+
     OldTimeAccum = CurrTimeAccum;  
     //RawData[RAWSIZE-1]= GetTimer(2);
     DWORD Noise =0;
@@ -198,12 +243,14 @@ void RUN_SUM (DWORD* RawDataI)//
     //processWindowMedian(RawData, RAWSIZE);
     //FiltrWOW(RawData, GetCntNumAvrg());
     //for (int i=0; i<j-1; ++i)
-    for (int i=0; i<(2*PointsPerPeriod); ++i)
+    // у нас в начале всегда 63 точки
+    // расчет уровня шумов
+    for (int i=30; i<(55); ++i)
     {
       if (RawData[i]>MaxNoise) MaxNoise = RawData[i];
       Noise +=RawData[i];
     }
-    Noise = (DWORD)1*(Noise/(2*PointsPerPeriod));
+    Noise = (DWORD)1*(Noise/(25));
     if (GetIndexLN()>5)// длинные линии -> добавим точек по расчету шумов
     {
       for (int i=4090;i<4120;++i) // берем 30 точек в конце отображения окна
@@ -219,7 +266,7 @@ void RUN_SUM (DWORD* RawDataI)//
       Noise = (DWORD)1*(NoiseAdd/CntAddNoise);
     }
     //Noise = (DWORD)1*(Noise/(j-1));
-    DWORD CurrentMaxLog =(DWORD)(5000.0*log10((double)Avrgs*4095)); // максимальный логарифм текщего накопления
+    DWORD CurrentMaxLog =(DWORD)(5000.0*log10((double)Avrgs*1023)); // максимальный логарифм текщего накопления
     // расчет логарифмического шума (перед импульсом)
     SetLogNoise((unsigned short)(CurrentMaxLog - (DWORD)(5000.0*log10((double)(MaxNoise-Noise))))) ;
     
@@ -229,12 +276,13 @@ void RUN_SUM (DWORD* RawDataI)//
     //SaveNoise (Noise/2);
     for (int i=0; i<OUTSIZE; i++)
     { 
-      if (PointsPerPeriod==48)   LocalRaw = (RawData[i+j-1]+RawData[i+j])>>1;// если самое мелкое то примитивный фильт на 2, иначе пила
-      else  LocalRaw = RawData[i+j];
-      //LocalRaw = RawData[i+j];
+      // усреднение на коротких линиях пока уберем 
+      //if (PointsPerPeriod==48)   LocalRaw = (RawData[i+j-1]+RawData[i+j])>>1;// если самое мелкое то примитивный фильт на 2, иначе пила
+      //else  LocalRaw = RawData[i+j];
+      LocalRaw = RawData[i+j];
       // добавка перед скачком, то есть перед большим отражением в маленьких сигналах
       // пресловутые 12 метров
-      LocalRaw += (DWORD)(RawData[i+j+(PointsPerPeriod/3)]*2.56e-5);
+      //LocalRaw += (DWORD)(RawData[i+j+(PointsPerPeriod/3)]*2.56e-5);
       
       if (LocalRaw<=Noise) LocalRaw=Noise+1;
       LocalRaw= LocalRaw-Noise;
@@ -280,7 +328,8 @@ void RUN_SUM (DWORD* RawDataI)//
     StopAllTIM(0);// останавливаем таймеры которые считают
 
   //if(++CountDMA<SumNumNak)
-  if((++CountDMA) >= SumNumNak)// паора заканчивать накопления
+  //if((++CountDMA) >= SumNumNak)// паора заканчивать накопления
+  if((++CountDMA) >= NumRepit)// паора заканчивать накопления
   {
     StopAllTIM(1);
     
@@ -289,7 +338,7 @@ void RUN_SUM (DWORD* RawDataI)//
     // установим признак окончания измерения для вывода результатов
     // можно тормознуть все остальные таймеры, и даже сбросить
     Ena_AVRG = 0;
-    EnaPrintRes = 1;
+    //EnaPrintRes = 1;
     
   }
   //еще не донакопили, надо понять как установить новый запуск

@@ -102,6 +102,8 @@ const int KeyPoints[PNTSNUM] = { 96, 172, 344, 688, 1366, 2048, 4608 }; // порги
  // всеж таки надо брать по конкретной длине а не по полному массиву, так как пересчитываем на реальную длину
 //const int KeyPoints[PNTSNUM] = { 96, 192, 384, 768, 1536, 2304, 4608 }; // порги определения индекса установленной длины для всего массива
 //const int VerticalSize[PNTVERTICALSIZE] = { 22000, 16000, 8000, 4000 }; // вертикальные масштабы  при просмотре
+// время измерния в uS в зависимости от длины и прореживания
+const int TimeRepitOfLN[PNTSNUM] = { 75, 120, 200, 350, 450, 750, 1500 }; // порги определения индекса установленной длины 4096
 
 const DWORD DelayBadLength [LENGTH_LINE_NUM-1][LENGTH_LINE_NUM]= //длина установленная,длина полученная
 {{0,1250,4600,11000,18000,12000,26000},
@@ -1148,15 +1150,15 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
     //123
     // здесь вызываются функции для прорисовки строки в разных режимах
     // надо разобраться , пока пишу ТЕСТ
-//    if (g_AutoSave)
-//    {
-//      sprintf(Str,"t9.txt=\"%03d/%03d\"яяя",GetNumTraceSaved(0),MAXMEMALL);// сколько занято
-//    }
-//    else
-//    {
-//      sprintf(Str,"t9.txt=\"%.4f\"яяя",GetIndexWAV ());
-//    }
-      sprintf(Str,"t9.txt=\"ТЕСТ\"яяя");// надо убрать
+    if (g_AutoSave)
+    {
+      sprintf(Str,"t9.txt=\"%03d/%03d\"яяя",GetNumTraceSaved(0),MAXMEMALL);// сколько занято
+    }
+    else
+    {
+      sprintf(Str,"t9.txt=\"%.4f\"яяя",GetIndexWAV ());
+    }
+    //  sprintf(Str,"t9.txt=\"ТЕСТ\"яяя");// надо убрать
     NEX_Transmit((void*)Str);// 
     // закрасим бэкграунды  и установим требуемый
     sprintf(Str,"t0.bco=WHITEяяя"); // белый
@@ -1300,7 +1302,9 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
   static BYTE SizeRepit = 0;// число повторений для данного набора измерений с сохраненеием
   static BYTE InputOK = YES;
   static BYTE LengthOK = YES;
-  static BYTE ShadowIndexLN;
+  static BYTE IndxAddBad = 0; //пересчет индекса длины при отражениях далее заявленной длины линии
+
+  static BYTE ShadowIndexLN; //
   static BYTE ShadowIndexIM;
   static BYTE NeedResetIM = 0; // признак необходимости переустановки длительности импульса после первого измерения
   //static DWORD CurrentSumDelay; // итоговая суммарная задержка при изменении длины линии для режима накоплений
@@ -1346,7 +1350,7 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
       g_NeedScr = 1;
     }
     SubModeMeasOTDR = INPUTOTDR;
-    ShadowIndexLN = GetIndexLN();
+    ShadowIndexLN = GetIndexLN(); // запоминаем установленную длину, определяет частоту съема
     ShadowIndexIM = GetIndexIM();
     PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
     memset( RawData, 0, RAWSIZE * sizeof(DWORD) );
@@ -1359,10 +1363,10 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     // запустим таймер 2 и посчитаем время
     //123    reset_timer(2);
     //123    enable_timer(2);
-    CurrTimeAccum = 0;
-    EnaTimerAccum = 1;
+    CurrTimeAccum = 0; // текущее время накопления 1 мкС
+    EnaTimerAccum = 1; // разрешаем считать время накопления
     
-    Averaging (200,0,0);//запуск прогревочного измерения
+    Averaging (5,0,0);//запуск прогревочного измерения
     break;
   case INPUTOTDR:
     LSEL0(0);
@@ -1443,15 +1447,15 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     InputOK = YES; // обнуляем признак плохого разъема
     memset( RawData, 0, RAWSIZE * sizeof(DWORD) );
     CntNumAvrg = 0; // обнуляем счетчик накоплений
-    Averaging (BEGZONEAVRG,TIMEDELAYINPUT,0); // измеряем 2км редко (128км)
+    Averaging (BEGZONEAVRG,6,0); // измеряем 2км редко (128км)
     LocalMax = 0;
-    Mean = (DWORD)(5000.0*log10(4095*BEGZONEAVRG)); // максимальный уровень при данном накопленнн
+    Mean = (DWORD)(5000.0*log10(1023*BEGZONEAVRG)); // максимальный уровень при данном накопленнн
     for (int i=0; i<BEGZONEPNT; ++i)
     {
       LocalMax +=LogData[i];
     }
     LocalMax=LocalMax/BEGZONEPNT; // средний уровень за 10 точек начала
-    if (LocalMax<3000) 
+    if (LocalMax<800) 
       InputOK = NO; // точки лежат выше -3дб = плохой разъем
     g_NeedScr = 1;
     SubModeMeasOTDR = SEARCHENDLINE;
@@ -1496,33 +1500,47 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     */
     LengthOK = YES;
     CurrentSumDelay = 1;
-    Mean = Scan( RawData, RAWSIZE , RawData[0] );//(+RawData[1])>>1
+    Mean = Scan( RawData, RAWSIZE , RawData[0] );// точка отражения , как бы конц линии в режиме 128 км
     //LengthLine = Mean;
     //for (Mean=RAWSIZE-1; ((Mean>90) && (RawData[Mean]<RawData[0])); --Mean);
-    if (IndexSeek(Mean)>ShadowIndexLN) 
+    IndxAddBad = IndexSeek(Mean); // какой индекс надо поставить при этом отражении
+    if (IndxAddBad>ShadowIndexLN) 
     {
       LengthOK = NO;
+      // надо перестроить измеритель на нужную длину
+      // но при этом не трогать частоту съема
       // добавка к периоду в тиках делая (83.33нс)
       DWORD tmp = RAWSIZE/NumPointsPeriod[ShadowIndexLN];
       if (Mean>tmp) CurrentSumDelay = (Mean-tmp)*4;
     }
-    else // Линия выбрана правильно
+    else 
+      {// Линия выбрана правильно
       Mean = KeyPoints[ShadowIndexLN]-1;
+      IndxAddBad = 0; // нужен для установки другого диапазона при измерениях
+      }
     // Mean - задает период повторения сборщика одной точки
     // число накоплениий за 3 сек можно сосчитать как 
     // время промежуточного вывода на экран 28 мС
     // время одного прохода в заданой длине Mean*333.33 + 14000*NumPointsPeriod[ShadowIndexLN]
-    TimeMeasure3S  = 2750000000L;
-    if (RemoutCtrl) TimeMeasure3S  = 3000000000L;
-    NumAvrg = (unsigned)(TimeMeasure3S/((Mean)*ADCPeriod + 16000));//*NumPointsPeriod[ShadowIndexLN])
-    // число накоплений как деление времени 2.75 сек на промеренную длину в тиках сбора 333ns 
+    TimeMeasure3S  = 2750000; // uS
+    if (RemoutCtrl) TimeMeasure3S  = 3000000; //uS
+    // рассчитаем приблизительное число накоплений
+    if(LengthOK) // линия правильная,  
+    NumAvrg = (unsigned)(TimeMeasure3S/(NumPointsPeriod[ShadowIndexLN]*TimeRepitOfLN[ShadowIndexLN]));//*NumPointsPeriod[ShadowIndexLN])
+    // линия плохая
+    else
+    NumAvrg = (unsigned)(TimeMeasure3S/(NumPointsPeriod[ShadowIndexLN]*TimeRepitOfLN[IndxAddBad]));//*NumPointsPeriod[ShadowIndexLN])
+      
+      
+                         // число накоплений как деление времени 2.75 сек на промеренную длину в тиках сбора 333ns 
     //  NumAvrg = (unsigned)(7300000L/(Mean+10)); // было +30
     // установить соотв. задержку для полученной линии 
     if (GetSubModRefl()) // автоматический - добавку не делаем
     {
       ShadowIndexLN = IndexSeek(Mean);
       ShadowIndexIM = IndexSeek(Mean);
-      NumAvrg = (unsigned)(8250000L/(KeyPoints[ShadowIndexLN]+50)); // число накоплений , было +30
+     // NumAvrg = (unsigned)(8250000L/(KeyPoints[ShadowIndexLN]+50)); // число накоплений , было +30
+    NumAvrg = (unsigned)(TimeMeasure3S/(NumPointsPeriod[ShadowIndexLN]*TimeRepitOfLN[ShadowIndexLN]));//*NumPointsPeriod[ShadowIndexLN])
       CurrentSumDelay = 1;
     }
     SetIndexLN(ShadowIndexLN);
@@ -1530,7 +1548,7 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
     ValueDS = (unsigned)((ADCPeriod*50000)/PointsPerPeriod); //  устанавливаем значения DS для установленного режима измерения
     // корректировка накоплений в соответствии с числом точек на период
-    NumAvrg = NumAvrg/PointsPerPeriod; // расчетное число накоплений за 1 секунду
+    //NumAvrg = NumAvrg/PointsPerPeriod; // расчетное число накоплений за 1 секунду
     // для нового индикатора
     //CurrentSumDelay += DelayPeriod[GetIndexLN()];
     g_NeedScr = 1;
@@ -1606,7 +1624,7 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     
     g_NeedScr = 1; // используем его для переключения в режим отображения накоплений
     // переключим окно для нового индиктора и сбросим признак
-    Averaging (NumAvrg,CurrentSumDelay,1);// через 3 сек первый результат
+    Averaging (NumAvrg,IndxAddBad,1);// через 3 сек первый результат
     // установка режима накопления 
     SubModeMeasOTDR = AVERAGING;
     // можно нарисовать окно с рефлектограммой
@@ -1646,7 +1664,7 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
       EnaTimerAccum = 1;
       
     }
-    Averaging (NumAvrg,CurrentSumDelay,1); //запуск текущего накопления
+    Averaging (NumAvrg,IndxAddBad,1); //запуск текущего накопления
     if ((GetCntNumAvrg() >= FinAvrg)||((CurrTimeAccum/1000)>GetTimeAvrg(GetIndexVRM()))) //закончили накопление рисуем рефлектограмму
     {
       

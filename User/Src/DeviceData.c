@@ -1,7 +1,7 @@
 // структура пользовательских установок
 #include "system.h"
 
-char NumVer[10];
+char NumVer[10];// = "180      \0";
 //const char *NumVer = {
 //  #include "version.h"
 //}
@@ -13,7 +13,7 @@ const unsigned WAVE_LENGTHS[WAVE_LENGTHS_NUM] = {850,1310,1490,1550,1625};
 const char *Ides[2] = {"OOO NPK SvyazServis,\0","OPTOKON Co. Ltd,\0"};
 const char *VerFW[2] = {",SW_rev \0",",SW_rev \0"};
 //const char *Device[2][LANG_NUM] = {{"ТОПАЗ-7\0","TOPAZ-7\0","TOPAZ-7\0"},{"MOT-700\0","MOT-700\0","MOT-700\0"}};
-const char *Device[2][2][2] = {{{"ТОПАЗ-7\0","ТОПАЗ-9\0"},{"TOPAZ-7\0","TOPAZ-9\0"}},{{"MOT-700\0","MOT-950\0"},{"MOT-700\0","MOT-950\0"}}};
+const char *Device[2][2][2] = {{{"ТОПАЗ-7\0","ТОПАЗ-7\0"},{"TOPAZ-7\0","TOPAZ-7\0"}},{{"MOT-700\0","MOT-950\0"},{"MOT-700\0","MOT-950\0"}}};
 
 const char *PMset[6] = {"10\0","31\0","32\0","-PMH\0","-VFL\0","AR\0"};
 const DWORD MultIndex[LENGTH_LINE_NUM]= {1,1,1,1,2,4,8};//множитель уменьшения частоты съема
@@ -24,7 +24,7 @@ const WORD WidthPulse[2][WIDTH_PULSE_NUM]= {{20,40,150,500,1000,3000,10000,20000
 const DWORD TimeAver[TIME_AVR_NUM]= {15,30,60,180,3,600};
 const unsigned TimeLight[TIME_LIGHT_NUM] = {0,15,30};
 const char *IdnsBC[2]= {"SvyazServis   \0","OPTOKON Co.Ltd\0"};
-const char *MfidBC[2][2]= {{"TOPAZ7\0","TOPAZ9\0"},{"MOT700\0","MOT950\0"}};
+const char *MfidBC[2][2]= {{"TOPAZ7\0","TOPAZ7\0"},{"MOT700\0","MOT950\0"}};
 // таблица расчета поправки на наклон для измеряемой линии с установленными параметрами
 const float LSACoef[WAVE_LENGTHS_NUM][LENGTH_LINE_NUM] = {
 {1.283367837, 2.566735673, 5.133471347, 10.26694269, 20.53388539, 30.80082808, 61.60165616},//850
@@ -857,6 +857,24 @@ BYTE GetPlaceLS (BYTE Dir)// установка индекса новой длины волны из списка устан
   // установка LSEL по SetPlace
   LSEL0((SetPlace+1) & 0x01);
   LSEL1(((SetPlace+1) & 0x02)>>1);
+  switch (SetPlace)
+  {
+  case 0:
+    ENZ1(1);
+    ENZ2(0);
+    ENZ3(0);
+    break;
+  case 1:
+    ENZ1(0);
+    ENZ2(1);
+    ENZ3(0);
+    break;
+  case 2:
+    ENZ1(0);
+    ENZ2(0);
+    ENZ3(1);
+    break;
+  }
   // установка коэфф преломления в зависимости от выбранной длины волны
   //SettingRefl.K_pr = UserSet.K_pr_SC[SetPlace];
   return SetPlace;

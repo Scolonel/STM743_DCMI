@@ -59,7 +59,7 @@ DWORD CalkZondImpuls (void)
   switch (GetIndexIM()) //шаг 4.166666 нс
   {
     case 0: // 10нс- (real 8.33 ns)
-    Imp=0x1;
+    Imp=0x2;
     break;
     case 1: // 40нс (real 39,9 ns)
     Imp=0x9;//10
