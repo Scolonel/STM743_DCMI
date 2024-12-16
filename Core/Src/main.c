@@ -734,6 +734,8 @@ void StopAllTIM(int Ext)  // остановка таймеров (OTDR)
       //__HAL_DCMI_CLEAR_FLAG(&hdcmi, DCMI_FLAG_VSYNCRI);      //CountDMA++;// добавим позже после ссуммирования
 
       Ena_CFG = 0;
+        LED_KT(0); // закончили удержание сброса линии
+
       //TIM4->CNT =0;
 
     }

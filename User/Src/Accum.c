@@ -316,8 +316,9 @@ void RUN_SUM (DWORD* RawDataI)//
   {
     //BufNAK[NumRepit*i+PointDMA] +=BufADC[i]; 
     // for ADC MS9280 buffer BufADD
+    //BufNAK[NumRepit*i+PointDMA] +=BufADD[i]; 
     BufNAK[NumRepit*i+PointDMA] +=BufADD[i]; 
-    //BufNAK[NumRepit*i+PointDMA] +=(BufADC[i]+BufADD[i-1])/2; 
+   //BufNAK[NumRepit*i+PointDMA] +=(BufADC[i]+BufADD[i-1])/2; 
     // BufNAK[2*(NumRepit*i+PointDMA)+1] +=BufADC[i]; 
     //BufNAK[2*(NumRepit*i+PointDMA)] +=BufADD[i-1]; 
     //TIM1->CNT = TIM1->CCR1 - 5; // так как он остановлен
@@ -325,6 +326,7 @@ void RUN_SUM (DWORD* RawDataI)//
   //LED_START(1);
     //TIM1->CR1 |=TIM_CR1_CEN;
   LED_START(0);
+  LED_KT(1); // закончили накопление - суммирование можно сбросить линию
     StopAllTIM(0);// останавливаем таймеры которые считают
 
   //if(++CountDMA<SumNumNak)

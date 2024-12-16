@@ -235,8 +235,7 @@ extern volatile BYTE TypeLCD ; // тип индикатора в идентификаторе v-3.2(=0) s-3.
 extern volatile BYTE g_NeedChkAnsvNEX; // признак получени€ строки из редактора.и ее проверка
 extern volatile BYTE g_AutoSave; // признак режима авто сохранени€ измерений на выбраных длинах волн
 extern volatile int NeedReturn; // необходимость вернутьс€ в окно сохранени€
-extern BYTE g_SetModeLW; // 16.11.2022 запоминаем установочную конфигурацию по длине волны Index 
-extern BYTE mg_SetModeLW; // 16.11.2022 запоминаем установочную конфигурацию по длине волны Index это в пам€ти
+//extern BYTE g_SetModeLW; // 16.11.2022 запоминаем установочную конфигурацию по длине волны Index 
 
 extern BYTE MemTable[MaxMemOTDR+1]; // таблица рефлектограмм €чейки пам€ти мен€етс€ в пам€ти до MaxMemOTDR
 extern BYTE MemTableExt[MaxMemOTDRExt+1]; // таблица рефлектограмм расширенной €чейки пам€ти мен€етс€ в пам€ти до MaxMemOTDRExt

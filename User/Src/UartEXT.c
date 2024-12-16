@@ -290,8 +290,8 @@ void DecodeCommandRS (void)
       // другая конфигурация хранения , возможно изменение
       //123
       // !!!!ACHTUNG!!!!
-      //      if (!memcmp ((void*)RX_Buf, ";MMEM:LOAD:FILE? ",17)) //RX_Buf[17] - номер рефл
-      //      {
+            if (!memcmp ((void*)RX_Buf, ";MMEM:LOAD:FILE? ",17)) //RX_Buf[17] - номер рефл
+            {
       //        //        unsigned long NowEND;
       //        //        unsigned long NowBEG;
       //        unsigned short NumEventNow = GetNumEvents();
@@ -349,122 +349,123 @@ void DecodeCommandRS (void)
       //        // тест загрузка формирование событий
       //        //NumEventNow = 9;
       //        //TestLoadEvents (NumEventNow);
-      //        // начинаем передачу трассы (Заголовок)
-      //        sprintf (StartStr, "#4%4d",8419 + ((NumEventNow)?(NumEventNow*32+40):(0)));
-      //        UARTSendExt ((BYTE*)StartStr, 6);
-      //        // Мар страница белкора с учетом Таблицы событий (блок 0)
-      //        // если есть таблица событий....
-      //        GetHeaderBelcore (BufString, 0, NumEventNow); // заполняем шапку белкора первые 56 байт Block=0
-      //        UARTSendExt ((BYTE*)BufString, 56+16*((NumEventNow)?(1):(0)));
-      //        unsigned short old_crc = 0xffff; 
-      //        unsigned short new_crc = 0xffff;
-      //        c = (unsigned char*)&BufString;
-      //        for (int i=0;i<56+16*((NumEventNow)?(1):(0));i++)
-      //        {
-      //          /* первый вариант подсчета контрольной суммы - табличный                                             */		
-      //          value = *c;
-      //          new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-      //          old_crc = new_crc;
-      //          c++;
-      //        }
-      //        // заполняем шапку белкора  62 байт Block=1 (продолжение Мар блока + GenParams)
-      //        GetHeaderBelcore (BufString, 1, NumEventNow); 
-      //        UARTSendExt ((BYTE*)BufString, 62);
-      //        c = (unsigned char*)&BufString;
-      //        for (int i=0;i<62;i++)
-      //        {
-      //          /* Считаем контрольную сумму переданного блока                                             */		
-      //          value = *c;
-      //          new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-      //          old_crc = new_crc;
-      //          c++;
-      //        }
-      //        // заполняем шапку белкора  94 байт Block=2 - (SupParams FxdParam)
-      //        GetHeaderBelcore (BufString, 2, NumEventNow); 
-      //        UARTSendExt ((BYTE*)BufString, 95);
-      //        c = (unsigned char*)&BufString;
-      //        for (int i=0;i<95;i++)
-      //        {
-      //          /* Считаем контрольную сумму переданного блока                                             */		
-      //          value = *c;
-      //          new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-      //          old_crc = new_crc;
-      //          c++;
-      //        }
-      //        // Проверяем и передаем блок событий если он есть (блок событий)
-      //        if (NumEventNow) // если есть события 2 байта +
-      //          // события в фиксированном размере для каждого 32 байта  +  22 байт общее для всего блока
-      //        {
-      //          // передаем  число событий  2 байта
-      //          UARTSendExt ((BYTE*)&NumEventNow, 2);
-      //          c = (unsigned char*)&NumEventNow;
-      //          for (int i=0;i<2;i++)
-      //          {
-      //            /* Считаем контрольную сумму переданного блока                                             */		
-      //            value = *c;
-      //            new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-      //            old_crc = new_crc;
-      //            c++;
-      //          }
-      //          // передаем информационные блоки событий  N*32
-      //          for (int s=0; s<NumEventNow; s++)
-      //          {
-      //            UARTSendExt ((BYTE*)&EvenTrace[s], 32);
-      //            c = (unsigned char*)&EvenTrace[s];
-      //            for (int i=0;i<32;i++)
-      //            {
-      //              /* Считаем контрольную сумму переданного блока                                             */		
-      //              value = *c;
-      //              new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-      //              old_crc = new_crc;
-      //              c++;
-      //            }
-      //            
-      //          }
-      //          // передаем конечный блок событий 22 байта
-      //          UARTSendExt ((BYTE*)&EndEvenBlk, 22);
-      //          c = (unsigned char*)&EndEvenBlk;
-      //          for (int i=0;i<22;i++)
-      //          {
-      //            /* Считаем контрольную сумму переданного блока                                             */		
-      //            value = *c;
-      //            new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-      //            old_crc = new_crc;
-      //            c++;
-      //          }
-      //        }
-      //        
-      //        // заполняем шапку белкора 12 байт Block=3 (DataPts)
-      //        GetHeaderBelcore (BufString, 3, NumEventNow); 
-      //        UARTSendExt ((BYTE*)BufString, 12);
-      //        c = (unsigned char*)&BufString;
-      //        for (int i=0;i<12;i++)
-      //        {
-      //          /* Считаем контрольную сумму переданного блока                                             */		
-      //          value = *c;
-      //          new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-      //          old_crc = new_crc;
-      //          c++;
-      //        }
-      //        
-      //        // блок данных 
-      //        UARTSendExt ((BYTE*)LogData, OUTSIZE*2);
-      //        c = (unsigned char*)&LogData;
-      //        for (int i=0;i<OUTSIZE*2;i++)
-      //        {
-      //          /* первый вариант подсчета контрольной суммы - табличный                                             */		
-      //          value = *c;
-      //          new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-      //          old_crc = new_crc;
-      //          c++;
-      //        }
-      //        
-      //        UARTSendExt ((BYTE*)&new_crc, 2);
-      //        
-      //        
-      //        //ClearScreen(screen);
-      //        
-      //      }
+              unsigned short NumEventNow = 0; // пока без событий
+              // начинаем передачу трассы (Заголовок)
+              sprintf (StartStr, "#4%4d",8419 + ((NumEventNow)?(NumEventNow*32+40):(0)));
+              UARTSendExt ((BYTE*)StartStr, 6);
+              // Мар страница белкора с учетом Таблицы событий (блок 0)
+              // если есть таблица событий....
+              GetHeaderBelcore (BufString, 0, NumEventNow); // заполняем шапку белкора первые 56 байт Block=0
+              UARTSendExt ((BYTE*)BufString, 56+16*((NumEventNow)?(1):(0)));
+              unsigned short old_crc = 0xffff; 
+              unsigned short new_crc = 0xffff;
+              c = (unsigned char*)&BufString;
+              for (int i=0;i<56+16*((NumEventNow)?(1):(0));i++)
+              {
+                /* первый вариант подсчета контрольной суммы - табличный                                             */		
+                value = *c;
+                new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+                old_crc = new_crc;
+                c++;
+              }
+              // заполняем шапку белкора  62 байт Block=1 (продолжение Мар блока + GenParams)
+              GetHeaderBelcore (BufString, 1, NumEventNow); 
+              UARTSendExt ((BYTE*)BufString, 62);
+              c = (unsigned char*)&BufString;
+              for (int i=0;i<62;i++)
+              {
+                /* Считаем контрольную сумму переданного блока                                             */		
+                value = *c;
+                new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+                old_crc = new_crc;
+                c++;
+              }
+              // заполняем шапку белкора  94 байт Block=2 - (SupParams FxdParam)
+              GetHeaderBelcore (BufString, 2, NumEventNow); 
+              UARTSendExt ((BYTE*)BufString, 95);
+              c = (unsigned char*)&BufString;
+              for (int i=0;i<95;i++)
+              {
+                /* Считаем контрольную сумму переданного блока                                             */		
+                value = *c;
+                new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+                old_crc = new_crc;
+                c++;
+              }
+              // Проверяем и передаем блок событий если он есть (блок событий)
+              if (NumEventNow) // если есть события 2 байта +
+                // события в фиксированном размере для каждого 32 байта  +  22 байт общее для всего блока
+              {
+                // передаем  число событий  2 байта
+                UARTSendExt ((BYTE*)&NumEventNow, 2);
+                c = (unsigned char*)&NumEventNow;
+                for (int i=0;i<2;i++)
+                {
+                  /* Считаем контрольную сумму переданного блока                                             */		
+                  value = *c;
+                  new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+                  old_crc = new_crc;
+                  c++;
+                }
+                // передаем информационные блоки событий  N*32
+                for (int s=0; s<NumEventNow; s++)
+                {
+                  UARTSendExt ((BYTE*)&EvenTrace[s], 32);
+                  c = (unsigned char*)&EvenTrace[s];
+                  for (int i=0;i<32;i++)
+                  {
+                    /* Считаем контрольную сумму переданного блока                                             */		
+                    value = *c;
+                    new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+                    old_crc = new_crc;
+                    c++;
+                  }
+                  
+                }
+                // передаем конечный блок событий 22 байта
+                UARTSendExt ((BYTE*)&EndEvenBlk, 22);
+                c = (unsigned char*)&EndEvenBlk;
+                for (int i=0;i<22;i++)
+                {
+                  /* Считаем контрольную сумму переданного блока                                             */		
+                  value = *c;
+                  new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+                  old_crc = new_crc;
+                  c++;
+                }
+              }
+              
+              // заполняем шапку белкора 12 байт Block=3 (DataPts)
+              GetHeaderBelcore (BufString, 3, NumEventNow); 
+              UARTSendExt ((BYTE*)BufString, 12);
+              c = (unsigned char*)&BufString;
+              for (int i=0;i<12;i++)
+              {
+                /* Считаем контрольную сумму переданного блока                                             */		
+                value = *c;
+                new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+                old_crc = new_crc;
+                c++;
+              }
+              
+              // блок данных 
+              UARTSendExt ((BYTE*)LogData, OUTSIZE*2);
+              c = (unsigned char*)&LogData;
+              for (int i=0;i<OUTSIZE*2;i++)
+              {
+                /* первый вариант подсчета контрольной суммы - табличный                                             */		
+                value = *c;
+                new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+                old_crc = new_crc;
+                c++;
+              }
+              
+              UARTSendExt ((BYTE*)&new_crc, 2);
+              
+              
+              //ClearScreen(screen);
+              
+            }
       //123      
       //      // ;MEMM:NAME? -  чтение комментариев сохраненных рефлектограмм
       //      if (!memcmp ((void*)RX_Buf, ";MMEM:NAME?",11)) //
@@ -581,8 +582,8 @@ void DecodeCommandRS (void)
         if(NumMode > 6) NumMode = 0;
         SetModeDevice (NumMode); // принудительная установка режима прибора
         
-        sprintf(BufString,"%01d\r",GetCurrentModeDevice ());// получение текущего режима прибора
-        UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        //sprintf(BufString,"%01d\r",GetCurrentModeDevice ());// получение текущего режима прибора
+        //UARTSendExt ((BYTE*)BufString, strlen (BufString));
         NeedTransmit = 1;
       }
       // запрос установленных лазеров 
@@ -1203,6 +1204,7 @@ void DecodeCommandRS (void)
           if (RX_Buf[14] == '?') // запрос структуры устанвоки параметров белкора
           {
             SendBelcoreSet (); // посылает установки белкора
+          NeedTransmit = 1;
           }
           if (RX_Buf[14] == ':') //   установка  структуры параметров белкора
           {

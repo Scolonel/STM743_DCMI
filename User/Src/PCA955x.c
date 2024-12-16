@@ -279,7 +279,15 @@ uint32_t BeginConfig (void) // начальная конфигурация
       //FixErrSettingPrm (ErrDev); //  фиксируем  (исправляем настройки)
       EEPROM_write(&ReflParam, ADR_EventSet, sizeof(ReflParam));
     }
-    
+     // проверка блока установок  рефлектометра начало измерений
+    EEPROM_read(&SettingRefl, ADR_ReflSetting, sizeof(SettingRefl));
+    DWORD Sets_err =  CheckSavedTrace ();  // Проверка установок рефлектометра и исправление
+    if (Sets_err)
+    {
+      //FixErrSettingPrm (ErrDev); //  фиксируем  (исправляем настройки)
+      EEPROM_write(&SettingRefl, ADR_ReflSetting, sizeof(SettingRefl));
+    }
+   
     //  // поуправляем переферией
     //  CntrlExpUnit (DSBL, EN_FLTR); // выкл. фильтр усилителя 
     //  CntrlExpUnit (DSBL, EN_RELAY); // выкл. реле, МАКСИМ усиление

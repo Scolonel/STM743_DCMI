@@ -35,7 +35,10 @@
 // Сигналы управления другие
 #define LED_G(a) ((a>0)?(HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_SET)):(HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_RESET)))
 
+#define LED_KT(a)    ((a>0)?(HAL_GPIO_WritePin(KTS_GPIO_Port, KTS_Pin, GPIO_PIN_SET)):(HAL_GPIO_WritePin(KTS_GPIO_Port, KTS_Pin, GPIO_PIN_RESET))) /* set LED_START to high/low */
+
 //#define LEDSTART         (1UL<<5)  // P1.5 (156) 
+
 #define LED_START(a)    ((a>0)?(HAL_GPIO_WritePin(LEDSTART_GPIO_Port, LEDSTART_Pin, GPIO_PIN_SET)):(HAL_GPIO_WritePin(LEDSTART_GPIO_Port, LEDSTART_Pin, GPIO_PIN_RESET))) /* set LED_START to high/low */
 #define PIN_PHLD         (0x400)  // P10 (PHLD) 
 #define PHLD(a)    ((a>0)?(CtrlExpand (PIN_PHLD, PIN_PHLD)):(CtrlExpand (0,PIN_PHLD)))  /* set PHLD to high/low */

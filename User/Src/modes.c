@@ -214,7 +214,7 @@ void SetPlaceNew(int Mode)
         g_AutoSave = 0; // сброс авто режима
           
           
-      switch (GetCombLS(g_SetModeLW))
+      switch (GetCombLS(SettingRefl.SetModeLW))
       {
       case 1:
         SettingRefl.SW_LW = 0; // установка индекса начального рабочего лазера
@@ -709,16 +709,16 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
       g_FirstScr = 1; // Need reDraw Screen
       if(GetIndexVRM()>3) // врем€ реальное или непрерываное не ставитс€ авто сохранение
       {
-      if (g_SetModeLW>0)g_SetModeLW--;
+      if (SettingRefl.SetModeLW>0)SettingRefl.SetModeLW--;
        else
-       g_SetModeLW =GetSetNumLS(0)-1  ;
+       SettingRefl.SetModeLW =GetSetNumLS(0)-1  ;
       }
       else
       {
-      if (g_SetModeLW>0)g_SetModeLW--;
+      if (SettingRefl.SetModeLW>0)SettingRefl.SetModeLW--;
       else
       {
-        g_SetModeLW = (1<<GetSetNumLS(0))-2;
+        SettingRefl.SetModeLW = (1<<GetSetNumLS(0))-2;
       }
       }
       // переключатель вывода в зависимости от комбинации
@@ -731,16 +731,16 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
       // 22.11.2022 манипул€ции с переключени€ми длин волн в зависимости от выбранного времени измерени€
       if(GetIndexVRM()>3) // врем€ реальное или непрерываное не ставитс€ авто сохранение
       {
-        if(g_SetModeLW<(GetSetNumLS(0)-1)) g_SetModeLW++;
-        else         g_SetModeLW = 0;
+        if(SettingRefl.SetModeLW<(GetSetNumLS(0)-1)) SettingRefl.SetModeLW++;
+        else         SettingRefl.SetModeLW = 0;
 
       }
       else
       {
-      if ((g_SetModeLW+1)<((1<<GetSetNumLS(0))-1))g_SetModeLW++;
+      if ((SettingRefl.SetModeLW+1)<((1<<GetSetNumLS(0))-1))SettingRefl.SetModeLW++;
       else
       {
-        g_SetModeLW = 0;
+        SettingRefl.SetModeLW = 0;
       }
       }
       // переключатель вывода в зависимости от комбинации
@@ -1032,7 +1032,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
     // столбцы названий 
     // переключатель вывода в зависимости от комбинации
     
-    switch (GetCombLS(g_SetModeLW))
+    switch (GetCombLS(SettingRefl.SetModeLW))
     {
     case 1: // одиночные длины волн
     case 2:
@@ -1068,7 +1068,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
   {
     //FIO1PIN |=LEDSTART;//On  LED
     // перва€ строка длина волны
-    switch (GetCombLS(g_SetModeLW))
+    switch (GetCombLS(SettingRefl.SetModeLW))
     {
     case 1: // одиночные длины волн
       sprintf(Str,"t1.txt=\"%d%s\"€€€",GetLengthWaveLS (0),MsgMass[18][CurrLang]); // nm
@@ -1196,6 +1196,8 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
   if (rawPressKeyS) // START Measure из режима установок рефлектометра
   {        
     myBeep(10);
+    // сохран€ем установки измерени€ если запустили
+    EEPROM_write(&SettingRefl, ADR_ReflSetting, sizeof(SettingRefl));
     ReSaveWAV_SC (); // пересохран€ем если есть изменени€
     LSEL0(0);
     LSEL1(0);
@@ -1781,7 +1783,7 @@ void ModeStartOTDR(void) // режим накоплени€ рефлектометра
         {
           CntLS++;
           // провер€ем не закончилс€ ли цикл измерений трассу сохранили
-          switch(GetCombLS(g_SetModeLW))
+          switch(GetCombLS(SettingRefl.SetModeLW))
           {
           case 1:
           case 2:
@@ -6900,7 +6902,8 @@ void SetHeadFileRaw (DWORD NAV)
         Head_RAW.Head[7 - Index++] = '#';
         while (Index < 8) Head_RAW.Head[7 - Index++]=0x20;
 // разрешение DS
-       Head_RAW.ValDS = (unsigned int)((ADCPeriod*50000)/(NumPointsPeriod[GetIndexLN()])); //  устанавливаем значени€ DS дл€ установленного режима измерени€
+       //Head_RAW.ValDS = (unsigned int)((ADCPeriod*50000)/(NumPointsPeriod[GetIndexLN()])); //  устанавливаем значени€ DS дл€ установленного режима измерени€
+       Head_RAW.ValDS = (unsigned int)((ADCPeriod*50000)/(NumRepit)); //  устанавливаем значени€ DS дл€ установленного режима измерени€
 // число накоплений NAV
        Head_RAW.NumAvrg = NAV;
 // длина волны источника, длительность импульса зондировани€ AW PWU
@@ -6911,7 +6914,7 @@ void SetHeadFileRaw (DWORD NAV)
 // ‘ормат данных, при прореживании (будет ли здесь не знаю = 0) смещение (начало линии) то что прописано в настройках
           Head_RAW.FormatData = GetCurrentBegShiftZone();
           // размер окна блокировки, сейчас число точек на период 
-            Head_RAW.SizeFrm = (NumPointsPeriod[GetIndexLN()]);
+            Head_RAW.SizeFrm = (NumRepit);
           //число отсчетов NPPW (на выбранный импульс, он у нас один)
               Head_RAW.NumPtsMain = 0x1200;
 }

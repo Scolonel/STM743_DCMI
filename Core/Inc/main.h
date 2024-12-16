@@ -122,6 +122,8 @@ extern uint32_t CountEndCMI ; // число прерываний совершенных циклов DMA по DCMI
 #define NEX_RX_GPIO_Port GPIOF
 #define NEX_TX_Pin GPIO_PIN_7
 #define NEX_TX_GPIO_Port GPIOF
+#define KTS_Pin GPIO_PIN_2
+#define KTS_GPIO_Port GPIOA
 #define FREE1_Pin GPIO_PIN_7
 #define FREE1_GPIO_Port GPIOA
 #define PM_SCLK_Pin GPIO_PIN_4

@@ -46,7 +46,7 @@ DB_NAME_ENA NameDB;
 // структура спектральных коэфф
 TAB_SET CoeffPM;
 // структура настройки рефлектометра ( текущего измерени€)
- REFL_SET SettingRefl;
+REFL_SET SettingRefl;
 //// структура конфигурации прибора
 CFG_DEV ConfigDevice;
 //// структура пользоваетьских установок
@@ -89,8 +89,8 @@ unsigned long CurCountFiles; // пор€дковый номер текущего файла (читаем из пам€т
 // если €чейка не записана (0xFFFF), то при считывании присваиваем пор€дковый номер хранени€ 
 // дл€ ранее сохраненных файлов без имени (без номера)
 
-BYTE g_SetModeLW; // 16.11.2022 запоминаем установочную конфигурацию по длине волны Index 
-BYTE mg_SetModeLW; // 16.11.2022 запоминаем установочную конфигурацию по длине волны Index for MEMORY
+//BYTE g_SetModeLW; // 16.11.2022 запоминаем установочную конфигурацию по длине волны Index 
+//BYTE mg_SetModeLW; // 16.11.2022 запоминаем установочную конфигурацию по длине волны Index for MEMORY
 
 static volatile BYTE g_SeqCombLW[7]; //разрешенные комбинации измерени€ по местам лазеров
 
@@ -104,7 +104,7 @@ void SetIndxSeqLS (void)
       {
         if(g_SeqCombLW[h] == (1<<SettingRefl.SW_LW))
         {
-         g_SetModeLW = h;
+         SettingRefl.SetModeLW = h;
          break;
         }
       }
@@ -1287,7 +1287,7 @@ void InitReflSet (void) // инициализаци€ установок рефлектометра
   SettingRefl.K_pr=1.4680; // коэфф преломлени€ 
   SettingRefl.SubModeRef = AUTO; // режим рефлектометра
   SettingRefl.LogNoise = 65535; // уровень логарифмического шума,
-  g_SetModeLW = 0; // показываем на первую возможную конфигурацию, формируем ее при включении из установленных лазеров
+  SettingRefl.SetModeLW = 0; // показываем на первую возможную конфигурацию, формируем ее при включении из установленных лазеров
 }
 
 void SetLogNoise (unsigned short Data)// уровень логарифмического шума, установка
@@ -1389,7 +1389,7 @@ BYTE CheckSavedTrace(void) // функци€ контрол€ сохраненной рефлектограммы
   if (SettingRefl.SW_LW > 2) Err++;
   if (SettingRefl.SubModeRef > 1) Err++;
   if ((SettingRefl.K_pr > 1.6)||(SettingRefl.K_pr < 1.4)) Err++;
-  if (mg_SetModeLW > 7) mg_SetModeLW=0; // не может быть конфигурации больше 7
+  if (SettingRefl.SetModeLW > 7) SettingRefl.SetModeLW=0; // не может быть конфигурации больше 7
   if (Err)
   {
     InitReflSet (); // инициализаци€ установок рефлектометра

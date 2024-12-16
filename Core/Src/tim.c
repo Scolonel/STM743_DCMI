@@ -282,7 +282,6 @@ void MX_TIM4_Init(void)
     Error_Handler();
   }
   __HAL_TIM_DISABLE_OCxPRELOAD(&htim4, TIM_CHANNEL_4);
-
   /* USER CODE BEGIN TIM4_Init 2 */
 
   /* USER CODE END TIM4_Init 2 */
@@ -348,8 +347,7 @@ void MX_TIM5_Init(void)
   {
     Error_Handler();
   }
-    __HAL_TIM_DISABLE_OCxPRELOAD(&htim5, TIM_CHANNEL_4);
-
+  __HAL_TIM_DISABLE_OCxPRELOAD(&htim5, TIM_CHANNEL_4);
   /* USER CODE BEGIN TIM5_Init 2 */
 
   /* USER CODE END TIM5_Init 2 */
