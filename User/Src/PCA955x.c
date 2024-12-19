@@ -124,7 +124,7 @@ HAL_StatusTypeDef ConfigPWRCtrl (void)
   BufTX[2] = 0x0;
   StatusI2C2 = TOP_I2C_Master_Transmit(&hi2c2, (uint16_t)(EXPWRCTRL<<1), BufTX, 3, 1000);
   if (StatusI2C2) return StatusI2C2;
-  // конфигурируем микросхему как порты ввода Р0-Р6 - вход, P7 & P8-P15 - выход
+  // конфигурируем микросхему как порты вывода Р0-P15 - выход
   BufTX[0] = 6;
   BufTX[1] = 0x00; 
   BufTX[2] = 0x00;
@@ -210,14 +210,14 @@ uint32_t BeginConfig (void) // начальная конфигурация
   // устанавливаем как входы все! несмотря на то что после сброса уже должно быть как входд
   StatusI2C2 =  TOP_I2C_IsDeviceReady(&hi2c2, (uint16_t)(KEYBOARD<<1), 2, 1000); // если эта микросхема???
   if (StatusI2C2) CodeError |= NOT_PCA9555_KB; // микросхема не определяется
-  StatusI2C2 =  ConfigKBRD (); // конфигурируем PCA9555  
+  StatusI2C2 =  ConfigKBRD (); // конфигурируем PCA9554  
   if (StatusI2C2) CodeError |= CFG_ERR_PCA9555_KB; // микросхема не конфигурируется
   //
   //конфигурация PCA9554 ( ExtKey ) адрес 0x39
   // 
   StatusI2C2 =  TOP_I2C_IsDeviceReady(&hi2c2, (uint16_t)(EXPWRCTRL<<1), 2, 1000); // если эта микросхема???
   if (StatusI2C2) CodeError |= NOT_PCA9554; // микросхема не определяется
-  StatusI2C2 =  ConfigPWRCtrl (); // конфигурируем PCA9554  
+  StatusI2C2 =  ConfigPWRCtrl (); // конфигурируем PCA9555  
   if (StatusI2C2) CodeError |= CFG_ERR_PCA9554; // микросхема не конфигурируется
   //
   

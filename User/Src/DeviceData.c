@@ -402,7 +402,6 @@ void GetDeviceName( char* name ) // from Computer
    {
    case 0: // RUS-SvyazService
      strcpy(c,PMset[ConfigDevice.CfgPM]);
-     //if(!(FIO1PIN & TABLET_95)) c[0] = '5';
      strcat( name, c);
      c[1]=0;
      c[0]= 0x30 + ConfigDevice.TypeDevice;
@@ -482,7 +481,6 @@ void GetMFID( char* name ) // for Belcore
    {
    case 0: // RUS-SvyazService
      strcpy(c,PMset[ConfigDevice.CfgPM]);
-     //if(!(FIO1PIN & TABLET_95)) c[0] = '5';
      strcat( name, c);
      c[1]=0;
      c[0]= 0x30 + ConfigDevice.TypeDevice;
@@ -560,7 +558,6 @@ void GetDeviceLabel( char* label, int Mode ) // Label on Main device page
      if(Mode) // главное имя
      {
      strcpy(c,PMset[ConfigDevice.CfgPM]);
-     //if(!(FIO1PIN & TABLET_95)) c[0] = '5';
      strcat( label,c);
      c[1]=0;
      c[0]= 0x30 + ConfigDevice.TypeDevice;

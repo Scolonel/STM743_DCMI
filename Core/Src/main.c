@@ -46,6 +46,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define BeginTest  64 // начальное смещение для рассчета 
+
 //const uint16_t CodeDAC[64]={4095,64,4032,128,3968,192,3904,256,3840,320,3776,384,3712,448,3648,512,
 //3584,576,3520,640,3456,704,3392,768,3328,832,3264,896,3200,960,3136,1024,
 //3072,1088,3008,1152,2944,1216,2880,1280,2816,1344,2752,1408,2688,1472,2624,1536,
@@ -104,6 +106,8 @@ volatile uint32_t MaxADC = (1<<ResolutionADC)-1; // максимальный уровень АЦП - р
 uint8_t Str[64];
 
 uint32_t DBPRO = 48;
+
+uint32_t SizeStrob = 264; // строба
 
 uint32_t BeginShift = 36; // начальное смещение для рассчета 
 uint32_t BeginSet = 200; // место установки начала зондир импульса при различных режимах прореживания (
@@ -695,14 +699,14 @@ void StopAllTIM(int Ext)  // остановка таймеров (OTDR)
   TIM5->CNT = 0;
   }
   //TIM2->CR1 &= ~TIM_CR1_CEN; // STop генератора TIM2 (Основной генератор задающий частоту повторения измерений)
+  TIM2->CR1 &= ~TIM_CR1_CEN; // STop генератора TIM2 (формирователь основных тактов для ДМА АЦП (30 мГц из 240/8)
   TIM3->CR1 &= ~TIM_CR1_CEN; // STop генератора TIM3 (формирователь зондирующего импульса)
   TIM4->CR1 &= ~TIM_CR1_CEN; // STop генератора TIM4 ()строб VSYNC HSYNC(
-  TIM2->CR1 &= ~TIM_CR1_CEN; // STop генератора TIM2 (формирователь основных тактов для ДМА АЦП (30 мГц из 240/8)
   //TIM12->CR1 &= ~TIM_CR1_CEN; // STop генератора TIM8 (вспомогательный генратор()
   // пытаемся их всех запустить от мастера TIM1 - (то же самое в Т9400 только там мастер TIM3)
+  TIM2->CNT = 0;
   TIM3->CNT = 0;
   TIM4->CNT = 0;
-  TIM2->CNT = 0;
   //TIM12->CNT = 0;
   
 }
@@ -734,7 +738,7 @@ void StopAllTIM(int Ext)  // остановка таймеров (OTDR)
       //__HAL_DCMI_CLEAR_FLAG(&hdcmi, DCMI_FLAG_VSYNCRI);      //CountDMA++;// добавим позже после ссуммирования
 
       Ena_CFG = 0;
-        LED_KT(0); // закончили удержание сброса линии
+        //LED_KT(0); // закончили удержание сброса линии
 
       //TIM4->CNT =0;
 
@@ -1241,6 +1245,8 @@ void SDMMC_SDCard_Test(int Num)
     // число проходов, шаг изменения положения зонд импульса
     void StartRunFirst(unsigned AddIndx) //
     {
+      uint32_t ClkADC_ARR;
+      uint32_t ClkADC_CCR1;
       StopAllTIM(1);
 
       MeasureNow = 1; 
@@ -1266,63 +1272,99 @@ void SDMMC_SDCard_Test(int Num)
       StartTime++;
       // считаем сколько нам сравнивать при прореживании число проходов увеличивается кратно числу повторений
       // так как будем измерять по одному накоплению, число проходов кратно прореживанию
-      SumNumNak = NumRepit;//NumNak*NumRepit;
-      // установить! TIM5 на время начала суммирования шаг 1 мкС , одиночный импульс
-      TIM5->ARR = 15;
-      TIM5->CCR4 = 5;
-      TIM4->CCR4 = 1;
-      TIM4->ARR = 95;
-      // встановим частоту - так на всякий случай
-         TIM2->ARR = 7;
-         TIM2->CCR1 = 4;
-
+      //SumNumNak = NumRepit;//NumNak*NumRepit;
+      // Установка 
+       IndexDist = GetIndexLN(); // индекс измерения длины выбранный пользователем (или заданный программой
+       // для установки параметров измерения кроме периода измерения
+       // период определяется если необходимо удлиннение
+       // по индексу устанавливается Число повторений (NumRepit)
+       // частота таймера ТИМ2 (такты АЦП)
+       // начальный сдвиг положения зондирующего импульса BeginSet
+       // Местоположение начала суммирования ТИМ5 
+      // предустанавливается TIM1 в зависимости от диапазна (индекс)
+       // Возможно будет изменен если необходимо удлиннение
+       
       // устанавливаем длительности импульса ТИМ3 
       ZondImpulse = CalkZondImpuls();
-
-      // устанвливаем TIM1 в зависимости от диапазна (индекс)
-       IndexDist = GetIndexLN(); // индекс измерения длины выбранный пользователем (или заданный программой
-       // для устанвоки парметров измерения кроме периода измерения
+      
+      // важно установить место расположения зонд импульса в зависимости от частоты Съема
        //BeginSet = BEG_ADD + (64<<IndexDist);// установка местоположения зонд импульса в зависимости от диапазона
        //BeginSet = BeginShift+(64<<IndexDist);// установка местоположения зонд импульса в зависимости от диапазона
-       if(IndexDist>3)
+       if(IndexDist>3) //32..128 km
        {
-         BeginSet = (64<<IndexDist)-((8<<IndexDist)- 95);//- (32<<(IndexDist-3));
+         SizeStrob = 32<<IndexDist;
+         //BeginSet = (BeginTest<<IndexDist)-((8<<IndexDist)- 95);//- (32<<(IndexDist-3));
+         BeginSet = SizeStrob +(BeginTest<<IndexDist)-(60<<(IndexDist-3));//- (32<<(IndexDist-3));
+         ClkADC_ARR = (1<<IndexDist)-1;
+         ClkADC_CCR1 = 1<<(IndexDist-1);
+         NumRepit = 1; 
+
        }
-       else
+       else // 0.5 ... 16 km
        {
-         BeginSet = BeginShift+(64<<IndexDist);// установка местоположения зонд импульса в зависимости от диапазона
+         SizeStrob = 256;
+         BeginSet = SizeStrob+((BeginTest)<<IndexDist)-60;// установка местоположения зонд импульса в зависимости от диапазона
+         // где 60 - это задержка на выдачу данных после преобразования
+         ClkADC_ARR = 7;
+         ClkADC_CCR1 = 4;
+         NumRepit = 8>>IndexDist; 
        }
+      
+      // ТИМ4 - установка строба тот есть АЦП уже должно как минимум 30 тактов
+      // пройти, что бы всё устаканилось
+      // соответственно при плотном съеме 2-16 км это величина 256 = 32*8
+      // 32 км - 512   (2.2 мкС)
+      // 64 км - 1024  (4.3мкС)
+      // 128 км - 2048 ( тиков 240 мГц) (8.5 мкс добавка для рассчета периода)
+      TIM4->CCR4 = 1;
+      TIM4->ARR = SizeStrob; 
+      
+      //TIM2 (clkADC)
+         TIM2->ARR = ClkADC_ARR;
+         TIM2->CCR1 = ClkADC_CCR1;
+      
+      // установить! TIM5 на время начала суммирования шаг 1 мкС , одиночный импульс
+      // 5000 точек суммируется за приблизительно 305 мкС
+      // соотв при более плотных съемах
+      // 0.5 2 км - время суммирования ~ 40uS
+      // 4 км - время суьмирования ~ 80uS
+      // 8 км - время суьмирования ~ 160uS
+      // 16 км - время суьмирования ~ 320uS
+      TIM5->ARR = 15;
+      TIM5->CCR4 = 5;
+      // восстановим частоту - так на всякий случай
+
        // здесь надо разделить период повторения и параметр съема
        switch(IndexDist) // устанвливаем параметры Съема
        {
        case 0: //0.5 2.0 km min 50uS 
-         TIM1->ARR = 75;
-         NumRepit = 8; 
-         TIM2->PSC = 0;
+         TIM1->ARR = 105;
+         //NumRepit = 8; 
+         //TIM2->PSC = 0;
          //TIM2->ARR = 7;
          //TIM2->CCR1 = 4;
          //BeginSet = BEG_ADD + (8<<IndexDist);
 
          //TIM4->PSC = 0;
          //TIM4->ARR = TIM4->CCR4 + (8+1)*2;
-         TIM5->CCR4 = 8;
-         TIM5->ARR = 9;
+         TIM5->CCR4 = 400; 
+         TIM5->ARR = 401;
          break;
        case 1: //4 km - 82uS
          TIM1->ARR = 120;
-         NumRepit = 4; 
-         TIM2->PSC = 0;
+         //NumRepit = 4; 
+         //TIM2->PSC = 0;
          //TIM2->ARR = 7;
          //TIM2->CCR1 = 4;
          //TIM4->PSC = 0;
          //TIM4->ARR = TIM4->CCR4 + (8+1)*2;
-         TIM5->CCR4 = 4;
-         TIM5->ARR = 5;
+         TIM5->CCR4 = 400;
+         TIM5->ARR = 401;
          break;
        case 2: //8 km - 170 uS
          TIM1->ARR = 200;
-         NumRepit = 2; 
-         TIM2->PSC = 0;
+         //NumRepit = 2; 
+         //TIM2->PSC = 0;
          //TIM2->ARR = 7;
          //TIM2->CCR1 = 4;
          //TIM4->PSC = 0;
@@ -1332,58 +1374,50 @@ void SDMMC_SDCard_Test(int Num)
          break;
        case 3: //16 km - 330uS 33.3nS*5000=166uS
          TIM1->ARR = 350;
-         NumRepit = 1; 
-         TIM2->PSC = 0;
+         //NumRepit = 1; 
+         //TIM2->PSC = 0;
          //TIM2->ARR = 7;
          //TIM2->CCR1 = 4;
          //TIM4->PSC = 0;
          //TIM4->ARR = TIM4->CCR4 + (8+1)*2;
-         TIM5->CCR4 = 6;
-         TIM5->ARR = 7;
+         TIM5->CCR4 = 400;
+         TIM5->ARR = 401;
          break;
        case 4: //32km - 330uS 66.6nS*5000=333uS
          TIM1->ARR = 450;
-         NumRepit = 1; 
-         TIM2->PSC = 1;
+         //NumRepit = 1; 
+         //TIM2->PSC = 1;
          //TIM2->ARR = 15;
          //TIM2->CCR1 = 8;
          //TIM4->PSC = 1;
          //TIM4->ARR = TIM4->CCR4 + DBPRO;//(16)*3;
-         TIM5->CCR4 = 50;
-         TIM5->ARR = 51;
+         TIM5->CCR4 = 12000;//50*240;
+         TIM5->ARR = 12001;//51*240;
          break;
        case 5: //64km - 660uS 133.3nS*5000=666uS
          TIM1->ARR = 750;
-         NumRepit = 1; 
-         TIM2->PSC = 3;
+         //NumRepit = 1; 
+         //TIM2->PSC = 3;
          //TIM2->ARR = 31;
          //TIM2->CCR1 = 16;
          //TIM4->PSC = 3;
          //TIM4->ARR = 100+24;
-         TIM5->CCR4 = 360;
-         TIM5->ARR = 361;
+         TIM5->CCR4 = 86400;//240*360;
+         TIM5->ARR = 86401;//361;
          break;
        case 6: //128km - 1300uS 266.6*5000=1333uS
          TIM1->ARR = 1500;
-         NumRepit = 1; 
-         TIM2->PSC = 7;
+         //NumRepit = 1; 
+         //TIM2->PSC = 7;
          //TIM2->ARR = 63;
          //TIM2->CCR1 = 32;
          //TIM4->PSC = 7;
          //TIM4->ARR = 64;
-         TIM5->CCR4 = 1100;
-         TIM5->ARR = 1101;
+         TIM5->CCR4 = 264000;//240*1100;
+         TIM5->ARR = 264001;//1101;
          break;
        default:
          TIM1->ARR = 75;
-         NumRepit = 8; 
-         TIM2->PSC = 0;
-         //TIM2->ARR = 7;
-         //TIM2->CCR1 = 4;
-         //BeginSet = BEG_ADD + (8<<IndexDist);
-
-         //TIM4->PSC = 0;
-         //TIM4->ARR = TIM4->CCR4 + (8+1)*2;
          TIM5->CCR4 = 8;
          TIM5->ARR = 9;
          
@@ -1435,8 +1469,8 @@ void SDMMC_SDCard_Test(int Num)
 //      } 
       //TIM1->CCR1 = TIM1->ARR - 5*(1+IndexDist);
       //TIM1->CNT = TIM1->CCR1 - 5*(1+IndexDist);
-      TIM1->CCR1 = TIM1->ARR - 15;
-      TIM1->CNT = TIM1->CCR1 - 15;
+      TIM1->CCR1 = TIM1->ARR - 5;
+      TIM1->CNT = TIM1->CCR1 - 5;
        //EnaStartRun = 0;
       
       //HAL_DCMI_Start_DMA(&hdcmi,DCMI_MODE_SNAPSHOT,(uint32_t)BufADD,SizeBlockNakVar);

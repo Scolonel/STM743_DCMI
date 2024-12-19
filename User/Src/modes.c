@@ -668,7 +668,6 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
   int NeedReSaveIndex=0; // признак пересохранения текущего индекса в индекс привязвнный к месту лазера
   
   //BYTE CurrLang=GetLang(CURRENT);
-  //DWORD KeyP = SetBtnStates( KEYS_REG, 1 );
   if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))
   {
     myBeep(10);
@@ -2023,14 +2022,13 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
   float fCD; // переменная для оценки дБ
   static float LvlLSA; // уровень погонного затухания
   BYTE NeedCalkLSA = 0;
-//123  unsigned CursorMain = PosCursorMain (0);
-  unsigned CursorMain = (0);
+  unsigned CursorMain = PosCursorMain (0);
+  //unsigned CursorMain = (0);
   float TmpACI;
 
   //float PosLine;// = ((ValueDS*LIGHTSPEED*1e-14)/GetIndexWAV())*CursorMain;
   //BYTE CurrLang;
   //CurrLang=GetLang(CURRENT);
-  //DWORD KeyP = SetBtnStates( KEYS_REG, 1 );
   switch (ViewMode)
   {
   case VIEWER: // обычный просмотр
@@ -2052,7 +2050,7 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
       // у нас как бы всегда 2 курсора, но при ОК совмещаем курсоры....
       NumCursors = 2;
       NeedCalkLSA = 1;
-//123      SetPosCursorSlave (CursorMain);
+      SetPosCursorSlave (CursorMain);//123
       
       //TypeCentral = BYCUR;
       //ClrKey(BTN_OK);
@@ -2085,7 +2083,7 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     {
       myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
-//123      PosCursorMain (GetSetHorizontScale (0));
+      PosCursorMain (GetSetHorizontScale (0));//123
       NeedCalkLSA = 1;
     }
     // отпустили долго нажатую кнопку
@@ -2096,7 +2094,7 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     }
     if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==INF_PRESSED))
     {
-//123      PosCursorMain (GetSetHorizontScale(0)*5);
+     PosCursorMain (GetSetHorizontScale(0)*5);//123 
       NeedCalkLSA = 1;
       g_NeedScr = 1; // перерисовки экрана ! Аккуратно! надо проверить потому что нет звука
     } 
@@ -2105,7 +2103,7 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     {
       myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
-//123      PosCursorMain (-GetSetHorizontScale(0));
+      PosCursorMain (-GetSetHorizontScale(0));//123
       NeedCalkLSA = 1;
     }
     // отпустили долго нажатую кнопку
@@ -2116,7 +2114,7 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     }
     if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==INF_PRESSED))
     {
-//123      PosCursorMain (-GetSetHorizontScale(0)*5);
+     PosCursorMain (-GetSetHorizontScale(0)*5);//123 
       NeedCalkLSA = 1;
       g_NeedScr = 1; // перерисовки экрана ! Аккуратно! надо проверить 
     }
@@ -2171,7 +2169,7 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     {
       myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
-//123      GetSetHorizontScale (-1);
+      GetSetHorizontScale (-1);//123
       //ClrKey (BTN_RIGHT);
       KeyP &=~BTN_RIGHT;
     }
@@ -2179,7 +2177,7 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     {
       myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
- //123     GetSetHorizontScale (1);
+      GetSetHorizontScale (1);//123
       //ClrKey (BTN_LEFT);
       KeyP &=~BTN_LEFT;
       
@@ -2209,7 +2207,7 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     {
       myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
-//123      GetSetHorizontScale (5);
+      GetSetHorizontScale (5);//123
       IndexVerSize = 0;
       TypeCentral = MEDIUM;
       ViewMode = VIEWER;
@@ -2226,7 +2224,7 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     
   } // от переключателя режимов просмотра
   // устнавливаем параметры отображения
-//123  GraphParams params = {GetVerticalSize(IndexVerSize),CursorMain,GetSetHorizontScale(0),NumCursors, TypeCentral};//PosCursorMain (0)
+  GraphParams params = {GetVerticalSize(IndexVerSize),CursorMain,GetSetHorizontScale(0),NumCursors, TypeCentral};//PosCursorMain (0)//123
   //GraphParams params = {22000,CursorMain,1<<3,NumCursors, TypeCentral};//PosCursorMain (0)
   //UserParams = {GetVerticalSize(IndexVerSize),CursorMain,GetSetHorizontScale(0),NumCursors, TypeCentral};//PosCursorMain (0)
   
@@ -2258,10 +2256,10 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     {
       // расчет погонного затухания, двух точечным методом
       NeedCalkLSA = 0;
-//123!!!      unsigned ptA = PosCursorMain (0);
-//123!!!      unsigned ptB = PosCursorSlave (0);
-      unsigned ptA = 0;
-      unsigned ptB = 128;
+      unsigned ptA = PosCursorMain (0);//123!!!
+      unsigned ptB = PosCursorSlave (0);//123!!!
+      //unsigned ptA = 0;
+      //unsigned ptB = 128;
       if(ptA!=ptB)
       {
       TmpACI = (GetPosLine(ptA)-GetPosLine(ptB)); // расстояние между точками
@@ -2277,11 +2275,11 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
   {
     
     // устнавливаем параметры отображения
-//123!!!    CursorMain = PosCursorMain (0); // переустановим курсор после изменений
-    CursorMain =  (0); // переустановим курсор после изменений
+    CursorMain = PosCursorMain (0); //123!!!// переустановим курсор после изменений
+    //CursorMain =  (0); // переустановим курсор после изменений
     // расчет параметров графика, и курсоры, надо ставить выше расчетов значений!?
-//123!!!    GraphParams paramsN = {GetVerticalSize(IndexVerSize),CursorMain,GetSetHorizontScale(0),NumCursors, TypeCentral};//PosCursorMain (0)
-    GraphParams paramsN = {22000,CursorMain,1<<3,NumCursors, TypeCentral};//PosCursorMain (0)
+    GraphParams paramsN = {GetVerticalSize(IndexVerSize),CursorMain,GetSetHorizontScale(0),NumCursors, TypeCentral};//123!!!//PosCursorMain (0)
+    //GraphParams paramsN = {22000,CursorMain,1<<3,NumCursors, TypeCentral};//PosCursorMain (0)
     // прорисовка(заполнение) данных для нового индикатора после обработки кнопок
     // здесь надо переопределить установки для разных типоразмеров индикаторов 400*240(3.2") или 480*320(3.5")
     if(TypeLCD)
@@ -2814,7 +2812,6 @@ void ModeKeyBoardOTDR(void) // режим отображения клавиатуры редактора комментари
   char Str[32];
   char StrI[32];
   //BYTE CurrLang=GetLang(CURRENT);
-  //DWORD KeyP = SetBtnStates( KEYS_REG, 1 );
   //static BYTE Shift = 0; // регистр 
   BYTE NeedSaveTr = 0;
   if (g_FirstScr)
@@ -2896,7 +2893,6 @@ void ModeMemoryOTDR(void) // режим отображения сохраненных рефлектограмм и работ
   char Str[64];
   char Stra[32];
   //BYTE CurrLang=GetLang(CURRENT);
-  //DWORD KeyP = SetBtnStates( KEYS_REG, 1 );
   unsigned Trace = GetNumTrace();
   static BYTE DeleteTrace = 0; //признак удаления выбранной трассы
   static BYTE MsgDel = 0; //сообщения при удалении выбранной трассы

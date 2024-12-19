@@ -138,7 +138,6 @@ return PosCursorSl;
 
 //void ButtonsForOTDR (void)
 //{
-//    DWORD KeyP = SetBtnStates( KEYS_REG, 1 );
 //
 //    if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
 //  {

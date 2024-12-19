@@ -234,7 +234,8 @@ void RUN_SUM (DWORD* RawDataI)//
     DWORD NoiseAdd =0; // расчетные шумы по добавленым точкам в конце линии при 64 и 128 км
     int CntAddNoise= 0; // счетчик точек добавок
     DWORD MaxNoise =0;
-    int j=GetCurrentBegShiftZone (); //получение текущего смещения по индексу
+    //int j=GetCurrentBegShiftZone (); //получение текущего смещения по индексу
+    int j=0; //получение текущего смещения по индексу
     DWORD LocalRaw;
     unsigned Avrgs = (GetCntNumAvrg()+CntAccumulat-1); // запись числа накоплений, на данный момент
     SetCntNumAvrg(Avrgs); // сохранение
@@ -310,7 +311,7 @@ void RUN_SUM (DWORD* RawDataI)//
   Cnt2Timer[CountDMA%128]=CurrCnt2Timer;
   //uint32_t PointDMA = (CountDMA&(NumRepit-1));
   uint32_t PointDMA = (CountDMA%(NumRepit));
-  LED_START(1);
+  //LED_START(1);
   //LED_START(0);
   for(int i=0;i<SizeBlockNak; i++)
   {
@@ -325,8 +326,8 @@ void RUN_SUM (DWORD* RawDataI)//
   }
   //LED_START(1);
     //TIM1->CR1 |=TIM_CR1_CEN;
-  LED_START(0);
-  LED_KT(1); // закончили накопление - суммирование можно сбросить линию
+  //LED_START(0);
+  //LED_KT(1); // закончили накопление - суммирование можно сбросить линию
     StopAllTIM(0);// останавливаем таймеры которые считают
 
   //if(++CountDMA<SumNumNak)

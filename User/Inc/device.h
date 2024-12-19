@@ -16,7 +16,7 @@
 #define POW_REF_ON         (0x100)  // P8 (PWR_OTDR_ON)
 //#define V_ALT_ON           (1UL<<14)  // P4.14 (159) 
 #define POWDET(a)    ((a>0)?(CtrlExpand(POW_DET_ON, POW_DET_ON)):(CtrlExpand(0, POW_DET_ON)))  /* set POW_DET_ON to high/low */
-#define POWREF(a)    ((a>0)?(CtrlExpand(POW_DET_ON, POW_REF_ON)):(CtrlExpand(0, POW_REF_ON)))  /* set POW_REF_ON to high/low */
+#define POWREF(a)    ((a>0)?(CtrlExpand(POW_REF_ON, POW_REF_ON)):(CtrlExpand(0, POW_REF_ON)))  /* set POW_REF_ON to high/low */
 //#define POWALT(a)    ((a>0)?(FIO4SET |= V_ALT_ON):(FIO4CLR |= V_ALT_ON))  /* set V_ALT_ON to high/low */
 #define EXT_POW           HAL_GPIO_ReadPin(PWR_EXT_GPIO_Port, PWR_EXT_Pin)  // PD10 (79) // сигнал внешнего питания 0-внешнее питание
 // пины конфигураторы железа
@@ -24,7 +24,6 @@
 #define TEST_PIN2         (1UL<<21)  // P1.21 (72) пин контроля новых плат июнь2012 (перепутана клава)
 #define ENA_PIL           (1UL<<23)  // P1.23 (76) // сигнал переназначения пинов управления лазером в постоянном излучении и генератора пилы
                                       //PHLD - переключается на пин P0.29 (61) P0.26 (12) - AOUT - для генерации пилы,
-#define TABLET_95         (1UL<<29)  // P1.29 (92) пин контроля перехода на планшетный вариант T-9500 MOT-950
 
 // сигналы управления высоким напряжением -  в новых платах 
 #define HV_CTRL           (0x02)  // P1 (CTRL) // сигнал пониженного напряжения
@@ -92,9 +91,6 @@
 
 //#define FLO_CS(a,b) #if (a > 0) \
                     
-#define ALT_CS(a)    ((a>0)?(FIO0SET |= CSALT):(FIO0CLR |= CSALT))  /* set SSEL P0.6 to high/low */
-//#define PM_CS(a)    ((a>0)?(FIO0SET |= CSPM):(FIO0CLR |= CSPM))  /* set SSEL P0.14 to high/low */
-#define FL_CS(b,a)    ((b>0)?((a>0)?(FIO4SET |= CSFL1):(FIO4CLR |= CSFL1)):((a>0)?(FIO0SET |= CSFL0):(FIO0CLR |= CSFL0))) /* set SSEL P0.16 to high/low */
 //#define FL1_CS(a)    ((a>0)?(FIO4SET |= CSFL1):(FIO4CLR |= CSFL1))  /* set SSEL P0.16 to high/low */
 
 //// Сигналы управления LCD
@@ -119,7 +115,6 @@
 //#define LCD_LIGHT(a)    ((a>0)?(FIO2SET |= LIGHTLCD):(FIO2CLR |= LIGHTLCD))  /* LIGHT P0.0 to high/low */
 
 //Клавиатура P2.8... P2.14
-#define KEYS_REG   FIO2PIN // без старшего бита
 //#define BTN_START   (1UL<<10)
 //// #define BTN_UP      (1UL<<11)
 //// #define BTN_DOWN    (1UL<<9)
@@ -137,8 +132,6 @@
 
 
 
-void GPIO_Set_Us_Device(void); // установка пользовательских пинов для конкретной платы
-void  SetupWaitEMC (void);  
 
 
 
