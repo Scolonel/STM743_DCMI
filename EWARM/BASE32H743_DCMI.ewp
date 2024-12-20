@@ -1409,7 +1409,7 @@
             <name>$PROJ_DIR$\..\FATFS\Target\sd_diskio.c</name>
           </file>
           <file>
-            <name>$PROJ_DIR$\..\FATFS\Target\fatfs_platform.c</name>
+            <name>$PROJ_DIR$/../FATFS/Target/fatfs_platform.c</name>
           </file>
         </group>
       </group>
