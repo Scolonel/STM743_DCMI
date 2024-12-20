@@ -103,7 +103,7 @@ const int KeyPoints[PNTSNUM] = { 96, 172, 344, 688, 1366, 2048, 4608 }; // порги
 //const int KeyPoints[PNTSNUM] = { 96, 192, 384, 768, 1536, 2304, 4608 }; // порги определения индекса установленной длины для всего массива
 //const int VerticalSize[PNTVERTICALSIZE] = { 22000, 16000, 8000, 4000 }; // вертикальные масштабы  при просмотре
 // время измерния в uS в зависимости от длины и прореживания
-const int TimeRepitOfLN[PNTSNUM] = { 75, 120, 200, 350, 450, 750, 1500 }; // порги определения индекса установленной длины 4096
+const int TimeRepitOfLN[PNTSNUM] = { 105, 120, 200, 350, 450, 750, 1500 }; // порги определения индекса установленной длины 4096
 
 const DWORD DelayBadLength [LENGTH_LINE_NUM-1][LENGTH_LINE_NUM]= //длина установленная,длина полученная
 {{0,1250,4600,11000,18000,12000,26000},
@@ -1547,7 +1547,7 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     SetIndexLN(ShadowIndexLN);
     SetIndexIM(ShadowIndexIM);
     PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
-    ValueDS = (unsigned)((ADCPeriod*50000)/PointsPerPeriod); //  устанавливаем значения DS для установленного режима измерения
+    ValueDS = (unsigned)(MultIndex[GetIndexLN()]*(ADCPeriod*50000)/PointsPerPeriod); //  устанавливаем значения DS для установленного режима измерения
     // корректировка накоплений в соответствии с числом точек на период
     //NumAvrg = NumAvrg/PointsPerPeriod; // расчетное число накоплений за 1 секунду
     // для нового индикатора

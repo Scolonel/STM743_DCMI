@@ -111,7 +111,13 @@ void Averaging (int NumAccum,unsigned AddIndexLN, BYTE EnDrawGraph )// функция н
   MeasureNow =0; //выключаем ограничение на прорисовку режима
 
   if (!RemoutCtrl)
+  {
+    // приостановим таймер времени накопления
+    EnaTimerAccum = 0;
   DrawPictureMeas (EnDrawGraph); // (28 mS) рисование картинки при измерении
+        EnaTimerAccum = 1;
+
+  }
 }
 
 void DrawPictureMeas (BYTE EnDraw) // рисование картинки при измерении

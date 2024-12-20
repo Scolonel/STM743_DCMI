@@ -215,6 +215,8 @@ extern const char *MsgMass[MSG_NUM][LANG_NUM];
 //extern const char MsgMass[MSG_NUM][LANG_NUM][32]; 
 extern const DWORD DelayPeriod[LENGTH_LINE_NUM];// задержка периода в тиках CreatDelay()~ 83.33 нс
 extern const DWORD NumPointsPeriod[LENGTH_LINE_NUM];
+extern const DWORD MultIndex[LENGTH_LINE_NUM];//множитель уменьшения частоты съема
+
 extern const unsigned char fonts[2048];
 extern char BufString[225];
 //extern char BufString[60];
