@@ -302,7 +302,7 @@ unsigned int TotalSec( RTCTime CurrentTime) // подсчет общего времени в сек
   Year = CurrentTime.RTC_Year%100; 
   if((!((Year) % 4))&&(Month>2)) days++;
   
-  if (Year > 32) Year = 19; // при плохом годе поставим 2019 (попробуем)
+  if (Year > 42) Year = 24; // при плохом годе поставим 2019 (попробуем)
   
   Year--;
   
@@ -324,6 +324,18 @@ unsigned int TotalSec( RTCTime CurrentTime) // подсчет общего времени в сек
   return(secs);
   
   
+}
+
+void GetFolder (char *Str) // получение названия папки по текущему времени каждые 7 дней меняется папка
+{
+    unsigned int MDays[]={0,31,59,90,120,151,181,212,243,273,304,334};
+  RTC_DateTypeDef          Date;  
+  uint32_t AllDay;
+  k_GetDate(&Date);  
+  AllDay = MDays[Date.Month-1] + Date.Date;
+  if((!((Date.Year) % 4))&&(Date.Month>2)) AllDay++;
+  AllDay = AllDay/7+1;
+  sprintf(Str, "%2d_%2d",Date.Year%100, AllDay);
 }
 
 void Sec2Date( unsigned long TimeSec, RTCTime* CurrentTime) // перевод секунд в дату

@@ -349,6 +349,8 @@ void DecodeCommandRS (void)
       //        // тест загрузка формирование событий
       //        //NumEventNow = 9;
       //        //TestLoadEvents (NumEventNow);
+        //< < < < <  !!! В Н И М А Н И Е !!! > > > > >
+              // попробуем записать файл
               unsigned short NumEventNow = 0; // пока без событий
               // начинаем передачу трассы (Заголовок)
               sprintf (StartStr, "#4%4d",8419 + ((NumEventNow)?(NumEventNow*32+40):(0)));
@@ -461,6 +463,7 @@ void DecodeCommandRS (void)
               }
               
               UARTSendExt ((BYTE*)&new_crc, 2);
+        NeedTransmit = 1;
               
               
               //ClearScreen(screen);
@@ -485,9 +488,13 @@ void DecodeCommandRS (void)
       //      }
       //123
       // другая организация хранения необходимо изменеие      
-      //      // ;MEMM:NFIL? -  чтение имен файлов сохраненных рефлектограмм
-      //      if (!memcmp ((void*)RX_Buf, ";MMEM:NFIL?",11)) //
-      //      {
+            // ;MEMM:NFIL? -  чтение имен файлов сохраненных рефлектограмм
+            if (!memcmp ((void*)RX_Buf, ";MMEM:NFIL?",11)) //
+            {
+              //EnaPrintRes =1;
+              //PressKey =1;
+              SDMMC_SDCard_DIR();
+              NeedTransmit = 1;
       //        for (int i = 1 ; i <= GetNumTraceSaved(0); i++)
       //        {
       //          unsigned long PorNom = FlashReadTimeTrace (i);
@@ -499,7 +506,7 @@ void DecodeCommandRS (void)
       //        
       //        sprintf(BufString,"\r");
       //        UARTSendExt ((BYTE*)BufString, 1);
-      //      }
+            }
       //123
       // контроль свободной памяти рефлектограмм
       // сейчас возможно не АКТУАЛЬНО
@@ -663,7 +670,7 @@ void DecodeCommandRS (void)
                 ,SetNewTime.RTC_Year
                   ,SetNewTime.RTC_Mon
                     ,SetNewTime.RTC_Mday);
-        UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        //UARTSendExt ((BYTE*)BufString, strlen (BufString));
         NeedTransmit = 1;
         
       }
@@ -695,7 +702,7 @@ void DecodeCommandRS (void)
                 ,SetNewTime.RTC_Hour
                   ,SetNewTime.RTC_Min
                     ,SetNewTime.RTC_Sec);
-        UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        //UARTSendExt ((BYTE*)BufString, strlen (BufString));
         NeedTransmit = 1;
       }
       // ;syst:key ss -  имитация нажатия кнопки

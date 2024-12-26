@@ -99,6 +99,7 @@ void myBeep (unsigned sound);
       extern uint16_t BufADC[SizeBuf_ADC_int];
       extern uint8_t EnaStartRun;// признак разрешения импульса и преобразования, пока от кнопки
       extern uint8_t EnaPrintRes;// признак разрешения печати данных по окончании преобразования
+      extern uint8_t PressKey; // признак что нажимали кнопку для разрешения передачи файла
       extern uint8_t EnaNextAvrg;// признак начала текущего накопления ( старт ДМА с текущими параметрами)
       extern uint32_t Cnt2Timer[128]; // время тамера 2 по окончании цикла ДМА
       extern uint32_t CountDMA; // число совершенных циклов DMA 

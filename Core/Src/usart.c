@@ -409,7 +409,7 @@ void UARTSendExt(BYTE *BufferPtr, DWORD Length )  // буфер и размер
  if (ENAUSBCOM)
   {
      CDC_Transmit(0, (void*)BufferPtr, Length); // выдаем блок
-     HAL_Delay(1);
+     HAL_Delay((Length>>9)+1);
   }
   else
   {

@@ -22,7 +22,7 @@
 #define LANG_NUM 6  // число столбцов в таблице €зыков
 
 #define MSG_NUM 126
-#define CMD_NUM 33 //команды Nextion
+#define CMD_NUM 35 //команды Nextion
 
 #define TIMERE 500 //врем€ цикла красного глаза по 500 м—
 
@@ -73,9 +73,16 @@
 #include "math.h"
 #include "pm.h" // функции измерител€
 #include "rtc.h" // 
-//#include "fonts.h"
+//#include "fatfs.h"
 #include "pca955x.h"
 #include "buttons.h"   
+#include "sdmmc.h"
+//#include "ff.h"
+// из FATFS библиотеки
+#include "fatfs.h"
+#include "ff_gen_drv.h"
+#include "ff.h"
+#include "ffconf.h"
 
 //#include "usbd_cdc_acm_if.h"
 #include "OTDR_Meas.h" //from T7kAR
@@ -99,6 +106,16 @@ uint32_t GetSysTick( int Mode); // получение тиков 1 м—. 0 - получение счетчика 
 void NEX_Transmit(uint8_t *Str);
 // управление таймером в измерителе ј¬“ќћј“≈
 WORD TimerPA (BYTE Set);
+
+extern char NameDir[100][6];
+extern char NameFiles[1000][16];
+extern uint32_t NumNameDir; // число имен директорий
+extern uint32_t IndexNameDir;// индекс дирректории на которую указываем
+extern uint32_t IndexLCDNameDir;// индекс указател€ на индикаторе дирректории на которую указываем
+extern uint32_t NumNameFales; // число имен файлов
+extern uint32_t IndexNameFiles;// индекс файла на который указываем
+extern uint32_t IndexLCDNameFiles;// индекс указател€ на индикаторе файла на который указываем
+extern uint32_t PageDir; 
 
 // структура хранени€ пам€ти измерител€
 struct tag_PON
@@ -242,6 +259,8 @@ extern volatile int NeedReturn; // необходимость вернутьс€ в окно сохранени€
 extern BYTE MemTable[MaxMemOTDR+1]; // таблица рефлектограмм €чейки пам€ти мен€етс€ в пам€ти до MaxMemOTDR
 extern BYTE MemTableExt[MaxMemOTDRExt+1]; // таблица рефлектограмм расширенной €чейки пам€ти мен€етс€ в пам€ти до MaxMemOTDRExt
 extern uint8_t BusyUSB ; // признак передачи данных по USB, с SD картой
+extern uint16_t PresentUSB ; // признак подключенного USB
+extern uint8_t ModeUSB ; // признак подключенного USB
 
 
 #endif

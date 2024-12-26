@@ -1,6 +1,8 @@
 #ifndef __MEMFLASH_H__
 #define __MEMFLASH_H__
 
+
+
 #define NUMPAGESFORREF 16
 #define NUMWORDINPAGE 256
 #define CHECKNUMTRACE Trace<=((CheckIDMEM)?(0x100+MaxMemOTDRExt):(MaxMemOTDR))
@@ -39,6 +41,8 @@ unsigned short FlashReadSpliceData (unsigned int NumData);
 void SpliceWRITE(unsigned int Trace); 
 // аварийная перезапись нулевой рефлекторграммы
 void AlarmReWriteTrace (void);
+
+void SDMMC_SDCard_DIR(void); // прочитаем дирректроии
 
 
 

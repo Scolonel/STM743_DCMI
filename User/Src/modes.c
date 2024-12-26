@@ -1527,10 +1527,10 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     if (RemoutCtrl) TimeMeasure3S  = 3000000; //uS
     // рассчитаем приблизительное число накоплений
     if(LengthOK) // линия правильная,  
-    NumAvrg = (unsigned)(TimeMeasure3S/(NumPointsPeriod[ShadowIndexLN]*TimeRepitOfLN[ShadowIndexLN]));//*NumPointsPeriod[ShadowIndexLN])
+    NumAvrg = (unsigned)(TimeMeasure3S/((NumPointsPeriod[ShadowIndexLN]+1)*TimeRepitOfLN[ShadowIndexLN]+260));//*NumPointsPeriod[ShadowIndexLN])
     // линия плохая
     else
-    NumAvrg = (unsigned)(TimeMeasure3S/(NumPointsPeriod[ShadowIndexLN]*TimeRepitOfLN[IndxAddBad]));//*NumPointsPeriod[ShadowIndexLN])
+    NumAvrg = (unsigned)(TimeMeasure3S/((NumPointsPeriod[ShadowIndexLN]+1)*TimeRepitOfLN[IndxAddBad]+260));//*NumPointsPeriod[ShadowIndexLN])
       
       
                          // число накоплений как деление времени 2.75 сек на промеренную длину в тиках сбора 333ns 
@@ -1541,7 +1541,8 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
       ShadowIndexLN = IndexSeek(Mean);
       ShadowIndexIM = IndexSeek(Mean);
      // NumAvrg = (unsigned)(8250000L/(KeyPoints[ShadowIndexLN]+50)); // число накоплений , было +30
-    NumAvrg = (unsigned)(TimeMeasure3S/(NumPointsPeriod[ShadowIndexLN]*TimeRepitOfLN[ShadowIndexLN]));//*NumPointsPeriod[ShadowIndexLN])
+    //NumAvrg = (unsigned)(TimeMeasure3S/(NumPointsPeriod[ShadowIndexLN]*TimeRepitOfLN[ShadowIndexLN]));//*NumPointsPeriod[ShadowIndexLN])
+    NumAvrg = (unsigned)(TimeMeasure3S/((NumPointsPeriod[ShadowIndexLN]+1)*TimeRepitOfLN[ShadowIndexLN]+260));//*NumPointsPeriod[ShadowIndexLN])
       CurrentSumDelay = 1;
     }
     SetIndexLN(ShadowIndexLN);
@@ -2886,6 +2887,88 @@ void ModeKeyBoardOTDR(void) // режим отображения клавиатуры редактора комментари
   }
 }
 
+// вызываем чтение SD Card для поиска директорий, составляем список
+// "правильных" директорий, устанавливаем курсоры если они не изменились,
+// если не совпадают с полученными размерами сбрасываем в начало
+// вызываем ОКНО 33
+void ModeFileMngDir(void) // режим файл менеджера директорий
+{
+  char Str[32];
+  
+  if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==UP_SHORT_PRESSED)) // переход в режим просмотра с переключением зума
+  {
+    myBeep(10);
+  }
+  if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED)) 
+  {
+    myBeep(10);
+    if(IndexNameDir>0)IndexNameDir--;
+    g_NeedScr=1;
+  }
+  if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
+  {
+    myBeep(10);
+    if((IndexNameDir+1)<NumNameDir)IndexNameDir++;
+    g_NeedScr=1;
+  }
+  if (g_FirstScr)
+  {
+    SDMMC_SDCard_DIR(); // прочитаем дирректроии
+    // здесь заполняем данными поля нового индикатора
+    // не требущие изменения при первичной инициализации
+    sprintf(Str, "t0.txt=\"0:/_OTDR\"яяя"); // < событиe >
+    NEX_Transmit((void*)Str);    //
+    sprintf(Str, "t14.txt=\"%d\"яяя", NumNameDir); // < сколько папок нашли >
+    NEX_Transmit((void*)Str);    //
+    
+    
+    g_FirstScr = 0;
+    g_NeedScr = 1;
+  }
+  if (g_NeedScr)
+  {
+    sprintf(Str, "t13.txt=\"%d\"яяя", IndexNameDir); // < какая папка выбрана >
+    NEX_Transmit((void*)Str);    //
+    if (IndexNameDir > NumNameDir) IndexNameDir = 0; 
+    // тут нужен сложный подсчет указателя на папки в индикации
+    // из выполнения условий текущий индекс папки должен быть меньше
+    // числа паПок,и индикационный тндекс должен устанавливаться в соответствии с 
+    // текущим индексом выбранной папки
+    IndexLCDNameDir = IndexNameDir%12; // как как у нас 12 полей
+    PageDir = IndexNameDir/12; // получим страницу перечня директорий котрую нужно отображать
+    // заполним поля индикатора именами директорий
+    for (int i=0; i<12; i++)
+    {
+      
+      sprintf(Str, "t%d.txt=\"%s\"яяя",i+1 ,NameDir[PageDir*12+i]); // < событиe >
+      NEX_Transmit((void*)Str);    //
+      
+    }
+    for (int i=0; i<12; i++)
+    {
+      // закрасим бэкграунды  и установим требуемый
+      sprintf(Str,"t%d.bco=WHITEяяя",i+1); // белый
+      NEX_Transmit((void*)Str);// 
+    }
+    sprintf(Str,"t%d.bco=GREENяяя",IndexLCDNameDir+1); // GREEN
+    NEX_Transmit((void*)Str);    //
+    // код подсветки требуемой строки если есть есть маркер строки
+    g_NeedScr = 0;
+  }
+  if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
+  {
+    // здесь над витвится в зависимости от признака откуда пришли
+    if(ReturnMemView)
+    {
+      //DeleteTrace = 0;
+      SetMode(ModeSelectMEM);
+      ModeDevice = MODEOTHER;
+      myBeep(10);
+      // посылка команды переключения окна на Memory (возврат)  
+      CmdInitPage(4);
+    }
+  }
+}
 
 void ModeMemoryOTDR(void) // режим отображения сохраненных рефлектограмм и работа с ними
 {
@@ -4513,12 +4596,13 @@ void ModeSelectMEM(void) // режим выбора работы с памятью CHECK_OFF
     case 1: // переход в память рефлектограмм
       myBeep(10);
 
-      SetMode(ModeMemoryOTDR);
+      //SetMode(ModeMemoryOTDR);
+      SetMode(ModeFileMngDir);
       ModeDevice = MODEMEMR;
       ModeMemDraw = VIEWNEXT;
       ReturnMemView = 1; // надо вернуться сюда же по ESC
          // посылка команды переключения окна на Mem_OTDR_garaph (вызов)  
-      CmdInitPage(13);
+      CmdInitPage(33);
        //CreatDelay(1000000);
   HAL_Delay(100);
     
@@ -7115,9 +7199,13 @@ float MeasORL(int NumAvrgThis, int EnaReport)
 // функция инициализации страницы по номеру в NEXTION
 void CmdInitPage(int Num)
 {
-      NEX_Transmit((void*)CmdNextion[Num]);
-      g_FirstScr=1;
-      //CreatDelay(20000);// 177 как в 173
+  char str[44];
+  sprintf(str, "page %dяяя",Num); // < событиe >
+  NEX_Transmit((void*)str);    //
+  
+  //NEX_Transmit((void*)CmdNextion[Num]);
+  g_FirstScr=1;
+  //CreatDelay(20000);// 177 как в 173
   HAL_Delay(30);
 }
 

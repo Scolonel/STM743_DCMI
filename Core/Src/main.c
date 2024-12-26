@@ -163,6 +163,8 @@ uint8_t CntCMD;
 uint32_t RecievUSB=0 ; // признак прин€ти€ данных по USB, число данных в буфере
 uint8_t BusyUSB=0 ; // признак передачи данных по USB, с SD картой
 // при приеме передаче взводим на 10 м— , и перезаводим при следующей передаче/приеме
+uint16_t PresentUSB = 0; // признак подключенного USB
+uint8_t ModeUSB = 0; // признак работы USB дл€ индикации
 
 // перенос переменных из MAIN.c from T7kAR
 unsigned int CheckErrMEM; 
@@ -185,6 +187,10 @@ BYTE CurrLang; // текущий €зык
 BYTE CheckIDMEM=0; // кака€ флэшь стоит? (0- 16 , 1- 32)//01/02/2013
 // счетчик частотты преобразовани€ JDSU
 unsigned int TimerValueJDSU; // текущее значение частоты приемника RS
+  FATFS FatFs;
+  FIL Fil;
+  FRESULT FR_Status;
+  FRESULT res;
 
 /* USER CODE END PV */
 
@@ -254,6 +260,33 @@ int main(void)
   // будет первым настраиватьс€
   // так как повтор€ем конфигурацию из 7kAR, то скомбинируем из DataDevice MemFlash(у нас PCA955x)
   CheckErrMEM =   BeginConfig();
+  
+  // попробуем проинициализировать SD Card
+  // пустое подключение с первого раза не берет
+  res = f_mount(&FatFs, SDPath, 1);
+  FR_Status = f_mount(NULL, "", 0);
+  //
+  res = f_mount(&FatFs, SDPath, 1);
+      if (res != FR_OK) // какие-то проблемы с SD Card
+    {
+      CheckErrMEM |= ERR_SDCard;
+      //sprintf(TxBuffer, "Error! While Mounting SD Card, Error Code: (%i)\r\n", FR_Status);
+      //UARTSendExt((void*)TxBuffer,strlen(TxBuffer)); // выдаем 
+    }
+
+    res = f_mkdir("0:/_OTDR");
+    if(res != FR_EXIST)
+    {
+      CheckErrMEM |= CLR_SDCard;
+    }
+        // почитаем директории...только что созданные 
+   // res = f_opendir(&dir, PathF);
+   // f_closedir(&dir);
+
+  FR_Status = f_mount(NULL, "", 0);
+      // создаем или провер€ем наличие дирректории _OTDR
+
+
   // Start Uart3 - внешний мир
   uint16_t  Dummy = huart3.Instance->RDR ; // чистим буффер приема от SIM
   HAL_UART_Receive_IT(&huart3, RxBufExt,1); // ждем прин€ти€ первого байта из внешнего мира
@@ -421,7 +454,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   { 
-    
+    //HAL_GPIO_TogglePin(KTS_GPIO_Port, KTS_Pin);
     // проверка кнопок 
     if(GetSysTick(0)>30)// каждые 30 м— или больше...
     {
@@ -551,6 +584,24 @@ int main(void)
     if(!MeasureNow)
     {
     ModeFuncTmp(); // прорисовка текущего режима - основной цикл
+    }
+    // проверим зан€тость USB  и соотв высветим значек
+    if(ModeUSB)
+    {
+      switch (ModeUSB)
+      {
+    case 1:
+    sprintf(Str,"pic 460,0,11€€€");//black
+      break;
+    case 2: // отключили USB
+    sprintf(Str,"pic 460,0,12€€€");//empty
+      break;
+    case 3:
+    sprintf(Str,"pic 460,0,9€€€");//RED
+      break;
+      }
+      ModeUSB = 0;
+    NEX_Transmit((void*)Str);// 
     }
     /* USER CODE END WHILE */
 
@@ -1118,7 +1169,7 @@ void SendFileBelcore (void)
     CDC_Transmit(0, (void*)new_crc, 2); // выдаем блок контрольной суммы
 }
 
-//„ужа€ прогрпмма теста работы FATFS in SDMMC2 with SD_Card
+//„ужа€ программа теста работы FATFS in SDMMC2 with SD_Card
 void SDMMC_SDCard_Test(int Num)
 {
   FATFS FatFs;
@@ -1128,7 +1179,7 @@ void SDMMC_SDCard_Test(int Num)
   UINT RWC, WWC; // Read/Write Word Counter
   DWORD FreeClusters;
   uint32_t TotalSize, FreeSpace;
-    char FileNameS[20];
+  char FileNameS[20];
   char RW_Buffer[200];
   char TxBuffer[250]; // тестовый буффер передачи справочной нофрмации в UART3 (во внешний мир)
   do
@@ -1138,19 +1189,19 @@ void SDMMC_SDCard_Test(int Num)
     if (FR_Status != FR_OK)
     {
       sprintf(TxBuffer, "Error! While Mounting SD Card, Error Code: (%i)\r\n", FR_Status);
-      HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
+      UARTSendExt ((BYTE*)TxBuffer, strlen (TxBuffer));
       break;
     }
     sprintf(TxBuffer, "00000\nSD Card Mounted Successfully! \r\n\n");
-    HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
+    UARTSendExt ((BYTE*)TxBuffer, strlen (TxBuffer));
     //------------------[ Get & Print The SD Card Size & Free Space ]--------------------
     f_getfree("", &FreeClusters, &FS_Ptr);
     TotalSize = (uint32_t)((FS_Ptr->n_fatent - 2) * FS_Ptr->csize * 0.5);
     FreeSpace = (uint32_t)(FreeClusters * FS_Ptr->csize * 0.5);
     sprintf(TxBuffer, "Total SD Card Size: %lu Bytes\r\n", TotalSize);
-    HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),100); // выдаем 
+    UARTSendExt ((BYTE*)TxBuffer, strlen (TxBuffer));
     sprintf(TxBuffer, "Free SD Card Space: %lu Bytes\r\n\n", FreeSpace);
-    HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),100); // выдаем 
+    UARTSendExt ((BYTE*)TxBuffer, strlen (TxBuffer));
     //------------------[ Open A Text File For Write & Write Data ]--------------------
     //Open the file
     //FR_Status = f_open(&Fil, "MyTextFile.txt", FA_WRITE | FA_READ | FA_CREATE_ALWAYS);
@@ -1159,11 +1210,11 @@ void SDMMC_SDCard_Test(int Num)
     if(FR_Status != FR_OK)
     {
       sprintf(TxBuffer, "Error! While Creating/Opening A New Text File, Error Code: (%i)\r\n", FR_Status);
-      HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
+      UARTSendExt ((BYTE*)TxBuffer, strlen (TxBuffer));
       break;
     }
     sprintf(TxBuffer, "Text File Created & Opened! Writing Data To The Text File..\r\n\n");
-    HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),100); // выдаем 
+    UARTSendExt ((BYTE*)TxBuffer, strlen (TxBuffer));
     // (1) Write Data To The Text File [ Using f_puts() Function ]
     f_puts("Hello! From STM32 To SD Card Over SDMMC, Using f_puts()\n", &Fil);
     // (2) Write Data To The Text File [ Using f_write() Function ]
@@ -1178,22 +1229,22 @@ void SDMMC_SDCard_Test(int Num)
     if(FR_Status != FR_OK)
     {
       sprintf(TxBuffer, "Error! While Opening (MyTextFile.txt) File For Read.. \r\n");
-      HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
+      UARTSendExt ((BYTE*)TxBuffer, strlen (TxBuffer));
       break;
     }
     // (1) Read The Text File's Data [ Using f_gets() Function ]
     f_gets(RW_Buffer, sizeof(RW_Buffer), &Fil);
     sprintf(TxBuffer, "Data Read From (MyTextFile.txt) Using f_gets():%s", RW_Buffer);
     //sprintf(TxBuffer, "Data Read From (%s) Using f_gets():%s",FileNameS, RW_Buffer);
-    HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
+    UARTSendExt ((BYTE*)TxBuffer, strlen (TxBuffer));
     // (2) Read The Text File's Data [ Using f_read() Function ]
     f_read(&Fil, RW_Buffer, f_size(&Fil), &RWC);
     sprintf(TxBuffer, "Data Read From (%s) Using f_read():%s",FileNameS, RW_Buffer);
-    HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
+    UARTSendExt ((BYTE*)TxBuffer, strlen (TxBuffer));
     // Close The File
     f_close(&Fil);
     sprintf(TxBuffer, "File Closed! \r\n\n");
-    HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
+    UARTSendExt ((BYTE*)TxBuffer, strlen (TxBuffer));
     //------------------[ Open An Existing Text File, Update Its Content, Read It Back ]--------------------
     // (1) Open The Existing File For Write (Update)
     //FR_Status = f_open(&Fil, "MyTextFile.txt", FA_OPEN_EXISTING | FA_WRITE);
@@ -1202,7 +1253,7 @@ void SDMMC_SDCard_Test(int Num)
     if(FR_Status != FR_OK)
     {
       sprintf(TxBuffer, "Error! While Opening (MyTextFile.txt) File For Update.. \r\n");
-      HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
+      UARTSendExt ((BYTE*)TxBuffer, strlen (TxBuffer));
       break;
     }
     // (2) Write New Line of Text Data To The File
@@ -1214,16 +1265,16 @@ void SDMMC_SDCard_Test(int Num)
     FR_Status = f_open(&Fil, FileNameS, FA_READ); // Open The File For Read
     f_read(&Fil, RW_Buffer, f_size(&Fil), &RWC);
     sprintf(TxBuffer, "Data Read From (MyTextFile.txt) After Update:\r\n%s", RW_Buffer);
-    HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
+    UARTSendExt ((BYTE*)TxBuffer, strlen (TxBuffer));
     f_close(&Fil);
     //------------------[ Delete The Text File ]--------------------
     // Delete The File
     /*
     FR_Status = f_unlink(MyTextFile.txt);
     if (FR_Status != FR_OK){
-        sprintf(TxBuffer, "Error! While Deleting The (MyTextFile.txt) File.. \r\n");
-        USC_CDC_Print(TxBuffer);
-    }
+    sprintf(TxBuffer, "Error! While Deleting The (MyTextFile.txt) File.. \r\n");
+    USC_CDC_Print(TxBuffer);
+  }
     */
   } while(0);
   //------------------[ Test Complete! Unmount The SD Card ]--------------------
@@ -1232,13 +1283,13 @@ void SDMMC_SDCard_Test(int Num)
   //        sprintf(TxBuffer, "\r\nSD Card NO   Un-mounted Successfully! \r\n");
   //    HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
   if (FR_Status != FR_OK)
-
+    
   {
-      sprintf(TxBuffer, "\r\nError! While Un-mounting SD Card, Error Code: (%i)\r\n", FR_Status);
-      HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
+    sprintf(TxBuffer, "\r\nError! While Un-mounting SD Card, Error Code: (%i)\r\n", FR_Status);
+    UARTSendExt ((BYTE*)TxBuffer, strlen (TxBuffer));
   } else{
-      sprintf(TxBuffer, "\r\nSD Card Un-mounted Successfully! \r\n");
-      HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
+    sprintf(TxBuffer, "\r\nSD Card Un-mounted Successfully! \r\n");
+    UARTSendExt ((BYTE*)TxBuffer, strlen (TxBuffer));
   }
 }
     // начало измерени€ устанавливаем исходные параметры измерени€, 
@@ -1256,7 +1307,7 @@ void SDMMC_SDCard_Test(int Num)
       // зависит от установленной длинны линии, шаг задали 1мк— 
       // все таймеры останавливаем и сбрасываем
       //memset(&BufADC, 0, sizeof(BufADC));
-      memset(&BufADD, 0, sizeof(BufADD));
+      //memset(&BufADD, 0, sizeof(BufADD));
       memset(&BufNAK, 0, sizeof(BufNAK));
       TIM4->CR1 &=~TIM_CR1_CEN;
       TIM2->CR1 &=~TIM_CR1_CEN;

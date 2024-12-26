@@ -34,6 +34,8 @@ const char *CmdNextion[CMD_NUM] =
   "page EnglishOLTÿÿÿ", //29
   "page RussianOLTÿÿÿ",//30
   "page EnglishPreFÿÿÿ", //31
-  "page RussianPreFÿÿÿ" //32
+  "page RussianPreFÿÿÿ", //32
+  "page FileMngDirÿÿÿ", //33
+  "page FileMngFilesÿÿÿ" //34
  
 };

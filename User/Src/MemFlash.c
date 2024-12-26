@@ -3,6 +3,237 @@
 // âçàèìîäåéñòâóåò ñ SSP
 
 #include "system.h"
+
+char NameDir[100][6];
+char NameFiles[1000][16];
+uint32_t NumNameDir=0; // ÷èñëî èìåí äèğåêòîğèé
+uint32_t IndexNameDir=0;// èíäåêñ äèğğåêòîğèè íà êîòîğóş óêàçûâàåì
+uint32_t IndexLCDNameDir=0;// èíäåêñ óêàçàòåëÿ íà èíäèêàòîğå äèğğåêòîğèè íà êîòîğóş óêàçûâàåì
+uint32_t NumNameFales=0; // ÷èñëî èìåí ôàéëîâ
+uint32_t IndexNameFiles=0;// èíäåêñ ôàéëà íà êîòîğûé óêàçûâàåì
+uint32_t IndexLCDNameFiles=0;// èíäåêñ óêàçàòåëÿ íà èíäèêàòîğå ôàéëà íà êîòîğûé óêàçûâàåì
+uint32_t PageDir; 
+// Íîâàÿ ñèñòåìà ğàáîòû ñ ôàéëàìè, îíè õğàíÿòñÿ íà SD card
+//×óæàÿ ïğîãğàììà òåñòà ğàáîòû FATFS in SDMMC2 with SD_Card
+void SDMMC_SDCard_DIR(void) // ïğî÷èòàåì äèğğåêòğîèè
+{
+  FATFS FatFs;
+  FIL Fil;
+  FRESULT FR_Status,res;
+  FATFS *FS_Ptr;
+  UINT RWC, WWC; // Read/Write Word Counter
+  DWORD FreeClusters;
+  FILINFO fno;
+  DIR dir;
+  char*   fn;
+  const  char path[9]={"0:/_OTDR\0"}; // 
+  char PathF[64];
+  //char   path=;
+  uint32_t TotalSize, FreeSpace;
+    char FileNameS[32];
+  char RW_Buffer[200];
+  char TxBuffer[250]; // òåñòîâûé áóôôåğ ïåğåäà÷è ñïğàâî÷íîé íîôğìàöèè â UART3 (âî âíåøíèé ìèğ)
+   TxBuffer[0] = 0;
+  do
+  {
+    //------------------[ Mount The SD Card ]--------------------
+    FR_Status = f_mount(&FatFs, SDPath, 1);
+    if (FR_Status != FR_OK)
+    {
+      //sprintf(TxBuffer, "Error! While Mounting SD Card, Error Code: (%i)\r\n", FR_Status);
+      //UARTSendExt((void*)TxBuffer,strlen(TxBuffer)); // âûäàåì 
+      break;
+    }
+    // ñîçäàåì èëè ïğîâåğÿåì íàëè÷èå äèğğåêòîğèè _OTDR
+    res = f_mkdir("0:/_OTDR");
+    if(res == FR_EXIST)
+    {
+      //sprintf ((char*)TxBuffer,"Make MainDir Already Is\r");
+      res = FR_OK;
+    }
+    GetFolder(FileNameS);
+    
+    sprintf(PathF,"%s/%s",path,FileNameS);
+    res = f_mkdir(PathF);
+    //res = f_unlink(PathF);
+    if(res == FR_EXIST)
+    {
+      //sprintf ((char*)TxBuffer,"Make MainDir Already Is\r");
+      res = FR_OK;
+    }
+    // ïî÷èòàåì äèğåêòîğèè...òîëüêî ÷òî ñîçäàííûå 
+    res = f_opendir(&dir, PathF);
+    f_closedir(&dir);
+    
+    
+    //else
+    //  sprintf ((char*)TxBuffer,"Make MainDir Ok\r");
+    //UARTSendExt((void*)TxBuffer,strlen(TxBuffer)); // âûäàåì 
+    // ïğîâåğêà îáúåìà ôëıøêè
+    //sprintf(TxBuffer, "00000\nSD Card Mounted Successfully! \r\n\n");
+    // UARTSendExt((void*)TxBuffer,strlen(TxBuffer)); // âûäàåì 
+    //------------------[ Get & Print The SD Card Size & Free Space ]--------------------
+    //f_getfree("", &FreeClusters, &FS_Ptr);
+    //TotalSize = (uint32_t)((FS_Ptr->n_fatent - 2) * FS_Ptr->csize * 0.5);
+    //FreeSpace = (uint32_t)(FreeClusters * FS_Ptr->csize * 0.5);
+    //sprintf(TxBuffer, "Total SD Card Size: %lu Bytes\r\n", TotalSize);
+    //  UARTSendExt((void*)TxBuffer,strlen(TxBuffer)); // âûäàåì 
+    //sprintf(TxBuffer, "Free SD Card Space: %lu Bytes\r\n\n", FreeSpace);
+    //  UARTSendExt((void*)TxBuffer,strlen(TxBuffer)); // âûäàåì 
+    
+    NumNameDir=0; // ÷èñëî èìåí äèğåêòîğèé
+    IndexNameDir=0;// èíäåêñ äèğğåêòîğèè íà êîòîğóş óêàçûâàåì
+    IndexLCDNameDir=0;// èíäåêñ óêàçàòåëÿ íà èíäèêàòîğå äèğğåêòîğèè íà êîòîğóş óêàçûâàåì
+    //NameDir[IndexNameDir][0] = 0; // îáíóëèì ìàññèâ  
+    memset(&NameDir,0,sizeof(NameDir));
+    // ïî÷èòàåì äèğåêòîğèè...
+    res = f_opendir(&dir, path);
+    if(res == FR_OK)
+    {
+      while(1)
+      {
+        res = f_readdir(&dir, &fno);
+        
+        if(res != FR_OK || fno.fname[0] == 0) // íåò äèğğåêòîğèé âûõîäèì
+          break;
+        
+        //      if(fno.fname[0] != 0) // âğîäå ıòî èìåíà ôàéëîâ
+        //      {
+        //        fn = fno.fname;
+        //              sprintf(TxBuffer, "file/%s\r",fn);
+        //      UARTSendExt((void*)TxBuffer,strlen(TxBuffer)); // âûäàåì 
+        //        
+        //      }
+        //      
+        //if(fno.fname[0] == '.')
+        //{ // âûâîäèì èìåíà äèğğåêòîğèé
+        //continue;
+        
+        fn = fno.fname; 
+        
+        if((fno.fattrib & AM_DIR) == AM_DIR) // äèğğåêòîğèè
+        {
+          // ıòî äèğåêòîğèè - íàäî ïğîâåğèòü èìÿ è çàïèñòü â ñïèñîê
+          if((strlen(fn) == 5)&&(fn[2]=='_')) // íàø ğàçìåğ òåïåğü ïğîâåğèì ñîäåğæèìîå
+          {
+            // ïğîâåğêà íà ñîñòàâ èìåíè äèğåêòîğèè
+            if((fn[0]>='0'&&fn[0]<='9')&&(fn[1]>='0'&&fn[1]<='9')&&(fn[3]>='0'&&fn[3]<='9')&&(fn[4]>='0'&&fn[4]<='9'))
+            {
+              memcpy( &NameDir[NumNameDir],fn,5);
+              NameDir[NumNameDir][5]=0;
+              NumNameDir++;
+              //            sprintf(TxBuffer, "dir/%s\r",fn);
+            }
+          }
+          else
+            TxBuffer[0] = 0;
+          
+        }
+        //        else // ôàéëû,
+        //        {
+        //                        sprintf(TxBuffer, "file/%s\r",fn);
+        //
+        //        }
+        //      UARTSendExt((void*)TxBuffer,strlen(TxBuffer)); // âûäàåì 
+        
+        //}
+      }
+    }
+    
+    f_closedir(&dir);
+    
+    
+    //    //------------------[ Open A Text File For Write & Write Data ]--------------------
+    //    //Open the file
+    //    //FR_Status = f_open(&Fil, "MyTextFile.txt", FA_WRITE | FA_READ | FA_CREATE_ALWAYS);
+    //    sprintf(FileNameS,"MyFile%03d.txt",Num);
+    //    FR_Status = f_open(&Fil, FileNameS, FA_WRITE | FA_READ | FA_CREATE_ALWAYS);
+    //    if(FR_Status != FR_OK)
+    //    {
+    //      sprintf(TxBuffer, "Error! While Creating/Opening A New Text File, Error Code: (%i)\r\n", FR_Status);
+    //      HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // âûäàåì 
+    //      break;
+    //    }
+    //    sprintf(TxBuffer, "Text File Created & Opened! Writing Data To The Text File..\r\n\n");
+    //    HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),100); // âûäàåì 
+    //    // (1) Write Data To The Text File [ Using f_puts() Function ]
+    //    f_puts("Hello! From STM32 To SD Card Over SDMMC, Using f_puts()\n", &Fil);
+    //    // (2) Write Data To The Text File [ Using f_write() Function ]
+    //    strcpy(RW_Buffer, "Hello! From STM32 To SD Card Over SDMMC, Using f_write()\r\n");
+    //    f_write(&Fil, RW_Buffer, strlen(RW_Buffer), &WWC);
+    //    // Close The File
+    //    f_close(&Fil);
+    //    //------------------[ Open A Text File For Read & Read Its Data ]--------------------
+    //    // Open The File
+    //    //FR_Status = f_open(&Fil, "MyTextFile.txt", FA_READ);
+    //    FR_Status = f_open(&Fil, FileNameS, FA_READ);
+    //    if(FR_Status != FR_OK)
+    //    {
+    //      sprintf(TxBuffer, "Error! While Opening (MyTextFile.txt) File For Read.. \r\n");
+    //      HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // âûäàåì 
+    //      break;
+    //    }
+    //    // (1) Read The Text File's Data [ Using f_gets() Function ]
+    //    f_gets(RW_Buffer, sizeof(RW_Buffer), &Fil);
+    //    sprintf(TxBuffer, "Data Read From (MyTextFile.txt) Using f_gets():%s", RW_Buffer);
+    //    //sprintf(TxBuffer, "Data Read From (%s) Using f_gets():%s",FileNameS, RW_Buffer);
+    //    HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // âûäàåì 
+    //    // (2) Read The Text File's Data [ Using f_read() Function ]
+    //    f_read(&Fil, RW_Buffer, f_size(&Fil), &RWC);
+    //    sprintf(TxBuffer, "Data Read From (%s) Using f_read():%s",FileNameS, RW_Buffer);
+    //    HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // âûäàåì 
+    //    // Close The File
+    //    f_close(&Fil);
+    //    sprintf(TxBuffer, "File Closed! \r\n\n");
+    //    HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // âûäàåì 
+    //    //------------------[ Open An Existing Text File, Update Its Content, Read It Back ]--------------------
+    //    // (1) Open The Existing File For Write (Update)
+    //    //FR_Status = f_open(&Fil, "MyTextFile.txt", FA_OPEN_EXISTING | FA_WRITE);
+    //    FR_Status = f_open(&Fil, FileNameS, FA_READ); // Open The File For Read
+    //    FR_Status = f_lseek(&Fil, f_size(&Fil)); // Move The File Pointer To The EOF (End-Of-File)
+    //    if(FR_Status != FR_OK)
+    //    {
+    //      sprintf(TxBuffer, "Error! While Opening (MyTextFile.txt) File For Update.. \r\n");
+    //      HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // âûäàåì 
+    //      break;
+    //    }
+    //    // (2) Write New Line of Text Data To The File
+    //    FR_Status = f_puts("This New Line Was Added During File Update!\r\n", &Fil);
+    //    f_close(&Fil);
+    //    memset(RW_Buffer,'\0',sizeof(RW_Buffer)); // Clear The Buffer
+    //    // (3) Read The Contents of The Text File After The Update
+    //    //FR_Status = f_open(&Fil, "MyTextFile.txt", FA_READ); // Open The File For Read
+    //    FR_Status = f_open(&Fil, FileNameS, FA_READ); // Open The File For Read
+    //    f_read(&Fil, RW_Buffer, f_size(&Fil), &RWC);
+    //    sprintf(TxBuffer, "Data Read From (MyTextFile.txt) After Update:\r\n%s", RW_Buffer);
+    //    HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // âûäàåì 
+    //    f_close(&Fil);
+    //    //------------------[ Delete The Text File ]--------------------
+    //    // Delete The File
+    //    /*
+    //    FR_Status = f_unlink(MyTextFile.txt);
+    //    if (FR_Status != FR_OK){
+    //        sprintf(TxBuffer, "Error! While Deleting The (MyTextFile.txt) File.. \r\n");
+    //        USC_CDC_Print(TxBuffer);
+    //    }
+    //    */
+  } while(0);
+  //------------------[ Test Complete! Unmount The SD Card ]--------------------
+  FR_Status = f_mount(NULL, "", 0);
+  // äóìàë íå çàêğûâàòü ôëıøêó
+  //        sprintf(TxBuffer, "\r\nSD Card NO   Un-mounted Successfully! \r\n");
+  //    HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // âûäàåì 
+//  if (FR_Status != FR_OK)
+//
+//  {
+//      sprintf(TxBuffer, "\r\nError! While Un-mounting SD Card, Error Code: (%i)\r\n", FR_Status);
+//      HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // âûäàåì 
+//  } else{
+//      sprintf(TxBuffer, "\r\nSD Card Un-mounted Successfully! \r\n");
+//      HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // âûäàåì 
+//  }
+}
+
 // ñòğóêòóğà êîíôèãóğàöèè ïğèáîğà
 
 BYTE MemTable[MaxMemOTDR+1]; // òàáëèöà ğåôëåêòîãğàìì ÿ÷åéêè ïàìÿòè ìåíÿåòñÿ â ïàìÿòè äî MaxMemOTDR

@@ -15,6 +15,7 @@
   *
   ******************************************************************************
   */
+#include "system.h"
 /* USER CODE END Header */
 
 /* Note: code generation based on sd_diskio_template_bspv1.c v2.1.4

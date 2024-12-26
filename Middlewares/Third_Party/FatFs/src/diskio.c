@@ -9,6 +9,7 @@
 /* This is an example of glue functions to attach various existing      */
 /* storage control modules to the FatFs module with a defined API.       */
 /*-----------------------------------------------------------------------*/
+#include "system.h"
 
 /* Includes ------------------------------------------------------------------*/
 #include "diskio.h"
