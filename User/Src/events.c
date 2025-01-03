@@ -773,7 +773,8 @@ long CalkEPT (unsigned long Position)
         float EvntEPT;
             // востанавливаем расчетные значения (при отображении рефлектограммы)
         PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
-        NowDS = (ADCPeriod*50000)/PointsPerPeriod; //  устанавливаем значения DS для установленного режима измерения
+        //NowDS = (ADCPeriod*50000)/PointsPerPeriod; //  устанавливаем значения DS для установленного режима измерения
+        NowDS = GetValueDS(); //  устанавливаем значения DS для установленного режима измерения
         EvntEPT = Position*NowDS;
         EvntEPT = EvntEPT/10000;
         return (long)(EvntEPT);

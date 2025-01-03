@@ -1548,7 +1548,8 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     SetIndexLN(ShadowIndexLN);
     SetIndexIM(ShadowIndexIM);
     PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
-    ValueDS = (unsigned)(MultIndex[GetIndexLN()]*(ADCPeriod*50000)/PointsPerPeriod); //  устанавливаем значения DS для установленного режима измерения
+    //ValueDS = (unsigned)(MultIndex[GetIndexLN()]*(ADCPeriod*50000)/PointsPerPeriod); //  устанавливаем значения DS для установленного режима измерения
+    ValueDS = GetValueDS(); //  устанавливаем значения DS для установленного режима измерения
     // корректировка накоплений в соответствии с числом точек на период
     //NumAvrg = NumAvrg/PointsPerPeriod; // расчетное число накоплений за 1 секунду
     // для нового индикатора
@@ -2308,7 +2309,7 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     rct.left=0;
     rct.top=0;
     paramsN.scale=(paramsN.scale>=16)?(InitScale):(paramsN.scale);
-    unsigned CurrSM = MakeGraphNext( &rct, LogData, 4096, &paramsN );// тут пересчитываем данные для графика (его вывод) в зависимости от параметров
+    unsigned CurrSM = MakeGraphNext( &rct, LogData, POINTSIZE, &paramsN );// тут пересчитываем данные для графика (его вывод) в зависимости от параметров
     // теперь нарисуем курсор в рамках Y=0..210
     CurrRed = (CurrSM & 0xffff);
     CurrBlue = (CurrSM>>16);
@@ -3103,7 +3104,8 @@ void ModeMemoryOTDR(void) // режим отображения сохраненных рефлектограмм и работ
     DrawMemoryRefl(Trace, CurrLang, g_mem_param);
     // востанавливаем расчетные значения (при отображении рефлектограммы)
     PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
-    ValueDS = (unsigned)((ADCPeriod*50000)/PointsPerPeriod); //  устанавливаем значения DS для установленного режима измерения
+    //ValueDS = (unsigned)((ADCPeriod*50000)/PointsPerPeriod); //  устанавливаем значения DS для установленного режима измерения
+    ValueDS = GetValueDS(); //  устанавливаем значения DS для установленного режима измерения
     ModeMemDraw = VIEWSAVED;
     
     break;
@@ -6093,7 +6095,8 @@ float GetPosLine (unsigned Cursor) // получение длины от позиции курсора
   float PosLine;
   // установим новые значения параметров съема (при чтении файла)
   PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
-  ValueDS = (unsigned)((ADCPeriod*50000)/PointsPerPeriod); //  устанавливаем значения DS для установленного режима измерения
+ //ValueDS = (unsigned)((ADCPeriod*50000)/PointsPerPeriod); //  устанавливаем значения DS для установленного режима измерения
+  ValueDS = GetValueDS(); //  устанавливаем значения DS для установленного режима измерения
 
   PosLine = (float)(LIGHTSPEED*1.0E-14);
   PosLine = PosLine*ValueDS;
@@ -7001,7 +7004,8 @@ void SetHeadFileRaw (DWORD NAV)
         while (Index < 8) Head_RAW.Head[7 - Index++]=0x20;
 // разрешение DS
        //Head_RAW.ValDS = (unsigned int)((ADCPeriod*50000)/(NumPointsPeriod[GetIndexLN()])); //  устанавливаем значения DS для установленного режима измерения
-       Head_RAW.ValDS = (unsigned int)((ADCPeriod*50000)/(NumRepit)); //  устанавливаем значения DS для установленного режима измерения
+       //Head_RAW.ValDS = (unsigned int)((ADCPeriod*50000)/(NumRepit)); //  устанавливаем значения DS для установленного режима измерения
+       Head_RAW.ValDS = (unsigned int)GetValueDS(); //  устанавливаем значения DS для установленного режима измерения
 // число накоплений NAV
        Head_RAW.NumAvrg = NAV;
 // длина волны источника, длительность импульса зондирования AW PWU
@@ -7014,7 +7018,7 @@ void SetHeadFileRaw (DWORD NAV)
           // размер окна блокировки, сейчас число точек на период 
             Head_RAW.SizeFrm = (NumRepit);
           //число отсчетов NPPW (на выбранный импульс, он у нас один)
-              Head_RAW.NumPtsMain = 0x1200;
+              Head_RAW.NumPtsMain = RAWSIZE;//0x1200;
 }
 
 // 26.02.2014 
@@ -7117,14 +7121,14 @@ float MeasORL(int NumAvrgThis, int EnaReport)
   // проверим уровень сигнала после импульса
   SumBeg = (RawData[43]+RawData[44]+RawData[45])/(3.0*NumAvrgThis)-SumNoise;
   if(SumBeg>1.8 && SumBeg<400.)
-    Mnozhitel = 40.96/SumBeg;
+    Mnozhitel = 10.24/SumBeg;
   else
     Mnozhitel = 1.0;
   // проверим значения и отнормируем их для суммирования
-  for(int i=0; i<4096; ++i) 
+  for(int i=0; i<POINTSIZE; ++i) //4096
   {
     CurrDat = (double)RawData[i+41]/NumAvrgThis; // нормируем показание
-    if(CurrDat > 4090) // перегрузка!
+    if(CurrDat > 1020) // перегрузка! 4090
     {
       NumPereg++; // посчитаем длительность перегрузки
       //AllPereg++;

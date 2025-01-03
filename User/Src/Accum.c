@@ -197,7 +197,7 @@ void DrawPictureMeas (BYTE EnDraw) // рисование картинки при измерении
     rct.top = 0;
     //rct={0,0,390,210};
     
-    MakeGraphNext( &rct, LogData, 4096, &params );// тут пересчитываем данные для графика (его вывод) в зависимости от параметров
+    MakeGraphNext( &rct, LogData, POINTSIZE, &params );// тут пересчитываем данные для графика (его вывод) в зависимости от параметров
     
     
     SendDrawNex(NexData,2,rct.right);
@@ -272,7 +272,7 @@ void RUN_SUM (DWORD* RawDataI)//
     Noise = (DWORD)1*(Noise/(25));
     if (GetIndexLN()>5)// длинные линии -> добавим точек по расчету шумов
     {
-      for (int i=4090;i<4120;++i) // берем 30 точек в конце отображения окна
+      for (int i=5390;i<5420;++i) // берем 30 точек в конце отображения окна
       {
         if (RawData[i] < (Noise + 100*Avrgs)) 
         {

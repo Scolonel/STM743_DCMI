@@ -94,6 +94,14 @@ unsigned long CurCountFiles; // порядковый номер текущего файла (читаем из памят
 
 static volatile BYTE g_SeqCombLW[7]; //разрешенные комбинации измерения по местам лазеров
 
+// получение индекса DS
+unsigned GetValueDS (void)
+{
+  unsigned Ret;
+  
+Ret =  (unsigned)(MultIndex[GetIndexLN()]*(ADCPeriod*50000)/NumPointsPeriod[GetIndexLN()]); //  устанавливаем значения DS для установленного режима измерения
+ return Ret;
+}
 // установка получение индекса в списке комбинации лазеров от номера лазерного места
 void SetIndxSeqLS (void)
 {
@@ -1678,7 +1686,8 @@ void GetHeaderBelcore (char* Name, unsigned short Block, unsigned short NumEvent
       memcpy( &Name[173-118], &DataShort, 2);
       // устанавливаем DS
       // ((10000points*10(in 1ns 100ps))/2 = 50000 , 333.333 ns - интервал съема информации
-      DataInt = (unsigned long)((ADCPeriod*50000)/NumPointsPeriod[GetIndexLN()]); //  устанавливаем значения DS для установленного режима измерения
+      //DataInt = (unsigned long)((ADCPeriod*50000)/NumPointsPeriod[GetIndexLN()]); //  устанавливаем значения DS для установленного режима измерения
+      DataInt = (unsigned long)GetValueDS(); //  устанавливаем значения DS для установленного режима измерения
       memcpy( &Name[175-118], &DataInt, 4);
       // ###(182) GI коэфф преломления  146583 (1.46583)  
       DataInt = (unsigned long)( GetIndexWAV()*100000);
@@ -1690,7 +1699,7 @@ void GetHeaderBelcore (char* Name, unsigned short Block, unsigned short NumEvent
       DataInt = SettingRefl.NumAvrag;
       memcpy( &Name[189-118], &DataInt, 4);
       // ###(192) AR  длина измеряемого участка (грубо число измерений на шаг) DS*NPPW/10000
-      DataInt = (unsigned long)((ADCPeriod*5*4096)/NumPointsPeriod[GetIndexLN()]); //  устанавливаем значения DS для установленного режима измерения
+      DataInt = (unsigned long)(MultIndex[GetIndexLN()]*(ADCPeriod*5*POINTSIZE)/NumPointsPeriod[GetIndexLN()]); //  устанавливаем значения DS для установленного режима измерения
       memcpy( &Name[193-118], &DataInt, 4);
       // ###(200) NF нижний уровень шумов равен 65535
       DataInt =  ReflParam.NF;

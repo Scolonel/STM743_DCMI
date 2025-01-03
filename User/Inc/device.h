@@ -124,10 +124,11 @@
 //#define BTN_MENU    (1UL<<12)
 ////#define BNS_MASK   (BTN_UP + BTN_DOWN + BTN_LEFT + BTN_RIGHT + BTN_OK + BTN_MENU) // не используется 23.06.2022
 
+//#define POINTSIZE    4096 // число активных точек, размер числа точек графика
 
-#define NEXSIZE    0x1000
-#define OUTSIZE    0x1000
-#define RAWSIZE    0x1200  //(4096+288)
+//#define NEXSIZE    4096 //0x1000
+//#define OUTSIZE    4096 //0x1000
+//#define RAWSIZE    0x1200  //(4096+288)
 #define FLTSIZE    5 // размерность фильтра
 
 
