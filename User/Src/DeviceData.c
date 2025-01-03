@@ -153,8 +153,20 @@ unsigned char * StructPtr(unsigned data)
 unsigned InvalidDBNAME() //boolean actually
 {
   unsigned res = NameDB.Ena_DB > 1;
-  unsigned err_str = 1;
-  for( unsigned i = 0; i < (sizeof(DB_NAME_ENA)-1);++i )
+  unsigned err_str = 0;
+    for( unsigned i = 0; i < (sizeof(NameDB.UserComm)-1);++i )
+  {
+    if(NameDB.UserComm[i]<0x20) 
+    {
+      err_str = 1; // в комментариях есть управляющие символы
+      break;
+    }
+  }
+  res = (res<<1) | err_str;
+  // Закроем строку
+  NameDB.UserComm[19]=0;
+  
+  for( unsigned i = 0; i < (sizeof(NameDB.AltName)-1);++i )
   {
     if(NameDB.AltName[i]==0) 
     {
@@ -177,7 +189,16 @@ unsigned InvalidDBNAME() //boolean actually
 }
 void InitDBNAME(unsigned Err)
 {
-  if (Err && 0x10) NameDB.Ena_DB=1; // плохой режим , установим ТОПАЗ (Not Alternate)
+  if (Err && 0x20) NameDB.Ena_DB=1; // плохой режим , установим ТОПАЗ (Not Alternate)
+
+  if (Err && 0x10) // string BAD!
+  {
+  for( unsigned i = 0; i < (ARRAY_SIZE(NameDB.UserComm)-1);++i )
+  {
+    NameDB.UserComm[i]=' '; 
+  }
+  NameDB.UserComm[(ARRAY_SIZE(NameDB.UserComm)-1)]=0;
+  }
   
   if (Err && 0x8) // нет конца строки
   {

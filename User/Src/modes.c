@@ -1762,7 +1762,9 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
       SaveLogNoise(); // сохраняем уровень шумов(перед импульсом в дБ (NF)
       //123      TraceERASE(0); // стирание трассы (0) в старом для сохранеия параметров измерения, что бы
       //123      TraceWRITE(0); // запись трассы (0) при следующем включении востановить параметры по этой (нулевой)
+      
       // рефлектограмме, в новом надо по другому...
+      SaveFileSD(0); // сохраняем в НУЛЕВУЮ
       IndexEvents=0; // указатель на событие (характеристика линии)
       if (SetGetMonEna(255)) PrintEventTbl(); // если установлен признак выдаем по RS таблицу событий
       // если установлен признак автоматического измерения, надо повторить измерение на новой длинне волны и сохранить текущее
@@ -1779,6 +1781,7 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
         memcpy( CommentsOTDR,FileNameOTDR, 20 );
         // сохраняем рефлектограмму в памяти 
         //123 !!!!        if (SaveTrace())
+        SaveFileSD(1);
         if (1)
         {
           CntLS++;
@@ -1911,6 +1914,8 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
       
 //123      TraceERASE(0); // стирание трассы (0)
 //123      TraceWRITE(0); // запись трассы (0)
+      SaveFileSD(0); // сохраняем нулевую трассу
+
       CmdInitPage(18);// посылка команды переключения окна на просмотра рефлектограммы DrawOTDRView
       
     }
@@ -2496,16 +2501,16 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     myBeep(10);
     CheckCommOTDR ();// проверка и корректировка строки комментариев OTDR
 
-//    // подготовка строки комментария для редакции
-//    IndexCommOTDR = 0;
-//    CommentsOTDR[ARRAY_SIZE(CommentsOTDR)-1]=0; // последний элемент в массиве равен 0
-//    for (int Ind =ARRAY_SIZE(CommentsOTDR)-2; Ind>=0; Ind--) // идем с последнего
-//    {
-//      if (CommentsOTDR[Ind]<0x20) CommentsOTDR[Ind]=' '; //если управляющие, то делаем их "пробелом"
-//      else if (CommentsOTDR[Ind]!=' ' && IndexCommOTDR == 0)IndexCommOTDR = Ind; // фиксируем длину строки до первого НЕ"прбела"
-//      //Index_Comm --;
-//    }
-//    if ((CommentsOTDR[IndexCommOTDR]!=' ')&&(IndexCommOTDR!=18))IndexCommOTDR ++;// если указатель на не пробел и это не последний, то увеличиваем указатель
+    // подготовка строки комментария для редакции
+    IndexCommOTDR = 0;
+    CommentsOTDR[ARRAY_SIZE(CommentsOTDR)-1]=0; // последний элемент в массиве равен 0
+    for (int Ind =ARRAY_SIZE(CommentsOTDR)-2; Ind>=0; Ind--) // идем с последнего
+    {
+      if (CommentsOTDR[Ind]<0x20) CommentsOTDR[Ind]=' '; //если управляющие, то делаем их "пробелом"
+      else if (CommentsOTDR[Ind]!=' ' && IndexCommOTDR == 0)IndexCommOTDR = Ind; // фиксируем длину строки до первого НЕ"прбела"
+      //Index_Comm --;
+    }
+    if ((CommentsOTDR[IndexCommOTDR]!=' ')&&(IndexCommOTDR!=18))IndexCommOTDR ++;// если указатель на не пробел и это не последний, то увеличиваем указатель
     KbPosX = 11;
     KbPosY = 2;
     // было старт терперь снова редактор сохранения
@@ -2850,6 +2855,13 @@ void ModeKeyBoardOTDR(void) // режим отображения клавиатуры редактора комментари
     //CommentsOLT[15]=0;
     for(int i=IndexCommOTDR; i<ARRAY_SIZE(CommentsOTDR); i++) CommentsOTDR[i]=' ';
     CommentsOTDR[ARRAY_SIZE(CommentsOTDR)-1]=0;
+    // сохраним комментарий
+   memcpy(NameDB.UserComm,CommentsOTDR,20); 
+    //for(int i=0; i<20; i++) 
+    //NameDB.UserComm[i]=CommentsOTDR[i];
+
+    WriteNeedStruct(0x10);
+  
     //CommentsOTDR[ARRAY_SIZE(CommentsOTDR)-1]=0xd;
     //    memcpy (PONI.CommUserPM, CommentsOLT,16);
     //    RX_BufNEX[31]=0xd;
@@ -2863,10 +2875,13 @@ void ModeKeyBoardOTDR(void) // режим отображения клавиатуры редактора комментари
     // обработка кнопки Ок
   {
     myBeep(7);
-      sprintf(Str, "click brok,1яяя"); // тест кнопка ок на клавиатуре
+    //  sprintf(Str, "click brok,1яяя"); // тест кнопка ок на клавиатуре
+    //NEX_Transmit((void*)Str);    //
+      sprintf(Str, "click bok,1яяя"); // тест кнопка ок на клавиатуре ENGLISH
     NEX_Transmit((void*)Str);    //
-      sprintf(Str, "click bok,1яяя"); // тест кнопка ок на клавиатуре
-    NEX_Transmit((void*)Str);    //
+    // здесь реально отвечает через не более 2 мС
+    // StartRecievNEX (10);// время ожидания начала ответов от индикатора
+
   }
   // выход без сохранения
   if (((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))||(NeedReturn))
@@ -4602,7 +4617,7 @@ void ModeSelectMEM(void) // режим выбора работы с памятью CHECK_OFF
       ModeMemDraw = VIEWNEXT;
       ReturnMemView = 1; // надо вернуться сюда же по ESC
          // посылка команды переключения окна на Mem_OTDR_garaph (вызов)  
-      CmdInitPage(33);
+      CmdInitPage(33); // новое окно лист бокс перечня директорий
        //CreatDelay(1000000);
   HAL_Delay(100);
     
@@ -6743,13 +6758,16 @@ int SaveNewOTDRTrace (BYTE Mode)
   ModeDevice = MODEMEMR;
   TimeSaveOTDR = RTCGetTime(); // сохраняем время сбора
   myBeep(10);
-  Ret = SaveTrace();
+  
+  Ret = 1;
+  //  SaveTrace(); // сохраняем текущую трассу(по плученному
+    SaveFileSD(1); // сохраняем текущую трассу( on SD Card
   //sprintf(txtout,"%s %d\r",CommentsOTDR,Ret);//c
   //      UARTSend0 ((BYTE*)txtout, strlen (txtout));
 
   if (Ret) ModeMemDraw = SAVEDTRACE;
   else ModeMemDraw = MEMFULL;
-  if (Mode)
+  if (Mode) // сохранение по UART
   {
     if (Ret) sprintf(BufStrOut,"Trace saved %d\r",Ret);//c
     else sprintf(BufStrOut,"Mem full\r");//c

@@ -16,7 +16,7 @@ volatile BYTE UART2TxEmpty = 1;
 volatile BYTE UART2Buffer[BUFSIZEUART2];
 volatile DWORD UART2Count = 0;
 volatile DWORD RecievNEX = STOP_UART;
-volatile BYTE RX_BufNEX[BUFSIZEUART2];
+uint8_t RX_BufNEX[BUFSIZEUART2];
 volatile DWORD CntRXNEX = 0;
 volatile BYTE Uart2DecYes = 0;
 volatile BYTE ReadyNEX=0; // готовность управления NEXTION
@@ -57,7 +57,7 @@ void StartRecievNEX (uint32_t TimeOut) // подготовка ожидания ответа от Nextionв
   ReadyNEX = 0; // чистим признак принятой команды с дешифровкой ( если разпознали ответ установливаем его номер)
   CountTimerUart2 = TimeOut;// уСТАНВЛИВАЕМ ВРЕМЯ ЗАДЕРЖКИ в mS 
   uint16_t  Dummy = huart7.Instance->RDR ; // чистим буффер приема от NEXTION
-  HAL_UART_Receive_IT(&huart7, RxBufExt,1); // ждем принятия первого байта из внешнего мира
+  HAL_UART_Receive_IT(&huart7, RX_BufNEX,1); // ждем принятия первого байта из внешнего мира
 
 }
 
