@@ -2911,10 +2911,6 @@ void ModeFileMngDir(void) // режим файл менеджера директорий
 {
   char Str[32];
   
-  if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==UP_SHORT_PRESSED)) // переход в режим просмотра с переключением зума
-  {
-    myBeep(10);
-  }
   if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED)) 
   {
     myBeep(10);
@@ -2943,7 +2939,7 @@ void ModeFileMngDir(void) // режим файл менеджера директорий
   }
   if (g_NeedScr)
   {
-    sprintf(Str, "t13.txt=\"%d\"€€€", IndexNameDir); // < кака€ папка выбрана >
+    sprintf(Str, "t13.txt=\"%d\"€€€", IndexNameDir+1); // < кака€ папка выбрана >
     NEX_Transmit((void*)Str);    //
     if (IndexNameDir > NumNameDir) IndexNameDir = 0; 
     // тут нужен сложный подсчет указател€ на папки в индикации
@@ -2971,6 +2967,22 @@ void ModeFileMngDir(void) // режим файл менеджера директорий
     // код подсветки требуемой строки если есть есть маркер строки
     g_NeedScr = 0;
   }
+  // обработка кнопки "OK"
+  if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==UP_SHORT_PRESSED)) // переход в режим просмотра с переключением зума
+  {
+    myBeep(10);
+      SetMode(ModeFileMngFiles);
+      ModeDevice = MODEMEMR;
+      ModeMemDraw = VIEWNEXT;
+      ReturnMemView = 1; // надо вернутьс€ сюда же по ESC
+         // посылка команды переключени€ окна на Mem_OTDR_garaph (вызов)  
+      //KeyP = 0;
+      ClrKey(BTN_OK);
+      CmdInitPage(34); // новое окно лист бокс перечн€ директорий
+       //CreatDelay(1000000);
+      HAL_Delay(100);
+  }
+
   if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
   {
     // здесь над витвитс€ в зависимости от признака откуда пришли
@@ -2982,6 +2994,93 @@ void ModeFileMngDir(void) // режим файл менеджера директорий
       myBeep(10);
       // посылка команды переключени€ окна на Memory (возврат)  
       CmdInitPage(4);
+    }
+  }
+}
+
+// вызываем чтение SD Card дл€ поиска файлов , составл€ем список
+// "правильных" файлов, устанавливаем курсоры если они не изменились,
+// если не совпадают с полученными размерами сбрасываем в начало
+// вызываем ќ Ќќ 34
+void ModeFileMngFiles(void) // режим файл менеджера файлов
+{
+  char Str[32];
+  if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==UP_SHORT_PRESSED)) // переход в режим просмотра с переключением зума
+  {
+    myBeep(10);
+  }
+  if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED)) 
+  {
+    myBeep(10);
+    if(IndexNameFiles>0)IndexNameFiles--;
+    g_NeedScr=1;
+  }
+  if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
+  {
+    myBeep(10);
+    if((IndexNameFiles+1)<NumNameFiles)IndexNameFiles++;
+    g_NeedScr=1;
+  }
+  if (g_FirstScr)
+  {
+    SDMMC_SDCard_FILES(); // прочитаем файлы, 
+    // здесь заполн€ем данными пол€ нового индикатора
+    // не требущие изменени€ при первичной инициализации
+    sprintf(Str, "t0.txt=\"0:/_OTDR/%s\"€€€",NameDir[IndexNameDir]); // < событиe >
+    NEX_Transmit((void*)Str);    //
+    sprintf(Str, "t14.txt=\"%d\"€€€", NumNameFiles); // < сколько файлов нашли >
+    NEX_Transmit((void*)Str);    //
+    
+    
+    g_FirstScr = 0;
+    g_NeedScr = 1;
+  }
+  if (g_NeedScr)
+  {
+    sprintf(Str, "t13.txt=\"%d\"€€€", IndexNameFiles+1); // < какой файл выбран >
+    NEX_Transmit((void*)Str);    //
+    if (IndexNameFiles > NumNameFiles) IndexNameFiles = 0; 
+    // тут нужен сложный подсчет указател€ на папки в индикации
+    // из выполнени€ условий текущий индекс папки должен быть меньше
+    // числа паѕок,и индикационный тндекс должен устанавливатьс€ в соответствии с 
+    // текущим индексом выбранной папки
+    IndexLCDNameFiles = IndexNameFiles%12; // как как у нас 12 полей
+    PageFiles = IndexNameFiles/12; // получим страницу перечн€ директорий котрую нужно отображать
+    // заполним пол€ индикатора именами директорий
+    for (int i=0; i<12; i++)
+    {
+      
+      sprintf(Str, "t%d.txt=\"%s\"€€€",i+1 ,NameFiles[PageFiles*12+i]); // < событиe >
+      NEX_Transmit((void*)Str);    //
+      
+    }
+    // здесь можно прочитать файл на котрый указываем и разобрать его
+    for (int i=0; i<12; i++)
+    {
+      // закрасим бэкграунды  и установим требуемый
+      sprintf(Str,"t%d.bco=WHITE€€€",i+1); // белый
+      NEX_Transmit((void*)Str);// 
+    }
+    sprintf(Str,"t%d.bco=GREEN€€€",IndexLCDNameFiles+1); // GREEN
+    NEX_Transmit((void*)Str);    //
+    // код подсветки требуемой строки если есть есть маркер строки
+    g_NeedScr = 0;
+  }
+  if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
+  {
+    // здесь над витвитс€ в зависимости от признака откуда пришли
+    if(ReturnMemView)
+    {
+      SetMode(ModeFileMngDir);
+      ModeDevice = MODEMEMR;
+      ModeMemDraw = VIEWNEXT;
+      ReturnMemView = 1; // надо вернутьс€ сюда же по ESC
+         // посылка команды переключени€ окна на Mem_OTDR_garaph (вызов)  
+      //KeyP = 0;
+      ClrKey(BTN_MENU);
+      CmdInitPage(34); // новое окно лист бокс перечн€ директорий
+       //CreatDelay(1000000);
+      HAL_Delay(100);
     }
   }
 }
@@ -4541,8 +4640,8 @@ void ModeSelectMEM(void) // режим выбора работы с пам€тью CHECK_OFF
     FrSelectMEM = ChangeFrSet (FrSelectMEM, 2+PowerMeter, 1, PLUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_DOWN);
   }
-
-
+  
+  
   if (g_FirstScr)
   {
     // здесь заполн€ем данными пол€ нового индикатора
@@ -4550,39 +4649,39 @@ void ModeSelectMEM(void) // режим выбора работы с пам€тью CHECK_OFF
     // «десь практичски все пол€ 
     sprintf(Str, "t0.txt=\"%s\"€€€", MsgMass[42][CurrLang]);
     NEX_Transmit((void*)Str);    // ѕам€ть
-
+    
     sprintf(Str, "t1.txt=\"%s\"€€€", MsgMass[43][CurrLang]);
     NEX_Transmit((void*)Str);    // свободно
-
+    
     sprintf(Str, "t2.txt=\"%s\"€€€", MsgMass[7][CurrLang]);
     NEX_Transmit((void*)Str);    // –≈‘Ћ≈ “ќћ≈“–
-
+    
     sprintf(Str, "t3.txt=\"%4d\"€€€", MAXMEMALL-GetNumTraceSaved(0));
     NEX_Transmit((void*)Str);    // сколько свободно
     
-  if (PowerMeter) // есть измеритель
-  {
-
-    sprintf(Str, "t4.txt=\"%s\"€€€", MsgMass[74][CurrLang]);
-    NEX_Transmit((void*)Str);    // »«ћ≈–»“≈Ћ№
-
-    sprintf(Str, "t5.txt=\"%4d\"€€€",MaxMemPM-GetCellMem(0));
-    NEX_Transmit((void*)Str);    // »«ћ≈–»“≈Ћ№ (число €чеек)
-
-    sprintf(Str, "t6.txt=\"%s\"€€€", MsgMass[44][CurrLang]);
-    NEX_Transmit((void*)Str);    // ќ„»—“ ј
-  }
-  else  // измерител€ нет
-  {
-    sprintf(Str, "t4.txt=\"%s\"€€€", MsgMass[44][CurrLang]);
-    NEX_Transmit((void*)Str);    // ќ„»—“ ј
-    sprintf(Str, "t5.txt=\"\"€€€");
-    NEX_Transmit((void*)Str);    // пустые
-
-    sprintf(Str, "t6.txt=\"\"€€€");
-    NEX_Transmit((void*)Str);    // пустые
-    
-  }
+    if (PowerMeter) // есть измеритель
+    {
+      
+      sprintf(Str, "t4.txt=\"%s\"€€€", MsgMass[74][CurrLang]);
+      NEX_Transmit((void*)Str);    // »«ћ≈–»“≈Ћ№
+      
+      sprintf(Str, "t5.txt=\"%4d\"€€€",MaxMemPM-GetCellMem(0));
+      NEX_Transmit((void*)Str);    // »«ћ≈–»“≈Ћ№ (число €чеек)
+      
+      sprintf(Str, "t6.txt=\"%s\"€€€", MsgMass[44][CurrLang]);
+      NEX_Transmit((void*)Str);    // ќ„»—“ ј
+    }
+    else  // измерител€ нет
+    {
+      sprintf(Str, "t4.txt=\"%s\"€€€", MsgMass[44][CurrLang]);
+      NEX_Transmit((void*)Str);    // ќ„»—“ ј
+      sprintf(Str, "t5.txt=\"\"€€€");
+      NEX_Transmit((void*)Str);    // пустые
+      
+      sprintf(Str, "t6.txt=\"\"€€€");
+      NEX_Transmit((void*)Str);    // пустые
+      
+    }
     
     g_FirstScr = 0;
     g_NeedScr = 1;
@@ -4591,7 +4690,7 @@ void ModeSelectMEM(void) // режим выбора работы с пам€тью CHECK_OFF
   {
     // здесь заполн€ем данными пол€ нового индикатора
     // по результатам изменений вызваныйх обработчиком клавиатуры
-
+    
     // раскрашивание пол€ выбора 
     // закрасим бэкграунды  и установим требуемый
     sprintf(Str, "t2.bco=WHITE€€€"); // белый
@@ -4602,27 +4701,29 @@ void ModeSelectMEM(void) // режим выбора работы с пам€тью CHECK_OFF
     NEX_Transmit((void*)Str);//
     sprintf(Str, "t%d.bco=GREEN€€€", FrSelectMEM<<1); // зеленый
     NEX_Transmit((void*)Str);// 
-                                       // код подсветки требуемой строки если есть есть маркер строки
+    // код подсветки требуемой строки если есть есть маркер строки
     g_NeedScr = 0;
   }
-
+  
   if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
   {
     switch (FrSelectMEM) // выбор по кнопке "ќ "
     {
     case 1: // переход в пам€ть рефлектограмм
       myBeep(10);
-
+      
       //SetMode(ModeMemoryOTDR);
       SetMode(ModeFileMngDir);
       ModeDevice = MODEMEMR;
       ModeMemDraw = VIEWNEXT;
       ReturnMemView = 1; // надо вернутьс€ сюда же по ESC
-         // посылка команды переключени€ окна на Mem_OTDR_garaph (вызов)  
+      // посылка команды переключени€ окна на Mem_OTDR_garaph (вызов)  
+      ClrKey(BTN_OK);
       CmdInitPage(33); // новое окно лист бокс перечн€ директорий
-       //CreatDelay(1000000);
-  HAL_Delay(100);
-    
+      //CreatDelay(1000000);
+      HAL_Delay(100);
+      
+      
       break;
     case 2: // переход в  пам€ти измерител€
       if (PowerMeter) // есть измеритель
@@ -4630,15 +4731,15 @@ void ModeSelectMEM(void) // режим выбора работы с пам€тью CHECK_OFF
         // go to wiev memPM
         if (GetCellMem(0))
         {
-//123!!!       ReadCellIzm(GetCellMem(0)-1,(unsigned char*)&PONI);//  читаем из пам€ти(flash) в PONI €чейку сохранени€ измерител€
-       
-       Sec2Date (PONI.TotalTimeCell, &TimeSaveOLT);
-       myBeep(10);
-       NumCellIzm = GetCellMem(0)-1;
-       SetMode(ModeViewMemOLT);
-       SetModeDevice(MODETESTMEM);
-         // посылка команды переключени€ окна на Mem_OLT_view (вызов)  
-      CmdInitPage(20);
+          //123!!!       ReadCellIzm(GetCellMem(0)-1,(unsigned char*)&PONI);//  читаем из пам€ти(flash) в PONI €чейку сохранени€ измерител€
+          
+          Sec2Date (PONI.TotalTimeCell, &TimeSaveOLT);
+          myBeep(10);
+          NumCellIzm = GetCellMem(0)-1;
+          SetMode(ModeViewMemOLT);
+          SetModeDevice(MODETESTMEM);
+          // посылка команды переключени€ окна на Mem_OLT_view (вызов)  
+          CmdInitPage(20);
         }
       }
       else
@@ -4646,7 +4747,7 @@ void ModeSelectMEM(void) // режим выбора работы с пам€тью CHECK_OFF
         myBeep(10);
         SetMode(ModeClearMEM);
         FrClearMEM = 2 + PowerMeter;
-         // посылка команды переключени€ окна на Select_MEM_Clr(вызов)  
+        // посылка команды переключени€ окна на Select_MEM_Clr(вызов)  
         CmdInitPage(21);
         //NeedReturn = 4; // что бы вернутс€ сюда же
       }
@@ -4655,21 +4756,21 @@ void ModeSelectMEM(void) // режим выбора работы с пам€тью CHECK_OFF
       myBeep(10);
       SetMode(ModeClearMEM);
       FrClearMEM = 2 + PowerMeter;
-         // посылка команды переключени€ окна на Select_MEM_Clr(вызов)  
+      // посылка команды переключени€ окна на Select_MEM_Clr(вызов)  
       CmdInitPage(21);
-       //NeedReturn = 4; // что бы вернутс€ сюда же
+      //NeedReturn = 4; // что бы вернутс€ сюда же
       break;
     }
-
+    
   }
   if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
   {
     myBeep(10);
     SetMode(ModeMainMenu);
     ModeDevice = MODEMENU;
-            // посылка команды переключени€ окна на MainMenu (возврат)  
+    // посылка команды переключени€ окна на MainMenu (возврат)  
     CmdInitPage(1);
-
+    
   }
 }
 

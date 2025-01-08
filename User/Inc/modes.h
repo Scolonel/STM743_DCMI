@@ -82,6 +82,7 @@ void Mode(void); // режим установок прибора
 void ModeDateTimeSET(void); // режим установок времени
 void ModeCalibrate(void); // режим установки начального смещения
 void ModeFileMngDir(void); // режим файл менеджера директорий
+void ModeFileMngFiles(void); // режим файл менеджера файлов
 
 //void FrBig(unsigned char SW,  char Add); //Большая рамка
 //void FrSmall(unsigned char SW,  char Add);// Маленькая рамка

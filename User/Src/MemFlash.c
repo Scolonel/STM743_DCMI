@@ -6,14 +6,16 @@
 #include "ff.h"
 
 char NameDir[100][6];
-char NameFiles[1000][16];
+char NameFiles[1000][17];
 uint32_t NumNameDir=0; // ÷èñëî èìåí äèğåêòîğèé
 uint32_t IndexNameDir=0;// èíäåêñ äèğğåêòîğèè íà êîòîğóş óêàçûâàåì
 uint32_t IndexLCDNameDir=0;// èíäåêñ óêàçàòåëÿ íà èíäèêàòîğå äèğğåêòîğèè íà êîòîğóş óêàçûâàåì
-uint32_t NumNameFales=0; // ÷èñëî èìåí ôàéëîâ
+uint32_t NumNameFiles=0; // ÷èñëî èìåí ôàéëîâ
 uint32_t IndexNameFiles=0;// èíäåêñ ôàéëà íà êîòîğûé óêàçûâàåì
 uint32_t IndexLCDNameFiles=0;// èíäåêñ óêàçàòåëÿ íà èíäèêàòîğå ôàéëà íà êîòîğûé óêàçûâàåì
 uint32_t PageDir; 
+uint32_t PageFiles; // ñòğàíèöà ôàéëîâ
+
   float TmpACI;
 
 // äëÿ ğàáîòû ñ FatFS è SDCard
@@ -90,6 +92,145 @@ uint32_t StartInitSDcard (void)
   return ret;
 }
 
+
+void SDMMC_SDCard_FILES(void) // ïğî÷èòàåì ñïèñîê ôàéëîâ â äèğåêòîğèè
+{
+  
+  do
+  {
+    //------------------[ Mount The SD Card ]--------------------
+    FR_Status = f_mount(&FatFs, SDPath, 1);
+    if (FR_Status != FR_OK)
+    {
+      break;
+    }
+        HAL_Delay(2);
+
+    // ñîçäàåì èëè ïğîâåğÿåì íàëè÷èå äèğğåêòîğèè _OTDR
+    res = f_mkdir(PathMainDir);//"0:/_OTDR"
+    if(res == FR_EXIST)
+    {
+      //sprintf ((char*)TxBuffer,"Make MainDir Already Is\r");
+      res = FR_OK;
+    }
+//    // òåñòîâîå ñîçäàíèå äèğğåêòîğèè ïî äàòå, äàëåå ıòî íà íàäî
+//    GetFolder(FileNameS);
+//    
+//    sprintf(PathF,"%s/%s",PathMainDir,FileNameS);
+//    res = f_mkdir(PathF);
+//    //res = f_unlink(PathF);
+//    if(res == FR_EXIST)
+//    {
+//      //sprintf ((char*)TxBuffer,"Make MainDir Already Is\r");
+//      res = FR_OK;
+//    }
+//        HAL_Delay(2);
+//    // ïî÷èòàåì äèğåêòîğèè...òîëüêî ÷òî ñîçäàííûå 
+//    res = f_opendir(&dir, PathF);
+//        HAL_Delay(2);
+//    f_closedir(&dir);
+    
+    
+    //else
+    //  sprintf ((char*)TxBuffer,"Make MainDir Ok\r");
+    //UARTSendExt((void*)TxBuffer,strlen(TxBuffer)); // âûäàåì 
+    // ïğîâåğêà îáúåìà ôëıøêè
+    //sprintf(TxBuffer, "00000\nSD Card Mounted Successfully! \r\n\n");
+    // UARTSendExt((void*)TxBuffer,strlen(TxBuffer)); // âûäàåì 
+    //------------------[ Get & Print The SD Card Size & Free Space ]--------------------
+    //f_getfree("", &FreeClusters, &FS_Ptr);
+    //TotalSize = (uint32_t)((FS_Ptr->n_fatent - 2) * FS_Ptr->csize * 0.5);
+    //FreeSpace = (uint32_t)(FreeClusters * FS_Ptr->csize * 0.5);
+    //sprintf(TxBuffer, "Total SD Card Size: %lu Bytes\r\n", TotalSize);
+    //  UARTSendExt((void*)TxBuffer,strlen(TxBuffer)); // âûäàåì 
+    //sprintf(TxBuffer, "Free SD Card Space: %lu Bytes\r\n\n", FreeSpace);
+    //  UARTSendExt((void*)TxBuffer,strlen(TxBuffer)); // âûäàåì 
+    
+    NumNameFiles=0; // ÷èñëî èìåí 
+    IndexNameFiles=0;// èíäåêñ ôàéëà íà êîòîğûé óêàçûâàåì
+    IndexLCDNameFiles=0;// èíäåêñ óêàçàòåëÿ íà èíäèêàòîğå ôàéëà íà êîòîğûé óêàçûâàåì
+    //NameDir[IndexNameDir][0] = 0; // îáíóëèì ìàññèâ  
+    memset(&NameFiles,0,sizeof(NameFiles));
+    // ïî÷èòàåì ñïèñîê ôàéëîâ â äàííîé äèğåêòîğèè (ïî óêàçàòåëş íà äèğåêòîğèş áåğåì ïóòü ê ôàéëàì...
+          //ñîçäàäèì ïîëíû ïóòü ê äèğåêòîğèè  ÷òîáû å¸ îòêğûòü
+    sprintf(PathFileS,"%s/%s",PathMainDir,NameDir[IndexNameDir]);
+   
+    res = f_opendir(&dir, PathFileS);
+    if(res == FR_OK)
+    {
+      while(1)
+      {
+        res = f_readdir(&dir, &fno);
+        
+        if(res != FR_OK || fno.fname[0] == 0) // íåò äèğğåêòîğèé âûõîäèì
+          break;
+        
+        //      if(fno.fname[0] != 0) // âğîäå ıòî èìåíà ôàéëîâ
+        //      {
+        //        fn = fno.fname;
+        //              sprintf(TxBuffer, "file/%s\r",fn);
+        //      UARTSendExt((void*)TxBuffer,strlen(TxBuffer)); // âûäàåì 
+        //        
+        //      }
+        //      
+        //if(fno.fname[0] == '.')
+        //{ // âûâîäèì èìåíà äèğğåêòîğèé
+        //continue;
+        
+        fn = fno.fname; 
+        
+        // ïîğîáóåì íàéòè ôàéëû
+        //1) åñòü â íóæíîì ìåñòå _ è .sor
+          if((strlen(fn) == 16)&&(fn[6]=='_')&&(fn[12]=='.')&&(fn[13]=='s')&&(fn[14]=='o')&&(fn[15]=='r')) // íàø ğàçìåğ òåïåğü ïğîâåğèì ñîäåğæèìîå
+          {
+            // 2) ïğîâåğèì ÷òî â èìåíè öèôğû
+                       // ïğîâåğêà íà ñîñòàâ èìåíè ôàéëà
+            //if((fn[0]>='0'&&fn[0]<='9')&&(fn[1]>='0'&&fn[1]<='9')&&(fn[2]>='0'&&fn[2]<='9')&&(fn[3]>='0'&&fn[3]<='9')&&(fn[4]>='0'&&fn[4]<='9')&&(fn[5]>='0'&&fn[5]<='9')&&(fn[7]>='0'&&fn[7]<='9')&&(fn[8]>='0'&&fn[8]<='9')&&(fn[9]>='0'&&fn[9]<='9')&&(fn[10]>='0'&&fn[10]<='9')&&(fn[11]>='0'&&fn[11]<='9'))
+            //{
+              memcpy( &NameFiles[NumNameFiles],fn,16);
+              NameFiles[NumNameFiles][16]=0;
+              NumNameFiles++;
+              //            sprintf(TxBuffer, "dir/%s\r",fn);
+            //}
+ 
+          }
+//        if((fno.fattrib & AM_DIR) == AM_DIR) // äèğğåêòîğèè
+//        {
+//          // ıòî äèğåêòîğèè - íàäî ïğîâåğèòü èìÿ è çàïèñòü â ñïèñîê
+//          if((strlen(fn) == 5)&&(fn[2]=='_')) // íàø ğàçìåğ òåïåğü ïğîâåğèì ñîäåğæèìîå
+//          {
+//            // ïğîâåğêà íà ñîñòàâ èìåíè äèğåêòîğèè
+//            if((fn[0]>='0'&&fn[0]<='9')&&(fn[1]>='0'&&fn[1]<='9')&&(fn[3]>='0'&&fn[3]<='9')&&(fn[4]>='0'&&fn[4]<='9'))
+//            {
+//              memcpy( &NameDir[NumNameDir],fn,5);
+//              NameDir[NumNameDir][5]=0;
+//              NumNameDir++;
+//              //            sprintf(TxBuffer, "dir/%s\r",fn);
+//            }
+//          }
+//          else
+//            TxBuffer[0] = 0;
+//          
+//        }
+        //        else // ôàéëû,
+        //        {
+        //                        sprintf(TxBuffer, "file/%s\r",fn);
+        //
+        //        }
+        //      UARTSendExt((void*)TxBuffer,strlen(TxBuffer)); // âûäàåì 
+        
+        //}
+      }
+    }
+    
+    f_closedir(&dir);
+    
+    
+  } while(0);
+  //------------------[ Test Complete! Unmount The SD Card ]--------------------
+  FR_Status = f_mount(NULL, "", 0);
+}
+
 // Íîâàÿ ñèñòåìà ğàáîòû ñ ôàéëàìè, îíè õğàíÿòñÿ íà SD card
 //×óæàÿ ïğîãğàììà òåñòà ğàáîòû FATFS in SDMMC2 with SD_Card
 void SDMMC_SDCard_DIR(void) // ïğî÷èòàåì äèğğåêòğîèè
@@ -143,7 +284,7 @@ void SDMMC_SDCard_DIR(void) // ïğî÷èòàåì äèğğåêòğîèè
     //  UARTSendExt((void*)TxBuffer,strlen(TxBuffer)); // âûäàåì 
     //sprintf(TxBuffer, "Free SD Card Space: %lu Bytes\r\n\n", FreeSpace);
     //  UARTSendExt((void*)TxBuffer,strlen(TxBuffer)); // âûäàåì 
-    
+    uint32_t OldIndexNameDir = IndexNameDir;
     NumNameDir=0; // ÷èñëî èìåí äèğåêòîğèé
     IndexNameDir=0;// èíäåêñ äèğğåêòîğèè íà êîòîğóş óêàçûâàåì
     IndexLCDNameDir=0;// èíäåêñ óêàçàòåëÿ íà èíäèêàòîğå äèğğåêòîğèè íà êîòîğóş óêàçûâàåì
@@ -202,7 +343,8 @@ void SDMMC_SDCard_DIR(void) // ïğî÷èòàåì äèğğåêòğîèè
         //}
       }
     }
-    
+    if(OldIndexNameDir <= NumNameDir)
+      IndexNameDir = OldIndexNameDir;
     f_closedir(&dir);
     
     

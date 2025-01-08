@@ -147,14 +147,15 @@ void NEX_Transmit(uint8_t *Str);
 WORD TimerPA (BYTE Set);
 
 extern char NameDir[100][6];
-extern char NameFiles[1000][16];
+extern char NameFiles[1000][17];
 extern uint32_t NumNameDir; // число имен директорий
 extern uint32_t IndexNameDir;// индекс дирректории на которую указываем
 extern uint32_t IndexLCDNameDir;// индекс указателя на индикаторе дирректории на которую указываем
-extern uint32_t NumNameFales; // число имен файлов
+extern uint32_t NumNameFiles; // число имен файлов
 extern uint32_t IndexNameFiles;// индекс файла на который указываем
 extern uint32_t IndexLCDNameFiles;// индекс указателя на индикаторе файла на который указываем
 extern uint32_t PageDir; 
+extern uint32_t PageFiles; 
 
 // структура хранения памяти измерителя
 struct tag_PON

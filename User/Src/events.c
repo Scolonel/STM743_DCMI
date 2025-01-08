@@ -22,7 +22,7 @@ MY_EVNT MyEvenTrace[3*SizeTableEvnt];
 //unsigned short PosEndEvenBlkELMP; // позиция расположения конца линии в отсчетах (надо продублировать для получения данных
 
 static unsigned short CntKeyEvents = 0;
-static unsigned short EnaKeyEvents = 1; //признак разрешения вывода событий в файл белкора
+static unsigned short EnaKeyEvents = 0; //признак разрешения вывода событий в файл белкора
 
 void InitMyEventsTable (void) // инициализация структур внутренних событий
 {
