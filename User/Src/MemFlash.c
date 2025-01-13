@@ -17,6 +17,7 @@ uint32_t PageDir;
 uint32_t PageFiles; // страница файлов
 
   float TmpACI;
+St_File_Sor F_SOR; // содержимое основных параметров файла SOR
 
 // для работы с FatFS и SDCard
   FATFS FatFs;
@@ -1418,6 +1419,7 @@ void SaveFileSD(int Mod)
       old_crc = new_crc;
       c++;
     }
+    // записали 56 или +16 байт в файл = 56 (72)
     // заполняем шапку белкора  62 байт Block=1 (продолжение Мар блока + GenParams)
     GetHeaderBelcore (BufString, 1, NumEventNow); 
     //UARTSendExt ((BYTE*)BufString, 62);
@@ -1431,6 +1433,7 @@ void SaveFileSD(int Mod)
       old_crc = new_crc;
       c++;
     }
+    // записали 56+62 или +16 байт в файл = 118 (134)
     // заполняем шапку белкора  94 байт Block=2 - (SupParams FxdParam)
     GetHeaderBelcore (BufString, 2, NumEventNow); 
     //UARTSendExt ((BYTE*)BufString, 95);
@@ -1444,9 +1447,11 @@ void SaveFileSD(int Mod)
       old_crc = new_crc;
       c++;
     }
+    // записали 118+95 или +16 байт в файл = 213 (229)
+
     // Проверяем и передаем блок событий если он есть (блок событий)
     if (NumEventNow) // если есть события 2 байта +
-      // события в фиксированном размере для каждого 32 байта  +  22 байт общее для всего блока
+      // события в фиксированном размере для каждого 32 байта  +  22 байт общее для всего блока, итого 24+N*32
     {
       // передаем  число событий  2 байта
       //UARTSendExt ((BYTE*)&NumEventNow, 2);

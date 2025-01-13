@@ -3005,6 +3005,11 @@ void ModeFileMngDir(void) // режим файл менеджера директорий
 void ModeFileMngFiles(void) // режим файл менеджера файлов
 {
   char Str[32];
+  char FilPath[64];
+  uint32_t BlkSz; // размер блока заголовка
+  UINT RWC;
+  FATFS FatFs;
+
   if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==UP_SHORT_PRESSED)) // переход в режим просмотра с переключением зума
   {
     myBeep(10);
@@ -3054,7 +3059,23 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов
       NEX_Transmit((void*)Str);    //
       
     }
+        FR_Status = f_mount(&FatFs, SDPath, 1);
+
     // здесь можно прочитать файл на котрый указываем и разобрать его
+    sprintf(FilPath, "0:/_OTDR/%s/%s",NameDir[IndexNameDir],NameFiles[IndexNameFiles]); // путь к файлу
+    // откроем файл и прочитаем размер блока
+        FR_Status = f_open(&Fil, FilPath, FA_READ);
+    if(FR_Status == FR_OK)
+    {
+     f_lseek (&Fil, 2); // переместимс€ на 2 байта
+     f_read (&Fil, (void*)&BlkSz, 4, &RWC);
+     f_lseek (&Fil, BlkSz); // переместимс€ на  байта
+     f_read (&Fil, (void*)&F_SOR, 142, &RWC);
+
+    }
+    f_close(&Fil);
+  FR_Status = f_mount(NULL, "", 0);
+    
     for (int i=0; i<12; i++)
     {
       // закрасим бэкграунды  и установим требуемый
@@ -3064,6 +3085,17 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов
     sprintf(Str,"t%d.bco=GREEN€€€",IndexLCDNameFiles+1); // GREEN
     NEX_Transmit((void*)Str);    //
     // код подсветки требуемой строки если есть есть маркер строки
+        sprintf(Str, "t15.txt=\"%d\"€€€", BlkSz); // < какой файл выбран >
+    NEX_Transmit((void*)Str);    //
+        sprintf(Str, "t16.txt=\"%dnm\"€€€", F_SOR.AW/10); // < какой файл выбран >
+    NEX_Transmit((void*)Str);    //
+        sprintf(Str, "t17.txt=\"%d\"€€€", F_SOR.NPPW); // < какой файл выбран >
+    NEX_Transmit((void*)Str);    //
+        sprintf(Str, "t18.txt=\"%d\"€€€", F_SOR.AR); // < какой файл выбран >
+    NEX_Transmit((void*)Str);    //
+        sprintf(Str, "t19.txt=\"%d\"€€€", F_SOR.NAV); // < какой файл выбран >
+    NEX_Transmit((void*)Str);    //
+
     g_NeedScr = 0;
   }
   if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
