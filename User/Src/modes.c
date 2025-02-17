@@ -1527,10 +1527,10 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     if (RemoutCtrl) TimeMeasure3S  = 3000000; //uS
     // рассчитаем приблизительное число накоплений
     if(LengthOK) // линия правильная,  
-    NumAvrg = (unsigned)(TimeMeasure3S/(NumPointsPeriod[ShadowIndexLN]*TimeRepitOfLN[ShadowIndexLN]));//*NumPointsPeriod[ShadowIndexLN])
+    NumAvrg = (unsigned)(TimeMeasure3S/((NumPointsPeriod[ShadowIndexLN]+1)*TimeRepitOfLN[ShadowIndexLN]+260));//*NumPointsPeriod[ShadowIndexLN])
     // линия плохая
     else
-    NumAvrg = (unsigned)(TimeMeasure3S/(NumPointsPeriod[ShadowIndexLN]*TimeRepitOfLN[IndxAddBad]));//*NumPointsPeriod[ShadowIndexLN])
+    NumAvrg = (unsigned)(TimeMeasure3S/((NumPointsPeriod[ShadowIndexLN]+1)*TimeRepitOfLN[IndxAddBad]+260));//*NumPointsPeriod[ShadowIndexLN])
       
       
                          // число накоплений как деление времени 2.75 сек на промеренную длину в тиках сбора 333ns 
@@ -1541,13 +1541,15 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
       ShadowIndexLN = IndexSeek(Mean);
       ShadowIndexIM = IndexSeek(Mean);
      // NumAvrg = (unsigned)(8250000L/(KeyPoints[ShadowIndexLN]+50)); // число накоплений , было +30
-    NumAvrg = (unsigned)(TimeMeasure3S/(NumPointsPeriod[ShadowIndexLN]*TimeRepitOfLN[ShadowIndexLN]));//*NumPointsPeriod[ShadowIndexLN])
+    //NumAvrg = (unsigned)(TimeMeasure3S/(NumPointsPeriod[ShadowIndexLN]*TimeRepitOfLN[ShadowIndexLN]));//*NumPointsPeriod[ShadowIndexLN])
+    NumAvrg = (unsigned)(TimeMeasure3S/((NumPointsPeriod[ShadowIndexLN]+1)*TimeRepitOfLN[ShadowIndexLN]+260));//*NumPointsPeriod[ShadowIndexLN])
       CurrentSumDelay = 1;
     }
     SetIndexLN(ShadowIndexLN);
     SetIndexIM(ShadowIndexIM);
     PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
-    ValueDS = (unsigned)(MultIndex[GetIndexLN()]*(ADCPeriod*50000)/PointsPerPeriod); //  устанавливаем значения DS для установленного режима измерения
+    //ValueDS = (unsigned)(MultIndex[GetIndexLN()]*(ADCPeriod*50000)/PointsPerPeriod); //  устанавливаем значения DS для установленного режима измерения
+    ValueDS = GetValueDS(); //  устанавливаем значения DS для установленного режима измерения
     // корректировка накоплений в соответствии с числом точек на период
     //NumAvrg = NumAvrg/PointsPerPeriod; // расчетное число накоплений за 1 секунду
     // для нового индикатора
@@ -1761,7 +1763,9 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
       SaveLogNoise(); // сохраняем уровень шумов(перед импульсом в дБ (NF)
       //123      TraceERASE(0); // стирание трассы (0) в старом для сохранеия параметров измерения, что бы
       //123      TraceWRITE(0); // запись трассы (0) при следующем включении востановить параметры по этой (нулевой)
+      
       // рефлектограмме, в новом надо по другому...
+      SaveFileSD(0); // сохраняем в НУЛЕВУЮ
       IndexEvents=0; // указатель на событие (характеристика линии)
       if (SetGetMonEna(255)) PrintEventTbl(); // если установлен признак выдаем по RS таблицу событий
       // если установлен признак автоматического измерения, надо повторить измерение на новой длинне волны и сохранить текущее
@@ -1778,6 +1782,7 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
         memcpy( CommentsOTDR,FileNameOTDR, 20 );
         // сохраняем рефлектограмму в памяти 
         //123 !!!!        if (SaveTrace())
+        SaveFileSD(1);
         if (1)
         {
           CntLS++;
@@ -1910,6 +1915,8 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
       
 //123      TraceERASE(0); // стирание трассы (0)
 //123      TraceWRITE(0); // запись трассы (0)
+      SaveFileSD(0); // сохраняем нулевую трассу
+
       CmdInitPage(18);// посылка команды переключения окна на просмотра рефлектограммы DrawOTDRView
       
     }
@@ -2302,7 +2309,7 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     rct.left=0;
     rct.top=0;
     paramsN.scale=(paramsN.scale>=16)?(InitScale):(paramsN.scale);
-    unsigned CurrSM = MakeGraphNext( &rct, LogData, 4096, &paramsN );// тут пересчитываем данные для графика (его вывод) в зависимости от параметров
+    unsigned CurrSM = MakeGraphNext( &rct, LogData, POINTSIZE, &paramsN );// тут пересчитываем данные для графика (его вывод) в зависимости от параметров
     // теперь нарисуем курсор в рамках Y=0..210
     CurrRed = (CurrSM & 0xffff);
     CurrBlue = (CurrSM>>16);
@@ -2495,16 +2502,16 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     myBeep(10);
     CheckCommOTDR ();// проверка и корректировка строки комментариев OTDR
 
-//    // подготовка строки комментария для редакции
-//    IndexCommOTDR = 0;
-//    CommentsOTDR[ARRAY_SIZE(CommentsOTDR)-1]=0; // последний элемент в массиве равен 0
-//    for (int Ind =ARRAY_SIZE(CommentsOTDR)-2; Ind>=0; Ind--) // идем с последнего
-//    {
-//      if (CommentsOTDR[Ind]<0x20) CommentsOTDR[Ind]=' '; //если управляющие, то делаем их "пробелом"
-//      else if (CommentsOTDR[Ind]!=' ' && IndexCommOTDR == 0)IndexCommOTDR = Ind; // фиксируем длину строки до первого НЕ"прбела"
-//      //Index_Comm --;
-//    }
-//    if ((CommentsOTDR[IndexCommOTDR]!=' ')&&(IndexCommOTDR!=18))IndexCommOTDR ++;// если указатель на не пробел и это не последний, то увеличиваем указатель
+    // подготовка строки комментария для редакции
+    IndexCommOTDR = 0;
+    CommentsOTDR[ARRAY_SIZE(CommentsOTDR)-1]=0; // последний элемент в массиве равен 0
+    for (int Ind =ARRAY_SIZE(CommentsOTDR)-2; Ind>=0; Ind--) // идем с последнего
+    {
+      if (CommentsOTDR[Ind]<0x20) CommentsOTDR[Ind]=' '; //если управляющие, то делаем их "пробелом"
+      else if (CommentsOTDR[Ind]!=' ' && IndexCommOTDR == 0)IndexCommOTDR = Ind; // фиксируем длину строки до первого НЕ"прбела"
+      //Index_Comm --;
+    }
+    if ((CommentsOTDR[IndexCommOTDR]!=' ')&&(IndexCommOTDR!=18))IndexCommOTDR ++;// если указатель на не пробел и это не последний, то увеличиваем указатель
     KbPosX = 11;
     KbPosY = 2;
     // было старт терперь снова редактор сохранения
@@ -2849,6 +2856,13 @@ void ModeKeyBoardOTDR(void) // режим отображения клавиатуры редактора комментари
     //CommentsOLT[15]=0;
     for(int i=IndexCommOTDR; i<ARRAY_SIZE(CommentsOTDR); i++) CommentsOTDR[i]=' ';
     CommentsOTDR[ARRAY_SIZE(CommentsOTDR)-1]=0;
+    // сохраним комментарий
+   memcpy(NameDB.UserComm,CommentsOTDR,20); 
+    //for(int i=0; i<20; i++) 
+    //NameDB.UserComm[i]=CommentsOTDR[i];
+
+    WriteNeedStruct(0x10);
+  
     //CommentsOTDR[ARRAY_SIZE(CommentsOTDR)-1]=0xd;
     //    memcpy (PONI.CommUserPM, CommentsOLT,16);
     //    RX_BufNEX[31]=0xd;
@@ -2862,10 +2876,13 @@ void ModeKeyBoardOTDR(void) // режим отображения клавиатуры редактора комментари
     // обработка кнопки Ок
   {
     myBeep(7);
-      sprintf(Str, "click brok,1яяя"); // тест кнопка ок на клавиатуре
+    //  sprintf(Str, "click brok,1яяя"); // тест кнопка ок на клавиатуре
+    //NEX_Transmit((void*)Str);    //
+      sprintf(Str, "click bok,1яяя"); // тест кнопка ок на клавиатуре ENGLISH
     NEX_Transmit((void*)Str);    //
-      sprintf(Str, "click bok,1яяя"); // тест кнопка ок на клавиатуре
-    NEX_Transmit((void*)Str);    //
+    // здесь реально отвечает через не более 2 мС
+    // StartRecievNEX (10);// время ожидания начала ответов от индикатора
+
   }
   // выход без сохранения
   if (((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))||(NeedReturn))
@@ -2886,6 +2903,219 @@ void ModeKeyBoardOTDR(void) // режим отображения клавиатуры редактора комментари
   }
 }
 
+// вызываем чтение SD Card для поиска директорий, составляем список
+// "правильных" директорий, устанавливаем курсоры если они не изменились,
+// если не совпадают с полученными размерами сбрасываем в начало
+// вызываем ОКНО 33
+void ModeFileMngDir(void) // режим файл менеджера директорий
+{
+  char Str[32];
+  
+  if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED)) 
+  {
+    myBeep(10);
+    if(IndexNameDir>0)IndexNameDir--;
+    g_NeedScr=1;
+  }
+  if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
+  {
+    myBeep(10);
+    if((IndexNameDir+1)<NumNameDir)IndexNameDir++;
+    g_NeedScr=1;
+  }
+  if (g_FirstScr)
+  {
+    SDMMC_SDCard_DIR(); // прочитаем дирректроии
+    // здесь заполняем данными поля нового индикатора
+    // не требущие изменения при первичной инициализации
+    sprintf(Str, "t0.txt=\"0:/_OTDR\"яяя"); // < событиe >
+    NEX_Transmit((void*)Str);    //
+    sprintf(Str, "t14.txt=\"%d\"яяя", NumNameDir); // < сколько папок нашли >
+    NEX_Transmit((void*)Str);    //
+    
+    
+    g_FirstScr = 0;
+    g_NeedScr = 1;
+  }
+  if (g_NeedScr)
+  {
+    sprintf(Str, "t13.txt=\"%d\"яяя", IndexNameDir+1); // < какая папка выбрана >
+    NEX_Transmit((void*)Str);    //
+    if (IndexNameDir > NumNameDir) IndexNameDir = 0; 
+    // тут нужен сложный подсчет указателя на папки в индикации
+    // из выполнения условий текущий индекс папки должен быть меньше
+    // числа паПок,и индикационный тндекс должен устанавливаться в соответствии с 
+    // текущим индексом выбранной папки
+    IndexLCDNameDir = IndexNameDir%12; // как как у нас 12 полей
+    PageDir = IndexNameDir/12; // получим страницу перечня директорий котрую нужно отображать
+    // заполним поля индикатора именами директорий
+    for (int i=0; i<12; i++)
+    {
+      
+      sprintf(Str, "t%d.txt=\"%s\"яяя",i+1 ,NameDir[PageDir*12+i]); // < событиe >
+      NEX_Transmit((void*)Str);    //
+      
+    }
+    for (int i=0; i<12; i++)
+    {
+      // закрасим бэкграунды  и установим требуемый
+      sprintf(Str,"t%d.bco=WHITEяяя",i+1); // белый
+      NEX_Transmit((void*)Str);// 
+    }
+    sprintf(Str,"t%d.bco=GREENяяя",IndexLCDNameDir+1); // GREEN
+    NEX_Transmit((void*)Str);    //
+    // код подсветки требуемой строки если есть есть маркер строки
+    g_NeedScr = 0;
+  }
+  // обработка кнопки "OK"
+  if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==UP_SHORT_PRESSED)) // переход в режим просмотра с переключением зума
+  {
+    myBeep(10);
+      SetMode(ModeFileMngFiles);
+      ModeDevice = MODEMEMR;
+      ModeMemDraw = VIEWNEXT;
+      ReturnMemView = 1; // надо вернуться сюда же по ESC
+         // посылка команды переключения окна на Mem_OTDR_garaph (вызов)  
+      //KeyP = 0;
+      ClrKey(BTN_OK);
+      CmdInitPage(34); // новое окно лист бокс перечня директорий
+       //CreatDelay(1000000);
+      HAL_Delay(100);
+  }
+
+  if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
+  {
+    // здесь над витвится в зависимости от признака откуда пришли
+    if(ReturnMemView)
+    {
+      //DeleteTrace = 0;
+      SetMode(ModeSelectMEM);
+      ModeDevice = MODEOTHER;
+      myBeep(10);
+      // посылка команды переключения окна на Memory (возврат)  
+      CmdInitPage(4);
+    }
+  }
+}
+
+// вызываем чтение SD Card для поиска файлов , составляем список
+// "правильных" файлов, устанавливаем курсоры если они не изменились,
+// если не совпадают с полученными размерами сбрасываем в начало
+// вызываем ОКНО 34
+void ModeFileMngFiles(void) // режим файл менеджера файлов
+{
+  char Str[32];
+  char FilPath[64];
+  uint32_t BlkSz; // размер блока заголовка
+  UINT RWC;
+  FATFS FatFs;
+
+  if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==UP_SHORT_PRESSED)) // переход в режим просмотра с переключением зума
+  {
+    myBeep(10);
+  }
+  if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED)) 
+  {
+    myBeep(10);
+    if(IndexNameFiles>0)IndexNameFiles--;
+    g_NeedScr=1;
+  }
+  if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
+  {
+    myBeep(10);
+    if((IndexNameFiles+1)<NumNameFiles)IndexNameFiles++;
+    g_NeedScr=1;
+  }
+  if (g_FirstScr)
+  {
+    SDMMC_SDCard_FILES(); // прочитаем файлы, 
+    // здесь заполняем данными поля нового индикатора
+    // не требущие изменения при первичной инициализации
+    sprintf(Str, "t0.txt=\"0:/_OTDR/%s\"яяя",NameDir[IndexNameDir]); // < событиe >
+    NEX_Transmit((void*)Str);    //
+    sprintf(Str, "t14.txt=\"%d\"яяя", NumNameFiles); // < сколько файлов нашли >
+    NEX_Transmit((void*)Str);    //
+    
+    
+    g_FirstScr = 0;
+    g_NeedScr = 1;
+  }
+  if (g_NeedScr)
+  {
+    sprintf(Str, "t13.txt=\"%d\"яяя", IndexNameFiles+1); // < какой файл выбран >
+    NEX_Transmit((void*)Str);    //
+    if (IndexNameFiles > NumNameFiles) IndexNameFiles = 0; 
+    // тут нужен сложный подсчет указателя на папки в индикации
+    // из выполнения условий текущий индекс папки должен быть меньше
+    // числа паПок,и индикационный тндекс должен устанавливаться в соответствии с 
+    // текущим индексом выбранной папки
+    IndexLCDNameFiles = IndexNameFiles%12; // как как у нас 12 полей
+    PageFiles = IndexNameFiles/12; // получим страницу перечня директорий котрую нужно отображать
+    // заполним поля индикатора именами директорий
+    for (int i=0; i<12; i++)
+    {
+      
+      sprintf(Str, "t%d.txt=\"%s\"яяя",i+1 ,NameFiles[PageFiles*12+i]); // < событиe >
+      NEX_Transmit((void*)Str);    //
+      
+    }
+        FR_Status = f_mount(&FatFs, SDPath, 1);
+
+    // здесь можно прочитать файл на котрый указываем и разобрать его
+    sprintf(FilPath, "0:/_OTDR/%s/%s",NameDir[IndexNameDir],NameFiles[IndexNameFiles]); // путь к файлу
+    // откроем файл и прочитаем размер блока
+        FR_Status = f_open(&Fil, FilPath, FA_READ);
+    if(FR_Status == FR_OK)
+    {
+     f_lseek (&Fil, 2); // переместимся на 2 байта
+     f_read (&Fil, (void*)&BlkSz, 4, &RWC);
+     f_lseek (&Fil, BlkSz); // переместимся на  байта
+     f_read (&Fil, (void*)&F_SOR, 142, &RWC);
+
+    }
+    f_close(&Fil);
+  FR_Status = f_mount(NULL, "", 0);
+    
+    for (int i=0; i<12; i++)
+    {
+      // закрасим бэкграунды  и установим требуемый
+      sprintf(Str,"t%d.bco=WHITEяяя",i+1); // белый
+      NEX_Transmit((void*)Str);// 
+    }
+    sprintf(Str,"t%d.bco=GREENяяя",IndexLCDNameFiles+1); // GREEN
+    NEX_Transmit((void*)Str);    //
+    // код подсветки требуемой строки если есть есть маркер строки
+        sprintf(Str, "t15.txt=\"%d\"яяя", BlkSz); // < какой файл выбран >
+    NEX_Transmit((void*)Str);    //
+        sprintf(Str, "t16.txt=\"%dnm\"яяя", F_SOR.AW/10); // < какой файл выбран >
+    NEX_Transmit((void*)Str);    //
+        sprintf(Str, "t17.txt=\"%d\"яяя", F_SOR.NPPW); // < какой файл выбран >
+    NEX_Transmit((void*)Str);    //
+        sprintf(Str, "t18.txt=\"%d\"яяя", F_SOR.AR); // < какой файл выбран >
+    NEX_Transmit((void*)Str);    //
+        sprintf(Str, "t19.txt=\"%d\"яяя", F_SOR.NAV); // < какой файл выбран >
+    NEX_Transmit((void*)Str);    //
+
+    g_NeedScr = 0;
+  }
+  if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
+  {
+    // здесь над витвится в зависимости от признака откуда пришли
+    if(ReturnMemView)
+    {
+      SetMode(ModeFileMngDir);
+      ModeDevice = MODEMEMR;
+      ModeMemDraw = VIEWNEXT;
+      ReturnMemView = 1; // надо вернуться сюда же по ESC
+         // посылка команды переключения окна на Mem_OTDR_garaph (вызов)  
+      //KeyP = 0;
+      ClrKey(BTN_MENU);
+      CmdInitPage(34); // новое окно лист бокс перечня директорий
+       //CreatDelay(1000000);
+      HAL_Delay(100);
+    }
+  }
+}
 
 void ModeMemoryOTDR(void) // режим отображения сохраненных рефлектограмм и работа с ними
 {
@@ -3005,7 +3235,8 @@ void ModeMemoryOTDR(void) // режим отображения сохраненных рефлектограмм и работ
     DrawMemoryRefl(Trace, CurrLang, g_mem_param);
     // востанавливаем расчетные значения (при отображении рефлектограммы)
     PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
-    ValueDS = (unsigned)((ADCPeriod*50000)/PointsPerPeriod); //  устанавливаем значения DS для установленного режима измерения
+    //ValueDS = (unsigned)((ADCPeriod*50000)/PointsPerPeriod); //  устанавливаем значения DS для установленного режима измерения
+    ValueDS = GetValueDS(); //  устанавливаем значения DS для установленного режима измерения
     ModeMemDraw = VIEWSAVED;
     
     break;
@@ -4441,8 +4672,8 @@ void ModeSelectMEM(void) // режим выбора работы с памятью CHECK_OFF
     FrSelectMEM = ChangeFrSet (FrSelectMEM, 2+PowerMeter, 1, PLUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_DOWN);
   }
-
-
+  
+  
   if (g_FirstScr)
   {
     // здесь заполняем данными поля нового индикатора
@@ -4450,39 +4681,39 @@ void ModeSelectMEM(void) // режим выбора работы с памятью CHECK_OFF
     // Здесь практичски все поля 
     sprintf(Str, "t0.txt=\"%s\"яяя", MsgMass[42][CurrLang]);
     NEX_Transmit((void*)Str);    // Память
-
+    
     sprintf(Str, "t1.txt=\"%s\"яяя", MsgMass[43][CurrLang]);
     NEX_Transmit((void*)Str);    // свободно
-
+    
     sprintf(Str, "t2.txt=\"%s\"яяя", MsgMass[7][CurrLang]);
     NEX_Transmit((void*)Str);    // РЕФЛЕКТОМЕТР
-
+    
     sprintf(Str, "t3.txt=\"%4d\"яяя", MAXMEMALL-GetNumTraceSaved(0));
     NEX_Transmit((void*)Str);    // сколько свободно
     
-  if (PowerMeter) // есть измеритель
-  {
-
-    sprintf(Str, "t4.txt=\"%s\"яяя", MsgMass[74][CurrLang]);
-    NEX_Transmit((void*)Str);    // ИЗМЕРИТЕЛЬ
-
-    sprintf(Str, "t5.txt=\"%4d\"яяя",MaxMemPM-GetCellMem(0));
-    NEX_Transmit((void*)Str);    // ИЗМЕРИТЕЛЬ (число ячеек)
-
-    sprintf(Str, "t6.txt=\"%s\"яяя", MsgMass[44][CurrLang]);
-    NEX_Transmit((void*)Str);    // ОЧИСТКА
-  }
-  else  // измерителя нет
-  {
-    sprintf(Str, "t4.txt=\"%s\"яяя", MsgMass[44][CurrLang]);
-    NEX_Transmit((void*)Str);    // ОЧИСТКА
-    sprintf(Str, "t5.txt=\"\"яяя");
-    NEX_Transmit((void*)Str);    // пустые
-
-    sprintf(Str, "t6.txt=\"\"яяя");
-    NEX_Transmit((void*)Str);    // пустые
-    
-  }
+    if (PowerMeter) // есть измеритель
+    {
+      
+      sprintf(Str, "t4.txt=\"%s\"яяя", MsgMass[74][CurrLang]);
+      NEX_Transmit((void*)Str);    // ИЗМЕРИТЕЛЬ
+      
+      sprintf(Str, "t5.txt=\"%4d\"яяя",MaxMemPM-GetCellMem(0));
+      NEX_Transmit((void*)Str);    // ИЗМЕРИТЕЛЬ (число ячеек)
+      
+      sprintf(Str, "t6.txt=\"%s\"яяя", MsgMass[44][CurrLang]);
+      NEX_Transmit((void*)Str);    // ОЧИСТКА
+    }
+    else  // измерителя нет
+    {
+      sprintf(Str, "t4.txt=\"%s\"яяя", MsgMass[44][CurrLang]);
+      NEX_Transmit((void*)Str);    // ОЧИСТКА
+      sprintf(Str, "t5.txt=\"\"яяя");
+      NEX_Transmit((void*)Str);    // пустые
+      
+      sprintf(Str, "t6.txt=\"\"яяя");
+      NEX_Transmit((void*)Str);    // пустые
+      
+    }
     
     g_FirstScr = 0;
     g_NeedScr = 1;
@@ -4491,7 +4722,7 @@ void ModeSelectMEM(void) // режим выбора работы с памятью CHECK_OFF
   {
     // здесь заполняем данными поля нового индикатора
     // по результатам изменений вызваныйх обработчиком клавиатуры
-
+    
     // раскрашивание поля выбора 
     // закрасим бэкграунды  и установим требуемый
     sprintf(Str, "t2.bco=WHITEяяя"); // белый
@@ -4502,26 +4733,29 @@ void ModeSelectMEM(void) // режим выбора работы с памятью CHECK_OFF
     NEX_Transmit((void*)Str);//
     sprintf(Str, "t%d.bco=GREENяяя", FrSelectMEM<<1); // зеленый
     NEX_Transmit((void*)Str);// 
-                                       // код подсветки требуемой строки если есть есть маркер строки
+    // код подсветки требуемой строки если есть есть маркер строки
     g_NeedScr = 0;
   }
-
+  
   if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
   {
     switch (FrSelectMEM) // выбор по кнопке "ОК"
     {
     case 1: // переход в память рефлектограмм
       myBeep(10);
-
-      SetMode(ModeMemoryOTDR);
+      
+      //SetMode(ModeMemoryOTDR);
+      SetMode(ModeFileMngDir);
       ModeDevice = MODEMEMR;
       ModeMemDraw = VIEWNEXT;
       ReturnMemView = 1; // надо вернуться сюда же по ESC
-         // посылка команды переключения окна на Mem_OTDR_garaph (вызов)  
-      CmdInitPage(13);
-       //CreatDelay(1000000);
-  HAL_Delay(100);
-    
+      // посылка команды переключения окна на Mem_OTDR_garaph (вызов)  
+      ClrKey(BTN_OK);
+      CmdInitPage(33); // новое окно лист бокс перечня директорий
+      //CreatDelay(1000000);
+      HAL_Delay(100);
+      
+      
       break;
     case 2: // переход в  памяти измерителя
       if (PowerMeter) // есть измеритель
@@ -4529,15 +4763,15 @@ void ModeSelectMEM(void) // режим выбора работы с памятью CHECK_OFF
         // go to wiev memPM
         if (GetCellMem(0))
         {
-//123!!!       ReadCellIzm(GetCellMem(0)-1,(unsigned char*)&PONI);//  читаем из памяти(flash) в PONI ячейку сохранения измерителя
-       
-       Sec2Date (PONI.TotalTimeCell, &TimeSaveOLT);
-       myBeep(10);
-       NumCellIzm = GetCellMem(0)-1;
-       SetMode(ModeViewMemOLT);
-       SetModeDevice(MODETESTMEM);
-         // посылка команды переключения окна на Mem_OLT_view (вызов)  
-      CmdInitPage(20);
+          //123!!!       ReadCellIzm(GetCellMem(0)-1,(unsigned char*)&PONI);//  читаем из памяти(flash) в PONI ячейку сохранения измерителя
+          
+          Sec2Date (PONI.TotalTimeCell, &TimeSaveOLT);
+          myBeep(10);
+          NumCellIzm = GetCellMem(0)-1;
+          SetMode(ModeViewMemOLT);
+          SetModeDevice(MODETESTMEM);
+          // посылка команды переключения окна на Mem_OLT_view (вызов)  
+          CmdInitPage(20);
         }
       }
       else
@@ -4545,7 +4779,7 @@ void ModeSelectMEM(void) // режим выбора работы с памятью CHECK_OFF
         myBeep(10);
         SetMode(ModeClearMEM);
         FrClearMEM = 2 + PowerMeter;
-         // посылка команды переключения окна на Select_MEM_Clr(вызов)  
+        // посылка команды переключения окна на Select_MEM_Clr(вызов)  
         CmdInitPage(21);
         //NeedReturn = 4; // что бы вернутся сюда же
       }
@@ -4554,21 +4788,21 @@ void ModeSelectMEM(void) // режим выбора работы с памятью CHECK_OFF
       myBeep(10);
       SetMode(ModeClearMEM);
       FrClearMEM = 2 + PowerMeter;
-         // посылка команды переключения окна на Select_MEM_Clr(вызов)  
+      // посылка команды переключения окна на Select_MEM_Clr(вызов)  
       CmdInitPage(21);
-       //NeedReturn = 4; // что бы вернутся сюда же
+      //NeedReturn = 4; // что бы вернутся сюда же
       break;
     }
-
+    
   }
   if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
   {
     myBeep(10);
     SetMode(ModeMainMenu);
     ModeDevice = MODEMENU;
-            // посылка команды переключения окна на MainMenu (возврат)  
+    // посылка команды переключения окна на MainMenu (возврат)  
     CmdInitPage(1);
-
+    
   }
 }
 
@@ -5994,7 +6228,8 @@ float GetPosLine (unsigned Cursor) // получение длины от позиции курсора
   float PosLine;
   // установим новые значения параметров съема (при чтении файла)
   PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
-  ValueDS = (unsigned)((ADCPeriod*50000)/PointsPerPeriod); //  устанавливаем значения DS для установленного режима измерения
+ //ValueDS = (unsigned)((ADCPeriod*50000)/PointsPerPeriod); //  устанавливаем значения DS для установленного режима измерения
+  ValueDS = GetValueDS(); //  устанавливаем значения DS для установленного режима измерения
 
   PosLine = (float)(LIGHTSPEED*1.0E-14);
   PosLine = PosLine*ValueDS;
@@ -6659,13 +6894,16 @@ int SaveNewOTDRTrace (BYTE Mode)
   ModeDevice = MODEMEMR;
   TimeSaveOTDR = RTCGetTime(); // сохраняем время сбора
   myBeep(10);
-  Ret = SaveTrace();
+  
+  Ret = 1;
+  //  SaveTrace(); // сохраняем текущую трассу(по плученному
+    SaveFileSD(1); // сохраняем текущую трассу( on SD Card
   //sprintf(txtout,"%s %d\r",CommentsOTDR,Ret);//c
   //      UARTSend0 ((BYTE*)txtout, strlen (txtout));
 
   if (Ret) ModeMemDraw = SAVEDTRACE;
   else ModeMemDraw = MEMFULL;
-  if (Mode)
+  if (Mode) // сохранение по UART
   {
     if (Ret) sprintf(BufStrOut,"Trace saved %d\r",Ret);//c
     else sprintf(BufStrOut,"Mem full\r");//c
@@ -6899,7 +7137,8 @@ void SetHeadFileRaw (DWORD NAV)
         while (Index < 8) Head_RAW.Head[7 - Index++]=0x20;
 // разрешение DS
        //Head_RAW.ValDS = (unsigned int)((ADCPeriod*50000)/(NumPointsPeriod[GetIndexLN()])); //  устанавливаем значения DS для установленного режима измерения
-       Head_RAW.ValDS = (unsigned int)((ADCPeriod*50000)/(NumRepit)); //  устанавливаем значения DS для установленного режима измерения
+       //Head_RAW.ValDS = (unsigned int)((ADCPeriod*50000)/(NumRepit)); //  устанавливаем значения DS для установленного режима измерения
+       Head_RAW.ValDS = (unsigned int)GetValueDS(); //  устанавливаем значения DS для установленного режима измерения
 // число накоплений NAV
        Head_RAW.NumAvrg = NAV;
 // длина волны источника, длительность импульса зондирования AW PWU
@@ -6912,7 +7151,7 @@ void SetHeadFileRaw (DWORD NAV)
           // размер окна блокировки, сейчас число точек на период 
             Head_RAW.SizeFrm = (NumRepit);
           //число отсчетов NPPW (на выбранный импульс, он у нас один)
-              Head_RAW.NumPtsMain = 0x1200;
+              Head_RAW.NumPtsMain = RAWSIZE;//0x1200;
 }
 
 // 26.02.2014 
@@ -7015,14 +7254,14 @@ float MeasORL(int NumAvrgThis, int EnaReport)
   // проверим уровень сигнала после импульса
   SumBeg = (RawData[43]+RawData[44]+RawData[45])/(3.0*NumAvrgThis)-SumNoise;
   if(SumBeg>1.8 && SumBeg<400.)
-    Mnozhitel = 40.96/SumBeg;
+    Mnozhitel = 10.24/SumBeg;
   else
     Mnozhitel = 1.0;
   // проверим значения и отнормируем их для суммирования
-  for(int i=0; i<4096; ++i) 
+  for(int i=0; i<POINTSIZE; ++i) //4096
   {
     CurrDat = (double)RawData[i+41]/NumAvrgThis; // нормируем показание
-    if(CurrDat > 4090) // перегрузка!
+    if(CurrDat > 1020) // перегрузка! 4090
     {
       NumPereg++; // посчитаем длительность перегрузки
       //AllPereg++;
@@ -7115,9 +7354,13 @@ float MeasORL(int NumAvrgThis, int EnaReport)
 // функция инициализации страницы по номеру в NEXTION
 void CmdInitPage(int Num)
 {
-      NEX_Transmit((void*)CmdNextion[Num]);
-      g_FirstScr=1;
-      //CreatDelay(20000);// 177 как в 173
+  char str[44];
+  sprintf(str, "page %dяяя",Num); // < событиe >
+  NEX_Transmit((void*)str);    //
+  
+  //NEX_Transmit((void*)CmdNextion[Num]);
+  g_FirstScr=1;
+  //CreatDelay(20000);// 177 как в 173
   HAL_Delay(30);
 }
 

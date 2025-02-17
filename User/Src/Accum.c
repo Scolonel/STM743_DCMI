@@ -15,8 +15,12 @@ void RUN_SUM (DWORD* RawDataI);//
 void SUMMER (DWORD* RawDataS)//
 {
   //надо запустить измерение с утановленными параметрами
-      memset(&BufADD, 0, sizeof(BufADD));
+      //memset(&BufADD, 0, sizeof(BufADD));
+     //LED_KT(1); // начало одного суммир
+  
       memset(&BufNAK, 0, sizeof(BufNAK));
+     //LED_KT(0); // начало одного суммир
+
   // запустим накопление 
   TIM1->CR1 |=TIM_CR1_CEN;
 
@@ -46,10 +50,13 @@ void SUMMER (DWORD* RawDataS)//
       }
     //StopAllTIM(1); // stop all timers
   // в буффере BufNAK лежит одно накопление 
+     //LED_KT(1); // начало одного суммир
+
    for (int i=0;i<RAWSIZE;i++)                                  // !!!!!!!!!!! 
     RawDataS[i] += BufNAK[i];     // суммирование с шины данных непосредственно (есть тики для АЦП) !!!!!!!!!!!
     // другой способ копирования
     //    memcpy( RawDataS, BufNAK, RAWSIZE * sizeof(DWORD) );
+    // LED_KT(0); // конец одног суммир
 
   //STARTPP(1); // устанавливаем в "1" START                            !!!!!!!!!!!
   //ADC_DATA_EN(1);// снимаем строб                            !!!!!!!!!!!
@@ -89,7 +96,10 @@ void Averaging (int NumAccum,unsigned AddIndexLN, BYTE EnDrawGraph )// функция н
    // это не надо SendSetALT (CalkSetALT(PointsPerPeriod, PointInPeriod=0)); // передача слова в Альтеру, первое поэтому чистим PointInPeriod
   // установим параметры измерения  перед запуском
   // в основном это установка (конфигурация таймеров) для измерения
+     //LED_KT(1); // начало одного суммир
   StartRunFirst(AddIndexLN);// установлены таймеры достаточно запустить таймер TIM1 - 
+     //LED_KT(0); // начало одного суммир
+
   if (CntAccumulat==0)CntAccumulat++;// первое измерение не пропустить
   //SetParamMeasure();
   while (CntAccumulat)
@@ -125,6 +135,7 @@ void DrawPictureMeas (BYTE EnDraw) // рисование картинки при измерении
   char Str[32];
   Rect rct={0,0,128,56};
   GraphParams params = {GetVerticalSize(GetUserVerSize()),PosCursorMain (0),GetSetHorizontScale(0),0, GetUserTypeCentral ()};//PosCursorMain (0)
+   //  LED_KT(1); // начало графика
   
   if (EnDraw)
   {
@@ -186,14 +197,15 @@ void DrawPictureMeas (BYTE EnDraw) // рисование картинки при измерении
     rct.top = 0;
     //rct={0,0,390,210};
     
-    MakeGraphNext( &rct, LogData, 4096, &params );// тут пересчитываем данные для графика (его вывод) в зависимости от параметров
+    MakeGraphNext( &rct, LogData, POINTSIZE, &params );// тут пересчитываем данные для графика (его вывод) в зависимости от параметров
     
     
     SendDrawNex(NexData,2,rct.right);
     HAL_Delay (1);
     
   }
-  
+    //   LED_KT(0); // конец графика
+
 }
 
 void RUN_SUM (DWORD* RawDataI)//
@@ -260,7 +272,7 @@ void RUN_SUM (DWORD* RawDataI)//
     Noise = (DWORD)1*(Noise/(25));
     if (GetIndexLN()>5)// длинные линии -> добавим точек по расчету шумов
     {
-      for (int i=4090;i<4120;++i) // берем 30 точек в конце отображения окна
+      for (int i=5390;i<5420;++i) // берем 30 точек в конце отображения окна
       {
         if (RawData[i] < (Noise + 100*Avrgs)) 
         {

@@ -209,21 +209,21 @@ uint32_t BeginConfig (void) // начальная конфигурация
   //конфигурация PCA9555 ( клавитатура ) адрес 0x20
   // устанавливаем как входы все! несмотря на то что после сброса уже должно быть как входд
   StatusI2C2 =  TOP_I2C_IsDeviceReady(&hi2c2, (uint16_t)(KEYBOARD<<1), 2, 1000); // если эта микросхема???
-  if (StatusI2C2) CodeError |= NOT_PCA9555_KB; // микросхема не определяется
+  if (StatusI2C2) CodeError |= NOT_PCA9555_KB; // микросхема не определяется (0x01)
   StatusI2C2 =  ConfigKBRD (); // конфигурируем PCA9554  
-  if (StatusI2C2) CodeError |= CFG_ERR_PCA9555_KB; // микросхема не конфигурируется
+  if (StatusI2C2) CodeError |= CFG_ERR_PCA9555_KB; // микросхема не конфигурируется (0x02)
   //
   //конфигурация PCA9554 ( ExtKey ) адрес 0x39
   // 
   StatusI2C2 =  TOP_I2C_IsDeviceReady(&hi2c2, (uint16_t)(EXPWRCTRL<<1), 2, 1000); // если эта микросхема???
-  if (StatusI2C2) CodeError |= NOT_PCA9554; // микросхема не определяется
+  if (StatusI2C2) CodeError |= NOT_PCA9554; // микросхема не определяется (0x04)
   StatusI2C2 =  ConfigPWRCtrl (); // конфигурируем PCA9555  
-  if (StatusI2C2) CodeError |= CFG_ERR_PCA9554; // микросхема не конфигурируется
+  if (StatusI2C2) CodeError |= CFG_ERR_PCA9554; // микросхема не конфигурируется (0x08)
   //
   
 //  // проверка наличия микросхемы  24lc512 на шине I2C(2) EEPROM
   StatusI2C2 =  TOP_I2C_IsDeviceReady(&hi2c2, (uint16_t)(EEPROM24LC128<<1), 2, 1000); // если эта микросхема???
-  if (StatusI2C2) CodeError |= NOT_EEPROM_24LC128; // микросхема не определяется
+  if (StatusI2C2) CodeError |= NOT_EEPROM_24LC128; // микросхема не определяется (0x10)
   else // микросхема есть прочитаем конфигурацию таблиц и поправим если надо Взята конфигурация от 9400
   {
     // читаем сохраненные массивы
@@ -233,6 +233,7 @@ uint32_t BeginConfig (void) // начальная конфигурация
     unsigned ErrDevJDSU = InvalidJDSU ();
     if (ErrDevJDSU)
     {
+      CodeError |= ERR_SJDSU; // for JDSU (0x20)
       InitJDSU (ErrDevJDSU); //  фиксируем  (исправляем )
       EEPROM_write(&SetJDSU, ADR_ComplJDSU, sizeof(SetJDSU));
     }
@@ -241,6 +242,7 @@ uint32_t BeginConfig (void) // начальная конфигурация
     unsigned ErrDevDB = InvalidDBNAME ();
     if (ErrDevDB)
     {
+      CodeError |= ERR_DB_NAME; // ошибка альтернативного имени от Д.Б. (0x40)
       InitDBNAME (ErrDevDB); //  фиксируем  (исправляем )
       EEPROM_write(&NameDB, ADR_NameDB, sizeof(NameDB));
     }
@@ -250,6 +252,7 @@ uint32_t BeginConfig (void) // начальная конфигурация
     ErrDev = InvalidDevice();
     if (ErrDev)
     {
+      CodeError |= ERR_DEVCFG; // плохая конфигурация прибора (0x80)
       SPCTR_err=0x80; // если плохой прибор, очистим спектральную характеристику
       InitDevice(ErrDev); 
       EEPROM_write(&ConfigDevice, ADR_ConfigDevice, sizeof(ConfigDevice));
@@ -259,6 +262,7 @@ uint32_t BeginConfig (void) // начальная конфигурация
     SPCTR_err = SPCTR_err + FindErrCoeff ();
     if (SPCTR_err)
     {
+      CodeError |= ERR_SPECTR; // плохая спектралка правим! (0x100)
       FixErrCoeff (SPCTR_err); //  фиксируем  (исправляем коэффициенты)
       EEPROM_write(&CoeffPM, ADR_CoeffPM, sizeof(CoeffPM));
     }
@@ -268,6 +272,7 @@ uint32_t BeginConfig (void) // начальная конфигурация
     SPCTR_err = SPCTR_err + CheckUserGonfig ();  // Проверка пользовательских настроек 
     if (SPCTR_err>=0x100)// были ошибки их уже исправили надо просто перезаписать 
     {
+      CodeError |= ERR_USERSET; // плохие пользоваельские настройки (0x200)
       //FixErrUserMC (ErrDev); //  фиксируем  (исправляем настройки)
       EEPROM_write(&UserSet, ADR_UserMeasConfig, sizeof(UserSet));
     }
@@ -276,6 +281,7 @@ uint32_t BeginConfig (void) // начальная конфигурация
     DWORD Param_err =  CheckReflParam ();  // Проверка установок событий рефлектограммы и исправление
     if (Param_err)
     {
+      CodeError |= ERR_EVENTS; // плохие настройки контроля рефлектограммы(0x400)
       //FixErrSettingPrm (ErrDev); //  фиксируем  (исправляем настройки)
       EEPROM_write(&ReflParam, ADR_EventSet, sizeof(ReflParam));
     }
@@ -284,6 +290,7 @@ uint32_t BeginConfig (void) // начальная конфигурация
     DWORD Sets_err =  CheckSavedTrace ();  // Проверка установок рефлектометра и исправление
     if (Sets_err)
     {
+      CodeError |= ERR_OTDRSET; // плохие настройки установок  рефлектометра(0x800)
       //FixErrSettingPrm (ErrDev); //  фиксируем  (исправляем настройки)
       EEPROM_write(&SettingRefl, ADR_ReflSetting, sizeof(SettingRefl));
     }
@@ -294,7 +301,8 @@ uint32_t BeginConfig (void) // начальная конфигурация
     //  CntrlExpUnit (DSBL, EN_70V); // выключаем преобразователь напряжения лавины
     //  SetRange(0); // устанавливаем самый чувствительный диапазон
   }
-  return (CodeError | (ErrDev<<3)); 
+  //return (CodeError | (ErrDev<<3)); 
+  return (CodeError); 
 }
 
 

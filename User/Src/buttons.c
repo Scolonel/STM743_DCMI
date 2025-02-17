@@ -73,14 +73,14 @@ void SetKeyMd (unsigned char Keys, unsigned char States)
 void ClrKey (uint16_t Button) // сброс бита обработанной клавиши
 {
   KeyPressed &= ~Button;
-  //for(unsigned i = 0; i < BTNS_NUM; ++i )
-  //{
-  //  if( (Button & Buttons[i].Bind) && (Buttons[ i ].State > M_LONG_PRESSED) )
-  //  {
-  //       Buttons[ i ].State = NOT_PRESSED;
-  //       Buttons[ i ].Time = 0;
-  // }
-  //}
+  for(unsigned i = 0; i < BTNS_NUM; ++i )
+  {
+    if( (Button & Buttons[i].Bind) && (Buttons[ i ].State > M_LONG_PRESSED) )
+    {
+         Buttons[ i ].State = NOT_PRESSED;
+         Buttons[ i ].Time = 0;
+   }
+  }
 }
 
 

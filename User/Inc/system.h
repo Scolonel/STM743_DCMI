@@ -22,7 +22,7 @@
 #define LANG_NUM 6  // число столбцов в таблице языков
 
 #define MSG_NUM 126
-#define CMD_NUM 33 //команды Nextion
+#define CMD_NUM 35 //команды Nextion
 
 #define TIMERE 500 //время цикла красного глаза по 500 мС
 
@@ -34,9 +34,11 @@
   #define Y2000Sec  946684800 // число секунд 2000 года
 
 // размеры массивов 
-#define NEXSIZE    0x1000  //размер для НЕКСТИОН
-#define OUTSIZE    0x1000  // выходной массив
-#define RAWSIZE    0x1200  //(4096+288)
+#define POINTSIZE    5200 //4096 // число активных точек, размер числа точек графика
+
+#define NEXSIZE    5200 //4096 //0x1000  //размер для НЕКСТИОН
+#define OUTSIZE    5200 //4096 //0x1000  // выходной массив
+#define RAWSIZE    5500 //4384 //0x1200  //(4096+288)
 #define FLTSIZE    5 // размерность фильтра
 // массивы из первичной проверки...перекликаются с размерами объявленными ранее
 #define SizeBuf_ADC_int 8
@@ -73,9 +75,16 @@
 #include "math.h"
 #include "pm.h" // функции измерителя
 #include "rtc.h" // 
-//#include "fonts.h"
+//#include "fatfs.h"
 #include "pca955x.h"
 #include "buttons.h"   
+#include "sdmmc.h"
+//#include "ff.h"
+// из FATFS библиотеки
+#include "fatfs.h"
+#include "ff_gen_drv.h"
+#include "ff.h"
+#include "ffconf.h"
 
 //#include "usbd_cdc_acm_if.h"
 #include "OTDR_Meas.h" //from T7kAR
@@ -92,6 +101,43 @@
 #include "memflash.h"// //from T7kAR
 
 //const uint8_t* TxGenOpt={"UUUUUUUUUUUUUUUUU"};
+  // таблица для расчета контрольной суммы по полиному 0x1021
+  static const short int table[] =
+  {
+    0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
+    0x8108, 0x9129, 0xa14a, 0xb16b, 0xc18c, 0xd1ad, 0xe1ce, 0xf1ef,
+    0x1231, 0x0210, 0x3273, 0x2252, 0x52b5, 0x4294, 0x72f7, 0x62d6,
+    0x9339, 0x8318, 0xb37b, 0xa35a, 0xd3bd, 0xc39c, 0xf3ff, 0xe3de,
+    0x2462, 0x3443, 0x0420, 0x1401, 0x64e6, 0x74c7, 0x44a4, 0x5485,
+    0xa56a, 0xb54b, 0x8528, 0x9509, 0xe5ee, 0xf5cf, 0xc5ac, 0xd58d,
+    0x3653, 0x2672, 0x1611, 0x0630, 0x76d7, 0x66f6, 0x5695, 0x46b4,
+    0xb75b, 0xa77a, 0x9719, 0x8738, 0xf7df, 0xe7fe, 0xd79d, 0xc7bc,
+    0x48c4, 0x58e5, 0x6886, 0x78a7, 0x0840, 0x1861, 0x2802, 0x3823,
+    0xc9cc, 0xd9ed, 0xe98e, 0xf9af, 0x8948, 0x9969, 0xa90a, 0xb92b,
+    0x5af5, 0x4ad4, 0x7ab7, 0x6a96, 0x1a71, 0x0a50, 0x3a33, 0x2a12,
+    0xdbfd, 0xcbdc, 0xfbbf, 0xeb9e, 0x9b79, 0x8b58, 0xbb3b, 0xab1a,
+    0x6ca6, 0x7c87, 0x4ce4, 0x5cc5, 0x2c22, 0x3c03, 0x0c60, 0x1c41,
+    0xedae, 0xfd8f, 0xcdec, 0xddcd, 0xad2a, 0xbd0b, 0x8d68, 0x9d49,
+    0x7e97, 0x6eb6, 0x5ed5, 0x4ef4, 0x3e13, 0x2e32, 0x1e51, 0x0e70,
+    0xff9f, 0xefbe, 0xdfdd, 0xcffc, 0xbf1b, 0xaf3a, 0x9f59, 0x8f78,
+    0x9188, 0x81a9, 0xb1ca, 0xa1eb, 0xd10c, 0xc12d, 0xf14e, 0xe16f,
+    0x1080, 0x00a1, 0x30c2, 0x20e3, 0x5004, 0x4025, 0x7046, 0x6067,
+    0x83b9, 0x9398, 0xa3fb, 0xb3da, 0xc33d, 0xd31c, 0xe37f, 0xf35e,
+    0x02b1, 0x1290, 0x22f3, 0x32d2, 0x4235, 0x5214, 0x6277, 0x7256,
+    0xb5ea, 0xa5cb, 0x95a8, 0x8589, 0xf56e, 0xe54f, 0xd52c, 0xc50d,
+    0x34e2, 0x24c3, 0x14a0, 0x0481, 0x7466, 0x6447, 0x5424, 0x4405,
+    0xa7db, 0xb7fa, 0x8799, 0x97b8, 0xe75f, 0xf77e, 0xc71d, 0xd73c,
+    0x26d3, 0x36f2, 0x0691, 0x16b0, 0x6657, 0x7676, 0x4615, 0x5634,
+    0xd94c, 0xc96d, 0xf90e, 0xe92f, 0x99c8, 0x89e9, 0xb98a, 0xa9ab,
+    0x5844, 0x4865, 0x7806, 0x6827, 0x18c0, 0x08e1, 0x3882, 0x28a3,
+    0xcb7d, 0xdb5c, 0xeb3f, 0xfb1e, 0x8bf9, 0x9bd8, 0xabbb, 0xbb9a,
+    0x4a75, 0x5a54, 0x6a37, 0x7a16, 0x0af1, 0x1ad0, 0x2ab3, 0x3a92,
+    0xfd2e, 0xed0f, 0xdd6c, 0xcd4d, 0xbdaa, 0xad8b, 0x9de8, 0x8dc9,
+    0x7c26, 0x6c07, 0x5c64, 0x4c45, 0x3ca2, 0x2c83, 0x1ce0, 0x0cc1,
+    0xef1f, 0xff3e, 0xcf5d, 0xdf7c, 0xaf9b, 0xbfba, 0x8fd9, 0x9ff8,
+    0x6e17, 0x7e36, 0x4e55, 0x5e74, 0x2e93, 0x3eb2, 0x0ed1, 0x1ef0
+  };
+
 
       // тики опроса клавиатура взято из Т7К_АР
 uint32_t GetSysTick( int Mode); // получение тиков 1 мС. 0 - получение счетчика от предыдущего сброса 1- сброс
@@ -99,6 +145,17 @@ uint32_t GetSysTick( int Mode); // получение тиков 1 мС. 0 - получение счетчика 
 void NEX_Transmit(uint8_t *Str);
 // управление таймером в измерителе АВТОМАТЕ
 WORD TimerPA (BYTE Set);
+
+extern char NameDir[100][6];
+extern char NameFiles[1000][17];
+extern uint32_t NumNameDir; // число имен директорий
+extern uint32_t IndexNameDir;// индекс дирректории на которую указываем
+extern uint32_t IndexLCDNameDir;// индекс указателя на индикаторе дирректории на которую указываем
+extern uint32_t NumNameFiles; // число имен файлов
+extern uint32_t IndexNameFiles;// индекс файла на который указываем
+extern uint32_t IndexLCDNameFiles;// индекс указателя на индикаторе файла на который указываем
+extern uint32_t PageDir; 
+extern uint32_t PageFiles; 
 
 // структура хранения памяти измерителя
 struct tag_PON
@@ -117,6 +174,61 @@ struct tag_PON
 }; // blok 64 bytes
 
 extern struct tag_PON PONI;
+// выжимка из полей *.sor файла для индикации и обработки, вытащим почти все что устанавливаем сами.
+#pragma pack(push,1)
+typedef struct
+{
+  char LC[2]; // [82-83] язык 2 байта (буквы) 
+  char CID; // [84] CID Cable ID 
+  char FID; // [85] FID Fiber ID
+  uint16_t NW; // [86..87] длина волны (2 байта) 
+  char OL;     // [88] OL Originating Location
+  char TL;    // [89] TL Terminating Location
+  char CCD;    // [90] CCD Cable Code
+  char CDF[2]; // [91] Current Data Flag (BC, RC, OT) 2 байта (буквы) 
+  uint32_t UO; // [93..96] DTS текущее время (4 байта)
+  char OP;  // [97] OP Name or Operator Code 
+  char CMT[20]; // [98..117] CMT комментарии по трассе 'Тrace '  (буквы строка 20 байт) 
+  char SN[15]; // [118..132] SN - имя компании  (буквы строка 15 байт) 
+  char MFID[13]; // [133..145] MFID - модель прибора TOPAZ-710XR (буквы строка 13 байт) 
+  char OTDR[5]; // [146..150] серийный номер прибора s/n 000  //4-x значный!!! (буквы строка 5 байт) 
+  char OMID; // [151] OMID
+  char OMSN;  // [152] OMSN
+  char SR[5]; // [153..157] SR версия ПО v4.0a (буквы строка 5 байт) 
+  char OTHER;  // [158] Other
+  uint32_t DTS; // [159..162] DTS текущее время (4 байта)
+  char UD[2]; // [163..164] UD единицы измерения km  2 байта (буквы)
+  uint16_t AW;//[165..166] AW длина волны в 0.1 нм (1310нм = 13100) 0x332c 0x3c8c (2 байта)
+  uint32_t AO;   // [167..170] AO смещение сбора данных
+  uint16_t TPW;   // [171..172] TPW количество зондир импульсов (один)
+  uint16_t PWU;//[173..174] PWU ширина зондир импульса (ns) 150ns=0x96, 500ns=0x1f4,  (2 байта)
+  uint32_t DS; //[175..178] DS data Spacing время между точками измерения в 100пс  (4 байта)
+                              // DS = (GI*L)/(C*10e-14) L - физическое расстояние между точками измерения С- скорость света
+                              // GI - коэфф. преломления, но реально длительность между отсчетами (в нс/2)*100000 = DS
+  uint32_t NPPW; // [179..182] NPPW количество точек (5200)//stm32h743  (4 байта)
+  uint32_t GI; // [183..186] GI коэфф преломления  146583 (1.46583) (4 байта)
+  uint16_t BC;//[187..188](BC = 800 предел обратного отражения (2 байта)
+  uint32_t NAV; // [189..92] NAV число накоплений - зависит от времени накопления и длины линии = sycl (4 байта)
+  uint32_t AR; // [193..196] AR  длина измеряемого участка (грубо число измерений на шаг) DS*NPPW/10000 (4 байта)
+  uint32_t FPO;   // [197..200] FPO смещение физическое (отступ сбора данных) равен 0
+  uint16_t NF;  // [201..202] NF нижний уровень шумов равен 0
+
+  uint16_t NFSF; // [203..204] NFSF масштабный коэфф  уровень шумов равен 1000 (2 байта)
+  uint16_t PO; // [205..206] PO смещение по мощности равен 0 в 0.001 дБ
+  uint16_t LT; // [207..208] LT минимальное значение затухания для события 200 в 0.001 дБ (2 байта)
+  uint16_t RT; // [209..210] RT минимальное значение отражения для события 40000 в -0.001дБ (2 байта)
+  uint16_t ET; // [211..212] ET минимальное затухание для конца линии 3000 в 0.001 дБ (2 байта)
+  uint32_t TNDP; // [213..216] TNDP количество точек stm32h743 = 5200 DS*NPPW/10000 (4 байта)
+  uint16_t TSF;  // [217..218] TSF число шкал
+  uint32_t TNS1; // [219..222] TNS1 количество точек на шкалу (5200)(4 байта)
+  uint16_t SF1; // [223..224] SF1 масштаб шкалы
+  
+} St_File_Sor;
+#pragma pack(pop)
+
+
+extern St_File_Sor F_SOR; // содержимое основных параметров файла SOR
+
 
 typedef struct
 {
@@ -184,7 +296,7 @@ extern volatile unsigned char rawPressure;
 extern volatile unsigned char rawPressKeyS; // признак необработанной нажатой клавиши S по прерыванию
 extern volatile unsigned char KeyS; 
 //extern char screen[1024] ;
-extern volatile BYTE RX_BufNEX[BUFSIZEUART2];
+extern uint8_t RX_BufNEX[BUFSIZEUART2];
 extern char VerFW_LCD[25]; //версия ПО индикатора NEXION
 extern char NameReadFile[32]; // глобальная имя файла при чтении в сохранении
 
@@ -242,6 +354,12 @@ extern volatile int NeedReturn; // необходимость вернуться в окно сохранения
 extern BYTE MemTable[MaxMemOTDR+1]; // таблица рефлектограмм ячейки памяти меняется в памяти до MaxMemOTDR
 extern BYTE MemTableExt[MaxMemOTDRExt+1]; // таблица рефлектограмм расширенной ячейки памяти меняется в памяти до MaxMemOTDRExt
 extern uint8_t BusyUSB ; // признак передачи данных по USB, с SD картой
+extern uint16_t PresentUSB ; // признак подключенного USB
+extern uint8_t ModeUSB ; // признак подключенного USB
 
+extern   FIL Fil;
+extern   FRESULT FR_Status;
+extern   FRESULT res;
+extern  DIR dir;
 
 #endif

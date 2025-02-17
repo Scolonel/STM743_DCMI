@@ -66,19 +66,27 @@ extern I2C_HandleTypeDef hi2c1;
   * @}
   */ 
 
-#define NOT_PCA9554 0x04
-#define CFG_ERR_PCA9554 0x08
 #define NOT_PCA9555_KB 0x01
 #define CFG_ERR_PCA9555_KB 0x02
+#define NOT_PCA9554 0x04
+#define CFG_ERR_PCA9554 0x08
+#define NOT_EEPROM_24LC128 0x10
+#define ERR_SJDSU 0x20         // ошибка установок для измерения JDSU
+#define ERR_DB_NAME 0x40 // ошибка альтернативного имени от Д.Б. (0x40)
+#define ERR_DEVCFG 0x80 // плохая конфигурация прибора (0x80)
+#define ERR_SPECTR 0x100 // плохая спектралка правим! (0x100)
+#define ERR_USERSET 0x200 // плохие пользоваельские настройки (0x200)
+#define ERR_EVENTS 0x400 // плохие настройки контроля рефлектограммы(0x400)
+#define ERR_OTDRSET 0x800 // плохие настройки установок  рефлектометра(0x800)
+#define ERR_SDCard 0x1000 // не монтируется карта
+#define CLR_SDCard 0x2000 // чистили карта
 #define NOT_RVOTDR 0x10
 #define CFG_ERR_RVOTDR 0x20
 #define EXPANDERS_ERR 0x40
 #define LASER_ERR 0x80
-#define ERR_SDCard 0x100
 #define NOT_PCA9555_ESP 0x200
 #define CFG_ERR_PCA9555_ESP 0x400
 #define NOT_EEPROM_24SR16 0x800
-#define NOT_EEPROM_24LC128 0x10
     
 #define REMOUT 0x01   // дисстанционное
 #define MONITOR 0x02   // мониторинг

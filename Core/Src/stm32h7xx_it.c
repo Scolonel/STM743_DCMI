@@ -204,7 +204,18 @@ void SysTick_Handler(void)
   HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
   // control USB 
-  if(BusyUSB) BusyUSB--;
+  if(BusyUSB>1) BusyUSB--;
+  else if(BusyUSB==1)
+  {
+    BusyUSB = 0;
+    ModeUSB = 1; // надо выключить значек занятости USB
+  }
+  if(PresentUSB>1) PresentUSB--;
+  else if(PresentUSB==1)
+  {
+    PresentUSB = 0;
+    ModeUSB = 2; // надо выключить значек USB
+  }
   // my control BEEP
   if (beepTick > 1)
   {
@@ -490,7 +501,10 @@ void UART7_IRQHandler(void)
 void OTG_FS_IRQHandler(void)
 {
   /* USER CODE BEGIN OTG_FS_IRQn 0 */
+   HAL_GPIO_TogglePin(KTS_GPIO_Port, KTS_Pin);
 
+  PresentUSB = 1500; // признак что крутится USB - тики когда ничего нет 
+  // приблизительно через секунду
   /* USER CODE END OTG_FS_IRQn 0 */
   HAL_PCD_IRQHandler(&hpcd_USB_OTG_FS);
   /* USER CODE BEGIN OTG_FS_IRQn 1 */

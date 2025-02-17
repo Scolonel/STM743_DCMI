@@ -247,8 +247,8 @@ int8_t STORAGE_Read(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t blk_l
 //
 //  return (USBD_OK);
     //LED_START(1);
-  BusyUSB=50;
-  ModeUSB = 3;
+  BusyUSB=10;
+
   // код из примера
      int8_t ret = -1;
 
@@ -280,8 +280,7 @@ int8_t STORAGE_Write(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t blk_
 //  return (USBD_OK);
   // код из примера
   //  LED_START(1);
-  BusyUSB=50;
-  ModeUSB = 3;
+  BusyUSB=10;
    int8_t ret = -1;
 
    HAL_SD_WriteBlocks(&hsd2, buf, blk_addr, blk_len, HAL_MAX_DELAY);

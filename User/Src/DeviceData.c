@@ -94,6 +94,14 @@ unsigned long CurCountFiles; // порядковый номер текущего файла (читаем из памят
 
 static volatile BYTE g_SeqCombLW[7]; //разрешенные комбинации измерения по местам лазеров
 
+// получение индекса DS
+unsigned GetValueDS (void)
+{
+  unsigned Ret;
+  
+Ret =  (unsigned)(MultIndex[GetIndexLN()]*(ADCPeriod*50000)/NumPointsPeriod[GetIndexLN()]); //  устанавливаем значения DS для установленного режима измерения
+ return Ret;
+}
 // установка получение индекса в списке комбинации лазеров от номера лазерного места
 void SetIndxSeqLS (void)
 {
@@ -153,8 +161,20 @@ unsigned char * StructPtr(unsigned data)
 unsigned InvalidDBNAME() //boolean actually
 {
   unsigned res = NameDB.Ena_DB > 1;
-  unsigned err_str = 1;
-  for( unsigned i = 0; i < (sizeof(DB_NAME_ENA)-1);++i )
+  unsigned err_str = 0;
+    for( unsigned i = 0; i < (sizeof(NameDB.UserComm)-1);++i )
+  {
+    if(NameDB.UserComm[i]<0x20) 
+    {
+      err_str = 1; // в комментариях есть управляющие символы
+      break;
+    }
+  }
+  res = (res<<1) | err_str;
+  // Закроем строку
+  NameDB.UserComm[19]=0;
+  
+  for( unsigned i = 0; i < (sizeof(NameDB.AltName)-1);++i )
   {
     if(NameDB.AltName[i]==0) 
     {
@@ -177,7 +197,16 @@ unsigned InvalidDBNAME() //boolean actually
 }
 void InitDBNAME(unsigned Err)
 {
-  if (Err && 0x10) NameDB.Ena_DB=1; // плохой режим , установим ТОПАЗ (Not Alternate)
+  if (Err && 0x20) NameDB.Ena_DB=1; // плохой режим , установим ТОПАЗ (Not Alternate)
+
+  if (Err && 0x10) // string BAD!
+  {
+  for( unsigned i = 0; i < (ARRAY_SIZE(NameDB.UserComm)-1);++i )
+  {
+    NameDB.UserComm[i]=' '; 
+  }
+  NameDB.UserComm[(ARRAY_SIZE(NameDB.UserComm)-1)]=0;
+  }
   
   if (Err && 0x8) // нет конца строки
   {
@@ -1657,7 +1686,8 @@ void GetHeaderBelcore (char* Name, unsigned short Block, unsigned short NumEvent
       memcpy( &Name[173-118], &DataShort, 2);
       // устанавливаем DS
       // ((10000points*10(in 1ns 100ps))/2 = 50000 , 333.333 ns - интервал съема информации
-      DataInt = (unsigned long)((ADCPeriod*50000)/NumPointsPeriod[GetIndexLN()]); //  устанавливаем значения DS для установленного режима измерения
+      //DataInt = (unsigned long)((ADCPeriod*50000)/NumPointsPeriod[GetIndexLN()]); //  устанавливаем значения DS для установленного режима измерения
+      DataInt = (unsigned long)GetValueDS(); //  устанавливаем значения DS для установленного режима измерения
       memcpy( &Name[175-118], &DataInt, 4);
       // ###(182) GI коэфф преломления  146583 (1.46583)  
       DataInt = (unsigned long)( GetIndexWAV()*100000);
@@ -1669,7 +1699,7 @@ void GetHeaderBelcore (char* Name, unsigned short Block, unsigned short NumEvent
       DataInt = SettingRefl.NumAvrag;
       memcpy( &Name[189-118], &DataInt, 4);
       // ###(192) AR  длина измеряемого участка (грубо число измерений на шаг) DS*NPPW/10000
-      DataInt = (unsigned long)((ADCPeriod*5*4096)/NumPointsPeriod[GetIndexLN()]); //  устанавливаем значения DS для установленного режима измерения
+      DataInt = (unsigned long)(MultIndex[GetIndexLN()]*(ADCPeriod*5*POINTSIZE)/NumPointsPeriod[GetIndexLN()]); //  устанавливаем значения DS для установленного режима измерения
       memcpy( &Name[193-118], &DataInt, 4);
       // ###(200) NF нижний уровень шумов равен 65535
       DataInt =  ReflParam.NF;
