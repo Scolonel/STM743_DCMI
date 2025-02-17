@@ -1852,8 +1852,9 @@ void GetNumVer (char* Str) // получение номера версии
   strcpy( out, NumVer );//, strlen(Ides[device->ID_Device])
   out[4] = 0;
   int Num = atoi (out);
+  //int Num = g_NumVer;
   //Num=Num/5;
-  sprintf (Str, "5%c%c%c", (BYTE)(0x30+(Num/260)), (BYTE)(0x30+(Num/26)), (BYTE)(0x61+(Num%26)));
+  sprintf (Str, "6%c%c%c", (BYTE)(0x30+(Num/260)), (BYTE)(0x30+(Num/26)), (BYTE)(0x61+(Num%26)));
 }
 
 void SetNewLeveldB (float RPON, int i) // установка нового уроаня привязки по принятым волнам
