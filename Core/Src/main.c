@@ -47,6 +47,10 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define BeginTest  64 // начальное смещение для рассчета 
+    // !!!В Н И М А Н И Е!!!
+    // идентификатор платы должен совпасть с программным
+#define ID_PLATE  0x3 //0x3 - Т7к  0x2 - Т5к
+    
 
 //const uint16_t CodeDAC[64]={4095,64,4032,128,3968,192,3904,256,3840,320,3776,384,3712,448,3648,512,
 //3584,576,3520,640,3456,704,3392,768,3328,832,3264,896,3200,960,3136,1024,
@@ -169,6 +173,9 @@ uint8_t ModeUSB = 0; // признак работы USB для индикации
 // перенос переменных из MAIN.c from T7kAR
 unsigned int CheckErrMEM; 
 
+  // контроль идентификатора платы
+uint8_t CheckErrID_Plate=0; 
+
 Measuring_Stat Head_RAW;
 // из modes.c - надо вернуть обратно
 //char VerFW_LCD[25] = {"No version LCD          \0"}; //версия ПО индикатора NEXION
@@ -199,6 +206,7 @@ void SystemClock_Config(void);
 void PeriphCommonClock_Config(void);
 /* USER CODE BEGIN PFP */
 //void SDMMC_SDCard_Test(int Num);
+uint8_t GetID_Plate(void);
 
 /* USER CODE END PFP */
 
@@ -233,6 +241,50 @@ int main(void)
   PeriphCommonClock_Config();
 
   /* USER CODE BEGIN SysInit */
+    MX_GPIO_Init();
+  if(ID_PLATE != GETIDPLT)
+  {
+    CheckErrID_Plate=1;
+  }
+  if(CheckErrID_Plate)
+  {
+    MX_DMA_Init();
+    MX_UART7_Init();
+    // Start Uart7 - Nextion
+    uint16_t  Dummy = huart7.Instance->RDR ; // чистим буффер приема от NEXTION
+    HAL_UART_Receive_IT(&huart7, RX_BufNEX,1); // ждем принятия первого байта из внешнего мира
+    /* disable the UART Parity Error Interrupt */
+    __HAL_UART_DISABLE_IT(&huart7, UART_IT_PE);
+    /* disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
+    __HAL_UART_DISABLE_IT(&huart7, UART_IT_ERR);
+    
+    // перенастроим UART7  для NEXTION
+    huart7.Init.BaudRate = 9600;
+    if (HAL_UART_Init(&huart7) != HAL_OK)
+    {
+      Error_Handler();
+    }
+    HAL_Delay(10);
+    sprintf((void*)Str,"bauds=115200яяя");
+    HAL_UART_Transmit(&huart7, (void*)Str,strlen((void*)Str),20); // выдаем 
+    
+    //NEX_Transmit(Str);// 
+    HAL_Delay(10);
+    huart7.Init.BaudRate = 115200;
+    if (HAL_UART_Init(&huart7) != HAL_OK)
+    {
+      Error_Handler();
+    }
+    //  myBeep(100);
+    HAL_Delay(10);
+    sprintf((void*)Str, "t0.txt=\"! ОШИБКА !\"яяя"); // auto
+    NEX_Transmit((void*)Str);    // 
+    sprintf((void*)Str, "t1.txt=\"!прибор не тот!\"яяя"); // auto
+    NEX_Transmit((void*)Str);    // 
+    
+    while(1);
+    
+  }
   
   /* USER CODE END SysInit */
 
@@ -256,10 +308,46 @@ int main(void)
   MX_DAC1_Init();
   MX_TIM5_Init();
   /* USER CODE BEGIN 2 */
+  // проверяем конфигурацию платы, чтобы не запустить программу по исправленю
+  // если вдруг зашили чужую программу, попытаемся написать в индикатор и зациклится
+  
+//  if(ID_PLATE != GETIDPLT)
+//  {
+//    CheckErrID_Plate=1;
+//  }
+  // Start Uart7 - Nextion
+  Dummy = huart7.Instance->RDR ; // чистим буффер приема от NEXTION
+  HAL_UART_Receive_IT(&huart7, RX_BufNEX,1); // ждем принятия первого байта из внешнего мира
+  /* disable the UART Parity Error Interrupt */
+  __HAL_UART_DISABLE_IT(&huart7, UART_IT_PE);
+  /* disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
+  __HAL_UART_DISABLE_IT(&huart7, UART_IT_ERR);
+  
+  // перенастроим UART7  для NEXTION
+  huart7.Init.BaudRate = 9600;
+  if (HAL_UART_Init(&huart7) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  HAL_Delay(10);
+  sprintf((void*)Str,"bauds=115200яяя");
+  HAL_UART_Transmit(&huart7, (void*)Str,strlen((void*)Str),20); // выдаем 
+
+  //NEX_Transmit(Str);// 
+   HAL_Delay(10);
+  huart7.Init.BaudRate = 115200;
+  if (HAL_UART_Init(&huart7) != HAL_OK)
+  {
+    Error_Handler();
+  }
+ //  myBeep(100);
+  HAL_Delay(10);
+
   // так как появилось I2C - конфигурация прибора и управление клавиатурой 
   // будет первым настраиваться
   // так как повторяем конфигурацию из 7kAR, то скомбинируем из DataDevice MemFlash(у нас PCA955x)
-  CheckErrMEM =   BeginConfig();
+
+  CheckErrMEM = BeginConfig();
   
   CheckErrMEM |= StartInitSDcard();
 
@@ -296,7 +384,7 @@ int main(void)
 
 
   // Start Uart3 - внешний мир
-  uint16_t  Dummy = huart3.Instance->RDR ; // чистим буффер приема от SIM
+  Dummy = huart3.Instance->RDR ; // чистим буффер приема от SIM
   HAL_UART_Receive_IT(&huart3, RxBufExt,1); // ждем принятия первого байта из внешнего мира
   /* disable the UART Parity Error Interrupt */
   __HAL_UART_DISABLE_IT(&huart3, UART_IT_PE);
@@ -305,13 +393,6 @@ int main(void)
   // Тестовая посылка по UART
   sprintf((void*)TxBufAns,"TEst\n"); //  
   HAL_UART_Transmit(&huart3,(void*)TxBufAns, strlen((void*)TxBufAns),100);
-  // Start Uart7 - Nextion
-  Dummy = huart7.Instance->RDR ; // чистим буффер приема от NEXTION
-  HAL_UART_Receive_IT(&huart7, RX_BufNEX,1); // ждем принятия первого байта из внешнего мира
-  /* disable the UART Parity Error Interrupt */
-  __HAL_UART_DISABLE_IT(&huart7, UART_IT_PE);
-  /* disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
-  __HAL_UART_DISABLE_IT(&huart7, UART_IT_ERR);
   // Start Uart5 - Optics
   Dummy = huart5.Instance->RDR ; // чистим буффер приема от OPTIC
   HAL_UART_Receive_IT(&huart5, RxBufExt,1); // ждем принятия первого байта из внешнего мира
