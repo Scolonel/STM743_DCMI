@@ -119,6 +119,8 @@ extern uint32_t CountEndCMI ; // число прерываний совершенных циклов DMA по DCMI
 /* Private defines -----------------------------------------------------------*/
 #define Beep_Pin GPIO_PIN_2
 #define Beep_GPIO_Port GPIOE
+#define EXT_POWER_Pin GPIO_PIN_3
+#define EXT_POWER_GPIO_Port GPIOE
 #define NEX_RX_Pin GPIO_PIN_6
 #define NEX_RX_GPIO_Port GPIOF
 #define NEX_TX_Pin GPIO_PIN_7
@@ -135,6 +137,10 @@ extern uint32_t CountEndCMI ; // число прерываний совершенных циклов DMA по DCMI
 #define LD1_GPIO_Port GPIOB
 #define V_BAT_Pin GPIO_PIN_11
 #define V_BAT_GPIO_Port GPIOF
+#define IDC1_Pin GPIO_PIN_13
+#define IDC1_GPIO_Port GPIOF
+#define IDC0_Pin GPIO_PIN_14
+#define IDC0_GPIO_Port GPIOF
 #define LEDSTART_Pin GPIO_PIN_15
 #define LEDSTART_GPIO_Port GPIOF
 #define BUT_START_Pin GPIO_PIN_14
@@ -150,8 +156,16 @@ extern uint32_t CountEndCMI ; // число прерываний совершенных циклов DMA по DCMI
 #define STLINK_TX_GPIO_Port GPIOD
 #define PWR_EXT_Pin GPIO_PIN_10
 #define PWR_EXT_GPIO_Port GPIOD
+#define IS1_Pin GPIO_PIN_12
+#define IS1_GPIO_Port GPIOD
+#define IS2_Pin GPIO_PIN_13
+#define IS2_GPIO_Port GPIOD
+#define KTB_Pin GPIO_PIN_14
+#define KTB_GPIO_Port GPIOD
 #define SW_SD_Pin GPIO_PIN_4
 #define SW_SD_GPIO_Port GPIOG
+#define KTA_Pin GPIO_PIN_5
+#define KTA_GPIO_Port GPIOG
 #define PM_DOUT_Pin GPIO_PIN_6
 #define PM_DOUT_GPIO_Port GPIOG
 #define PM_CS_Pin GPIO_PIN_7

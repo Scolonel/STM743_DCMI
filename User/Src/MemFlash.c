@@ -3,7 +3,7 @@
 // взаимодействует с SSP
 
 #include "system.h"
-#include "ff.h"
+#include "fatfs.h"
 
 char NameDir[100][6];
 char NameFiles[1000][17];
@@ -29,6 +29,8 @@ St_File_Sor F_SOR; // содержимое основных параметров файла SOR
   FILINFO fno;
   DIR dir;
   UINT    br, bw;         // File R/W count
+  FIL Fil;
+  FRESULT FR_Status, res;
 
   char*   fn;
   const  char PathMainDir[9]={"0:/_OTDR\0"}; // 

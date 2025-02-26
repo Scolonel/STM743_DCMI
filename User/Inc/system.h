@@ -81,10 +81,10 @@
 #include "sdmmc.h"
 //#include "ff.h"
 // из FATFS библиотеки
-#include "fatfs.h"
-#include "ff_gen_drv.h"
-#include "ff.h"
-#include "ffconf.h"
+//#include "fatfs.h"
+//#include "ff_gen_drv.h"
+//#include "ff.h"
+//#include "ffconf.h"
 
 //#include "usbd_cdc_acm_if.h"
 #include "OTDR_Meas.h" //from T7kAR
@@ -357,9 +357,9 @@ extern uint8_t BusyUSB ; // признак передачи данных по USB, с SD картой
 extern uint16_t PresentUSB ; // признак подключенного USB
 extern uint8_t ModeUSB ; // признак подключенного USB
 
-extern   FIL Fil;
-extern   FRESULT FR_Status;
-extern   FRESULT res;
-extern  DIR dir;
+//extern   FIL Fil;
+//extern   FRESULT FR_Status;
+//extern   FRESULT res;
+//extern  DIR dir;
 
 #endif

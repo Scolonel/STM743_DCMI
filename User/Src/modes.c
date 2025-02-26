@@ -52,6 +52,8 @@
 #define Pic_Ty 2 // Y - смещение картинки при выводе установки времени
 
 #include "system.h"
+#include "fatfs.h"
+
 // тест картинка
 //static const  unsigned char LOGOS[] = {
 //  0xaa, 0xaa, 0xaa, 0xaa, 
@@ -3009,6 +3011,8 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов
   uint32_t BlkSz; // размер блока заголовка
   UINT RWC;
   FATFS FatFs;
+  FIL Fil;
+  FRESULT FR_Status;
 
   if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==UP_SHORT_PRESSED)) // переход в режим просмотра с переключением зума
   {

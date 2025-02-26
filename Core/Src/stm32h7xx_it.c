@@ -429,7 +429,6 @@ CountKeyS++; // число нажатых кнопок
     
   }
   /* USER CODE END EXTI15_10_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_13);
   HAL_GPIO_EXTI_IRQHandler(BUT_START_Pin);
   /* USER CODE BEGIN EXTI15_10_IRQn 1 */
 
