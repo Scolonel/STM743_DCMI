@@ -55,7 +55,8 @@ void MX_UART5_Init(void)
   huart5.Init.OverSampling = UART_OVERSAMPLING_16;
   huart5.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
   huart5.Init.ClockPrescaler = UART_PRESCALER_DIV1;
-  huart5.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  huart5.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_TXINVERT_INIT;
+  huart5.AdvancedInit.TxPinLevelInvert = UART_ADVFEATURE_TXINV_ENABLE;
   if (HAL_UART_Init(&huart5) != HAL_OK)
   {
     Error_Handler();
