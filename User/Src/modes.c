@@ -6672,10 +6672,12 @@ WORD CheckLevelBattery (void) // контроль заряда баттареи
 {
   static volatile WORD BufProcBat[10]={100,100,100,100,100,100,100,100,100,100};
   WORD ProcBatMed, ProcBatSum;
-//123  ADCData = ADC0Read(BAT_ADC);//новое правило получения данных АЦП батарейки
-  ADCData = 2048;
-  Ubat = ADCData * GetSetBatStep(0)* 3 ; // так как делитель на 3, может не надо -0.3- 0.3
-    if (Ubat > 5.1) ProcBat = 100;
+  //123  ADCData = ADC0Read(BAT_ADC);//новое правило получения данных АЦП батарейки
+  //ADCData = 2048;
+  //Ubat = ADCData * GetSetBatStep(0)* 3 ; // так как делитель на 3, может не надо -0.3- 0.3
+  Ubat = 2.5*2*BufADC[0]/4096; 
+  
+  if (Ubat > 5.1) ProcBat = 100;
   //else if (Ubat >= 4.0) ProcBat = (WORD)((Ubat-4.0)*90.91);//  1.1в = 100%
   //else if (Ubat >= 4.3) ProcBat = (WORD)((Ubat-4.3)*125);//  0.8в = 100%
   else if (Ubat >= 4.15) ProcBat = (WORD)((Ubat-4.15)*105.26);//  0.95в = 100%
@@ -6684,8 +6686,8 @@ WORD CheckLevelBattery (void) // контроль заряда баттареи
     ProcBat = 0; // плохая батарея
   }
   if (!(EXT_POW)) ProcBat = 100; // если внешне питание подсветку включаем
-
-//123  SetContrast (Ubat, GetUserContr()); // возможно не нужна!
+  
+  //123  SetContrast (Ubat, GetUserContr()); // возможно не нужна!
   ProcBatSum=0;
   for (int i=9;i>0;--i)
   {

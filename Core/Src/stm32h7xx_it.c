@@ -288,6 +288,7 @@ void DMA1_Stream1_IRQHandler(void)
 //    EnaNextAvrg = 1;
 //
 //  }
+  HAL_ADC_Stop_DMA(&hadc1);
 
   /* USER CODE END DMA1_Stream1_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_adc1);

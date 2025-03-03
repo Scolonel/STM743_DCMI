@@ -18,7 +18,7 @@
 #define POWDET(a)    ((a>0)?(CtrlExpand(POW_DET_ON, POW_DET_ON)):(CtrlExpand(0, POW_DET_ON)))  /* set POW_DET_ON to high/low */
 #define POWREF(a)    ((a>0)?(CtrlExpand(POW_REF_ON, POW_REF_ON)):(CtrlExpand(0, POW_REF_ON)))  /* set POW_REF_ON to high/low */
 //#define POWALT(a)    ((a>0)?(FIO4SET |= V_ALT_ON):(FIO4CLR |= V_ALT_ON))  /* set V_ALT_ON to high/low */
-#define EXT_POW           HAL_GPIO_ReadPin(PWR_EXT_GPIO_Port, PWR_EXT_Pin)  // PD10 (79) // сигнал внешнего питания 0-внешнее питание
+#define EXT_POW           HAL_GPIO_ReadPin(EXT_POWER_GPIO_Port, EXT_POWER_Pin)  // PE3 (2) // сигнал внешнего питания 0-внешнее питание
 // пины конфигураторы железа
 #define TEST_VER           (1UL<<26)  // P3.26 (55) // сигнал контроля версий
 #define TEST_PIN2         (1UL<<21)  // P1.21 (72) пин контроля новых плат июнь2012 (перепутана клава)
@@ -26,6 +26,8 @@
 
 // получение идентификатора платы
 #define GETIDPLT           (HAL_GPIO_ReadPin(IDC1_GPIO_Port, IDC1_Pin)<<1)+(HAL_GPIO_ReadPin(IDC0_GPIO_Port, IDC0_Pin))  // PD10 (79) // сигнал внешнего питания 0-внешнее питание
+// чтение внешнего питания
+#define GETEXTPWR           (HAL_GPIO_ReadPin(EXT_POWER_GPIO_Port, EXT_POWER_Pin)) // PE3 (2) // сигнал внешнего питания 0-внешнее питание
 
 // сигналы управления высоким напряжением -  в новых платах 
 #define HV_CTRL           (0x02)  // P1 (CTRL) // сигнал пониженного напряжения

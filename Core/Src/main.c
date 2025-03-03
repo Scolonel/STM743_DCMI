@@ -198,6 +198,10 @@ unsigned int TimerValueJDSU; // текущее значение частоты приемника RS
 //  FIL Fil;
 //  FRESULT FR_Status;
 //  FRESULT res;
+// для батарейки
+  char LvlBatInd=0; //индикатор уровня батарейки
+char PeriodIntADC=0; // счетчик запуска внутреннего АЦП и измерения уровня батарейки
+//float Ubat=4.1; // начальное напряжение батареи
 
 /* USER CODE END PV */
 
@@ -241,7 +245,7 @@ int main(void)
   PeriphCommonClock_Config();
 
   /* USER CODE BEGIN SysInit */
-    MX_GPIO_Init();
+  MX_GPIO_Init();
   if(ID_PLATE != GETIDPLT)
   {
     CheckErrID_Plate=1;
@@ -311,10 +315,10 @@ int main(void)
   // проверяем конфигурацию платы, чтобы не запустить программу по исправленю
   // если вдруг зашили чужую программу, попытаемся написать в индикатор и зациклится
   
-//  if(ID_PLATE != GETIDPLT)
-//  {
-//    CheckErrID_Plate=1;
-//  }
+  //  if(ID_PLATE != GETIDPLT)
+  //  {
+  //    CheckErrID_Plate=1;
+  //  }
   // Start Uart7 - Nextion
   Dummy = huart7.Instance->RDR ; // чистим буффер приема от NEXTION
   HAL_UART_Receive_IT(&huart7, RX_BufNEX,1); // ждем принятия первого байта из внешнего мира
@@ -332,57 +336,59 @@ int main(void)
   HAL_Delay(10);
   sprintf((void*)Str,"bauds=115200яяя");
   HAL_UART_Transmit(&huart7, (void*)Str,strlen((void*)Str),20); // выдаем 
-
+  
   //NEX_Transmit(Str);// 
-   HAL_Delay(10);
+  HAL_Delay(10);
   huart7.Init.BaudRate = 115200;
   if (HAL_UART_Init(&huart7) != HAL_OK)
   {
     Error_Handler();
   }
- //  myBeep(100);
+  //  myBeep(100);
   HAL_Delay(10);
-
+  sprintf((void*)Str, "page 0яяя"); // < START>
+  NEX_Transmit((void*)Str);    //
+  
   // так как появилось I2C - конфигурация прибора и управление клавиатурой 
   // будет первым настраиваться
   // так как повторяем конфигурацию из 7kAR, то скомбинируем из DataDevice MemFlash(у нас PCA955x)
-
+  
   CheckErrMEM = BeginConfig();
   
   CheckErrMEM |= StartInitSDcard();
-
-//  // попробуем проинициализировать SD Card
-//  // пустое подключение с первого раза не берет
-//  res = f_mount(&FatFsMain, SDPath, 1);
-//  FR_Status = f_mount(NULL, "", 0);
-//  //
-//  HAL_Delay(100);
-//  res = f_mount(&FatFsMain, SDPath, 1);
-//      if (res != FR_OK) // какие-то проблемы с SD Card
-//    {
-//      CheckErrMEM |= ERR_SDCard;
-//      //sprintf(TxBuffer, "Error! While Mounting SD Card, Error Code: (%i)\r\n", FR_Status);
-//      //UARTSendExt((void*)TxBuffer,strlen(TxBuffer)); // выдаем 
-//    }
-//
-//    res = f_mkdir("0:/_OTDR");
-//    if(res != FR_EXIST)
-//    {
-//      CheckErrMEM |= CLR_SDCard;
-//    }
-//        // почитаем директории...только что созданные 
-//    res = f_opendir(&dir, "0:/_OTDR");
-//    f_closedir(&dir);
-//    
-//    sprintf((void*)TxBufAns,"TOP_N%04d",ConfigDevice.NumDevice);
-//    
-//    res = f_setlabel (TxBufAns);							/* Set volume label */
-//
-//
-//  FR_Status = f_mount(NULL, "", 0);
-//      // создаем или проверяем наличие дирректории _OTDR
-
-
+  
+  //  // попробуем проинициализировать SD Card
+  //  // пустое подключение с первого раза не берет
+  //  res = f_mount(&FatFsMain, SDPath, 1);
+  //  FR_Status = f_mount(NULL, "", 0);
+  //  //
+  //  HAL_Delay(100);
+  //  res = f_mount(&FatFsMain, SDPath, 1);
+  //      if (res != FR_OK) // какие-то проблемы с SD Card
+  //    {
+  //      CheckErrMEM |= ERR_SDCard;
+  //      //sprintf(TxBuffer, "Error! While Mounting SD Card, Error Code: (%i)\r\n", FR_Status);
+  //      //UARTSendExt((void*)TxBuffer,strlen(TxBuffer)); // выдаем 
+  //    }
+  //
+  //    res = f_mkdir("0:/_OTDR");
+  //    if(res != FR_EXIST)
+  //    {
+  //      CheckErrMEM |= CLR_SDCard;
+  //    }
+  //        // почитаем директории...только что созданные 
+  //    res = f_opendir(&dir, "0:/_OTDR");
+  //    f_closedir(&dir);
+  //    
+  //    sprintf((void*)TxBufAns,"TOP_N%04d",ConfigDevice.NumDevice);
+  //    
+  //    res = f_setlabel (TxBufAns);							/* Set volume label */
+  //
+  //
+  //  FR_Status = f_mount(NULL, "", 0);
+  //      // создаем или проверяем наличие дирректории _OTDR
+  
+  
   // Start Uart3 - внешний мир
   Dummy = huart3.Instance->RDR ; // чистим буффер приема от SIM
   HAL_UART_Receive_IT(&huart3, RxBufExt,1); // ждем принятия первого байта из внешнего мира
@@ -400,44 +406,44 @@ int main(void)
   __HAL_UART_DISABLE_IT(&huart5, UART_IT_PE);
   /* disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
   __HAL_UART_DISABLE_IT(&huart5, UART_IT_ERR);
- 
-   //HAL_TIM_PWM_Start (&htim12, TIM_CHANNEL_2 ); // запускаем таймер синхронизации ЦАП 
+  
+  //HAL_TIM_PWM_Start (&htim12, TIM_CHANNEL_2 ); // запускаем таймер синхронизации ЦАП 
   //HAL_TIM_Base_Start(&htim4); // запускаем таймер для DAC и DAC 
   // прочитаем клавиатуру
   
   //
- // myBeep(100);
-//  HAL_Delay(500);
-    //  порождение строки версии
+  // myBeep(100);
+  //  HAL_Delay(500);
+  //  порождение строки версии
   sprintf(NumVer,"%03d",g_NumVer); // новый список версий
-
+  
   
   
   if (HAL_ADCEx_Calibration_Start(&hadc1, ADC_CALIB_OFFSET_LINEARITY, ADC_SINGLE_ENDED) != HAL_OK)
   {
-      myBeep(100);
-
+    myBeep(100);
+    
     Error_Handler();
-   }
+  }
   //  if (HAL_ADCEx_Calibration_Start(&hadc2, ADC_CALIB_OFFSET_LINEARITY, ADC_SINGLE_ENDED) != HAL_OK)
   //  {
   //    Error_Handler();
   //  }
   
-//  myBeep(100);
-//  HAL_Delay(500);
+  //  myBeep(100);
+  //  HAL_Delay(500);
   
   if (HAL_ADC_Start_DMA(&hadc1,
                         (uint32_t *)BufADC,
-                        SizeBuf_ADC_int
+                        3
                           ) != HAL_OK)
   {
-      myBeep(100);
-
+    myBeep(100);
+    
     Error_Handler();
   }
-//  myBeep(100);
-//  HAL_Delay(500);
+  //  myBeep(100);
+  //  HAL_Delay(500);
   //DCMI->CR|=DCMI_CR_CAPTURE;          // DCMI capture enable
   
   //  if (HAL_ADC_Start_DMA(&hadc2,
@@ -478,19 +484,19 @@ int main(void)
   HAL_Delay(100);
   sprintf((void*)Str,"bauds=115200яяя");
   HAL_UART_Transmit(&huart7, (void*)Str,strlen((void*)Str),20); // выдаем 
-
+  
   //NEX_Transmit(Str);// 
-   HAL_Delay(100);
+  HAL_Delay(100);
   huart7.Init.BaudRate = 115200;
   if (HAL_UART_Init(&huart7) != HAL_OK)
   {
     Error_Handler();
   }
- //  myBeep(100);
+  //  myBeep(100);
   HAL_Delay(100);
-
   
- // необходимо запустить таймеры, но они работают от мастера TIM1, 
+  
+  // необходимо запустить таймеры, но они работают от мастера TIM1, 
   // в прерывании которго они могут перекофигурироваться и запускатся по его Перезаписи чуть позже!
   HAL_TIM_PWM_Start_IT (&htim1, TIM_CHANNEL_1 ); // мастер таймер Период повторения 
   HAL_TIM_PWM_Start (&htim3, TIM_CHANNEL_4 ); // Зондир.Импульс Тетсовый вроде как надо запустить таймеры
@@ -499,43 +505,43 @@ int main(void)
   HAL_TIM_PWM_Start_IT (&htim5, TIM_CHANNEL_4 ); // для подсчета времени когда начать ссумировать
   //HAL_Delay(10);
   StopAllTIM(1);  // остановка таймеров (OTDR)
- 
- //инициализация DCMI DMA (пока 10 точек но это не важно)
+  
+  //инициализация DCMI DMA (пока 10 точек но это не важно)
   // важно определить режим и буфер
- HAL_DCMI_Start_DMA(&hdcmi,DCMI_MODE_SNAPSHOT,(uint32_t)BufADD,10);
- 
-//  HAL_Delay(100);
-//    sprintf((void*)Str,"page 1яяя");
-//  NEX_Transmit(Str);// 
-//  HAL_Delay(100);
-//  HAL_Delay(100);
-//    sprintf((void*)Str,"page 1яяя");
-//  NEX_Transmit(Str);// 
-//  HAL_Delay(100);
-//    myBeep(100);
-//
-//    sprintf((void*)Str,"page 23яяя");
-//  NEX_Transmit(Str);// 
-//  HAL_Delay(100);
-
+  HAL_DCMI_Start_DMA(&hdcmi,DCMI_MODE_SNAPSHOT,(uint32_t)BufADD,10);
+  
+  //  HAL_Delay(100);
+  //    sprintf((void*)Str,"page 1яяя");
+  //  NEX_Transmit(Str);// 
+  //  HAL_Delay(100);
+  //  HAL_Delay(100);
+  //    sprintf((void*)Str,"page 1яяя");
+  //  NEX_Transmit(Str);// 
+  //  HAL_Delay(100);
+  //    myBeep(100);
+  //
+  //    sprintf((void*)Str,"page 23яяя");
+  //  NEX_Transmit(Str);// 
+  //  HAL_Delay(100);
+  
   InitBtns(); 
   //вызов функции установки лазеров по местам согласно конфигурации
-        SetIndxSeqLS();
-   // востановим из памяти коментарий
-   memcpy( CommentsOTDR,NameDB.UserComm, 20 );
-
+  SetIndxSeqLS();
+  // востановим из памяти коментарий
+  memcpy( CommentsOTDR,NameDB.UserComm, 20 );
+  
   //myBeep(100);
   //HAL_Delay(100);
   // начало работы..
   TimeBegin = HAL_GetTick();
   
-    CmdInitPage(0);// вызов окна заставки
+  CmdInitPage(0);// вызов окна заставки
   HAL_Delay(100);
   SetMode (ModeWelcome);
   CmdInitPage(0);// посылка команды переключения окна на Welcome и установка признака первого входа
   MX_USB_DEVICE_Init();
-
-//  MX_USB_DEVICE_Init(); //инициализация USB - долгий процесс
+  
+  //  MX_USB_DEVICE_Init(); //инициализация USB - долгий процесс
   // повисим возможно сдесь если подключены  к линии писаноем туда сообщение
   // здесь запускается "долгий" процесс связи с компьютером, и мешает инициализации, стоит
   // что-то предпринять
@@ -547,7 +553,7 @@ int main(void)
   { 
     //HAL_GPIO_TogglePin(KTS_GPIO_Port, KTS_Pin);
     // проверка кнопок 
-    if(GetSysTick(0)>30)// каждые 30 мС или больше...
+    if((GetSysTick(0)>30)&&(!ProgFW_LCD))// каждые 30 мС или больше...
     {
       KeyP = SetBtnStates( GetExpand (), 1 ); // опрос клавиатуры
       GetSysTick(1);// сброс системного ожидания
@@ -556,147 +562,159 @@ int main(void)
       // поконтролить батарейку
       // инекремент таймаре PA
       CountTimerPA++;
+      
+      if(++PeriodIntADC > 15)
+      {
+        // здесь можно запустить Измерение АЦП
+        if (HAL_ADC_Start_DMA(&hadc1,(uint32_t *)&BufADC,3) != HAL_OK)
+        {
+          myBeep(100);
+          Error_Handler();
+        }
+        PeriodIntADC = 0;
+      }
+      
     }
     // проверка приема по UART EXT
-          if (RSDecYes) // вызов программы обработки комманды принятой по UART
-      {
-        DecodeCommandRS();
-      }
-
+    if (RSDecYes) // вызов программы обработки комманды принятой по UART
+    {
+      DecodeCommandRS();
+    }
+    
     
     // режим программирования индикатора и ответы от индикатора
     if(Uart2DecYes)
     {
       if(ProgFW_LCD)
       {
-             CDC_Transmit(0, (uint8_t*)RX_BufNEX, CntRXNEX ); // echo back on same channel
+        CDC_Transmit(0, (uint8_t*)RX_BufNEX, CntRXNEX ); // echo back on same channel
       }
       else
       {
         // что-то приняли в ответ от индикатора, можно посмотреть
-            CheckStrNEX (); // проверка принятой строки  
-
+        CheckStrNEX (); // проверка принятой строки  
+        
       }
       Uart2DecYes=0;
       RecievNEX=STOP_UART;
     }
-     
-// надо объединить в непрерывную функцию сбора по установленным параметрм
     
-//    // начало измерения устанавливаем исходные параметры измерения, 
-//    // число проходов, шаг изменения положения зонд импульса
-//    if(EnaStartRun)
-//      {//
-//      StartRunFirst(); // подготовка перед запуском измерений
-//      // первое прерывание от TIM1_CCR1 пред начало счета ТИМ1
-//      while(Ena_AVRG)
-//      {
-//        //CountWait=0;
-//        //LED_START(1);
-//        while(Ena_CFG) // ждем установок для измерения
-//        {
-//        //  CountWait++;
-//        asm("NOP");
-//        }
-//       // LED_START(0);
-//       // BufNAK[0] = CountWait;
-//       // CountWait=0;
-//       // LED_START(1);
-//        while(Ena_SUMM)
-//        {
-//       //   CountWait++;
-//        asm("NOP");
-//        }
-//       // LED_START(0);
-//       // BufNAK[1] = CountWait;
-//             ContNextAvrg();
-//
-//        
-//      }
-//      EnaStartRun=0;
-//      }
-
-//    // суммирование текущего накопления , параметры должны быть установленны заранее
-//    // нужно посчитать число проходов ДМА - возможно это размер массива деленный на число повторений
-//    // если накопили до конца отключаем основной таймер и тормозим все остаальные
-//    // если суммируем перустанавливаем основной таймер в пред окончание и его запускаем
-//    if(EnaNextAvrg)
-//    {
-//      EnaNextAvrg = 0;
-//    }
+    // надо объединить в непрерывную функцию сбора по установленным параметрм
+    
+    //    // начало измерения устанавливаем исходные параметры измерения, 
+    //    // число проходов, шаг изменения положения зонд импульса
+    //    if(EnaStartRun)
+    //      {//
+    //      StartRunFirst(); // подготовка перед запуском измерений
+    //      // первое прерывание от TIM1_CCR1 пред начало счета ТИМ1
+    //      while(Ena_AVRG)
+    //      {
+    //        //CountWait=0;
+    //        //LED_START(1);
+    //        while(Ena_CFG) // ждем установок для измерения
+    //        {
+    //        //  CountWait++;
+    //        asm("NOP");
+    //        }
+    //       // LED_START(0);
+    //       // BufNAK[0] = CountWait;
+    //       // CountWait=0;
+    //       // LED_START(1);
+    //        while(Ena_SUMM)
+    //        {
+    //       //   CountWait++;
+    //        asm("NOP");
+    //        }
+    //       // LED_START(0);
+    //       // BufNAK[1] = CountWait;
+    //             ContNextAvrg();
+    //
+    //        
+    //      }
+    //      EnaStartRun=0;
+    //      }
+    
+    //    // суммирование текущего накопления , параметры должны быть установленны заранее
+    //    // нужно посчитать число проходов ДМА - возможно это размер массива деленный на число повторений
+    //    // если накопили до конца отключаем основной таймер и тормозим все остаальные
+    //    // если суммируем перустанавливаем основной таймер в пред окончание и его запускаем
+    //    if(EnaNextAvrg)
+    //    {
+    //      EnaNextAvrg = 0;
+    //    }
     //здесь когда закончили очередной DMA можно проссумировать 
     // с параметром смещения зондирующего импульса,
     // по окнчании ссумрования можно перезустить новый ДМА
     // переустановить положение зонд импульса
-    if(EnaPrintRes)
-    {
-      //LED_Y(0);
-      //HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 0x0);
-      //TIM6->CR1 &=~TIM_CR1_CEN;
-      //TIM6->CNT =0;
-      //TIM2->CR1 &=~TIM_CR1_CEN;
-      //TIM2->CNT =0;
-      // быстро посчитаем Логарифм
-      if(PressKey)
-      {
-        GetLogData ();
-        
-        
-        //LED_R(1); // delete
-        // выдадим файл
-       // SendFileBelcore ();
-        // и запишем тест файл...
-        HAL_Delay(200);
-     //   SDMMC_SDCard_Test(CntIzmer);
-        CntIzmer++;
-        HAL_Delay(200);
-        //LED_R(0); //delete
-        PressKey =0;
-        MeasureNow =0; //выключаем ограничение на прорисовку режима
-      }
-      // остановим таймер для ЦАП
-      //HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 0x0);
-      //      int sos = StartTime&0x3;
-      //      switch(sos)
-      //      {
-      //      case 0:
-      //        SM = 100;
-      //        break;
-      //      case 1:
-      //        SM = 200;
-      //        break;
-      //      case 2:
-      //        SM = 300;
-      //        break;
-      //      case 3:
-      //        SM = 400;
-      //        break;
-      //      }
-      
-      EnaPrintRes=0;
-    }
+    //    if(EnaPrintRes)
+    //    {
+    //      //LED_Y(0);
+    //      //HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 0x0);
+    //      //TIM6->CR1 &=~TIM_CR1_CEN;
+    //      //TIM6->CNT =0;
+    //      //TIM2->CR1 &=~TIM_CR1_CEN;
+    //      //TIM2->CNT =0;
+    //      // быстро посчитаем Логарифм
+    //      if(PressKey)
+    //      {
+    //        GetLogData ();
+    //        
+    //        
+    //        //LED_R(1); // delete
+    //        // выдадим файл
+    //       // SendFileBelcore ();
+    //        // и запишем тест файл...
+    //        HAL_Delay(200);
+    //     //   SDMMC_SDCard_Test(CntIzmer);
+    //        CntIzmer++;
+    //        HAL_Delay(200);
+    //        //LED_R(0); //delete
+    //        PressKey =0;
+    //        MeasureNow =0; //выключаем ограничение на прорисовку режима
+    //      }
+    //      // остановим таймер для ЦАП
+    //      //HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 0x0);
+    //      //      int sos = StartTime&0x3;
+    //      //      switch(sos)
+    //      //      {
+    //      //      case 0:
+    //      //        SM = 100;
+    //      //        break;
+    //      //      case 1:
+    //      //        SM = 200;
+    //      //        break;
+    //      //      case 2:
+    //      //        SM = 300;
+    //      //        break;
+    //      //      case 3:
+    //      //        SM = 400;
+    //      //        break;
+    //      //      }
+    //      
+    //      EnaPrintRes=0;
+    //    }
     // все параметры включим до вызова сновного цикала
-    if(!MeasureNow)
+    if((!MeasureNow)&&(!ProgFW_LCD))
     {
-    ModeFuncTmp(); // прорисовка текущего режима - основной цикл
-    }
-    // проверим занятость USB  и соотв высветим значек
-    if(ModeUSB)
-    {
-      switch (ModeUSB)
+      ModeFuncTmp(); // прорисовка текущего режима - основной цикл
+      // проверим занятость USB  и соотв высветим значек
+      if(ModeUSB)
       {
-    case 1:
-    sprintf((void*)Str,"pic 460,0,11яяя");//black
-      break;
-    case 2: // отключили USB
-    sprintf((void*)Str,"pic 460,0,12яяя");//empty
-      break;
-    case 3:
-    sprintf((void*)Str,"pic 460,0,9яяя");//RED
-      break;
+        switch (ModeUSB)
+        {
+        case 1:
+          sprintf((void*)Str,"pic 460,0,11яяя");//black
+          break;
+        case 2: // отключили USB
+          sprintf((void*)Str,"pic 460,0,12яяя");//empty
+          break;
+        case 3:
+          sprintf((void*)Str,"pic 460,0,9яяя");//RED
+          break;
+        }
+        ModeUSB = 0;
+        NEX_Transmit((void*)Str);// 
       }
-      ModeUSB = 0;
-    NEX_Transmit((void*)Str);// 
     }
     /* USER CODE END WHILE */
 
@@ -785,8 +803,16 @@ void PeriphCommonClock_Config(void)
   /** Initializes the peripherals clock
   */
   PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USB|RCC_PERIPHCLK_ADC
-                              |RCC_PERIPHCLK_UART5|RCC_PERIPHCLK_UART7
-                              |RCC_PERIPHCLK_USART3;
+                              |RCC_PERIPHCLK_SDMMC|RCC_PERIPHCLK_UART5
+                              |RCC_PERIPHCLK_UART7|RCC_PERIPHCLK_USART3;
+  PeriphClkInitStruct.PLL2.PLL2M = 16;
+  PeriphClkInitStruct.PLL2.PLL2N = 144;
+  PeriphClkInitStruct.PLL2.PLL2P = 3;
+  PeriphClkInitStruct.PLL2.PLL2Q = 8;
+  PeriphClkInitStruct.PLL2.PLL2R = 6;
+  PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_1;
+  PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
+  PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
   PeriphClkInitStruct.PLL3.PLL3M = 16;
   PeriphClkInitStruct.PLL3.PLL3N = 96;
   PeriphClkInitStruct.PLL3.PLL3P = 2;
@@ -795,7 +821,8 @@ void PeriphCommonClock_Config(void)
   PeriphClkInitStruct.PLL3.PLL3RGE = RCC_PLL3VCIRANGE_1;
   PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3VCOWIDE;
   PeriphClkInitStruct.PLL3.PLL3FRACN = 0;
-  PeriphClkInitStruct.Usart234578ClockSelection = RCC_USART234578CLKSOURCE_PLL3;
+  PeriphClkInitStruct.SdmmcClockSelection = RCC_SDMMCCLKSOURCE_PLL2;
+  PeriphClkInitStruct.Usart234578ClockSelection = RCC_USART234578CLKSOURCE_PLL2;
   PeriphClkInitStruct.UsbClockSelection = RCC_USBCLKSOURCE_PLL3;
   PeriphClkInitStruct.AdcClockSelection = RCC_ADCCLKSOURCE_PLL3;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)

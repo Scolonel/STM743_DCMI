@@ -1741,12 +1741,12 @@ void  SetupSource (BYTE ModeLS) // установка режима работы лазера
     break;
   case 2: // выключаем источник и перестраиваем UART и запускаем Генерацию меандра 275 Hz
     PHLD(0);
+    HAL_UART_DMAStop(&huart5);
     huart5.Init.BaudRate = 550;
     if (HAL_UART_Init(&huart5) != HAL_OK)
     {
       Error_Handler();
     }
-    HAL_UART_DMAStop(&huart5);
     //HAL_UART_Receive_IT(&huart2, RxBufOpt,1); // ждем принятия первого байта из внешнего мира
     //Dummy = huart2.Instance->DR ; // чистим буффер приема 
     
@@ -1755,12 +1755,12 @@ void  SetupSource (BYTE ModeLS) // установка режима работы лазера
     break;
   case 3: // выключаем источник и и перестраиваем UART и запускаем Генерацию меандра 2 kHz
     PHLD(0);
+    HAL_UART_DMAStop(&huart5);
     huart5.Init.BaudRate = 4000;
     if (HAL_UART_Init(&huart5) != HAL_OK)
     {
       Error_Handler();
     }
-    HAL_UART_DMAStop(&huart5);
     //HAL_UART_Receive_IT(&huart2, RxBufOpt,1); // ждем принятия первого байта из внешнего мира
     //Dummy = huart2.Instance->DR ; // чистим буффер приема 
     
@@ -1769,12 +1769,12 @@ void  SetupSource (BYTE ModeLS) // установка режима работы лазера
     break;
   case 4: // выключаем источник и перестраиваем UART на скорость 1200
     PHLD(0);
+    HAL_UART_DMAStop(&huart5);
     huart5.Init.BaudRate = 1200;
     if (HAL_UART_Init(&huart5) != HAL_OK)
     {
       Error_Handler();
     }
-    HAL_UART_DMAStop(&huart5);
     //HAL_UART_Receive_IT(&huart2, RxBufOpt,1); // ждем принятия первого байта из внешнего мира
     //Dummy = huart2.Instance->DR ; // чистим буффер приема 
     //    HAL_UART_DMAStop(&huart2);
