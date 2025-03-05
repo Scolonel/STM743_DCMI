@@ -21,7 +21,8 @@
 #include "rtc.h"
 
 /* USER CODE BEGIN 0 */
-
+  #define TIMELASTVERSION  1741158000
+// 1741158000 - 2025/03/05 10:00:00
   #define YearSecV  31622400
   #define YearSec   31536000
   #define DaySec    86400
@@ -71,7 +72,9 @@ void MX_RTC_Init(void)
        // время в структуре
     unsigned int CurTime = TotalSec (RTCGetTime()); 
    //  1731664800 - 15 nov 2024 10.00.00
-  if(CurTime < 1731664800)
+   // if(CurTime < TIMELASTVERSION1731664800)
+
+  if(CurTime < TIMELASTVERSION)
   {
   /* USER CODE END Check_RTC_BKUP */
 
@@ -87,9 +90,9 @@ void MX_RTC_Init(void)
     Error_Handler();
   }
   sDate.WeekDay = RTC_WEEKDAY_MONDAY;
-  sDate.Month = RTC_MONTH_NOVEMBER;
-  sDate.Date = 21;
-  sDate.Year = 24;
+  sDate.Month = RTC_MONTH_MARCH;
+  sDate.Date = 05;
+  sDate.Year = 25;
 
   if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK)
   {

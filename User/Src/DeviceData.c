@@ -72,9 +72,10 @@ uint8_t TxOptBusy=0; // признак зан€тости UatrOptic
 uint8_t TimeSCWP=0; // счетчик времени дл€ переключени€ лазеров
 
 
-static volatile BYTE ModeLS = 0; // режим источника
+uint8_t ModeLS = 0; // режим источника
 static volatile BYTE ModeRE = 0; // режим VFL
 static DWORD CurrentBegShiftZone = 0;
+uint8_t NeedFreq=0; // необходимо перезапустить генерацию через ƒћј
 
 
 static volatile BYTE IndBkLight = 0; // указатель на выбор длительности подсветки
@@ -1741,7 +1742,6 @@ void  SetupSource (BYTE ModeLS) // установка режима работы лазера
     break;
   case 2: // выключаем источник и перестраиваем UART и запускаем √енерацию меандра 275 Hz
     PHLD(0);
-    HAL_UART_DMAStop(&huart5);
     huart5.Init.BaudRate = 550;
     if (HAL_UART_Init(&huart5) != HAL_OK)
     {
@@ -1749,13 +1749,13 @@ void  SetupSource (BYTE ModeLS) // установка режима работы лазера
     }
     //HAL_UART_Receive_IT(&huart2, RxBufOpt,1); // ждем прин€ти€ первого байта из внешнего мира
     //Dummy = huart2.Instance->DR ; // чистим буффер приема 
+    HAL_UART_DMAStop(&huart5);
     
     HAL_UART_Transmit_DMA(&huart5, (void*)TxGenOpt,strlen((void*)TxGenOpt)); // выдаем 
     LED_START(ON);
     break;
   case 3: // выключаем источник и и перестраиваем UART и запускаем √енерацию меандра 2 kHz
     PHLD(0);
-    HAL_UART_DMAStop(&huart5);
     huart5.Init.BaudRate = 4000;
     if (HAL_UART_Init(&huart5) != HAL_OK)
     {
@@ -1763,13 +1763,13 @@ void  SetupSource (BYTE ModeLS) // установка режима работы лазера
     }
     //HAL_UART_Receive_IT(&huart2, RxBufOpt,1); // ждем прин€ти€ первого байта из внешнего мира
     //Dummy = huart2.Instance->DR ; // чистим буффер приема 
+    HAL_UART_DMAStop(&huart5);
     
     HAL_UART_Transmit_DMA(&huart5, (void*)TxGenOpt,strlen((void*)TxGenOpt)); // выдаем 
     LED_START(ON);
     break;
   case 4: // выключаем источник и перестраиваем UART на скорость 1200
     PHLD(0);
-    HAL_UART_DMAStop(&huart5);
     huart5.Init.BaudRate = 1200;
     if (HAL_UART_Init(&huart5) != HAL_OK)
     {
@@ -1778,6 +1778,7 @@ void  SetupSource (BYTE ModeLS) // установка режима работы лазера
     //HAL_UART_Receive_IT(&huart2, RxBufOpt,1); // ждем прин€ти€ первого байта из внешнего мира
     //Dummy = huart2.Instance->DR ; // чистим буффер приема 
     //    HAL_UART_DMAStop(&huart2);
+    HAL_UART_DMAStop(&huart5);
     TimeSCWP = 70; // 3.5sec
     LED_START(ON);
     break;
@@ -1790,22 +1791,22 @@ void  SetupSource (BYTE ModeLS) // установка режима работы лазера
 }
 //
 // функци€ переключени€ лазеров по кругу с излучением информации о себе
-void Run_SCWP(void) // каждые 50 м—
+void Run_SCWP(void) // каждые 30 м—
 {
-  if(TimeSCWP++<70)
+  if(TimeSCWP++<116) // ~3.5 сек
   {
     switch(TimeSCWP)
     {
-    case 2:
+    case 3: // 90м—
       sprintf((char*)StrTXOpt, "UUUU####SL%4u %.2f\rUUU",GetLengthWaveLS(GetPlaceLS (CURRENT)),-30.0);//UUU ooo1300
-      HAL_UART_Transmit_DMA(&huart5, (void*)StrTXOpt,strlen((void*)StrTXOpt)); // выдаем 
+      HAL_UART_Transmit_DMA(&huart5, (void*)StrTXOpt,strlen((void*)StrTXOpt)); // выдаем (врем€ выдачи ~210м—)
       TxOptBusy = 1;
       //TsT(1);// дернем ногой дл€ проверки
       //  HAL_GPIO_WritePin(test_GPIO_Port, test_Pin, GPIO_PIN_SET); 
 
       //HAL_Delay(200);
       break;
-    case 10: // через 500 м— после старта передачи... 
+    case 16: // через 500 м— после старта передачи... 
       PHLD(1); // on CW 
       break;
     default:
@@ -1825,7 +1826,17 @@ void Run_SCWP(void) // каждые 50 м—
     //NeedReDraw = 1;
   }
 }
-
+// продолжение модул€ции при выбранной модул€ции
+void ContinueModulation(void)
+{
+  if(NeedFreq) // дл€ режимов излучени€ источника 270√ц и 2к√ц
+  {
+    //if(HAL_UART_Transmit_DMA(&huart5, (void*)TxGenOpt,strlen((void*)TxGenOpt))==HAL_OK) // выдаем 
+    HAL_UART_Transmit_DMA(&huart5, (void*)TxGenOpt,strlen((void*)TxGenOpt)); // выдаем
+    NeedFreq=0;
+  }
+  
+}
 
 unsigned short CalkCheckSum (void)// подсчет контрольной суммы конфигурации прибора
 {

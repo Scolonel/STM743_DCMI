@@ -275,8 +275,11 @@ void FiltrWOW (DWORD* array, unsigned Avrgs );
 int CheckSpeedUart2 (void);
 // События конца
 //extern unsigned short PosEndEvenBlkELMP; // позиция расположения конца линии в отсчетах (надо продублировать для получения данных
-
+// оптический UART переменные
 extern UART_HandleTypeDef huart5;
+extern uint8_t NeedFreq; // необходимо перезапустить генерацию через ДМА
+extern uint8_t ModeLS; // режим источника
+extern uint8_t TxOptBusy; // признак занятости UatrOptic
 
 // extern void (*ModeFunc)(void);
 //extern unsigned short LogData[OUTSIZE] ; // логарифмические данные

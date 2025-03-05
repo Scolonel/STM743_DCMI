@@ -6675,7 +6675,7 @@ WORD CheckLevelBattery (void) // контроль заряда баттареи
   //123  ADCData = ADC0Read(BAT_ADC);//новое правило получения данных АЦП батарейки
   //ADCData = 2048;
   //Ubat = ADCData * GetSetBatStep(0)* 3 ; // так как делитель на 3, может не надо -0.3- 0.3
-  Ubat = 2.5*2*BufADC[0]/4096; 
+  Ubat = 2.5*3*BufADC[0]/4096; 
   
   if (Ubat > 5.1) ProcBat = 100;
   //else if (Ubat >= 4.0) ProcBat = (WORD)((Ubat-4.0)*90.91);//  1.1в = 100%

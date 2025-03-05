@@ -355,10 +355,19 @@ void DMA1_Stream3_IRQHandler(void)
 void DMA1_Stream5_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA1_Stream5_IRQn 0 */
-
+// прерывание по окончании передачи по оптике UART5
+  // нам нужен бит TCIF5 (11) in register  DMA_HISR
+  if(DMA1->HISR & 0x800)
+  {
+    HAL_UART_DMAStop(&huart5);
+     TxOptBusy = 0; // сбросим признак зан€тости оптики
+      NeedFreq = 1;
+  }
   /* USER CODE END DMA1_Stream5_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_uart5_tx);
   /* USER CODE BEGIN DMA1_Stream5_IRQn 1 */
+    if((ModeLS==2)||(ModeLS==3))
+    ContinueModulation(); // продолжение модул€ции источника дл€ режимов 270√ц и 2к√ц
 
   /* USER CODE END DMA1_Stream5_IRQn 1 */
 }

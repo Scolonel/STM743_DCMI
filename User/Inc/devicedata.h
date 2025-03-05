@@ -261,6 +261,8 @@ float GetCurrLvldB(int Lambda);         // Возвращает текущий уровень привязки
 BYTE PreSetModeLS (BYTE Index); // принудительная установка режима источника
 void  SetupSource (BYTE ModeLS); // установка режима работы лазера
 BYTE GetModeLS (void); // получить режим источника
+// продолжение модуляции при выбранной модуляции
+void ContinueModulation(void);
 
 void GetNumVer (char* Str); // получение номера версии
 void SetNewLeveldB (float RPON, int i); // установка нового уроаня привязки по принятым волнам
