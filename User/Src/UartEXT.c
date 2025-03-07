@@ -997,7 +997,7 @@ void DecodeCommandRS (void)
         {
           Data = (WORD)atoi((char*)&RX_Buf[9]);
           SetupWavePlaceLS((BYTE)(RX_Buf[7]-'1'),Data); // установка длин волн лазеров в посадочные места 
-          sprintf(BufString,"%d %d\r",RX_Buf[7],Data);//c
+          sprintf(BufString,"%d %d\r",RX_Buf[7]-'1',Data);//c
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
           NeedTransmit = 1;
           

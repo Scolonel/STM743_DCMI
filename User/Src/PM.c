@@ -17,6 +17,9 @@ static int Res_Old=0;                 // Предыдущее усредненное значение АЦП с у
 static int Level[40];         // Накопленные значения АЦП с учетом смещения
 static unsigned int PMWavelenght=1310;  // Текущая длина волны
 
+ void MyDe_t (int lin); // подпрограмма формирования программной задержки
+
+
 unsigned int GetPMWavelenght(signed char DeltaLambda) //Возвращает, либо изменяет текущую длину волны
 {
   BYTE i=0;     // Индекс
@@ -132,10 +135,6 @@ void SetSwitchPMMode(BYTE SwMode)
   return;
 }
 
-void MyDe_t (int lin) // подпрограмма формирования программной задержки
-{
-  for (int i=0;i<lin;i++);
-}
 
 
 // ногоДрыганное чтение данных из АЦП
@@ -145,11 +144,11 @@ uint32_t ReadDataADC7782 (void)
   for (int i=0; i<24; i++)
   {
     PM_CLK(0);
-    MyDe_t(2);
+    MyDe_t(100);
     if ((GET_PM_DATA)!=0) Data++;
     PM_CLK(1);  
     Data = Data<<1;
-    MyDe_t(4);
+    MyDe_t(100);
   }
   return Data>>1;
 }
@@ -909,3 +908,11 @@ float GetCoefSpctrKlb(WORD index, float RealPower)     // Возвращает спектральны
 
   
 }
+
+#pragma optimize = none;
+
+ void MyDe_t (int lin) // подпрограмма формирования программной задержки
+{
+  for (int i=0;i<lin;i++);
+}
+
