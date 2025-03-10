@@ -75,6 +75,7 @@
 #include "math.h"
 #include "pm.h" // функции измерителя
 #include "rtc.h" // 
+#include "tim.h" // 
 //#include "fatfs.h"
 #include "pca955x.h"
 #include "buttons.h"   

@@ -17,7 +17,6 @@ static int Res_Old=0;                 // Предыдущее усредненное значение АЦП с у
 static int Level[40];         // Накопленные значения АЦП с учетом смещения
 static unsigned int PMWavelenght=1310;  // Текущая длина волны
 
- void MyDe_t (int lin); // подпрограмма формирования программной задержки
 
 
 unsigned int GetPMWavelenght(signed char DeltaLambda) //Возвращает, либо изменяет текущую длину волны
@@ -136,6 +135,15 @@ void SetSwitchPMMode(BYTE SwMode)
 }
 
 
+ void MyDe_t (int lin) // подпрограмма формирования программной задержки
+ { 
+   TIM7->CNT= 0;
+   TIM7->CR1 |= TIM_CR1_CEN; // START генератора TIM1 (вспомогательный генратор()
+   
+   while(TIM7->CNT < lin) {} // пауза lin мкс
+   TIM7->CR1 &= ~TIM_CR1_CEN; // stop таймера 7
+ }
+
 
 // ногоДрыганное чтение данных из АЦП
 uint32_t ReadDataADC7782 (void)
@@ -144,11 +152,11 @@ uint32_t ReadDataADC7782 (void)
   for (int i=0; i<24; i++)
   {
     PM_CLK(0);
-    MyDe_t(100);
+    MyDe_t(12);
     if ((GET_PM_DATA)!=0) Data++;
     PM_CLK(1);  
     Data = Data<<1;
-    MyDe_t(100);
+    MyDe_t(12);
   }
   return Data>>1;
 }
@@ -202,9 +210,9 @@ int GetPMData(void)
   //FreeCodeADC_PM = 0x800000-DataADC_PM;
   //FreeCodeADC_PM = 0xFFFFFF-DataADC_PM; // для маленьких тесторов
 //  if(DeviceConfig.CfgRE>>1) // если новая плата аналоговая 03.03.2023
-//    FreeCodeADC_PM = 0x800000 - DataADC_PM;
+    FreeCodeADC_PM = 0x800000 - DataADC_PM;
 //  else // старая аналоговая плата
-    FreeCodeADC_PM = DataADC_PM-0x800000;
+//    FreeCodeADC_PM = DataADC_PM-0x800000;
   return  FreeCodeADC_PM;                           // 
 }
 void SetStateADC (BYTE State) // установка режима АЦП
@@ -909,10 +917,5 @@ float GetCoefSpctrKlb(WORD index, float RealPower)     // Возвращает спектральны
   
 }
 
-#pragma optimize = none;
 
- void MyDe_t (int lin) // подпрограмма формирования программной задержки
-{
-  for (int i=0;i<lin;i++);
-}
 
