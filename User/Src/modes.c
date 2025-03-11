@@ -1,7 +1,8 @@
 //#define LANG_NUM 3
 #define ENADRAWORL 1
 //#define ENAOLDLCD 1 //1 - разрешение прорисовки на старый LCD, 0 - нет старого экрана
-
+#define RESISTOR_PWR 50. // номинал резистора (кќм) в делителе дл€ контрол€ напр€жени€ батарейки
+// на макетках стоит 50кќм (2||100кќм)
 
 #define NO_PARENT 0xFFFFFFFF
 #define MAXWIDESMBL 17 // максимальное число широких символов в строке 
@@ -6675,7 +6676,8 @@ WORD CheckLevelBattery (void) // контроль зар€да баттареи
   //123  ADCData = ADC0Read(BAT_ADC);//новое правило получени€ данных ј÷ѕ батарейки
   //ADCData = 2048;
   //Ubat = ADCData * GetSetBatStep(0)* 3 ; // так как делитель на 3, может не надо -0.3- 0.3
-  Ubat = 2.5*3*BufADC[0]/4096; 
+  float DelRes = (100./RESISTOR_PWR)+1.0;
+  Ubat = 2.5*DelRes*BufADC[0]/4096; 
   
   if (Ubat > 5.1) ProcBat = 100;
   //else if (Ubat >= 4.0) ProcBat = (WORD)((Ubat-4.0)*90.91);//  1.1в = 100%
