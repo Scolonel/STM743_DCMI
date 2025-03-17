@@ -1,7 +1,7 @@
 #include "system.h"
 
 #define TICS 48
-#define MAXPOSCURSOR 4095
+#define MAXPOSCURSOR 5299//4095
 
 /*
 static unsigned int PointInPeriod = 0; // указатель точки в периоде при накоплении
@@ -39,7 +39,8 @@ unsigned GetSetHorizontScale (int Dir)//получение горизонтального масштаба отобр
  else
  {
    if(TypeLCD)
-     MaxIndexSc=3; // ÷ветной 3.5" 480 точек (мах=8)
+     MaxIndexSc=4; // ÷ветной 3.5" 480 точек (мах=8)
+     //MaxIndexSc=3; // ÷ветной 3.5" 480 точек (мах=8)
    else
      MaxIndexSc=4; // ÷ветной 3.2" 400 точек (мах=16)
  }

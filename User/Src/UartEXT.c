@@ -59,6 +59,7 @@ volatile DWORD CntRX = 0;
 volatile uint32_t RSDecYes = 0;
 char NameReadFile[32]; // глобальна€ им€ файла при чтении в сохранении
 char BufString[225];
+char Strn[16]; // to Nextion
 
 
 void SendBelcoreSet (void); // посылает установки белкора
@@ -353,7 +354,11 @@ void DecodeCommandRS (void)
               // попробуем записать файл
               unsigned short NumEventNow = 0; // пока без событий
               // начинаем передачу трассы («аголовок)
-              sprintf (StartStr, "#4%4d",8419 + ((NumEventNow)?(NumEventNow*32+40):(0)));
+              //sprintf (StartStr, "#4%4d",8419 + ((NumEventNow)?(NumEventNow*32+40):(0)));
+              // дл€ 5 значных размеров файла и числа точек,
+              // было 8192(sizePoints*2)+225(head1.h)+2(checksum)? = 8419
+              // стало 8192(OUTSIZE*2)+225(head1.h)+2(checksum)? = 10827
+              sprintf (StartStr, "#5%5d",(OUTSIZE*2) + 227 + ((NumEventNow)?(NumEventNow*32+40):(0)));
               UARTSendExt ((BYTE*)StartStr, 6);
               // ћар страница белкора с учетом “аблицы событий (блок 0)
               // если есть таблица событий....
@@ -715,6 +720,30 @@ void DecodeCommandRS (void)
         nBtn = Num%10;
         nSts = (Num/10)%10;
         SetKeyMd (nBtn, nSts);
+        sprintf(BufString,"%d\r",Num); // выдаем // 
+        UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        NeedTransmit = 1;
+      }
+      // ;lcd:thup n -  просыпаемс€ от тача
+      if (!memcmp ((void*)RX_Buf, ";LCD:THUP ",10)) //
+      {
+        int i=10;
+        DWORD Num;
+        Num = atoi((char*)&RX_Buf[i]); // 
+        sprintf(Strn, "thup=%d€€€", Num); //!
+        NEX_Transmit((void*)Strn);    // 
+        sprintf(BufString,"%d\r",Num); // выдаем // 
+        UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        NeedTransmit = 1;
+      }
+      // ;lcd:slep n -  спать не спать
+      if (!memcmp ((void*)RX_Buf, ";LCD:SLEP ",10)) //
+      {
+        int i=10;
+        DWORD Num;
+        Num = atoi((char*)&RX_Buf[i]); // 
+        sprintf(Strn, "sleep=%d€€€", Num); //!
+        NEX_Transmit((void*)Strn);    // 
         sprintf(BufString,"%d\r",Num); // выдаем // 
         UARTSendExt ((BYTE*)BufString, strlen (BufString));
         NeedTransmit = 1;

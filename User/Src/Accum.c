@@ -252,8 +252,8 @@ void RUN_SUM (DWORD* RawDataI)//
     DWORD NoiseAdd =0; // расчетные шумы по добавленым точкам в конце линии при 64 и 128 км
     int CntAddNoise= 0; // счетчик точек добавок
     DWORD MaxNoise =0;
-    //int j=GetCurrentBegShiftZone (); //получение текущего смещения по индексу
-    int j=0; //получение текущего смещения по индексу
+    int j=GetCurrentBegShiftZone (); //получение текущего смещения по индексу
+    //int j=0; //получение текущего смещения по индексу
     DWORD LocalRaw;
     unsigned Avrgs = (GetCntNumAvrg()+CntAccumulat-1); // запись числа накоплений, на данный момент
     SetCntNumAvrg(Avrgs); // сохранение

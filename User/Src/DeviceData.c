@@ -1653,6 +1653,10 @@ void GetHeaderBelcore (char* Name, unsigned short Block, unsigned short NumEvent
         break;
       case 1: //56...117 (72...133) 62 byte
       memcpy( Name, &HeaderBelcore[56], 62 );
+      // иизменить размер блока данных согласно размера числа данных
+      DataInt = (unsigned long)(OUTSIZE*2+12);
+      memcpy( &Name[66-56], &DataInt, 4);
+      
         // устанавливаем длину волны
       DataShort = (unsigned short)GetLengthWaveLS (GetPlaceLS(CURRENT)); // получение длины волны от индекса установочного места
       // перезапись длинны волны 1300 для х4 приборов!
@@ -1690,6 +1694,9 @@ void GetHeaderBelcore (char* Name, unsigned short Block, unsigned short NumEvent
       //DataInt = (unsigned long)((ADCPeriod*50000)/NumPointsPeriod[GetIndexLN()]); //  устанавливаем значения DS для установленного режима измерения
       DataInt = (unsigned long)GetValueDS(); //  устанавливаем значения DS для установленного режима измерения
       memcpy( &Name[175-118], &DataInt, 4);
+      // ###(178) число точек 
+      DataInt = (unsigned long)(OUTSIZE);
+      memcpy( &Name[179-118], &DataInt, 4);
       // ###(182) GI коэфф преломления  146583 (1.46583)  
       DataInt = (unsigned long)( GetIndexWAV()*100000);
       memcpy( &Name[183-118], &DataInt, 4);
@@ -1717,6 +1724,12 @@ void GetHeaderBelcore (char* Name, unsigned short Block, unsigned short NumEvent
         break;
       case 3: //212...223 (228...239) 12 byte
       memcpy( Name, &HeaderBelcore[213], 12 );
+      // здесь тоже надо переустановить размеры блоков
+      // ###(213) число точек 
+      DataInt = (unsigned long)(OUTSIZE);
+      memcpy( &Name[213-213], &DataInt, 4);
+      DataInt = (unsigned long)(OUTSIZE);
+      memcpy( &Name[219-213], &DataInt, 4);
        break; 
       }
 

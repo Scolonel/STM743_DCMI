@@ -2296,7 +2296,8 @@ void ModeDrawOTDR(void) // режим отображени€ рефлектограммы
     {
       rct.right=480;
       rct.bottom=255;// здесь надо сделать 255, а индикаторе масштаб 270/255 1.058
-      InitScale = 8; // 4608/InitScale>480
+      //InitScale = 8; // 4608/InitScale>480
+      InitScale = 11 ; //дл€ 743 5300/480 = 11.1 
       // курсорный масштаб
       CursorScale = 1.06;
     }
@@ -2435,7 +2436,7 @@ void ModeDrawOTDR(void) // режим отображени€ рефлектограммы
     sprintf(Stra,"Y-%.1f%s/div",(float)GetVerticalSize(IndexVerSize)/7000.0,MsgMass[47][1] );//дЅ
     
     if(TypeLCD)
-      sprintf( Str,"xstr 360,0,120,24,3,GREEN,BLACK,0,1,3,\"%s\"€€€",Stra); // 3_5(3-24) (є шрифта-–азмер) 0
+      sprintf( Str,"xstr 330,0,120,24,3,GREEN,BLACK,0,1,3,\"%s\"€€€",Stra); // 3_5(3-24) (є шрифта-–азмер) 0
     else
       sprintf( Str,"xstr 260,0,140,24,2,GREEN,BLACK,0,1,3,\"%s\"€€€",Stra); // 3_2(2-24) (є шрифта-–азмер) 0
     NEX_Transmit((void*)Str);// 
@@ -2444,7 +2445,7 @@ void ModeDrawOTDR(void) // режим отображени€ рефлектограммы
 
     sprintf(Stra,"X-1:%d",GetSetHorizontScale(0));// признак управлени€ горизонтальным зумом
     if(TypeLCD)
-      sprintf( Str,"xstr 360,24,120,24,3,GREEN,BLACK,0,1,3,\"%s\"€€€",Stra); // 3_5(24)  0
+      sprintf( Str,"xstr 330,24,120,24,3,GREEN,BLACK,0,1,3,\"%s\"€€€",Stra); // 3_5(24)  0
     else
       sprintf( Str,"xstr 260,16,140,24,2,GREEN,BLACK,0,1,3,\"%s\"€€€",Stra); // 3_2(24)  0
     NEX_Transmit((void*)Str);// 
