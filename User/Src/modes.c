@@ -2982,7 +2982,7 @@ void ModeFileMngDir(void) // режим файл менеджера директорий
          // посылка команды переключения окна на Mem_OTDR_garaph (вызов)  
       //KeyP = 0;
       ClrKey(BTN_OK);
-      CmdInitPage(34); // новое окно лист бокс перечня директорий
+      CmdInitPage(34); // новое окно лист бокс перечня файлов в текущей дирректории
        //CreatDelay(1000000);
       HAL_Delay(100);
   }
@@ -3006,11 +3006,21 @@ void ModeFileMngDir(void) // режим файл менеджера директорий
 // "правильных" файлов, устанавливаем курсоры если они не изменились,
 // если не совпадают с полученными размерами сбрасываем в начало
 // вызываем ОКНО 34
-void ModeFileMngFiles(void) // режим файл менеджера файлов
+void ModeFileMngFiles(void) // режим файл менеджера файлов (Окно 34)
 {
+  // таблица экрана поля ввода, верхняя строка t0, левая колонка t1-t12
+  //        t0
+  // t13  t14   t15
+  //            t16
+  // t20        t17  
+  // t21        t18
+  //        t19
   char Str[32];
   char FilPath[64];
   uint32_t BlkSz; // размер блока заголовка
+  uint32_t EvntSz=0; // размер блока событий, пока не читаем события просто для смещения
+  uint32_t PosDataLog=0xe1; // позиция начала блока данных для копирования в 
+  // на начало данных
   UINT RWC;
   FATFS FatFs;
   FIL Fil;
@@ -3056,12 +3066,12 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов
     // числа паПок,и индикационный тндекс должен устанавливаться в соответствии с 
     // текущим индексом выбранной папки
     IndexLCDNameFiles = IndexNameFiles%12; // как как у нас 12 полей
-    PageFiles = IndexNameFiles/12; // получим страницу перечня директорий котрую нужно отображать
-    // заполним поля индикатора именами директорий
+    PageFiles = IndexNameFiles/12; // получим страницу перечня файлов который нужно отображать
+    // заполним поля индикатора именами файлов
     for (int i=0; i<12; i++)
     {
       
-      sprintf(Str, "t%d.txt=\"%s\"яяя",i+1 ,NameFiles[PageFiles*12+i]); // < событиe >
+      sprintf(Str, "t%d.txt=\"%s\"яяя",i+1 ,NameFiles[PageFiles*12+i]); // < имена файлов >
       NEX_Transmit((void*)Str);    //
       
     }
@@ -3075,9 +3085,18 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов
     {
      f_lseek (&Fil, 2); // переместимся на 2 байта
      f_read (&Fil, (void*)&BlkSz, 4, &RWC);
+     if(BlkSz==98) // есть события
+     {
+     f_lseek (&Fil, 0x44); // переместимся на 0x44 байта чтобы прочитать размер блока событий 
+     f_read (&Fil, (void*)&EvntSz, 4, &RWC);
+     PosDataLog = 0xe1 + 16 + EvntSz;
+     }
      f_lseek (&Fil, BlkSz); // переместимся на  байта
      f_read (&Fil, (void*)&F_SOR, 142, &RWC);
-
+      // читаем блок данных из файла
+     f_lseek (&Fil, PosDataLog); // переместимся на начало блока данных байта
+     f_read (&Fil, (void*)&LogData, F_SOR.NPPW*2, &RWC);
+     
     }
     f_close(&Fil);
   FR_Status = f_mount(NULL, "", 0);
@@ -3091,16 +3110,29 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов
     sprintf(Str,"t%d.bco=GREENяяя",IndexLCDNameFiles+1); // GREEN
     NEX_Transmit((void*)Str);    //
     // код подсветки требуемой строки если есть есть маркер строки
-        sprintf(Str, "t15.txt=\"%d\"яяя", BlkSz); // < какой файл выбран >
+        sprintf(Str, "t15.txt=\"%d %d\"яяя", BlkSz, EvntSz); // < ракзмер заголовка, есть ли там события >
     NEX_Transmit((void*)Str);    //
-        sprintf(Str, "t16.txt=\"%dnm\"яяя", F_SOR.AW/10); // < какой файл выбран >
+        sprintf(Str, "t16.txt=\"%dnm\"яяя", F_SOR.AW/10); // < длина волны >
     NEX_Transmit((void*)Str);    //
-        sprintf(Str, "t17.txt=\"%d\"яяя", F_SOR.NPPW); // < какой файл выбран >
+        sprintf(Str, "t17.txt=\"%d\"яяя", F_SOR.NPPW); // < число точек >
     NEX_Transmit((void*)Str);    //
-        sprintf(Str, "t18.txt=\"%d\"яяя", F_SOR.AR); // < какой файл выбран >
+        //sprintf(Str, "t18.txt=\"%d\"яяя", F_SOR.AR); // < какой файл выбран >
+        sprintf(Str, "t18.txt=\"%d\"яяя", F_SOR.NAV); // < число накоплений >
     NEX_Transmit((void*)Str);    //
-        sprintf(Str, "t19.txt=\"%d\"яяя", F_SOR.NAV); // < какой файл выбран >
+        sprintf(Str, "t19.txt=\"%s\"яяя", F_SOR.CMT); // < комметарий >
     NEX_Transmit((void*)Str);    //
+   // надо нарисовать график 265*160
+    //  //объявления графических установок для  индикатора, 
+  GraphParams params = {27000,0,20,0,MEMDRAW};//PosCursorMain (0) // масштаб 48 ( для уменьшенной картинки)
+  Rect rct;
+//  //для нового индикатора(рисуем график)
+    rct.right=260;//
+    rct.bottom=160;//
+    rct.left=0;
+    rct.top=0;
+    MakeGraphNext( &rct, LogData, 5300, &params );
+    HAL_Delay(5);
+    SendDrawNex(NexData,16,rct.right); // ID=16 для графика в просмотре
 
     g_NeedScr = 0;
   }
@@ -3116,7 +3148,7 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов
          // посылка команды переключения окна на Mem_OTDR_garaph (вызов)  
       //KeyP = 0;
       ClrKey(BTN_MENU);
-      CmdInitPage(34); // новое окно лист бокс перечня директорий
+      CmdInitPage(33); // новое окно лист бокс перечня директорий
        //CreatDelay(1000000);
       HAL_Delay(100);
     }

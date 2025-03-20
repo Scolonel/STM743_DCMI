@@ -446,7 +446,7 @@ void SendDrawNex (unsigned char* array, int ID_lcd, int Points)
  // sprintf( CmdBuf,"t2.txt=\"–ус€\"€€€"); // 0xff
 //  UARTSend2 ((BYTE*)CmdBuf, strlen (CmdBuf));// 
   //  CreatDelay (30000); // 33 м— - пока без ответа (подтверждени€)
-  StartRecievNEX (80);
+  StartRecievNEX (10);
   sprintf( CmdBuf,"addt %d,1,%d€€€",ID_lcd, Points+1); // 0xff внимание следите за номером элемента куда выводитс€ (оказалось 3 или lcd
 //  g_WtRdyNEX = 0;
 //  ReadyNEX = 0;
@@ -458,11 +458,10 @@ void SendDrawNex (unsigned char* array, int ID_lcd, int Points)
   // надо ждать получени€ ответа
   //array[390]=255; 
   //  CreatDelay (400000); // 300000-глючило на 3.5
-  HAL_Delay(40);
   array[Points+1]=255;  
   array[Points+2]=255;  
   array[Points+3]=255; 
-  StartRecievNEX (80);
+  StartRecievNEX (150);
 
 //  g_WtRdyNEX = 0;
 //  ReadyNEX = 0;
@@ -470,10 +469,11 @@ void SendDrawNex (unsigned char* array, int ID_lcd, int Points)
 //  GetRstTMUart2(1); // сбросим таймер Uart2
   // а тут надо передать массив данных без учте символов
   //UARTSend2 ((BYTE*)array, Points+1);//
+  HAL_Delay(150);
    HAL_UART_Transmit(&huart7,(void*)array,Points+1,(uint32_t)((Points+1)/8));  //
   // также ждать получение ответа
   while(!((g_WtRdyNEX)||(ReadyNEX==1)));
   
    // CreatDelay (800000); // 70 м— - пока без ответа (подтверждени€)
-  HAL_Delay(80);
+  HAL_Delay(10);
 }
