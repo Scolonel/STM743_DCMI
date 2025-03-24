@@ -123,7 +123,7 @@ uint32_t NumRepit = 1;// число повторений, дл€ самого плотного = 8
 uint32_t T_Dist_Arr = 1000;// длительность повторени€ импульсов (рассчетно-проверенна€ дл€ разных режимов)
 // устанавливаетс€ от параметров измерени€ и рассчетов в тиках таймера TIM1- 1мк—
 uint32_t NumNak = 5; // число накоплений , сколько надо копить в единицах
-uint32_t PointForDist = 5500; // число точек съема (зависит от уст диапазона (дистанци€)
+uint32_t PointForDist = 5600; // число точек съема (зависит от уст диапазона (дистанци€)
 uint32_t ZondImpulse = 5000; // длительность зондирующего импульса в тиках 240 ћ√ц (4.1666 н—)
 // признаки работающего сборщика
 volatile uint8_t Ena_AVRG = 0; // разрешаем накоплени€, пока циклимс€ в while
@@ -391,7 +391,7 @@ int main(void)
   
   
   // Start Uart3 - внешний мир
-  Dummy = huart3.Instance->RDR ; // чистим буффер приема от SIM
+  Dummy = huart3.Instance->RDR ; // чистим буффер приема 
   HAL_UART_Receive_IT(&huart3, RxBufExt,1); // ждем прин€ти€ первого байта из внешнего мира
   /* disable the UART Parity Error Interrupt */
   __HAL_UART_DISABLE_IT(&huart3, UART_IT_PE);
@@ -407,6 +407,8 @@ int main(void)
   __HAL_UART_DISABLE_IT(&huart5, UART_IT_PE);
   /* disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
   __HAL_UART_DISABLE_IT(&huart5, UART_IT_ERR);
+  /* disable the UART Error Interrupt: (готовность данных) */
+  __HAL_UART_DISABLE_IT(&huart5, UART_IT_RXNE); // пока запретим а то мешает.
   
   //HAL_TIM_PWM_Start (&htim12, TIM_CHANNEL_2 ); // запускаем таймер синхронизации ÷јѕ 
   //HAL_TIM_Base_Start(&htim4); // запускаем таймер дл€ DAC и DAC 
@@ -923,7 +925,7 @@ void StopAllTIM(int Ext)  // остановка таймеров (OTDR)
       TIM3->ARR = BeginSet + Sm_Shift + ZondImpulse; //расчетное первое положение ипульса в съеме 50+макссдвиг(40)+импульс(2)=90
       // реально снимаем на 97 при плотном 
       TIM3->CCR4 = BeginSet + Sm_Shift;
-      DMA1_Stream2->NDTR = SizeBlockNak/2-1; // размер блока данных DMA 
+      DMA1_Stream2->NDTR = (SizeBlockNak/2)-1; // размер блока данных DMA 
       DMA1_Stream2->CR |= DMA_SxCR_EN; // запускаем новый цикл ƒћј for DCMI
       //DCMI->CR|=DCMI_CR_ENABLE;          // DCMI capture enable
       DCMI->CR|=DCMI_CR_CAPTURE;          // DCMI capture enable
@@ -1516,7 +1518,7 @@ void SendFileBelcore (void)
          TIM2->ARR = ClkADC_ARR;
          TIM2->CCR1 = ClkADC_CCR1;
       
-      // установить! TIM5 на врем€ начала суммировани€ шаг 1 мк— , одиночный импульс
+      // установить! TIM5 на врем€ начала суммировани€ шаг 1/240 мк— , одиночный импульс
       // 5000 точек суммируетс€ за приблизительно 305 мк—
       // соотв при более плотных съемах
       // 0.5 2 км - врем€ суммировани€ ~ 40uS
@@ -1530,8 +1532,10 @@ void SendFileBelcore (void)
        // здесь надо разделить период повторени€ и параметр съема
        switch(IndexDist) // устанвливаем параметры —ъема
        {
-       case 0: //0.5 2.0 km min 50uS 
-         TIM1->ARR = 105;
+       case 0: //0.5 2.0 km - 33.3nS*700=24uS = “нак (прореживание = 4)
+         // “сумм = 42 мк— > “нак !!! поэтому можем суммировать сразу 
+         TIM1->ARR = KeyPoints[IndexDist];
+         //TIM1->ARR = 65;
          //NumRepit = 8; 
          //TIM2->PSC = 0;
          //TIM2->ARR = 7;
@@ -1540,74 +1544,86 @@ void SendFileBelcore (void)
 
          //TIM4->PSC = 0;
          //TIM4->ARR = TIM4->CCR4 + (8+1)*2;
-         TIM5->CCR4 = 400; 
+         TIM5->CCR4 = 400; //через 1.666 мк— + 42 мк—(сумм 700) меньше 105 мк—
          TIM5->ARR = 401;
          break;
-       case 1: //4 km - 82uS
-         TIM1->ARR = 120;
+       case 1: //4 km - 33.3nS*1400=47uS = “нак (прореживание = 4)
+         // “сумм = 84 мк— > “нак !!! поэтому можем суммировать сразу 
+         TIM1->ARR = KeyPoints[IndexDist];
+         //TIM1->ARR = 100;
          //NumRepit = 4; 
          //TIM2->PSC = 0;
          //TIM2->ARR = 7;
          //TIM2->CCR1 = 4;
          //TIM4->PSC = 0;
          //TIM4->ARR = TIM4->CCR4 + (8+1)*2;
-         TIM5->CCR4 = 400;
+         TIM5->CCR4 = 400; //через 1.666 мк— + 84 мк—(сумм 1400) меньше 100 мк—
          TIM5->ARR = 401;
          break;
-       case 2: //8 km - 170 uS
-         TIM1->ARR = 200;
+       case 2: //8 km - 33.3nS*2800=94uS = “нак (прореживание = 2)
+         // “сумм = 168 мк— > “нак !!! поэтому можем суммировать сразу 
+         TIM1->ARR = KeyPoints[IndexDist];
+         //TIM1->ARR = 200;
          //NumRepit = 2; 
          //TIM2->PSC = 0;
          //TIM2->ARR = 7;
          //TIM2->CCR1 = 4;
          //TIM4->PSC = 0;
          //TIM4->ARR = TIM4->CCR4 + (8+1)*2;
-         TIM5->CCR4 = 5;
+         TIM5->CCR4 = 5; // +168 мк— (сумм 2800) меньше 200мк—
          TIM5->ARR = 6;
          break;
-       case 3: //16 km - 330uS 33.3nS*5000=166uS
-         TIM1->ARR = 350;
+       case 3: //16 km - 186uS 33.3nS*5600=186uS  = “нак врем€ накоплени€
+         // “сумм = 336 мк— > “нак !!! поэтому можем суммировать сразу 
+         TIM1->ARR = KeyPoints[IndexDist];
+         //TIM1->ARR = 350;
          //NumRepit = 1; 
          //TIM2->PSC = 0;
          //TIM2->ARR = 7;
          //TIM2->CCR1 = 4;
          //TIM4->PSC = 0;
          //TIM4->ARR = TIM4->CCR4 + (8+1)*2;
-         TIM5->CCR4 = 400;
+         TIM5->CCR4 = 400; // через 1.666 мк— + 336 мк— (сумм 5600) меньше  350мкс
          TIM5->ARR = 401;
          break;
-       case 4: //32km - 330uS 66.6nS*5000=333uS
-         TIM1->ARR = 450;
+       case 4: //32km - 330uS 66.6nS*5600=373uS = “нак
+         // “сумм = 336 мк—
+         TIM1->ARR = KeyPoints[IndexDist];
+         //TIM1->ARR = 420;
          //NumRepit = 1; 
          //TIM2->PSC = 1;
          //TIM2->ARR = 15;
          //TIM2->CCR1 = 8;
          //TIM4->PSC = 1;
          //TIM4->ARR = TIM4->CCR4 + DBPRO;//(16)*3;
-         TIM5->CCR4 = 12000;//50*240;
+         TIM5->CCR4 = 12000;//50*240; 373uS = “нак < через 50 мк— + 336 мк— (сумм 5600) < 420 мк—
          TIM5->ARR = 12001;//51*240;
          break;
-       case 5: //64km - 660uS 133.3nS*5000=666uS
-         TIM1->ARR = 750;
+       case 5: //64km - 660uS 133.3nS*5600=750uS = “нак
+         // “сумм = 336 мк—
+         TIM1->ARR = KeyPoints[IndexDist];
+         //TIM1->ARR = 800;
          //NumRepit = 1; 
          //TIM2->PSC = 3;
          //TIM2->ARR = 31;
          //TIM2->CCR1 = 16;
          //TIM4->PSC = 3;
          //TIM4->ARR = 100+24;
-         TIM5->CCR4 = 86400;//240*360;
-         TIM5->ARR = 86401;//361;
+         TIM5->CCR4 = 100800;//240*420; 750uS < через 420 мк— + 336 мк— (сумм 5600) < 800 мк—
+         TIM5->ARR = 100801;//361;
          break;
-       case 6: //128km - 1300uS 266.6*5000=1333uS
-         TIM1->ARR = 1500;
+       case 6: //128km - 1300uS 266.6н— *5600=1493uS = “нак
+         // “сумм = 336 мк—
+         TIM1->ARR = KeyPoints[IndexDist];
+         //TIM1->ARR = 1600; // “повт
          //NumRepit = 1; 
          //TIM2->PSC = 7;
          //TIM2->ARR = 63;
          //TIM2->CCR1 = 32;
          //TIM4->PSC = 7;
          //TIM4->ARR = 64;
-         TIM5->CCR4 = 264000;//240*1100;
-         TIM5->ARR = 264001;//1101;
+         TIM5->CCR4 = 288000;//240*1200;1493 мк— < через 1200 мк— + 336 мк— (сумм 5600) < 1493 мк—
+         TIM5->ARR = 288001;//1201;
          break;
        default:
          TIM1->ARR = 75;
@@ -1617,29 +1633,36 @@ void SendFileBelcore (void)
          break;         
        }
  // переустановим период повторени€ если надо
+       // ранее рассчитали диапазон который получили по длине
+        // то устанавливать AddIndx = AddIndexLN = IndxAddBad будем как рассчитанный при
+        //   
        if(AddIndx)
        {
-         switch(AddIndx)
-         {
-         case 1:
-         TIM1->ARR = 120;
-           break;
-         case 2:
-         TIM1->ARR = 200;
-           break;
-         case 3:
-         TIM1->ARR = 350;
-           break;
-         case 4:
-         TIM1->ARR = 450;
-           break;
-         case 5:
-         TIM1->ARR = 750;
-           break;
-         case 6:
-         TIM1->ARR = 1500;
-           break;
-         }
+         // было
+//         switch(AddIndx)
+//         {
+//         case 1:
+//         TIM1->ARR = 120;
+//           break;
+//         case 2:
+//         TIM1->ARR = 200;
+//           break;
+//         case 3:
+//         TIM1->ARR = 350;
+//           break;
+//         case 4:
+//         TIM1->ARR = 450;
+//           break;
+//         case 5:
+//         TIM1->ARR = 750;
+//           break;
+//         case 6:
+//         TIM1->ARR = 1500;
+//           break;
+//         }
+         // стало
+         TIM1->ARR = KeyPoints[AddIndx];
+        //TIM1->ARR = AddIndx*10; 
        }
       
       // ¬Ќ»ћјЌ»≈! «десь надо перенастроить TIM1 дл€ устаногвленного режима прореживани€

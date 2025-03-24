@@ -62,6 +62,7 @@
 //
 #define LENGTH_LINE_NUM 7 // число длин линий (диапазонов)
 
+#define PNTSNUM 7 // число точек контроля длины линии
 
 #define BELCORESIZE 224
 #define ENAOLDLCD 0 //разрешение прорисовки на старый LCD 1-разрешено, 0-запрещено
@@ -333,6 +334,7 @@ extern const DWORD DelayPeriod[LENGTH_LINE_NUM];// задержка периода в тиках Crea
 extern const DWORD NumPointsPeriod[LENGTH_LINE_NUM];
 extern const DWORD MultIndex[LENGTH_LINE_NUM];//множитель уменьшения частоты съема
 
+extern const int KeyPoints[PNTSNUM]; // порги определения индекса установленной длины 4096
 extern const unsigned char fonts[2048];
 extern char BufString[225];
 //extern char BufString[60];

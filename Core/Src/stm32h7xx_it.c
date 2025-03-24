@@ -510,7 +510,7 @@ void UART7_IRQHandler(void)
 void OTG_FS_IRQHandler(void)
 {
   /* USER CODE BEGIN OTG_FS_IRQn 0 */
-   HAL_GPIO_TogglePin(KTS_GPIO_Port, KTS_Pin);
+   //HAL_GPIO_TogglePin(KTS_GPIO_Port, KTS_Pin);
 
   PresentUSB = 1500; // признак что крутится USB - тики когда ничего нет 
   // приблизительно через секунду

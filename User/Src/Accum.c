@@ -331,6 +331,8 @@ void RUN_SUM (DWORD* RawDataI)//
   uint32_t PointDMA = (CountDMA%(NumRepit));
   //LED_START(1);
   //LED_START(0);
+  //LED_KT(1); // начали суммирование одного прохода
+
   for(int i=0;i<SizeBlockNak; i++)
   {
     //BufNAK[NumRepit*i+PointDMA] +=BufADC[i]; 
@@ -345,7 +347,7 @@ void RUN_SUM (DWORD* RawDataI)//
   //LED_START(1);
     //TIM1->CR1 |=TIM_CR1_CEN;
   //LED_START(0);
-  //LED_KT(1); // закончили накопление - суммирование можно сбросить линию
+  //LED_KT(0); // закончили накопление - суммирование можно сбросить линию
     StopAllTIM(0);// останавливаем таймеры которые считают
 
   //if(++CountDMA<SumNumNak)
