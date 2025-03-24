@@ -170,7 +170,7 @@ void DecodeCommandRS (void)
   float TmpACI;
   //char Str[128];
   //char BufString[225];
-  char StartStr[7]={"#48419\0"}; // 4-х значные номера!!!
+  char StartStr[10]={"#48419\0"}; // 4-х значные номера!!!
   //VICINTENCLEAR  = 1 << UART0_INT; /* Disable Interrupt */
   char NeedTransmit; //
   // 0 - команда не обработана надо выслать Err
@@ -358,8 +358,8 @@ void DecodeCommandRS (void)
               // для 5 значных размеров файла и числа точек,
               // было 8192(sizePoints*2)+225(head1.h)+2(checksum)? = 8419
               // стало 8192(OUTSIZE*2)+225(head1.h)+2(checksum)? = 10827
-              sprintf (StartStr, "#5%5d",(OUTSIZE*2) + 227 + ((NumEventNow)?(NumEventNow*32+40):(0)));
-              UARTSendExt ((BYTE*)StartStr, 6);
+              sprintf (StartStr, "#5%05d",(OUTSIZE*2) + 227 + ((NumEventNow)?(NumEventNow*32+40):(0)));
+              UARTSendExt ((BYTE*)StartStr, 7);
               // Мар страница белкора с учетом Таблицы событий (блок 0)
               // если есть таблица событий....
               GetHeaderBelcore (BufString, 0, NumEventNow); // заполняем шапку белкора первые 56 байт Block=0
