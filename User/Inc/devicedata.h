@@ -3,7 +3,7 @@
 
 #define WAVE_LENGTHS_NUM 5
 #define LENGTH_LINE_NUM 7
-#define WIDTH_PULSE_NUM 8
+#define WIDTH_PULSE_NUM 9//8 добавили 5 н—
 #define TIME_AVR_NUM 6
 #define TIME_LIGHT_NUM 3
 #define LSPLACENUM 3

@@ -84,7 +84,7 @@ extern I2C_HandleTypeDef hi2c2;
 //      void GetHeaderBelcore (char* Name, unsigned short Block, unsigned short NumEvents); // заполняем шапку белкора
       
       // Отправка файла Белкора построенных как Т7к без событий
-      void SendFileBelcore (void);
+     // void SendFileBelcore (void);
       
       
 /* USER CODE END EM */

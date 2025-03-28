@@ -6,6 +6,7 @@ volatile DWORD OldTimeAccum; // предыдущее значение таймера накопления
 volatile DWORD CurrTimeAccum; // текущее значение
 uint8_t EnaTimerAccum =0; //признак разрешения счета таймера накопления
 int CntAccumulat=0; // счетчик накоплений
+static int WT_R = 0;
 
 
 
@@ -39,13 +40,28 @@ void SUMMER (DWORD* RawDataS)//
        // BufNAK[0] = CountWait;
        // CountWait=0;
        // LED_START(1);
-        while(Ena_SUMM)
+        while(Ena_SUMM) // вот тут идет накопление по DMA, ждем разрешения5 суммирования
         {
+          // в ожидании "подергаемся" вычислениями
+         WT_R = rand()%13;
+        while(WT_R)
+        {
+          WT_R--;
+          asm("NOP");
+        }
+
        //   CountWait++;
-        asm("NOP");
+        //asm("NOP");
         }
        // LED_START(0);
        // BufNAK[1] = CountWait;
+        // тут бы поизменять начало ссумирования
+        WT_R = rand()%25;
+        while(WT_R)
+        {
+          WT_R--;
+          asm("NOP");
+        }
              ContNextAvrg();
       }
     //StopAllTIM(1); // stop all timers
@@ -248,7 +264,9 @@ void RUN_SUM (DWORD* RawDataI)//
 
     OldTimeAccum = CurrTimeAccum;  
     //RawData[RAWSIZE-1]= GetTimer(2);
-    DWORD Noise =0;
+    static DWORD Noise =0;
+    DWORD NoiseBegin =0; //0-49
+    DWORD NoiseEnd =0;   //5530-5580
     DWORD NoiseAdd =0; // расчетные шумы по добавленым точкам в конце линии при 64 и 128 км
     int CntAddNoise= 0; // счетчик точек добавок
     DWORD MaxNoise =0;
@@ -263,18 +281,35 @@ void RUN_SUM (DWORD* RawDataI)//
     //FiltrWOW(RawData, GetCntNumAvrg());
     //for (int i=0; i<j-1; ++i)
     // у нас в начале всегда 63 точки
-    // расчет уровня шумов
-    for (int i=30; i<(55); ++i)
+    // расчет уровня в начале
+    for (int i=0; i<(50); ++i)
     {
       if (RawData[i]>MaxNoise) MaxNoise = RawData[i];
       Noise +=RawData[i];
     }
-    Noise = (DWORD)1*(Noise/(25));
-    if (GetIndexLN()>5)// длинные линии -> добавим точек по расчету шумов
+    Noise = (DWORD)1*(Noise/(50));
+//    NoiseBegin = Noise;
+//    // посчитаем в конце 
+//      for (int i=5530;i<5580;++i) // берем 30 точек в конце отображения окна
+//      {
+//          //CntAddNoise++;
+//          NoiseEnd +=RawData[i];
+//      }
+//    NoiseEnd = (DWORD)1*(NoiseEnd/(50));// смешение в конце
+//     if(NoiseEnd>NoiseBegin) 
+//       Noise = NoiseEnd;
+//     else
+//       Noise = NoiseBegin;
+//// а теперь просто увеличим смещение посчитанное в начале на половину накоплений
+//            Noise = NoiseBegin + Avrgs/4;
+
+    
+    //if (GetIndexLN()>5)// длинные линии -> добавим точек по расчету шумов
+    if (1)// длинные линии -> добавим точек по расчету шумов
     {
-      for (int i=5390;i<5420;++i) // берем 30 точек в конце отображения окна
+      for (int i=5530;i<5580;++i) // берем 30 точек в конце снятых данных без превышения сигнала на 100 ед АЦП от уровня смещения
       {
-        if (RawData[i] < (Noise + 100*Avrgs)) 
+        if (RawData[i] < (Noise + 20*Avrgs)) 
         {
           CntAddNoise++;
           NoiseAdd +=RawData[i];

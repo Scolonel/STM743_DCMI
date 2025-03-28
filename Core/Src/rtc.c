@@ -21,7 +21,8 @@
 #include "rtc.h"
 
 /* USER CODE BEGIN 0 */
-  #define TIMELASTVERSION  1742799600
+  #define TIMELASTVERSION  1743145200 //2025/03/28 10:00:00 v020
+//  #define TIMELASTVERSION  1742799600 //2025/03/25 10:00:00
 //  #define TIMELASTVERSION  1741158000 //2025/03/05 10:00:00
 // 1741158000 - 2025/03/05 10:00:00
   #define YearSecV  31622400
@@ -32,7 +33,7 @@
 RTCTime TimeSaveOTDR;
 RTCTime TimeSaveOLT;
 RTCTime current_time;
-
+ static unsigned int CurTime;
 /* USER CODE END 0 */
 
 RTC_HandleTypeDef hrtc;
@@ -71,7 +72,7 @@ void MX_RTC_Init(void)
     // HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
     //            HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
        // время в структуре
-    unsigned int CurTime = TotalSec (RTCGetTime()); 
+   CurTime = TotalSec (RTCGetTime()); 
    //  1731664800 - 15 nov 2024 10.00.00
    // if(CurTime < TIMELASTVERSION1731664800)
 
@@ -92,7 +93,7 @@ void MX_RTC_Init(void)
   }
   sDate.WeekDay = RTC_WEEKDAY_MONDAY;
   sDate.Month = RTC_MONTH_MARCH;
-  sDate.Date = 7;
+  sDate.Date = 28;
   sDate.Year = 25;
 
   if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK)

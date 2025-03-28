@@ -20,7 +20,7 @@ const DWORD MultIndex[LENGTH_LINE_NUM]= {1,1,1,1,2,4,8};//множитель уменьшения ч
 const DWORD NumPointsPeriod[LENGTH_LINE_NUM]= {8,4,2,1,1,1,1};// число точек на период
 const DWORD LengthLine[LENGTH_LINE_NUM]= {2,4,8,16,32,64,128};
 const DWORD DelayPeriod[LENGTH_LINE_NUM]= {700,1200,4000,8000,10000,0,0};// задержка периода в тиках CreatDelay()~ 83.33 нс
-const WORD WidthPulse[2][WIDTH_PULSE_NUM]= {{20,40,150,500,1000,3000,10000,20000},{10,40,150,500,1000,3000,10000,20000}};
+const WORD WidthPulse[2][WIDTH_PULSE_NUM]= {{5,20,40,150,500,1000,3000,10000,20000},{4,10,40,150,500,1000,3000,10000,20000}};
 const DWORD TimeAver[TIME_AVR_NUM]= {15,30,60,180,3,600};
 const unsigned TimeLight[TIME_LIGHT_NUM] = {0,15,30};
 const char *IdnsBC[2]= {"SvyazServis   \0","OPTOKON Co.Ltd\0"};
@@ -987,8 +987,8 @@ BYTE SetIndexLN (BYTE Index) // установка индекса длины линии
   if (Index>LENGTH_LINE_NUM-1) Index=LENGTH_LINE_NUM-1;
   if (Index==0xFF) Index=0;
     SettingRefl.Index_Ln = Index;
-    if ((Index == 5) && (GetIndexIM()>5)) SetIndexIM (5);
-    if ((Index == 1) && (GetIndexIM()>4)) SetIndexIM (4);
+    if ((Index == 5) && (GetIndexIM()>6)) SetIndexIM (6);
+    if ((Index == 1) && (GetIndexIM()>5)) SetIndexIM (5);
           SetIndexIM(GetIndexIM()); // переустанавливаем мертвые зоны в зависимости от индекса
 return Index;
 }

@@ -42,7 +42,7 @@
 #define FLTSIZE    5 // размерность фильтра
 // массивы из первичной проверки...перекликаютс€ с размерами объ€вленными ранее
 #define SizeBuf_ADC_int 8
-#define SizeBuf_ADC 6000//8192
+#define SizeBuf_ADC 5700//8192
 #define SizeLogBuf 8000
 #define SizeBuf_DAC 75
 #define ResolutionADC  10
@@ -334,6 +334,7 @@ extern const DWORD DelayPeriod[LENGTH_LINE_NUM];// задержка периода в тиках Crea
 extern const DWORD NumPointsPeriod[LENGTH_LINE_NUM];
 extern const DWORD MultIndex[LENGTH_LINE_NUM];//множитель уменьшени€ частоты съема
 
+extern const int TimeRepitOfLN[PNTSNUM]; // времена периодов повторени€ при разных диапазонах в мк— дл€ “»ћ1
 extern const int KeyPoints[PNTSNUM]; // порги определени€ индекса установленной длины 4096
 extern const unsigned char fonts[2048];
 extern char BufString[225];
