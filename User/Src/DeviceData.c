@@ -1005,6 +1005,16 @@ BYTE GetIndexIM (void) // получение индекса длины Pulse
 
 void SetIndexIM (BYTE Index) // установка индекса длины Pulse
 {
+  // 0 - 4н—
+  // 1 - 10н—
+  // 2 - 40н—
+  // 3 - 150н—
+  // 4 - 500н—
+  // 5 - 1000н—
+  // 6 - 3000н—
+  // 7 - 10000н—
+  // 8 - 20000н—
+  
   if (Index==0xFF) Index=0;
   BYTE LineInx = GetIndexLN ();
   switch (LineInx) //здесь же установим начальное смещение
@@ -1028,14 +1038,14 @@ void SetIndexIM (BYTE Index) // установка индекса длины Pulse
     break;
   }
   SW_FLTR(ON);
-  if (Index <5)
+  if (Index <6)
   {
     SW_FLTR(OFF);
     CurrentBegShiftZone = UserSet.BegShiftZone[LineInx] ;
   }
-  if (Index == 5) CurrentBegShiftZone = UserSet.BegShiftZone[5+LineInx] ;// 3000 ns
-  if (Index == 6) CurrentBegShiftZone = UserSet.BegShiftZone[6+LineInx] ;//10mks for 128km
-  if (Index == 7) CurrentBegShiftZone = UserSet.BegShiftZone[6+LineInx] ;//20mks for 128km
+  if (Index == 6) CurrentBegShiftZone = UserSet.BegShiftZone[5+LineInx] ;// 3000 ns
+  if (Index == 7) CurrentBegShiftZone = UserSet.BegShiftZone[6+LineInx] ;//10mks for 128km
+  if (Index == 8) CurrentBegShiftZone = UserSet.BegShiftZone[6+LineInx] ;//20mks for 128km
     
   SettingRefl.Index_Im = Index;
 }
