@@ -1534,10 +1534,10 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
       if (Mean>tmp) CurrentSumDelay = (Mean-tmp)*4;
     }
     else 
-      {// Линия выбрана правильно
+    {// Линия выбрана правильно
       Mean = KeyPoints[ShadowIndexLN]-1;
       IndxAddBad = 0; // нужен для установки другого диапазона при измерениях
-      }
+    }
     // Mean - задает период повторения сборщика одной точки
     // число накоплениий за 3 сек можно сосчитать как 
     // время промежуточного вывода на экран 28 мС
@@ -1546,22 +1546,22 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     if (RemoutCtrl) TimeMeasure3S  = 3000000; //uS
     // рассчитаем приблизительное число накоплений
     if(LengthOK) // линия правильная,  
-    NumAvrg = (unsigned)(TimeMeasure3S/((NumPointsPeriod[ShadowIndexLN]+1)*TimeRepitOfLN[ShadowIndexLN]+260));//*NumPointsPeriod[ShadowIndexLN])
+      NumAvrg = (unsigned)(TimeMeasure3S/((NumPointsPeriod[ShadowIndexLN]+1)*TimeRepitOfLN[ShadowIndexLN]+260));//*NumPointsPeriod[ShadowIndexLN])
     // линия плохая
     else
-    NumAvrg = (unsigned)(TimeMeasure3S/((NumPointsPeriod[ShadowIndexLN]+1)*TimeRepitOfLN[IndxAddBad]+260));//*NumPointsPeriod[ShadowIndexLN])
-      
-      
-                         // число накоплений как деление времени 2.75 сек на промеренную длину в тиках сбора 333ns 
+      NumAvrg = (unsigned)(TimeMeasure3S/((NumPointsPeriod[ShadowIndexLN]+1)*TimeRepitOfLN[IndxAddBad]+260));//*NumPointsPeriod[ShadowIndexLN])
+    
+    
+    // число накоплений как деление времени 2.75 сек на промеренную длину в тиках сбора 333ns 
     //  NumAvrg = (unsigned)(7300000L/(Mean+10)); // было +30
     // установить соотв. задержку для полученной линии 
     if (GetSubModRefl()) // автоматический - добавку не делаем
     {
       ShadowIndexLN = IndexSeek(Mean);
       ShadowIndexIM = IndexSeek(Mean);
-     // NumAvrg = (unsigned)(8250000L/(KeyPoints[ShadowIndexLN]+50)); // число накоплений , было +30
-    //NumAvrg = (unsigned)(TimeMeasure3S/(NumPointsPeriod[ShadowIndexLN]*TimeRepitOfLN[ShadowIndexLN]));//*NumPointsPeriod[ShadowIndexLN])
-    NumAvrg = (unsigned)(TimeMeasure3S/((NumPointsPeriod[ShadowIndexLN]+1)*TimeRepitOfLN[ShadowIndexLN]+260));//*NumPointsPeriod[ShadowIndexLN])
+      // NumAvrg = (unsigned)(8250000L/(KeyPoints[ShadowIndexLN]+50)); // число накоплений , было +30
+      //NumAvrg = (unsigned)(TimeMeasure3S/(NumPointsPeriod[ShadowIndexLN]*TimeRepitOfLN[ShadowIndexLN]));//*NumPointsPeriod[ShadowIndexLN])
+      NumAvrg = (unsigned)(TimeMeasure3S/((NumPointsPeriod[ShadowIndexLN]+1)*TimeRepitOfLN[ShadowIndexLN]+260));//*NumPointsPeriod[ShadowIndexLN])
       CurrentSumDelay = 1;
     }
     SetIndexLN(ShadowIndexLN);
@@ -1665,17 +1665,20 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     // сюда попадаем после первого измерения (первые 3 сек)
     // если есть склейка, сохраняем рефлектограмму для склейки
     //123    
-    //    if (NeedResetIM) // восстановим импульс и сохраним рефлектограмму
-    //    {
-    //      SetIndexIM(ShadowIndexIM);
-    //      SSPInit_Any(MEM_FL1); // Востанавливаем Инициализацию SSP для управления внешней FLASH (чтобы записать)
-    //      SpliceWRITE(250); 
-    //      LogData[12] = FlashReadSpliceData(12);
-    //      SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (переключаем обратно управление )
-    //      memset( RawData, 0, RAWSIZE * sizeof(DWORD) ); // обнуляем массив накоплений
-    //      CntNumAvrg = 0; // обнуляем счетчик накоплений
-    //      NeedResetIM = 0;
-    //    }
+    if (NeedResetIM) // восстановим импульс и сохраним рефлектограмму
+    {
+      // тут надо скопировать буфер логарифмических данных 
+      memcpy(LogDataSplice, LogData, 5700*2);
+      SaveFileSD(0);
+      SetIndexIM(ShadowIndexIM);
+      //      SSPInit_Any(MEM_FL1); // Востанавливаем Инициализацию SSP для управления внешней FLASH (чтобы записать)
+      //      SpliceWRITE(250); 
+      //      LogData[12] = FlashReadSpliceData(12);
+      //      SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (переключаем обратно управление )
+      memset( RawData, 0, RAWSIZE * sizeof(DWORD) ); // обнуляем массив накоплений
+      CntNumAvrg = 0; // обнуляем счетчик накоплений
+      NeedResetIM = 0;
+    }
     if (GetIndexVRM()==4) // разовый ~1,5 cek ... режим Реал тайм
     {
       CntNumAvrg = 0; // обнуляем счетчик накоплений
@@ -7088,10 +7091,10 @@ unsigned short SpliceProg (unsigned short PII)
       {
         Index = i+5;
         //medium = medium/5;
-        medium = (unsigned long)FlashReadSpliceData(Index)- (unsigned long)LogData[Index];
+        medium = (unsigned long)LogDataSplice[Index]- (unsigned long)LogData[Index];
         for (int o=1; o<Index; ++o) // перезапись от короткого импульса
         {
-          LogData[o] = FlashReadSpliceData(o);
+          LogData[o] = LogDataSplice[o];
         }
         for (int o=Index; o<OUTSIZE; ++o) // изменение "хвоста"
         {

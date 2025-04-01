@@ -286,6 +286,7 @@ extern uint8_t TxOptBusy; // признак занятости UatrOptic
 // extern void (*ModeFunc)(void);
 //extern unsigned short LogData[OUTSIZE] ; // логарифмические данные
 extern uint16_t LogData[SizeBuf_ADC]; // буфер логарифмических данных накопления, в него добавляем из буфера АЦП
+extern uint16_t LogDataSplice[SizeBuf_ADC]; // буфер логарифмических данных накопления, в него добавляем из буфера АЦП
 
 extern unsigned char NexData[NEXSIZE] ; // для графика в Nextion
 extern DWORD RawData[RAWSIZE] ;// НЕ обработанные данные

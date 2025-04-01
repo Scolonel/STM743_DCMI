@@ -43,15 +43,15 @@ void SUMMER (DWORD* RawDataS)//
         while(Ena_SUMM) // вот тут идет накопление по DMA, ждем разрешения5 суммирования
         {
           // в ожидании "подергаемся" вычислениями
-         WT_R = rand()%13;
-        while(WT_R)
-        {
-          WT_R--;
-          asm("NOP");
-        }
+//         WT_R = rand()%13;
+//        while(WT_R)
+//        {
+//          WT_R--;
+//          asm("NOP");
+//        }
 
        //   CountWait++;
-        //asm("NOP");
+        asm("NOP");
         }
        // LED_START(0);
        // BufNAK[1] = CountWait;
@@ -330,9 +330,17 @@ void RUN_SUM (DWORD* RawDataI)//
     //SaveNoise (Noise/2);
     for (int i=0; i<OUTSIZE; i++)
     { 
+      
       // усреднение на коротких линиях пока уберем 
       //if (PointsPerPeriod==48)   LocalRaw = (RawData[i+j-1]+RawData[i+j])>>1;// если самое мелкое то примитивный фильт на 2, иначе пила
       //else  LocalRaw = RawData[i+j];
+      // попробуем фильтрануть, то есть если разница по модулю между предыдущей и последующей
+      // меньше 1/8 от числа накоплений то ппоследующую берем как среднее с предыдущей,
+      // если разница больше не меняем
+      if(abs((int)(RawData[i+j-1]-RawData[i+j]))<(Avrgs/4))
+      {
+        RawData[i+j] = (RawData[i+j-1]+RawData[i+j])>>1;
+      }
       LocalRaw = RawData[i+j];
       // добавка перед скачком, то есть перед большим отражением в маленьких сигналах
       // пресловутые 12 метров

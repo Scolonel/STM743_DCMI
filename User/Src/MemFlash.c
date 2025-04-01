@@ -1399,7 +1399,7 @@ void SaveFileSD(int Mod)
     
     //unsigned short NumEventNow = 0; // пока без событий
     // начинаем передачу трассы (Заголовок)
-    uint32_t HowSizeFile = 8419 + ((NumEventNow)?(NumEventNow*32+40):(0));
+    //uint32_t HowSizeFile = 8419 + ((NumEventNow)?(NumEventNow*32+40):(0));
     
     //sprintf (StartStr, "#4%4d",8419 + ((NumEventNow)?(NumEventNow*32+40):(0)));
     //UARTSendExt ((BYTE*)StartStr, 6);

@@ -94,6 +94,7 @@ uint16_t BufADC[SizeBuf_ADC_int]; // буфер внутреннего АЦП (8), в него пишем при
 uint16_t BufADD[SizeBuf_ADC]; // буфер 2АЦП, в него пишем при съеме DMA, размер до 8192
 uint32_t BufNAK[SizeBuf_ADC]; // буфер накопления, в него добавляем из буфера АЦП
 uint16_t LogData[SizeBuf_ADC]; // буфер логарифмических данных накопления, в него добавляем из буфера АЦП
+uint16_t LogDataSplice[SizeBuf_ADC]; // буфер логарифмических данных накопления, в него добавляем из буфера АЦП
 uint32_t Cnt2Timer[128]; // время тамера 2 по окончании цикла ДМА
 uint32_t CurrCnt2Timer; // время тамера 2 по окончании цикла ДМА
 //static uint32_t MediumNoise = 0;
