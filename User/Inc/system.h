@@ -99,6 +99,7 @@
 #include "modes.h"  //from T7kAR
 #include "UartNEX.h"  //from T7kAR
 #include "UartEXT.h"  //from T7kAR
+#include "UartOpt.h"  //from T7kAR
 #include "drawfunctions.h" //from T7kAR
 #include "memflash.h"// //from T7kAR
 
@@ -158,6 +159,7 @@ extern uint32_t IndexNameFiles;// индекс файла на который указываем
 extern uint32_t IndexLCDNameFiles;// индекс указателя на индикаторе файла на который указываем
 extern uint32_t PageDir; 
 extern uint32_t PageFiles; 
+
 
 // структура хранения памяти измерителя
 struct tag_PON

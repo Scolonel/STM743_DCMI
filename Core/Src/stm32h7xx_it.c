@@ -467,10 +467,19 @@ void TIM5_IRQHandler(void)
 void UART5_IRQHandler(void)
 {
   /* USER CODE BEGIN UART5_IRQn 0 */
+  // это запросы из вне по OPT RS
+      if (__HAL_UART_GET_FLAG(&huart5, UART_FLAG_RXNE))
+  {
+  Dummy = (uint16_t)(huart5.Instance->RDR); // 
+  RS_com_Optic((BYTE)Dummy); 
+  }
+  
   /* USER CODE END UART5_IRQn 0 */
   HAL_UART_IRQHandler(&huart5);
   /* USER CODE BEGIN UART5_IRQn 1 */
    HAL_NVIC_ClearPendingIRQ(UART5_IRQn);
+   huart5.Instance->CR1 |= UART_IT_RXNE; // востанавливаем возможно выкл. прерывания
+   huart5.Instance->ISR = 0; // востанавливаем возможно выкл. прерывания
 
   /* USER CODE END UART5_IRQn 1 */
 }

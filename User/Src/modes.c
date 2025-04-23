@@ -3977,7 +3977,7 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
   //BYTE AddRed;
   //BYTE CurrLang=GetLang(CURRENT);
   //DWORD KeyP = SetBtnStates( KEYS_REG, 1 );
-  TimerAutoPM = TimerPA(0); // ~100mS период
+  TimerAutoPM = TimerPA(0); // ~30mS период
   //AddRed = DrawSourceVFL (&FrAutoOLT, Str, KeyP, CurrLang, 3, 3);
   DrawSourceVFL (&FrAutoOLT, Str, KeyP, CurrLang, 3, 3);
   /* */  
@@ -4000,8 +4000,8 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
   //SetRange(1);
   if (RSOptYes) // получаем длину волны кoторая сейчас будет излучаться
   {
-//123!!!    TempNumWave = GetNumWaveOpt (); // получаем номер длины волны
-    TempNumWave = 1310; // получаем номер длины волны
+    TempNumWave = GetNumWaveOpt (); // получаем номер длины волны
+    //TempNumWave = 1310; // получаем номер длины волны
     if (TempNumWave)
     { 
       // 1. посчитаем к какому диапазону приходится волна 
@@ -4078,7 +4078,7 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
   switch (ModAutoPM)
   {
   case WAITING:
-    if (TimerAutoPM > 1000) //~10S
+    if (TimerAutoPM > 333) //~10S
     {
       myBeep(10);
       InitAutoPM();
@@ -4088,7 +4088,7 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
     // измерение в автомате
     // возможно время  велико или мало, так как плохо работаем с простыми тесторами 06.06.2011
   case MEASUR:
-    if (TimerAutoPM >= 150) //~1.5S
+    if (TimerAutoPM >= 50) //~1.5S
     {
       RPON[IndWavePON] = Watt2dB(Str, tmpPOW , 1);
       ModAutoPM = WAITING; // режим измерителя авто ожидаем

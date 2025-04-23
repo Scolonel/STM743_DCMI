@@ -1277,6 +1277,9 @@
                 <name>User</name>
                 <file>
                     <name>$PROJ_DIR$\..\User\Src\Accum.c</name>
+                    <configuration>
+                        <name>BASE32H743_DCMI</name>
+                    </configuration>
                 </file>
                 <file>
                     <name>$PROJ_DIR$\..\User\Src\buttons.c</name>
@@ -1313,9 +1316,15 @@
                 </file>
                 <file>
                     <name>$PROJ_DIR$\..\User\Src\UartEXT.c</name>
+                    <configuration>
+                        <name>BASE32H743_DCMI</name>
+                    </configuration>
                 </file>
                 <file>
                     <name>$PROJ_DIR$\..\User\Src\UartNEX.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\User\Src\UartOpt.c</name>
                 </file>
             </group>
         </group>

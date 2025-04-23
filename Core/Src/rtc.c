@@ -92,8 +92,8 @@ void MX_RTC_Init(void)
     Error_Handler();
   }
   sDate.WeekDay = RTC_WEEKDAY_MONDAY;
-  sDate.Month = RTC_MONTH_MARCH;
-  sDate.Date = 28;
+  sDate.Month = RTC_MONTH_APRIL;
+  sDate.Date = 22;
   sDate.Year = 25;
 
   if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK)

@@ -403,13 +403,13 @@ int main(void)
   HAL_UART_Transmit(&huart3,(void*)TxBufAns, strlen((void*)TxBufAns),100);
   // Start Uart5 - Optics
   Dummy = huart5.Instance->RDR ; // чистим буффер приема от OPTIC
-  HAL_UART_Receive_IT(&huart5, RxBufExt,1); // ждем принятия первого байта из внешнего мира
+  HAL_UART_Receive_IT(&huart5, RX_BufOpt,1); // ждем принятия первого байта из оптики
   /* disable the UART Parity Error Interrupt */
   __HAL_UART_DISABLE_IT(&huart5, UART_IT_PE);
   /* disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
   __HAL_UART_DISABLE_IT(&huart5, UART_IT_ERR);
   /* disable the UART Error Interrupt: (готовность данных) */
-  __HAL_UART_DISABLE_IT(&huart5, UART_IT_RXNE); // пока запретим а то мешает.
+  //__HAL_UART_DISABLE_IT(&huart5, UART_IT_RXNE); // пока запретим а то мешает.
   
   //HAL_TIM_PWM_Start (&htim12, TIM_CHANNEL_2 ); // запускаем таймер синхронизации ЦАП 
   //HAL_TIM_Base_Start(&htim4); // запускаем таймер для DAC и DAC 

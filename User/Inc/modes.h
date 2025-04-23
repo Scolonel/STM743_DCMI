@@ -170,7 +170,6 @@ void CreatDelay (unsigned long a); // перенесли из LCD.h
 //extern RTCTime TimeSaveOLT; // время сохраненной рефлектограммы
 extern char CommentsOTDR[20]; //комментарии рефлектометра
 extern char IndexCommOTDR ;
-extern BYTE RSOptYes; // признак приема команды по оптическому UART
 extern BYTE RemoutCtrl; // признак дист управления
 
 //переменные настройки измерения ORL 

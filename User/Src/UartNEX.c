@@ -24,7 +24,6 @@ volatile BYTE g_WtRdyNEX = 1;
 volatile BYTE ProgFW_LCD =0; // признак программирования индикатора Nexion
 volatile WORD CountTimerUart2 = 0;
 char wrd[10];
-BYTE RSOptYes = 0;
 
 
 
