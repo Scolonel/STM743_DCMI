@@ -69,7 +69,8 @@ CFG_USR UserSet;
 uint8_t StrTXOpt[64]; // буффер передачи данных по оптике
 
 uint8_t TxOptBusy=0; // признак зан€тости UatrOptic
-uint8_t TimeSCWP=0; // счетчик времени дл€ переключени€ лазеров
+uint8_t ModeSCWP=0; // режим времени дл€ переключени€ лазеров
+uint16_t TimeSCWP=0; // счетчик времени дл€ переключени€ лазеров
 
 
 uint8_t ModeLS = 0; // режим источника
@@ -1745,10 +1746,10 @@ void GetHeaderBelcore (char* Name, unsigned short Block, unsigned short NumEvent
 
 }
 // управление лазерным источником (сигналом CW и FW)-
-void  SetupSource (BYTE ModeLS) // установка режима работы лазера
+void  SetupSource (BYTE NewModeLS) // установка режима работы лазера
 {
   __HAL_UART_DISABLE_IT(&huart5, UART_IT_PE);
-  
+  ModeLS = NewModeLS;
   //SWITCH_LW(); // установка требуемой длины волны источника (управление ключами)
 //  const uint8_t* TxGenOpt={"UUUUUUUUUUUUUUUUU"};
   switch(ModeLS)
@@ -1802,7 +1803,7 @@ void  SetupSource (BYTE ModeLS) // установка режима работы лазера
     //Dummy = huart2.Instance->DR ; // чистим буффер приема 
     //    HAL_UART_DMAStop(&huart2);
     HAL_UART_DMAStop(&huart5);
-    TimeSCWP = 70; // 3.5sec
+    TimeSCWP = 0; // 3.5sec
     LED_START(ON);
     break;
   default:
@@ -1816,11 +1817,17 @@ void  SetupSource (BYTE ModeLS) // установка режима работы лазера
 // функци€ переключени€ лазеров по кругу с излучением информации о себе
 void Run_SCWP(void) // каждые 30 м—
 {
-  if(TimeSCWP++<116) // ~3.5 сек
+  // ModeSCWP - признаки работы  источника в режиме CW*
+  // 0 - молчим
+  // 1 - посылка сообщени€
+  // 2 - начало излучени€ посто€нное
+  // 3 - переключение лазера и снова старт
+  // цикл ~3.5 сек
+  if(ModeSCWP) // ~3.5 сек
   {
-    switch(TimeSCWP)
+    switch(ModeSCWP)
     {
-    case 3: // 90м—
+    case 1: // 90м—
       sprintf((char*)StrTXOpt, "UUUU####SL%4u %.2f\rUUU",GetLengthWaveLS(GetPlaceLS (CURRENT)),-30.0);//UUU ooo1300
       HAL_UART_Transmit_DMA(&huart5, (void*)StrTXOpt,strlen((void*)StrTXOpt)); // выдаем (врем€ выдачи ~210м—)
       TxOptBusy = 1;
@@ -1829,24 +1836,20 @@ void Run_SCWP(void) // каждые 30 м—
 
       //HAL_Delay(200);
       break;
-    case 16: // через 500 м— после старта передачи... 
+    case 2: // через 500 м— после старта передачи... 
       PHLD(1); // on CW 
       break;
-    default:
-      break;
-    }
-  }
-  else
-  {
-    TimeSCWP = 0; // все сначала
+    case 3: // через 500 м— после старта передачи... 
     PHLD(0); // off CW
     // переключаем Ћј«≈–џ
       //  GetSetLW_SC (1, 0) ; // так будут все светить
     GetPlaceLS (NEXT);
-    //    GetSetLW_SC (1, 1) ; // а так только на одном выходе
-
-
-    //NeedReDraw = 1;
+    TimeSCWP = 0;
+      break;
+    default:
+      break;
+    }
+    ModeSCWP = 0; // ждем установки нового режима
   }
 }
 // продолжение модул€ции при выбранной модул€ции

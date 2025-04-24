@@ -149,6 +149,11 @@ void NEX_Transmit(uint8_t *Str);
 // управление таймером в измерителе АВТОМАТЕ
 WORD TimerPA (BYTE Set);
 
+extern uint8_t ModeSCWP; // режим времени для переключения лазеров
+extern uint16_t TimeSCWP; // счетчик времени для переключения лазеров
+extern DWORD CountTimerPA; // счетчик времен для режима автомат PM 
+
+
 extern char NameDir[100][6];
 extern char NameFiles[1000][17];
 extern uint32_t NumNameDir; // число имен директорий

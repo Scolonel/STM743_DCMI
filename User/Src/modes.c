@@ -660,6 +660,7 @@ void ModeMainMenu(void) // режим основного ћ≈Ќё
     //ClrKey (BTN_OK);
   }
   // сделаем "тупую задержку"
+  // и зачем? пока не пон€ткно
   HAL_Delay (20); //
   
   //ClrKey (BTN_MENU + BTN_LEFT + BTN_RIGHT);
@@ -3970,6 +3971,7 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
   static WORD TempNumWave=1310;
   static float tmpPOW;
   static BYTE MemIndexLW;
+  BYTE   M_PON =0;
   //char wrd[10];
   BYTE NowIndexLW;
   //static BYTE NeedSetNewLVL = 0;
@@ -4000,6 +4002,8 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
   //SetRange(1);
   if (RSOptYes) // получаем длину волны кoтора€ сейчас будет излучатьс€
   {
+          LED_KTT(1);
+
     TempNumWave = GetNumWaveOpt (); // получаем номер длины волны
     //TempNumWave = 1310; // получаем номер длины волны
     if (TempNumWave)
@@ -4067,7 +4071,8 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
       SetRange(3); // самый грубый
       SetSwitchPMMode(AUTO);  // ”станавливает режим переключени€ диапазонов автомат
     }
-
+ 
+    g_NeedScr = 1;
   }
         // test code
     //sprintf(Str, "t8.txt=\"%s\"€€€",wrd);
@@ -4078,54 +4083,32 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
   switch (ModAutoPM)
   {
   case WAITING:
-    if (TimerAutoPM > 333) //~10S
+    if (TimerAutoPM > 10000) //~10S
     {
       myBeep(10);
       InitAutoPM();
+      g_NeedScr = 1;
     }
     
     break;
     // измерение в автомате
     // возможно врем€  велико или мало, так как плохо работаем с простыми тесторами 06.06.2011
   case MEASUR:
-    if (TimerAutoPM >= 50) //~1.5S
+    if (TimerAutoPM >= 2000) //~1.5S
     {
+            LED_KTT(1);
+
       RPON[IndWavePON] = Watt2dB(Str, tmpPOW , 1);
       ModAutoPM = WAITING; // режим измерител€ авто ожидаем
       TimerAutoPM = TimerPA(1); // счетчик времени (обнул€ем)
       SetSwitchPMMode(MANUAL);  // ”станавливает режим переключени€ диапазонов в ручную
       SetRange(1);
+      g_NeedScr = 1;
+
     }
     
     break;
   }
-  BYTE   M_PON =0;
-  // рисуем значени€ в новый индикатор
- // каждый раз!? может надо сделать реже
-    // –исуем строки измерени€
-  M_PON = 0;
-  for (int i=0; i<5; ++i)
-  {
-    if ((RPON[i]>-100.0)&&(M_PON<3)) // есть значение дл€ индикации
-    {
-      //DrawLine(2,12*M_PON+5,114,12*M_PON+5,11,0); //чистка индикатора показаний
-      sprintf(Str,"t%d.txt=\"%6.3f %s\"€€€",M_PON+1, RPON[i], MsgMass[47][CurrLang]);//дЅ
-    NEX_Transmit((void*)Str);    // значение
-      //sprintf(Str,"t%d.txt=\"%d%s\"€€€",M_PON+4,CoeffPM.PointKalib[i], MsgMass[18][CurrLang]);//нм 1300
-      sprintf(Str,"t%d.txt=\"%d%s\"€€€",M_PON+4,LWPON[i], MsgMass[18][CurrLang]);//нм
-    NEX_Transmit((void*)Str);    // длина волны
-      M_PON++;
-    }
-  }
-  for(int i=M_PON; i<3;++i)
-  {
-    //DrawLine(2,i*12+5,114,i*12+5,11,0); //чистка индикатора показаний
-    sprintf(Str,"t%d.txt=\"--------\"€€€",i+1);
-    NEX_Transmit((void*)Str);    // значение
-    sprintf(Str,"t%d.txt=\"----\"€€€",i+4);
-    NEX_Transmit((void*)Str);    // длина волны
-  }
-  
   
   if (g_FirstScr)
   {
@@ -4174,6 +4157,34 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
   }
   if (g_NeedScr)
   {
+      // рисуем значени€ в новый индикатор
+ // каждый раз!? может надо сделать реже
+    // –исуем строки измерени€
+        //LED_KTT(1);
+
+  M_PON = 0;
+  for (int i=0; i<5; ++i)
+  {
+    if ((RPON[i]>-100.0)&&(M_PON<3)) // есть значение дл€ индикации
+    {
+      //DrawLine(2,12*M_PON+5,114,12*M_PON+5,11,0); //чистка индикатора показаний
+      sprintf(Str,"t%d.txt=\"%6.3f %s\"€€€",M_PON+1, RPON[i], MsgMass[47][CurrLang]);//дЅ
+    NEX_Transmit((void*)Str);    // значение
+      //sprintf(Str,"t%d.txt=\"%d%s\"€€€",M_PON+4,CoeffPM.PointKalib[i], MsgMass[18][CurrLang]);//нм 1300
+      sprintf(Str,"t%d.txt=\"%d%s\"€€€",M_PON+4,LWPON[i], MsgMass[18][CurrLang]);//нм
+    NEX_Transmit((void*)Str);    // длина волны
+      M_PON++;
+    }
+  }
+  for(int i=M_PON; i<3;++i)
+  {
+    //DrawLine(2,i*12+5,114,i*12+5,11,0); //чистка индикатора показаний
+    sprintf(Str,"t%d.txt=\"--------\"€€€",i+1);
+    NEX_Transmit((void*)Str);    // значение
+    sprintf(Str,"t%d.txt=\"----\"€€€",i+4);
+    NEX_Transmit((void*)Str);    // длина волны
+  }
+
     // здесь заполн€ем данными пол€ нового индикатора
     // по результатам изменений вызваныйх обработчиком клавиатуры
  // sprintf(Str,"t1.txt=\"%2.2f\"€€€",GetCurrLvldB(0)); // dBm REF
@@ -4212,7 +4223,8 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
         sprintf(Stra,"t14.txt=\"%.2f\"€€€",GetLengthWaveLS (MemIndexLW)/1000.0);
     NEX_Transmit((void*)Stra);    // источник
     
-    
+          LED_KTT(0);
+
     g_NeedScr = 0;
   }
     //sprintf(Str,"%d",TimerValueJDSU);

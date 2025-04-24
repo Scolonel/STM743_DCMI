@@ -241,7 +241,28 @@ void SysTick_Handler(void)
       g_WtRdyNEX = 1; // ввзводим признак готовности данных, грубо окончание текущего приема
     }
   }
-  
+  // для CW* и PA 
+        // инкремент таймера PA
+   CountTimerPA++;
+
+  if(TimeSCWP <4000)
+  {
+    TimeSCWP++;
+    switch(TimeSCWP)
+    {
+    case 10:
+      ModeSCWP = 1;
+      break;
+    case 400:
+      ModeSCWP = 2;
+      break;
+    case 3500:
+      ModeSCWP = 3;
+      break;
+    default:
+      break;
+    }
+  }
   /* USER CODE END SysTick_IRQn 1 */
 }
 

@@ -437,9 +437,13 @@ void SendUartTX (uint8_t *Str_mas)
 void NEX_Transmit(uint8_t *Str)
 {
   uint16_t Size = strlen((void*)Str);
+         // LED_KTT(1);
+
     HAL_UART_Transmit_DMA(&huart7, (void*)Str,Size); // גûהאול 
 
  //HAL_UART_Transmit(&huart7,(void*)Str, Size,(uint32_t)(Size/8));
- HAL_Delay((Size/10)+1);
+ HAL_Delay((int)((Size/10)+0.5));
+         //LED_KTT(0);
+
 }
 /* USER CODE END 1 */
