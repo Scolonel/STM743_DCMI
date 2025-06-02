@@ -201,6 +201,7 @@ void DecodeCommandRS (void)
         if (!memcmp ((void*)RX_Buf, "*IDHW",5)) // идентификатор "железной" реализации
           //if ((RX_Buf[1]=='I')&&(RX_Buf[2]=='D')&&(RX_Buf[3]=='N')&&(RX_Buf[4]=='?'))
         {
+          BufString[0]= 0;
           GetDeviceHW( BufString ); // запрос сторки идентификатора
           NeedTransmit = 1;
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
