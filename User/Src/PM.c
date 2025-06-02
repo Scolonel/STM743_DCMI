@@ -180,7 +180,7 @@ int GetPMData(void)
   case BUSYADC: // 
     Watchdog++; // ждем готовности АЦП
     
-    if (Watchdog > 10) // не дождались более 250 мС
+    if (Watchdog > 100) // не дождались более 250 мС
     {
       // чистим буфер на всякий случай (делаем пустое чтение
       ReadDataADC7782 ();
@@ -191,9 +191,14 @@ int GetPMData(void)
     {
       if (!(GET_PM_DATA)) // данные готовы можно считывать
       {
+        LED_KTS(1);
+        
         DataADC_PM =  ReadDataADC7782 ();
         Watchdog=0; //
         StateADC = READYDATA;
+        PM_CS(1);
+        LED_KTS(0);
+        
       }
     }
     
@@ -201,6 +206,8 @@ int GetPMData(void)
   case READYDATA: // данные готовы (здесь попробуем фильтрануть их)
     Watchdog=0; // 
     PM_CS(1);
+    LED_KTS(0);
+    
     //CurrRange = Range;
     //PMCurrValue = GetPower(PMWavelenght);      // Получаем мощность в мВт не зависимо от длины волны
     StateADC = FREEADC;
@@ -209,10 +216,11 @@ int GetPMData(void)
   
   //FreeCodeADC_PM = 0x800000-DataADC_PM;
   //FreeCodeADC_PM = 0xFFFFFF-DataADC_PM; // для маленьких тесторов
-//  if(DeviceConfig.CfgRE>>1) // если новая плата аналоговая 03.03.2023
-    FreeCodeADC_PM = 0x800000 - DataADC_PM;
-//  else // старая аналоговая плата
-//    FreeCodeADC_PM = DataADC_PM-0x800000;
+  //  if(DeviceConfig.CfgRE>>1) // если новая плата аналоговая 03.03.2023
+  FreeCodeADC_PM = 0x800000 - DataADC_PM;
+  //  else // старая аналоговая плата
+  //    FreeCodeADC_PM = DataADC_PM-0x800000;
+  
   return  FreeCodeADC_PM;                           // 
 }
 void SetStateADC (BYTE State) // установка режима АЦП
@@ -225,15 +233,15 @@ BYTE GetStateADC (void) // получение режима АЦП
  return StateADC; 
 }
 
-int SetDataADC (int Data) // установка данных АЦП в прерывании
-{
-  PM_CS(1);
-  DataADC_PM = Data;
-  Watchdog=0; // обнуляем счетчик сторожевого таймера (такт около 30 мС)
-  StateADC = READYDATA;
-  return DataADC_PM;
-  
-}
+//int SetDataADC (int Data) // установка данных АЦП в прерывании
+//{
+//  PM_CS(1);
+//  DataADC_PM = Data;
+//  Watchdog=0; // обнуляем счетчик сторожевого таймера (такт около 30 мС)
+//  StateADC = READYDATA;
+//  return DataADC_PM;
+//  
+//}
 
 float GetPower(unsigned int Lambda)      // Получаем мощность в нВт в зависимости от длины волны
 {
@@ -255,18 +263,18 @@ float GetPower(unsigned int Lambda)      // Получаем мощность в нВт в зависимост
   {
     if (abs(Res_Old - Res_Now)>10000)                      // Перезапишем буфера при скачке показаний измерения
     {
-      for (i=0; i<=39; i++)
+      for (i=0; i<=19; i++)
         Level[i]=Res_Now;    
     }
     
-    for (i=39; i>=1; i--)
+    for (i=19; i>=1; i--)
     Level[i]=Level[i-1];
     Level[0] = Res_Now; 
     
     
     Lev_x = 0;                                            // Считаем среднее значение показаний АЦП
-    for (i=0; i<40; i++)Lev_x +=Level[i];
-    Lev_x = Lev_x/40.0;
+    for (i=0; i<20; i++)Lev_x +=Level[i];
+    Lev_x = Lev_x/20.0;
                              // замена строк местами, сначала проверяем потом устанавливаем
     Res_Old = (int)Lev_x;                                      // Запомнили значение, как "старое"
     if (Lev_x<=0)     Lev_x = 1;                          // Если вдруг значение меньше или равно нулю

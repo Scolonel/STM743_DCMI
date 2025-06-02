@@ -1,7 +1,7 @@
 //#define LANG_NUM 3
 #define ENADRAWORL 1
 //#define ENAOLDLCD 1 //1 - разрешение прорисовки на старый LCD, 0 - нет старого экрана
-#define RESISTOR_PWR 50. // номинал резистора (кќм) в делителе дл€ контрол€ напр€жени€ батарейки
+#define RESISTOR_PWR 62. // номинал резистора (кќм) в делителе дл€ контрол€ напр€жени€ батарейки
 // на макетках стоит 50кќм (2||100кќм)
 
 #define NO_PARENT 0xFFFFFFFF
@@ -27,6 +27,7 @@
 
 #define WAITING 0
 #define MEASUR 1
+#define REWAIT 2
 
 #define INCR 1
 #define DECR -1
@@ -498,7 +499,7 @@ void ModeMainMenu(void) // режим основного ћ≈Ќё
     // выключим опрос индикатора всегда 
      TypeLCD=1;
      
-#if 0
+//#if 0
      StartRecievNEX (500);
     sprintf(Str,"get t6.txt€€€");
     NEX_Transmit((void*)Str);//
@@ -533,7 +534,7 @@ void ModeMainMenu(void) // режим основного ћ≈Ќё
     if(!KnowLCD)
       // возможно индикатор "больной" надо просигнализировать и попытатьс€ работать дальше
       AlarmSignal(3);
-#endif
+//#endif
 
       //сюда перенесем установки QR code
         if(TypeLCD)
@@ -3648,7 +3649,7 @@ void ModeMeasManualOLT(void) // режим работы тестера в ручном режиме CHECK_OFF
   {
     tmp =  GetPower(GetPMWavelenght(0)); // ѕолучаем мощность в м¬т
     LastPower = tmp;
-    i=10;
+    i=4;
    //      g_NeedScr = 1; // Need reDraw Screen
   }
   else
@@ -4002,7 +4003,6 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
   //SetRange(1);
   if (RSOptYes) // получаем длину волны кoтора€ сейчас будет излучатьс€
   {
-          LED_KTT(1);
 
     TempNumWave = GetNumWaveOpt (); // получаем номер длины волны
     //TempNumWave = 1310; // получаем номер длины волны
@@ -4065,6 +4065,7 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
       NumWave = TempNumWave;
       GetCurrLvldB(NumWave);
       //SetPMWavelenght (NumWave); // принудительна€ установка текущей длины волны
+    //LED_KTT(1);
       
       ModAutoPM = MEASUR;
       TimerAutoPM = TimerPA(1); // обнул€ем таймер
@@ -4077,9 +4078,11 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
         // test code
     //sprintf(Str, "t8.txt=\"%s\"€€€",wrd);
     //sprintf(Str, "t8.txt=\"%d %d\"€€€",TimerAutoPM,ModAutoPM);
-    //NEX_Transmit((void*)Str);    // 
-  
+    //NEX_Transmit((void*)Str);    //
+           // LED_KTS(1);
+
   tmpPOW =  GetPower(NumWave); // ѕолучаем мощность в м¬т
+  
   switch (ModAutoPM)
   {
   case WAITING:
@@ -4094,16 +4097,30 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
     // измерение в автомате
     // возможно врем€  велико или мало, так как плохо работаем с простыми тесторами 06.06.2011
   case MEASUR:
-    if (TimerAutoPM >= 2000) //~1.5S
+    if (TimerAutoPM >= 2500) //~1.5S
     {
             LED_KTT(1);
 
       RPON[IndWavePON] = Watt2dB(Str, tmpPOW , 1);
+      ModAutoPM = REWAIT; // режим измерител€ авто ожидаем
+      //TimerAutoPM = TimerPA(1); // счетчик времени (обнул€ем)
+      //SetSwitchPMMode(MANUAL);  // ”станавливает режим переключени€ диапазонов в ручную
+      //SetRange(1);
+      g_NeedScr = 1;
+           // LED_KTT(0);
+
+    }
+  case REWAIT:
+    if (TimerAutoPM >= 3000) //~2.5S
+    {
+
+      //RPON[IndWavePON] = Watt2dB(Str, tmpPOW , 1);
       ModAutoPM = WAITING; // режим измерител€ авто ожидаем
       TimerAutoPM = TimerPA(1); // счетчик времени (обнул€ем)
       SetSwitchPMMode(MANUAL);  // ”станавливает режим переключени€ диапазонов в ручную
       SetRange(1);
       g_NeedScr = 1;
+           // LED_KTT(0);
 
     }
     
@@ -4223,7 +4240,7 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
         sprintf(Stra,"t14.txt=\"%.2f\"€€€",GetLengthWaveLS (MemIndexLW)/1000.0);
     NEX_Transmit((void*)Stra);    // источник
     
-          LED_KTT(0);
+          //LED_KTT(0);
 
     g_NeedScr = 0;
   }
@@ -4268,6 +4285,9 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
           // посылка команды переключени€ окна на Tester (возврат)  
       CmdInitPage(24);
   }
+             LED_KTT(0);
+          //  LED_KTS(0);
+
 }
 
 void ModeSourceOnly(void) // режим работы тестера только источник CHECK_OFF
