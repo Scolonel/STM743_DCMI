@@ -165,6 +165,8 @@ extern uint32_t IndexLCDNameFiles;// индекс указателя на индикаторе файла на кот
 extern uint32_t PageDir; 
 extern uint32_t PageFiles; 
 
+extern BYTE KnowLCD ;
+
 
 // структура хранения памяти измерителя
 struct tag_PON

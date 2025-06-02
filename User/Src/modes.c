@@ -208,6 +208,8 @@ volatile BYTE g_NeedChkAnsvNEX=0; // признак получени€ строки из редактора.и ее 
 volatile BYTE g_AutoSave=0; // признак режима авто сохранени€ измерений на выбраных длинах волн
 volatile int NeedReturn = 0; // необходимость вернутьс€ в окно сохранени€
 static BYTE ReturnMemView = 0; // признак куда возвращаемс€ по Esc из просмотра пам€ти, 1- в пам€ть, там и устанавливаем
+ BYTE KnowLCD = 0;
+
 // 0 - из старта измерений 
 
 
@@ -434,7 +436,6 @@ void ModeMainMenu(void) // режим основного ћ≈Ќё
   static WORD CntInd = 0;
   //static WORD ProcBatNow = 55;
   static BYTE OnlyBat = 1;
-  static BYTE KnowLCD = 0;
 
   char Str[32];
   char StrN[32];
@@ -495,42 +496,42 @@ void ModeMainMenu(void) // режим основного ћ≈Ќё
     //LCD_LIGHT(ON);
     NEX_Transmit((void*)Str);//
     //CreatDelay (3000000); // 168 м— - пока без ответа (подтверждени€) 83nS*30000 надо приблизительно 2 м—
-    HAL_Delay(300);    // попробуем запросить код версии индикатора
+    HAL_Delay(200);    // попробуем запросить код версии индикатора
     // выключим опрос индикатора всегда 
-     TypeLCD=1;
-     
-//#if 0
-     StartRecievNEX (500);
-    sprintf(Str,"get t6.txt€€€");
-    NEX_Transmit((void*)Str);//
-    //NEX_Transmit((void*)CmdBuf);//
-    while(!((g_WtRdyNEX)||(ReadyNEX==4)));
-    // здесь просто можем повиснуть не дождавшись ответов от индикатора
-    // это плохо при плохих индикаторах
-    // надо ждать получени€ ответа
-    //CreatDelay (2000000); // 168 м— - пока без ответа (подтверждени€) 83nS*30000 надо приблизительно 2 м—
-    if(RX_BufNEX[0] == 0x70) // есть ответ! перепишем буффер
-    {
-      for(int i=0;i<25;++i)VerFW_LCD[i]=RX_BufNEX[i+1];
-      VerFW_LCD[23]=0;
-      // здесь получим идентификатор индикатора (если его прочтем)
-      // он нужен дл€ вариантов отображени€ при просмотре рефлектограмм и в пам€ти
-      switch(VerFW_LCD[3])
-      {
-      case '2':
-        TypeLCD=0;
-        KnowLCD = 1;
-        break;
-      case '5':
-        TypeLCD=1;
-        KnowLCD = 1;
-        break;
-      default:
-        TypeLCD=0;
-        KnowLCD = 0;
-        break;
-      }
-    }
+//     TypeLCD=1;
+//     
+////#if 0
+//     StartRecievNEX (500);
+//    sprintf(Str,"get t6.txt€€€");
+//    NEX_Transmit((void*)Str);//
+//    //NEX_Transmit((void*)CmdBuf);//
+//    while(!((g_WtRdyNEX)||(ReadyNEX==4)));
+//    // здесь просто можем повиснуть не дождавшись ответов от индикатора
+//    // это плохо при плохих индикаторах
+//    // надо ждать получени€ ответа
+//    //CreatDelay (2000000); // 168 м— - пока без ответа (подтверждени€) 83nS*30000 надо приблизительно 2 м—
+//    if(RX_BufNEX[0] == 0x70) // есть ответ! перепишем буффер
+//    {
+//      for(int i=0;i<25;++i)VerFW_LCD[i]=RX_BufNEX[i+1];
+//      VerFW_LCD[23]=0;
+//      // здесь получим идентификатор индикатора (если его прочтем)
+//      // он нужен дл€ вариантов отображени€ при просмотре рефлектограмм и в пам€ти
+//      switch(VerFW_LCD[3])
+//      {
+//      case '2':
+//        TypeLCD=0;
+//        KnowLCD = 1;
+//        break;
+//      case '5':
+//        TypeLCD=1;
+//        KnowLCD = 1;
+//        break;
+//      default:
+//        TypeLCD=0;
+//        KnowLCD = 0;
+//        break;
+//      }
+//    }
     if(!KnowLCD)
       // возможно индикатор "больной" надо просигнализировать и попытатьс€ работать дальше
       AlarmSignal(3);
