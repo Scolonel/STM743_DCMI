@@ -96,7 +96,7 @@ void Averaging (int NumAccum,unsigned AddIndexLN, BYTE EnDrawGraph )// функция н
 // не 0 - устанвливает период согластно индекса диапазона оценивается в StartRunFirst
 { 
   //    CntPointPick=0;
-
+  
   //CurrTimeAccum = HAL_GetTick();
   OldTimeAccum = CurrTimeAccum;
   SetNumAccumPerSec (NumAccum);// запись числа накоплений
@@ -109,13 +109,13 @@ void Averaging (int NumAccum,unsigned AddIndexLN, BYTE EnDrawGraph )// функция н
   // устанавливаются число реальных (проходов)накоплений равное числу установленных накоплений умноженное на число прореживаний
   // !!! Важно правильно установить период повторения имульсов, через таймер ТИМ1 (с заявленым тиком 1 мкС)
   // по прерыванию окончания цикла ДМА DCMI , первый съем, устанавливается признак вызова запуска
-   // это не надо SendSetALT (CalkSetALT(PointsPerPeriod, PointInPeriod=0)); // передача слова в Альтеру, первое поэтому чистим PointInPeriod
+  // это не надо SendSetALT (CalkSetALT(PointsPerPeriod, PointInPeriod=0)); // передача слова в Альтеру, первое поэтому чистим PointInPeriod
   // установим параметры измерения  перед запуском
   // в основном это установка (конфигурация таймеров) для измерения
-     //LED_KT(1); // начало одного суммир
+  //LED_KT(1); // начало одного суммир
   StartRunFirst(AddIndexLN);// установлены таймеры достаточно запустить таймер TIM1 - 
-     //LED_KT(0); // начало одного суммир
-
+  //LED_KT(0); // начало одного суммир
+  
   if (CntAccumulat==0)CntAccumulat++;// первое измерение не пропустить
   //SetParamMeasure();
   while (CntAccumulat)
@@ -129,20 +129,20 @@ void Averaging (int NumAccum,unsigned AddIndexLN, BYTE EnDrawGraph )// функция н
     // надо заменить SUMMER на НАШ цикл одного измерения без очстки буффеов
     // из 
     // проверяется 
-
+    
     RUN_SUM(RawData);//34-67-130-260-510-770-1540~ max 34*48=1632 uS 1632/1540=
     //CreatDelay (DelayAfterAvrg);
     //SendSetALT (CalkSetALT(PointsPerPeriod, PointInPeriod)); // (14 uS)передача слова в Альтеру
   }
   MeasureNow =0; //выключаем ограничение на прорисовку режима
-
+  
   if (!RemoutCtrl)
   {
     // приостановим таймер времени накопления
     EnaTimerAccum = 0;
-  DrawPictureMeas (EnDrawGraph); // (28 mS) рисование картинки при измерении
-        EnaTimerAccum = 1;
-
+    DrawPictureMeas (EnDrawGraph); // (28 mS) рисование картинки при измерении
+    EnaTimerAccum = 1;
+    
   }
 }
 

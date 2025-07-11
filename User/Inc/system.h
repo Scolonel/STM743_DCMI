@@ -373,6 +373,8 @@ extern BYTE MemTableExt[MaxMemOTDRExt+1]; // таблица рефлектограмм расширенной я
 extern uint8_t BusyUSB ; // признак передачи данных по USB, с SD картой
 extern uint16_t PresentUSB ; // признак подключенного USB
 extern uint8_t ModeUSB ; // признак подключенного USB
+ // Номер текущей страницы индикатора для востановления
+extern char NumCurrPage ; // 
 
 //extern   FIL Fil;
 //extern   FRESULT FR_Status;

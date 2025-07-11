@@ -170,7 +170,11 @@ uint8_t BusyUSB=0 ; // признак передачи данных по USB, с SD картой
 // при приеме передаче взводим на 10 м— , и перезаводим при следующей передаче/приеме
 uint16_t PresentUSB = 0; // признак подключенного USB
 uint8_t ModeUSB = 0; // признак работы USB дл€ индикации
-
+uint8_t Tik_045 = 0; // тик дл€ медленной индикации, взводитс€ каждые 450 м— , в основном цикле...
+ // Ќомер текущей страницы индикатора дл€ востановлени€
+  char NumCurrPage = 0; // 
+  // счетчик циклов по 450 м—
+  uint8_t CountSeqMeas = 0; 
 // перенос переменных из MAIN.c from T7kAR
 unsigned int CheckErrMEM; 
 
@@ -265,7 +269,10 @@ int main(void)
     }
     HAL_Delay(10);
     sprintf((void*)Str,"bauds=115200€€€");
-    HAL_UART_Transmit(&huart7, (void*)Str,strlen((void*)Str),20); // выдаем 
+    HAL_UART_Transmit(&huart7, (void*)Str,strlen((void*)Str),200); // выдаем 
+    HAL_Delay(20);
+    sprintf((void*)Str,"bauds=115200€€€");
+    HAL_UART_Transmit(&huart7, (void*)Str,strlen((void*)Str),200); // выдаем 
     
     //NEX_Transmit(Str);// 
     HAL_Delay(10);
@@ -679,7 +686,9 @@ int main(void)
           myBeep(100);
           Error_Handler();
         }
-        PeriodIntADC = 0;
+        PeriodIntADC = 0; // это каждые ~450 м—
+        Tik_045 = 1; 
+        CountSeqMeas++;
       }
     }
       // если измеритель то можно почитать медленное ј÷ѕ 7782
@@ -812,26 +821,65 @@ int main(void)
     // все параметры включим до вызова сновного цикала
     if((!MeasureNow)&&(!ProgFW_LCD))
     {
-      ModeFuncTmp(); // прорисовка текущего режима - основной цикл
-      // проверим зан€тость USB  и соотв высветим значек
-      if(ModeUSB)
+      
+      if(ModeUSB) // устанавливаем когда пишем или читаем по USB SDCard
       {
-        switch (ModeUSB)
+        // сбрасываем нажатые кнопки - всегда
+        ClrKeyAll();
+        if(Tik_045)
         {
-        case 1:
-          sprintf((void*)Str,"pic 460,0,11€€€");//black
-          break;
-        case 2: // отключили USB
-          sprintf((void*)Str,"pic 460,0,12€€€");//empty
-          break;
-        case 3:
-          sprintf((void*)Str,"pic 460,0,9€€€");//RED
-          break;
+          switch (ModeUSB)
+          {
+          case 3:
+            // вывод картинки о том что зан€то USB
+            sprintf((void*)Str,"pic 144,94,%d€€€",(CountSeqMeas%3)+16);
+            //sprintf((void*)Str,"pic 144,94,53€€€");
+            NEX_Transmit((void*)Str);//
+            ModeUSB=2;
+            break;
+          case 2:
+            HAL_Delay(20);
+            break;
+          default:
+            
+            ModeUSB = 0;
+            CmdInitPage(NumCurrPage);
+            
+            break;
+          }
+          Tik_045 =0;
         }
-        ModeUSB = 0;
-        NEX_Transmit((void*)Str);// 
       }
+      else
+      {
+        // прорисовка основной функции
+        ModeFuncTmp();
+      }
+      
+      // здесь всегда в основном цикле
+      //      ModeFuncTmp(); // прорисовка текущего режима - основной цикл
+      //      // проверим зан€тость USB  и соотв высветим значек
+      //      if(ModeUSB)
+      //      {
+      //        switch (ModeUSB)
+      //        {
+      //        case 1:
+      //          sprintf((void*)Str,"pic 460,0,11€€€");//black
+      //          break;
+      //        case 2: // отключили USB
+      //          sprintf((void*)Str,"pic 460,0,12€€€");//empty
+      //          break;
+      //        case 3:
+      //          sprintf((void*)Str,"pic 460,0,9€€€");//RED
+      //          break;
+      //        }
+      //        ModeUSB = 0;
+      //        NEX_Transmit((void*)Str);// 
+      //      }
     }
+        // проверка окончани€ записи индикатора
+    if(ProgFW_LCD==2) ProgFW_LCD=0;
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

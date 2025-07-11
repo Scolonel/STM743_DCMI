@@ -3189,37 +3189,37 @@ void ModeMemoryOTDR(void) // режим отображения сохраненных рефлектограмм и работ
   BYTE NeedCallView = 0; //признак необходимости открыть окно просмотра рефлектограммы
   //BYTE NeedReStartMeasure = 0; //признак необходимости снова запустить измерение из окна предросмотра рефлектограмм
   // обработка клавиатуры  с изменениями
-    if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED)&&!DeleteTrace)
+  if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED)&&!DeleteTrace)
     // обработка кнопки Ок (подтверждение перехода в окно просмотра рефлекторгаммы
   {
-      TraceERASE(0);
-      TraceWRITE(0); // записываем рефлектограмму с параметрами сьема  в 0 ячейку
-      DeleteTrace = 0;
-      GetSetHorizontScale (5);// вся картинка на экран
-      SetMode(ModeDrawOTDR);
-      if(ReturnMemView)
+    TraceERASE(0);
+    TraceWRITE(0); // записываем рефлектограмму с параметрами сьема  в 0 ячейку
+    DeleteTrace = 0;
+    GetSetHorizontScale (5);// вся картинка на экран
+    SetMode(ModeDrawOTDR);
+    if(ReturnMemView)
       ReturnModeViewRefl = VIEWMEM;//SETPARAM -  чтобы вернуться в предпросмотр
-      else
+    else
       ReturnModeViewRefl = SETPARAM;//-  чтобы вернуться в предпросмотр
-        
-      ModeDevice = MODEREFL;
-      myBeep(10);
-      NeedCallView = 1;
-    }
+    
+    ModeDevice = MODEREFL;
+    myBeep(10);
+    NeedCallView = 1;
+  }
   if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED)&&DeleteTrace)
     // обработка кнопки Ок При удалении
   {
-      // удаляем выбранную рефлектограмму
-      Trace = DeletingTrace (Trace);
-      SetNumTrace(Trace);
-      g_FirstScr = 1; // надо перечитать трассу
-      ModeMemDraw = VIEWNEXT;
-
-      //ModeMemDraw = VIEWSAVED;
-      MsgDel = 2;
-      g_NeedScr = 1;
-      DeleteTrace = 0;
-      myBeep(20);
+    // удаляем выбранную рефлектограмму
+    Trace = DeletingTrace (Trace);
+    SetNumTrace(Trace);
+    g_FirstScr = 1; // надо перечитать трассу
+    ModeMemDraw = VIEWNEXT;
+    
+    //ModeMemDraw = VIEWSAVED;
+    MsgDel = 2;
+    g_NeedScr = 1;
+    DeleteTrace = 0;
+    myBeep(20);
   }
   
   if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
@@ -3250,7 +3250,7 @@ void ModeMemoryOTDR(void) // режим отображения сохраненных рефлектограмм и работ
     g_FirstScr = 1; // надо перечитать трассу
     DrawMemoryRefl(Trace, CurrLang, g_mem_param);
     ModeMemDraw = VIEWSAVED;
-   
+    
   }
   if ((PRESS(BTN_LEFT))&&((getStateButtons(BTN_LEFT)==SHORT_PRESSED)||(getStateButtons(BTN_LEFT)==INF_PRESSED)))
   {
@@ -3273,7 +3273,7 @@ void ModeMemoryOTDR(void) // режим отображения сохраненных рефлектограмм и работ
     ModeMemDraw = VIEWNEXT;
     g_FirstScr = 1; // надо перечитать трассу
   }
-// переключатель отображения по режимам
+  // переключатель отображения по режимам
   switch (ModeMemDraw)
   {
   case SAVEDTRACE:
@@ -3287,7 +3287,7 @@ void ModeMemoryOTDR(void) // режим отображения сохраненных рефлектограмм и работ
     sprintf(Stra,"%s    %d/%d",MsgMass[63][CurrLang], GetNumTraceSaved(0), MAXMEMALL);//  "НЕТ ПАМЯТИ" 
     sprintf( Str,"xstr 200,150,200,40,2,2047,BLACK,0,1,3,\"%s\"яяя",Stra); // 0для обоих индикаторов 
     NEX_Transmit((void*)Str);//
-
+    
     ModeMemDraw = VIEWSAVED;
     break;
   case VIEWNEXT:
@@ -3337,22 +3337,22 @@ void ModeMemoryOTDR(void) // режим отображения сохраненных рефлектограмм и работ
     }
     // надо добавить записи: - вопрос про удаление, - подтверждение удаления
     //      sprintf(Stra,"<ZOOM>");// признак кправления горизонтальным зумом
-      //sprintf(Stra,"<Z1:%d>",GetSetHorizontScale(0));// признак кправления горизонтальным зумом
-
+    //sprintf(Stra,"<Z1:%d>",GetSetHorizontScale(0));// признак кправления горизонтальным зумом
+    
     g_NeedScr = 0;
   }
   if(NeedCallView)
   {
     // посылка команды переключения окна на DrawOTDRview (возврат)  
     CmdInitPage(18);
-         //надо время что бы переключится
+    //надо время что бы переключится
     // возможно здесь многовато будет... 13.02.2024
     // ставил в 10 раз меньше не влияет
     //CreatDelay(1000000); //  до 173
     //CreatDelay(100000); //  173
     //CreatDelay(800000);// 176
     CreatDelay(100000);// 177  вернул к 173
-
+    
     NeedCallView = 0;
   }
   
@@ -3361,11 +3361,11 @@ void ModeMemoryOTDR(void) // режим отображения сохраненных рефлектограмм и работ
     // здесь над витвится в зависимости от признака откуда пришли
     if(ReturnMemView)
     {
-   DeleteTrace = 0;
-   SetMode(ModeSelectMEM);
-   ModeDevice = MODEOTHER;
-   myBeep(10);
-    // посылка команды переключения окна на Memory (возврат)  
+      DeleteTrace = 0;
+      SetMode(ModeSelectMEM);
+      ModeDevice = MODEOTHER;
+      myBeep(10);
+      // посылка команды переключения окна на Memory (возврат)  
       CmdInitPage(4);
     }
     else
@@ -3378,57 +3378,57 @@ void ModeMemoryOTDR(void) // режим отображения сохраненных рефлектограмм и работ
       ReturnModeViewRefl = SETPARAM;//SETPARAM -  чтобы вернуться в предпросмотр
       ModeDevice = MODEREFL;
       myBeep(10);
-    // посылка команды переключения окна на DrawOTDRview (возврат)  
-    CmdInitPage(18);
+      // посылка команды переключения окна на DrawOTDRview (возврат)  
+      CmdInitPage(18);
       
     }
   }
- // if (((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==INF_PRESSED))||
- //    ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==INF_PRESSED))) // если продолжительное нажатие Left Right
-    //ClrKey (BNS_MASK-BTN_RIGHT-BTN_LEFT);
- // else
-    //ClrKey (BNS_MASK);
+  // if (((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==INF_PRESSED))||
+  //    ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==INF_PRESSED))) // если продолжительное нажатие Left Right
+  //ClrKey (BNS_MASK-BTN_RIGHT-BTN_LEFT);
+  // else
+  //ClrKey (BNS_MASK);
   //CalkEventsKeys (LogData, PointsInImpulse(0), 1)
   // в версии 154 убрана обработка
-//  if(NeedReStartMeasure)
-//  {
-    if (rawPressKeyS) // 17.11.2022 хотим запустить измерение
-    {        
-      myBeep(10);
-      // если стартуем перепишем выбранную длину волны в соответствии с памяти
-      SetIndxSeqLS();
-       //g_SetModeLW = SettingRefl.SW_LW;
-      g_AutoSave = 0; // длина волны одиночная сброс авто сохранения/
-        
-      ReSaveWAV_SC (); // пересохраняем если есть изменения
-      LSEL0(0);
-      LSEL1(0);
-      SlowON();
-      //POWALT(ON);
-      //POWREF (ON);
-      //POWDET(ON);
-      SetMode(ModeStartOTDR);
-      ModeDevice = MODEMEASURE;
-      ReturnMemView = 0; // как бы запустились из установок
-      ReturnModeViewRefl = SETPARAM;//SETPARAM -  чтобы вернуться в установки
-      //IndexVerSize  = 0;// установка вертикального размера отображения рефлектограммы ( самый крупный)
-      SubModeMeasOTDR = SETPOWER;
-      //123 SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
-      rawPressKeyS=0;
-      
-      //CreatDelay (30000); // 3.3 мС
-  HAL_Delay(4);
-      CmdInitPage(16);// посылка команды переключения окна на начало измерения Measuring
-    }
-//    NeedReStartMeasure = 0;
-//  }
+  //  if(NeedReStartMeasure)
+  //  {
+  if (rawPressKeyS) // 17.11.2022 хотим запустить измерение
+  {        
+    myBeep(10);
+    // если стартуем перепишем выбранную длину волны в соответствии с памяти
+    SetIndxSeqLS();
+    //g_SetModeLW = SettingRefl.SW_LW;
+    g_AutoSave = 0; // длина волны одиночная сброс авто сохранения/
+    
+    ReSaveWAV_SC (); // пересохраняем если есть изменения
+    LSEL0(0);
+    LSEL1(0);
+    SlowON();
+    //POWALT(ON);
+    //POWREF (ON);
+    //POWDET(ON);
+    SetMode(ModeStartOTDR);
+    ModeDevice = MODEMEASURE;
+    ReturnMemView = 0; // как бы запустились из установок
+    ReturnModeViewRefl = SETPARAM;//SETPARAM -  чтобы вернуться в установки
+    //IndexVerSize  = 0;// установка вертикального размера отображения рефлектограммы ( самый крупный)
+    SubModeMeasOTDR = SETPOWER;
+    //123 SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
+    rawPressKeyS=0;
+    
+    //CreatDelay (30000); // 3.3 мС
+    HAL_Delay(4);
+    CmdInitPage(16);// посылка команды переключения окна на начало измерения Measuring
+  }
+  //    NeedReStartMeasure = 0;
+  //  }
   
-      // сделаем "тупую задержку"
-    // похоже задержка слишком велика, пропускаем команды по UART 13.02.2024?
-    // ставил 20000 - не поменялось
-    //CreatDelay (20000); //173 и 176,177
+  // сделаем "тупую задержку"
+  // похоже задержка слишком велика, пропускаем команды по UART 13.02.2024?
+  // ставил 20000 - не поменялось
+  //CreatDelay (20000); //173 и 176,177
   HAL_Delay(3);
-
+  
 }
 
 
@@ -6864,6 +6864,7 @@ void UploadFW_Nextion(void) // обновление индикатора NEXTION
     // не требущие изменения при первичной инициализации
     sprintf(Str, "t0.txt=\"%s\"яяя", MsgMass[119][CurrLang]);
     NEX_Transmit((void*)Str);    // 
+  HAL_Delay(5);
   
     sprintf(Str, "t1.txt=\"%s\"яяя", MsgMass[120][CurrLang]);
     NEX_Transmit((void*)Str);    // 
@@ -6876,19 +6877,23 @@ void UploadFW_Nextion(void) // обновление индикатора NEXTION
     g_NeedScr = 0;
   }
 
-  if(ProgFW_LCD==2) // если сбросисли признак программирования то переключимся  в норм режим
+  if(ProgFW_LCD==0) // если сбросисли признак программирования то переключимся  в норм режим
   {
   //123 enable_timer( 0 );
   GetSysTick(1); // получение тиков 10 мС. 0 - получение счетчика от предыдущего сброса 1- сброс
   ProgFW_LCD=0;  
   SubModeMeasOTDR = NOTMODE;
-  SetMode(ModeMainMenu);
-  ModeDevice = MODEMENU;
-      // посылка команды переключения окна на MainMenu (возврат)  
-  // вызовем новое окно!
-  //CreatDelay(5000000);
-  SetModeDevice (MODEMENU); // принудительная установка режима прибора
-  CmdInitPage(1);
+//  SetMode(ModeMainMenu);
+//  ModeDevice = MODEMENU;
+//      // посылка команды переключения окна на MainMenu (возврат)  
+//  // вызовем новое окно!
+//  //CreatDelay(5000000);
+//  SetModeDevice (MODEMENU); // принудительная установка режима прибора
+//  CmdInitPage(1);
+  CmdInitPage(0);// вызов окна заставки
+  HAL_Delay(100);
+  SetMode (ModeWelcome);
+  CmdInitPage(0);// посылка команды переключения окна на Welcome и установка признака первого входа
   HAL_Delay(500);// индикатор после сброса, время не понятно!
   myBeep(125);
   }
@@ -7448,6 +7453,8 @@ float MeasORL(int NumAvrgThis, int EnaReport)
 void CmdInitPage(int Num)
 {
   char str[44];
+  // при вызове окна сохраним его номер, чтобы вернуть инициализацию (окна в индикаторе)
+  NumCurrPage = Num;
   sprintf(str, "page %dяяя",Num); // < событиe >
   NEX_Transmit((void*)str);    //
   

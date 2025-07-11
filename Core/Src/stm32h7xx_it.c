@@ -214,7 +214,7 @@ void SysTick_Handler(void)
   else if(PresentUSB==1)
   {
     PresentUSB = 0;
-    ModeUSB = 2; // надо выключить значек USB
+    //ModeUSB = 2; // надо выключить значек USB
   }
   // my control BEEP
   if (beepTick > 1)
@@ -452,17 +452,17 @@ void EXTI15_10_IRQHandler(void)
   /* USER CODE BEGIN EXTI15_10_IRQn 0 */
   if (__HAL_GPIO_EXTI_GET_IT(BUT_START_Pin) != 0x00U)
   {
-//EnaStartRun = 1;
-// из старой проги, признак нажатой кнопки "S"
-              rawPressKeyS = 1;
-
-CountKeyS++; // число нажатых кнопок
+    //EnaStartRun = 1;
+    // из старой проги, признак нажатой кнопки "S"
+    rawPressKeyS = 1;
+    
+    CountKeyS++; // число нажатых кнопок
     
   }
   /* USER CODE END EXTI15_10_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(BUT_START_Pin);
   /* USER CODE BEGIN EXTI15_10_IRQn 1 */
-
+  
   /* USER CODE END EXTI15_10_IRQn 1 */
 }
 
