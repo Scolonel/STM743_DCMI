@@ -297,35 +297,55 @@ int main(void)
     while(1);
     
   }
-  HAL_Delay(10);
-  sprintf((void*)Str, "page 0€€€"); // < START>
-  NEX_Transmit((void*)Str);    //
+  
+  CmdInitPage(0);// вызов окна заставки
+//  sprintf((void*)Str, "t1.txt=\"¬ключение...\"€€€"); // auto
+//  NEX_Transmit((void*)Str);    // 
+  CmdInitPage(0);// вызов окна заставки
+  // пошлем сообщение о включении ...
+
+//  HAL_Delay(100);
+//  sprintf((void*)Str, "page 0€€€"); // < START>
+//  NEX_Transmit((void*)Str);    //
+//    sprintf((void*)Str,"t0.bco=11111€€€");
+//    NEX_Transmit((void*)Str);//
 //       StartRecievNEX (500);
 //    sprintf((void*)Str,"get t10.txt€€€");
 //    NEX_Transmit((void*)Str);//
     //NEX_Transmit((void*)CmdBuf);//
-  HAL_Delay(10);
-  sprintf((void*)Str, "page 0€€€"); // < START>
-  NEX_Transmit((void*)Str);    //
-  HAL_Delay(10);
+//HAL_Delay(200);
+//  sprintf((void*)Str, "page 0€€€"); // < START>
+//  NEX_Transmit((void*)Str);    //
+//    sprintf((void*)Str,"t1.bco=22222€€€");
+//    NEX_Transmit((void*)Str);//
+//  HAL_Delay(100);
 //    sprintf((void*)Str, "t0.txt=\"начало\"€€€"); // auto
 //    NEX_Transmit((void*)Str);    // 
 //      HAL_Delay(10);
 
-       StartRecievNEX (600);
-    sprintf((void*)Str,"get t10.txt€€€");
+       StartRecievNEX (400);
+    sprintf((void*)Str,"get tlcd.txt€€€");
     NEX_Transmit((void*)Str);//
+    //LED_KTS(1);
   //HAL_Delay(200);
     while(!((g_WtRdyNEX)||(ReadyNEX==4)));
-       StartRecievNEX (600);
-    sprintf((void*)Str,"get t10.txt€€€");
+//    sprintf((void*)Str,"t2.bco=33333€€€");
+//    NEX_Transmit((void*)Str);//
+    //LED_KTS(0);
+    HAL_Delay(50);
+       StartRecievNEX (400);
+    sprintf((void*)Str,"get tlcd.txt€€€");
     NEX_Transmit((void*)Str);//
-  //HAL_Delay(200);
+    //LED_KTS(1);
     while(!((g_WtRdyNEX)||(ReadyNEX==4)));
     // здесь просто можем повиснуть не дождавшись ответов от индикатора
     // это плохо при плохих индикаторах
     // надо ждать получени€ ответа
     //CreatDelay (2000000); // 168 м— - пока без ответа (подтверждени€) 83nS*30000 надо приблизительно 2 м—
+//    sprintf((void*)Str,"t3.bco=44444€€€");
+//    NEX_Transmit((void*)Str);//
+    //LED_KTS(0);
+
     if(RX_BufNEX[0] == 0x70) // есть ответ! перепишем буффер
     {
       for(int i=0;i<25;++i)VerFW_LCD[i]=RX_BufNEX[i+1];
@@ -348,7 +368,11 @@ int main(void)
         break;
       }
     }
-  
+//  if(!KnowLCD)
+//  {
+//    sprintf((void*)Str,"t8.bco=54321€€€");
+//    NEX_Transmit((void*)Str);//
+//  }
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */

@@ -191,13 +191,13 @@ int GetPMData(void)
     {
       if (!(GET_PM_DATA)) // данные готовы можно считывать
       {
-        LED_KTS(1);
+        //LED_KTS(1);
         
         DataADC_PM =  ReadDataADC7782 ();
         Watchdog=0; //
         StateADC = READYDATA;
         PM_CS(1);
-        LED_KTS(0);
+        //LED_KTS(0);
         
       }
     }
@@ -206,7 +206,7 @@ int GetPMData(void)
   case READYDATA: // данные готовы (здесь попробуем фильтрануть их)
     Watchdog=0; // 
     PM_CS(1);
-    LED_KTS(0);
+    //LED_KTS(0);
     
     //CurrRange = Range;
     //PMCurrValue = GetPower(PMWavelenght);      // ѕолучаем мощность в м¬т не зависимо от длины волны
