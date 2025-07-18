@@ -461,7 +461,7 @@ void SendDrawNex (unsigned char* array, int ID_lcd, int Points)
   array[Points+1]=255;  
   array[Points+2]=255;  
   array[Points+3]=255; 
-  StartRecievNEX (150);
+  HAL_Delay(250);
 
 //  g_WtRdyNEX = 0;
 //  ReadyNEX = 0;
@@ -469,7 +469,7 @@ void SendDrawNex (unsigned char* array, int ID_lcd, int Points)
 //  GetRstTMUart2(1); // сбросим таймер Uart2
   // а тут надо передать массив данных без учте символов
   //UARTSend2 ((BYTE*)array, Points+1);//
-  HAL_Delay(150);
+  StartRecievNEX (150);
    HAL_UART_Transmit(&huart7,(void*)array,Points+1,(uint32_t)((Points+1)/8));  //
   // также ждать получение ответа
   while(!((g_WtRdyNEX)||(ReadyNEX==1)));
