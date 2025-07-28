@@ -3039,6 +3039,7 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (Окно 34)
   //        t19
   char Str[32];
   char FilPath[64];
+  static float CalkRes;
   uint32_t BlkSz; // размер блока заголовка
   uint32_t EvntSz=0; // размер блока событий, пока не читаем события просто для смещения
   uint32_t PosDataLog=0xe1; // позиция начала блока данных для копирования в 
@@ -3052,16 +3053,19 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (Окно 34)
   {
     myBeep(10);
   }
-  if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED)) 
+  if ((PRESS(BTN_UP))&&((getStateButtons(BTN_UP)==SHORT_PRESSED)||(getStateButtons(BTN_UP)==INF_PRESSED))) 
   {
     myBeep(10);
     if(IndexNameFiles>0)IndexNameFiles--;
+    else IndexNameFiles = NumNameFiles-1;
+      
     g_NeedScr=1;
   }
-  if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
+  if ((PRESS(BTN_DOWN))&&((getStateButtons(BTN_DOWN)==SHORT_PRESSED)||(getStateButtons(BTN_DOWN)==INF_PRESSED)))
   {
     myBeep(10);
     if((IndexNameFiles+1)<NumNameFiles)IndexNameFiles++;
+    else IndexNameFiles = 0;
     g_NeedScr=1;
   }
   if (g_FirstScr)
@@ -3097,57 +3101,78 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (Окно 34)
       NEX_Transmit((void*)Str);    //
       
     }
-        FR_Status = f_mount(&FatFs, SDPath, 1);
-
+    FR_Status = f_mount(&FatFs, SDPath, 1);
+    
     // здесь можно прочитать файл на котрый указываем и разобрать его
     sprintf(FilPath, "0:/_OTDR/%s/%s",NameDir[IndexNameDir],NameFiles[IndexNameFiles]); // путь к файлу
     // откроем файл и прочитаем размер блока
-        FR_Status = f_open(&Fil, FilPath, FA_READ);
+    FR_Status = f_open(&Fil, FilPath, FA_READ);
     if(FR_Status == FR_OK)
     {
-     f_lseek (&Fil, 2); // переместимся на 2 байта
-     f_read (&Fil, (void*)&BlkSz, 4, &RWC);
-     if(BlkSz==98) // есть события
-     {
-     f_lseek (&Fil, 0x44); // переместимся на 0x44 байта чтобы прочитать размер блока событий 
-     f_read (&Fil, (void*)&EvntSz, 4, &RWC);
-     PosDataLog = 0xe1 + 16 + EvntSz;
-     }
-     f_lseek (&Fil, BlkSz); // переместимся на  байта
-     f_read (&Fil, (void*)&F_SOR, 142, &RWC);
+      f_lseek (&Fil, 2); // переместимся на 2 байта
+      f_read (&Fil, (void*)&BlkSz, 4, &RWC);
+      if(BlkSz==98) // есть события
+      {
+        f_lseek (&Fil, 0x44); // переместимся на 0x44 байта чтобы прочитать размер блока событий 
+        f_read (&Fil, (void*)&EvntSz, 4, &RWC);
+        PosDataLog = 0xe1 + 16 + EvntSz;
+      }
+      f_lseek (&Fil, BlkSz); // переместимся на  байта
+      f_read (&Fil, (void*)&F_SOR, 142, &RWC);
       // читаем блок данных из файла
-     f_lseek (&Fil, PosDataLog); // переместимся на начало блока данных байта
-     f_read (&Fil, (void*)&LogData, F_SOR.NPPW*2, &RWC);
-     
+      f_lseek (&Fil, PosDataLog); // переместимся на начало блока данных байта
+      f_read (&Fil, (void*)&LogData, F_SOR.NPPW*2, &RWC);
+      
     }
     f_close(&Fil);
-  FR_Status = f_mount(NULL, "", 0);
+    FR_Status = f_mount(NULL, "", 0);
     
     for (int i=0; i<12; i++)
     {
       // закрасим бэкграунды  и установим требуемый
       sprintf(Str,"t%d.bco=WHITEяяя",i+1); // белый
       NEX_Transmit((void*)Str);// 
+      HAL_Delay(1);
     }
     sprintf(Str,"t%d.bco=GREENяяя",IndexLCDNameFiles+1); // GREEN
     NEX_Transmit((void*)Str);    //
     // код подсветки требуемой строки если есть есть маркер строки
-        sprintf(Str, "t15.txt=\"%d %d\"яяя", BlkSz, EvntSz); // < ракзмер заголовка, есть ли там события >
+    //sprintf(Str, "t15.txt=\"%d %d\"яяя", BlkSz, EvntSz); // < ракзмер заголовка, есть ли там события >
+    //CalkRes = LIGHTSPEED*1.e-9;
+//    sprintf(Str, "t20.txt=\"%.3f\"яяя", CalkRes); // < длина линии>
+//    NEX_Transmit((void*)Str);    //
+    //CalkRes = CalkRes*F_SOR.DS;
+//    sprintf(Str, "t21.txt=\"%.3f\"яяя", CalkRes); // < длина линии>
+    //sprintf(Str, "t21.txt=\"%d\"яяя", F_SOR.DS); // < шаг измерения>
+    //NEX_Transmit((void*)Str);    //
+    //CalkRes = CalkRes/F_SOR.GI;
+//    sprintf(Str, "t20.txt=\"%.3f\"яяя", CalkRes); // < длина линии>
+//    NEX_Transmit((void*)Str);    //
+    //CalkRes = CalkRes*F_SOR.NPPW;
+    
+    //CalkRes = (F_SOR.DS*LIGHTSPEED*1.0e-9*F_SOR.NPPW)/F_SOR.GI;//
+    //sprintf(Str, "t15.txt=\"%.3f\"яяя", CalkRes); // < длина линии>
+    //sprintf(Str, "t15.txt=\"%d\"яяя", F_SOR.DS); // < шаг измерения>
+    sprintf(Str, "t15.txt=\"%d km\"яяя", (F_SOR.DS/208333)*2 ); // < длина линии>
     NEX_Transmit((void*)Str);    //
-        sprintf(Str, "t16.txt=\"%dnm\"яяя", F_SOR.AW/10); // < длина волны >
+    sprintf(Str, "t16.txt=\"%d nm\"яяя", F_SOR.AW/10); // < длина волны >
     NEX_Transmit((void*)Str);    //
-        sprintf(Str, "t17.txt=\"%d\"яяя", F_SOR.NPPW); // < число точек >
+    //    sprintf(Str, "t17.txt=\"%d\"яяя", F_SOR.NPPW); // < число точек >
+    //NEX_Transmit((void*)Str);    //
+    sprintf(Str, "t17.txt=\"%d ns\"яяя", F_SOR.PWU); // < длительность импульса >
     NEX_Transmit((void*)Str);    //
-        //sprintf(Str, "t18.txt=\"%d\"яяя", F_SOR.AR); // < какой файл выбран >
-        sprintf(Str, "t18.txt=\"%d\"яяя", F_SOR.NAV); // < число накоплений >
+    //sprintf(Str, "t18.txt=\"%d\"яяя", F_SOR.AR); // < какой файл выбран >
+    //sprintf(Str, "t18.txt=\"%d\"яяя", F_SOR.NAV); // < число накоплений >
+    //sprintf(Str, "t18.txt=\"%d\"яяя", F_SOR.AR); // < длина измеряемого участка... >
+    sprintf(Str, "t18.txt=\"%.5f\"яяя", F_SOR.GI/100000.); // < коэфф преломления... >
     NEX_Transmit((void*)Str);    //
-        sprintf(Str, "t19.txt=\"%s\"яяя", F_SOR.CMT); // < комметарий >
+    sprintf(Str, "t19.txt=\"%s\"яяя", F_SOR.CMT); // < комметарий >
     NEX_Transmit((void*)Str);    //
-   // надо нарисовать график 265*160
+    // надо нарисовать график 265*160
     //  //объявления графических установок для  индикатора, 
-  GraphParams params = {27000,0,20,0,MEMDRAW};//PosCursorMain (0) // масштаб 48 ( для уменьшенной картинки)
-  Rect rct;
-//  //для нового индикатора(рисуем график)
+    GraphParams params = {27000,0,20,0,MEMDRAW};//PosCursorMain (0) // масштаб 48 ( для уменьшенной картинки)
+    Rect rct;
+    //  //для нового индикатора(рисуем график)
     rct.right=260;//
     rct.bottom=160;//
     rct.left=0;
@@ -3155,7 +3180,7 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (Окно 34)
     MakeGraphNext( &rct, LogData, 5300, &params );
     HAL_Delay(5);
     SendDrawNex(NexData,16,rct.right); // ID=16 для графика в просмотре
-
+    
     g_NeedScr = 0;
   }
   if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
