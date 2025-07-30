@@ -2493,14 +2493,17 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     switch (ReturnModeViewRefl)
     {
     case VIEWMEM:
-      SetMode(ModeMemoryOTDR);
+    myBeep(10);
+      SetMode(ModeFileMngFiles);
       ModeDevice = MODEMEMR;
       ModeMemDraw = VIEWNEXT;
-      // посылка команды переключения окна на Mem_OTDR_graph (возврат)  
-      CmdInitPage(13);
-      //надо время что бы переключится
-      //CreatDelay(1000000);
-        HAL_Delay(100);
+      ReturnMemView = 1; // надо вернуться сюда же по ESC
+         // посылка команды переключения окна на Mem_OTDR_garaph (вызов)  
+      //KeyP = 0;
+      ClrKey(BTN_MENU);
+      CmdInitPage(34); // новое окно лист бокс перечня файлов в текущей дирректории
+       //CreatDelay(1000000);
+      HAL_Delay(100);
 
       break;
     case VIEWEVNT:
@@ -2996,6 +2999,7 @@ void ModeFileMngDir(void) // режим файл менеджера директорий
   // обработка кнопки "OK"
   if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==UP_SHORT_PRESSED)) // переход в режим просмотра с переключением зума
   {
+    // вызов окна выбора файлов при просмотре памяти
     myBeep(10);
       SetMode(ModeFileMngFiles);
       ModeDevice = MODEMEMR;
@@ -3049,10 +3053,6 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (Окно 34)
   FIL Fil;
   FRESULT FR_Status;
 
-  if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==UP_SHORT_PRESSED)) // переход в режим просмотра с переключением зума
-  {
-    myBeep(10);
-  }
   if ((PRESS(BTN_UP))&&((getStateButtons(BTN_UP)==SHORT_PRESSED)||(getStateButtons(BTN_UP)==INF_PRESSED))) 
   {
     myBeep(10);
@@ -3173,7 +3173,7 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (Окно 34)
     GraphParams params = {27000,0,20,0,MEMDRAW};//PosCursorMain (0) // масштаб 48 ( для уменьшенной картинки)
     Rect rct;
     //  //для нового индикатора(рисуем график)
-    rct.right=260;//
+    rct.right=265;//
     rct.bottom=160;//
     rct.left=0;
     rct.top=0;
@@ -3183,6 +3183,20 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (Окно 34)
     
     g_NeedScr = 0;
   }
+  // постобработка выходы в другие ОКНА
+  if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==UP_SHORT_PRESSED)) // переход в режим просмотра с переключением зума
+  {
+    SetMode(ModeDrawOTDR);
+// 22.11.2022 надо вернутся туда откуда пришли по новой переменной  ReturnMemView
+    if(ReturnMemView)
+      ReturnModeViewRefl = VIEWMEM;//SETPARAM -  чтобы вернуться в предпросмотр
+      else
+      ReturnModeViewRefl = SETPARAM;//-  чтобы вернуться в предпросмотр
+    myBeep(10);
+    // посылка команды переключения окна на DrawOTDRview (возврат)  
+      CmdInitPage(18);
+  }
+  
   if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
   {
     // здесь над витвится в зависимости от признака откуда пришли
@@ -7013,8 +7027,7 @@ int SaveNewOTDRTrace (BYTE Mode)
   int Ret=0;
   // получаем новое время, и сохраняем вновь в 0 и следующую
   
-  SetMode(ModeMemoryOTDR);
-  ModeDevice = MODEMEMR;
+  // странно тут меняем время сбора на текущий момент!!!
   TimeSaveOTDR = RTCGetTime(); // сохраняем время сбора
   myBeep(10);
   
@@ -7035,14 +7048,14 @@ int SaveNewOTDRTrace (BYTE Mode)
   }
       // посылка команды переключения окна на Mem_OTDR_graph (возврат)  
   // возможно бы тут надо бы ПОТУПИТЬ
-  // 07.11.2022 (148)
-     // CreatDelay(100000);
-  HAL_Delay(10);
-      CmdInitPage(13);
-//  myBeep(10);
-//      CreatDelay(200000);
-//      CmdInitPage(13);
-//  myBeep(10);
+  // сразу по сохранении переходим в установки...
+      SetMode(ModeSetupOTDR);
+      GetSetModeLW(-1); // сброс счетчика, так как из просмотра 
+      ClrKey (BTN_MENU);
+      ModeDevice = MODESETREFL;
+      ViewMode = VIEWER; // если есть зумм то выключаем его
+      // посылка команды переключения окна на OTDR (возврат)  
+      CmdInitPage(2);
 
  return Ret; 
 }
