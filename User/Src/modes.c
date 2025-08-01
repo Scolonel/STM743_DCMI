@@ -334,6 +334,9 @@ void ModeFuncTmp(void)
   ModeFunc();
   if(KeyP)
     KeyP = 0;
+  // обнул€ем не обработанную кнопку "S"
+  rawPressKeyS=0;
+  
 }
 
 void SetMode( void(f)(void) )
@@ -1381,7 +1384,7 @@ void ModeStartOTDR(void) // режим накоплени€ рефлектометра
     LSEL1(0);
     if(g_NeedScr) //
     {
-      sprintf(Str,"t1.txt=\"%s\"€€€",MsgMass[34][CurrLang]); // 
+      sprintf(Str,"t1.txt=\"%s\"€€€",MsgMass[34][CurrLang]); // излучение на входе
       NEX_Transmit((void*)Str);// 
       sprintf(Str,"t6.txt=\"???\"€€€"); // 
       NEX_Transmit((void*)Str);// 
@@ -1428,7 +1431,7 @@ void ModeStartOTDR(void) // режим накоплени€ рефлектометра
     g_VolORL = MeasORL (1000, 0);
     LED_START(1);//On  LED - продолжаем измерение
     // печатаем что Ќ≈“ излучени€ на входе
-    sprintf(Str,"t6.txt=\"%s\"€€€",MsgMass[35][CurrLang]); // 
+    sprintf(Str,"t6.txt=\"%s\"€€€",MsgMass[35][CurrLang]); // "Ќ≈“"
     NEX_Transmit((void*)Str);// 
     
     g_NeedScr =1;
@@ -1444,9 +1447,9 @@ void ModeStartOTDR(void) // режим накоплени€ рефлектометра
     {
       //sprintf(Str,"t6.txt=\"%s\"€€€",MsgMass[35][CurrLang]); // 
       //NEX_Transmit((void*)Str);// 
-      sprintf(Str,"t2.txt=\"%s\"€€€",MsgMass[32][CurrLang]); // 
+      sprintf(Str,"t2.txt=\"%s\"€€€",MsgMass[32][CurrLang]); // входной разъем
       NEX_Transmit((void*)Str);// 
-      sprintf(Str,"t7.txt=\"%s\"€€€",MsgMass[33][CurrLang]); // 
+      sprintf(Str,"t7.txt=\"%s\"€€€",MsgMass[33][CurrLang]); // тест
       NEX_Transmit((void*)Str);// 
       
       g_NeedScr = 0;
@@ -1589,8 +1592,10 @@ void ModeStartOTDR(void) // режим накоплени€ рефлектометра
         sprintf(Str,"t8.txt=\"%d%s%s\"€€€",GetLengthLine(GetIndexLN()),MsgMass[20][CurrLang],((LengthOK)?(" "):("!")));//ƒлина линии: XXкм
       //sprintf(Str,"t6.txt=\"%s\"€€€",MsgMass[35][CurrLang]); // 
       NEX_Transmit((void*)Str);// 
+      HAL_Delay(1);
       sprintf(Str,"t4.txt=\"%s\"€€€",MsgMass[29][CurrLang]); // ƒлит.импульса: XXнс
       NEX_Transmit((void*)Str);// 
+      HAL_Delay(1);
       sprintf(Str,"t9.txt=\"%d%s\"€€€",GetWidthPulse(GetIndexIM()),MsgMass[23][CurrLang]); // ƒлит.импульса: XXнс
       NEX_Transmit((void*)Str);// 
       sprintf(Str,"t5.txt=\"%s\"€€€",MsgMass[30][CurrLang]); //»дет измерение: XXс 
@@ -2514,7 +2519,8 @@ void ModeDrawOTDR(void) // режим отображени€ рефлектограммы
     default:
       SetMode(ModeSetupOTDR);
       GetSetModeLW(-1); // сброс счетчика, так как из просмотра 
-      ClrKey (BTN_MENU);
+      //ClrKey (BTN_MENU);
+      //KeyP = 0;
       ModeDevice = MODESETREFL;
       ViewMode = VIEWER; // если есть зумм то выключаем его
       // посылка команды переключени€ окна на OTDR (возврат)  
@@ -2525,6 +2531,8 @@ void ModeDrawOTDR(void) // режим отображени€ рефлектограммы
   //ClrKey (BNS_MASK);
   if (rawPressKeyS)// переход в редактор комментариев сохранени€
   { 
+    if(ReturnModeViewRefl==SETPARAM)
+    {
     myBeep(10);
     SetMode(ModeKeyBoardOTDR);
     ModeDevice = MODEOTHER;
@@ -2563,7 +2571,9 @@ void ModeDrawOTDR(void) // режим отображени€ рефлектограммы
     {
       CmdInitPage(23);
     }
+    }
     
+   rawPressKeyS = 0;
     
   }
   // вызов нового окна, если необходимо
