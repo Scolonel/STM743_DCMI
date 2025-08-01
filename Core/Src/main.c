@@ -233,54 +233,54 @@ int main(void)
   /* USER CODE BEGIN 1 */
   
   /* USER CODE END 1 */
-
+  
   /* MCU Configuration--------------------------------------------------------*/
-
+  
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-
+  
   /* USER CODE BEGIN Init */
   
   /* USER CODE END Init */
-
+  
   /* Configure the system clock */
   SystemClock_Config();
-
-/* Configure the peripherals common clocks */
+  
+  /* Configure the peripherals common clocks */
   PeriphCommonClock_Config();
-
+  
   /* USER CODE BEGIN SysInit */
   MX_GPIO_Init();
-    MX_DMA_Init();
-    MX_UART7_Init();
-    // Start Uart7 - Nextion
-    uint16_t  Dummy = huart7.Instance->RDR ; // чистим буффер приема от NEXTION
-    HAL_UART_Receive_IT(&huart7, RX_BufNEX,1); // ждем прин€ти€ первого байта из внешнего мира
-    /* disable the UART Parity Error Interrupt */
-    __HAL_UART_DISABLE_IT(&huart7, UART_IT_PE);
-    /* disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
-    __HAL_UART_DISABLE_IT(&huart7, UART_IT_ERR);
-    
-    // перенастроим UART7  дл€ NEXTION
-    huart7.Init.BaudRate = 9600;
-    if (HAL_UART_Init(&huart7) != HAL_OK)
-    {
-      Error_Handler();
-    }
-    HAL_Delay(10);
-    sprintf((void*)Str,"bauds=115200€€€");
-    HAL_UART_Transmit(&huart7, (void*)Str,strlen((void*)Str),200); // выдаем 
-    HAL_Delay(20);
-    sprintf((void*)Str,"bauds=115200€€€");
-    HAL_UART_Transmit(&huart7, (void*)Str,strlen((void*)Str),200); // выдаем 
-    
-    //NEX_Transmit(Str);// 
-    HAL_Delay(10);
-    huart7.Init.BaudRate = 115200;
-    if (HAL_UART_Init(&huart7) != HAL_OK)
-    {
-      Error_Handler();
-    }
+  MX_DMA_Init();
+  MX_UART7_Init();
+  // Start Uart7 - Nextion
+  uint16_t  Dummy = huart7.Instance->RDR ; // чистим буффер приема от NEXTION
+  HAL_UART_Receive_IT(&huart7, RX_BufNEX,1); // ждем прин€ти€ первого байта из внешнего мира
+  /* disable the UART Parity Error Interrupt */
+  __HAL_UART_DISABLE_IT(&huart7, UART_IT_PE);
+  /* disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
+  __HAL_UART_DISABLE_IT(&huart7, UART_IT_ERR);
+  
+  // перенастроим UART7  дл€ NEXTION
+  huart7.Init.BaudRate = 9600;
+  if (HAL_UART_Init(&huart7) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  HAL_Delay(10);
+  sprintf((void*)Str,"bauds=115200€€€");
+  HAL_UART_Transmit(&huart7, (void*)Str,strlen((void*)Str),200); // выдаем 
+  HAL_Delay(20);
+  sprintf((void*)Str,"bauds=115200€€€");
+  HAL_UART_Transmit(&huart7, (void*)Str,strlen((void*)Str),200); // выдаем 
+  
+  //NEX_Transmit(Str);// 
+  HAL_Delay(10);
+  huart7.Init.BaudRate = 115200;
+  if (HAL_UART_Init(&huart7) != HAL_OK)
+  {
+    Error_Handler();
+  }
   if(ID_PLATE != GETIDPLT)
   {
     CheckErrID_Plate=1;
@@ -299,82 +299,82 @@ int main(void)
   }
   
   CmdInitPage(0);// вызов окна заставки
-//  sprintf((void*)Str, "t1.txt=\"¬ключение...\"€€€"); // auto
-//  NEX_Transmit((void*)Str);    // 
+  //  sprintf((void*)Str, "t1.txt=\"¬ключение...\"€€€"); // auto
+  //  NEX_Transmit((void*)Str);    // 
   CmdInitPage(0);// вызов окна заставки
   // пошлем сообщение о включении ...
-
-//  HAL_Delay(100);
-//  sprintf((void*)Str, "page 0€€€"); // < START>
-//  NEX_Transmit((void*)Str);    //
-//    sprintf((void*)Str,"t0.bco=11111€€€");
-//    NEX_Transmit((void*)Str);//
-//       StartRecievNEX (500);
-//    sprintf((void*)Str,"get t10.txt€€€");
-//    NEX_Transmit((void*)Str);//
-    //NEX_Transmit((void*)CmdBuf);//
-//HAL_Delay(200);
-//  sprintf((void*)Str, "page 0€€€"); // < START>
-//  NEX_Transmit((void*)Str);    //
-//    sprintf((void*)Str,"t1.bco=22222€€€");
-//    NEX_Transmit((void*)Str);//
-//  HAL_Delay(100);
-//    sprintf((void*)Str, "t0.txt=\"начало\"€€€"); // auto
-//    NEX_Transmit((void*)Str);    // 
-//      HAL_Delay(10);
-
-       StartRecievNEX (400);
-    sprintf((void*)Str,"get tlcd.txt€€€");
-    NEX_Transmit((void*)Str);//
-    //LED_KTS(1);
+  
+  //  HAL_Delay(100);
+  //  sprintf((void*)Str, "page 0€€€"); // < START>
+  //  NEX_Transmit((void*)Str);    //
+  //    sprintf((void*)Str,"t0.bco=11111€€€");
+  //    NEX_Transmit((void*)Str);//
+  //       StartRecievNEX (500);
+  //    sprintf((void*)Str,"get t10.txt€€€");
+  //    NEX_Transmit((void*)Str);//
+  //NEX_Transmit((void*)CmdBuf);//
   //HAL_Delay(200);
-    while(!((g_WtRdyNEX)||(ReadyNEX==4)));
-//    sprintf((void*)Str,"t2.bco=33333€€€");
-//    NEX_Transmit((void*)Str);//
-    //LED_KTS(0);
-    HAL_Delay(50);
-       StartRecievNEX (400);
-    sprintf((void*)Str,"get tlcd.txt€€€");
-    NEX_Transmit((void*)Str);//
-    //LED_KTS(1);
-    while(!((g_WtRdyNEX)||(ReadyNEX==4)));
-    // здесь просто можем повиснуть не дождавшись ответов от индикатора
-    // это плохо при плохих индикаторах
-    // надо ждать получени€ ответа
-    //CreatDelay (2000000); // 168 м— - пока без ответа (подтверждени€) 83nS*30000 надо приблизительно 2 м—
-//    sprintf((void*)Str,"t3.bco=44444€€€");
-//    NEX_Transmit((void*)Str);//
-    //LED_KTS(0);
-
-    if(RX_BufNEX[0] == 0x70) // есть ответ! перепишем буффер
+  //  sprintf((void*)Str, "page 0€€€"); // < START>
+  //  NEX_Transmit((void*)Str);    //
+  //    sprintf((void*)Str,"t1.bco=22222€€€");
+  //    NEX_Transmit((void*)Str);//
+  //  HAL_Delay(100);
+  //    sprintf((void*)Str, "t0.txt=\"начало\"€€€"); // auto
+  //    NEX_Transmit((void*)Str);    // 
+  //      HAL_Delay(10);
+  
+  StartRecievNEX (400);
+  sprintf((void*)Str,"get tlcd.txt€€€");
+  NEX_Transmit((void*)Str);//
+  //LED_KTS(1);
+  //HAL_Delay(200);
+  while(!((g_WtRdyNEX)||(ReadyNEX==4)));
+  //    sprintf((void*)Str,"t2.bco=33333€€€");
+  //    NEX_Transmit((void*)Str);//
+  //LED_KTS(0);
+  HAL_Delay(50);
+  StartRecievNEX (400);
+  sprintf((void*)Str,"get tlcd.txt€€€");
+  NEX_Transmit((void*)Str);//
+  //LED_KTS(1);
+  while(!((g_WtRdyNEX)||(ReadyNEX==4)));
+  // здесь просто можем повиснуть не дождавшись ответов от индикатора
+  // это плохо при плохих индикаторах
+  // надо ждать получени€ ответа
+  //CreatDelay (2000000); // 168 м— - пока без ответа (подтверждени€) 83nS*30000 надо приблизительно 2 м—
+  //    sprintf((void*)Str,"t3.bco=44444€€€");
+  //    NEX_Transmit((void*)Str);//
+  //LED_KTS(0);
+  
+  if(RX_BufNEX[0] == 0x70) // есть ответ! перепишем буффер
+  {
+    for(int i=0;i<25;++i)VerFW_LCD[i]=RX_BufNEX[i+1];
+    VerFW_LCD[23]=0;
+    // здесь получим идентификатор индикатора (если его прочтем)
+    // он нужен дл€ вариантов отображени€ при просмотре рефлектограмм и в пам€ти
+    switch(VerFW_LCD[3])
     {
-      for(int i=0;i<25;++i)VerFW_LCD[i]=RX_BufNEX[i+1];
-      VerFW_LCD[23]=0;
-      // здесь получим идентификатор индикатора (если его прочтем)
-      // он нужен дл€ вариантов отображени€ при просмотре рефлектограмм и в пам€ти
-      switch(VerFW_LCD[3])
-      {
-      case '2':
-        TypeLCD=0;
-        KnowLCD = 1;
-        break;
-      case '5':
-        TypeLCD=1;
-        KnowLCD = 1;
-        break;
-      default:
-        TypeLCD=0;
-        KnowLCD = 0;
-        break;
-      }
+    case '2':
+      TypeLCD=0;
+      KnowLCD = 1;
+      break;
+    case '5':
+      TypeLCD=1;
+      KnowLCD = 1;
+      break;
+    default:
+      TypeLCD=0;
+      KnowLCD = 0;
+      break;
     }
-//  if(!KnowLCD)
-//  {
-//    sprintf((void*)Str,"t8.bco=54321€€€");
-//    NEX_Transmit((void*)Str);//
-//  }
+  }
+  //  if(!KnowLCD)
+  //  {
+  //    sprintf((void*)Str,"t8.bco=54321€€€");
+  //    NEX_Transmit((void*)Str);//
+  //  }
   /* USER CODE END SysInit */
-
+  
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
@@ -410,68 +410,68 @@ int main(void)
   __HAL_UART_DISABLE_IT(&huart7, UART_IT_PE);
   /* disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
   __HAL_UART_DISABLE_IT(&huart7, UART_IT_ERR);
-//  
-//  // перенастроим UART7  дл€ NEXTION
-//  huart7.Init.BaudRate = 9600;
-//  if (HAL_UART_Init(&huart7) != HAL_OK)
-//  {
-//    Error_Handler();
-//  }
-//  HAL_Delay(10);
-//  sprintf((void*)Str,"bauds=115200€€€");
-//  HAL_UART_Transmit(&huart7, (void*)Str,strlen((void*)Str),20); // выдаем 
-//  
-//  //NEX_Transmit(Str);// 
-//  HAL_Delay(10);
-//  huart7.Init.BaudRate = 115200;
-//  if (HAL_UART_Init(&huart7) != HAL_OK)
-//  {
-//    Error_Handler();
-//  }
-//  //  myBeep(100);
-//  HAL_Delay(10);
-//  sprintf((void*)Str, "page 0€€€"); // < START>
-//  NEX_Transmit((void*)Str);    //
-////       StartRecievNEX (500);
-////    sprintf((void*)Str,"get t10.txt€€€");
-////    NEX_Transmit((void*)Str);//
-//    //NEX_Transmit((void*)CmdBuf);//
-//  HAL_Delay(10);
-//  sprintf((void*)Str, "page 0€€€"); // < START>
-//  NEX_Transmit((void*)Str);    //
-//  HAL_Delay(10);
-//       StartRecievNEX (600);
-//    sprintf((void*)Str,"get t10.txt€€€");
-//    NEX_Transmit((void*)Str);//
-//  HAL_Delay(200);
-//   // while(!((g_WtRdyNEX)||(ReadyNEX==4)));
-//    // здесь просто можем повиснуть не дождавшись ответов от индикатора
-//    // это плохо при плохих индикаторах
-//    // надо ждать получени€ ответа
-//    //CreatDelay (2000000); // 168 м— - пока без ответа (подтверждени€) 83nS*30000 надо приблизительно 2 м—
-//    if(RX_BufNEX[0] == 0x70) // есть ответ! перепишем буффер
-//    {
-//      for(int i=0;i<25;++i)VerFW_LCD[i]=RX_BufNEX[i+1];
-//      VerFW_LCD[23]=0;
-//      // здесь получим идентификатор индикатора (если его прочтем)
-//      // он нужен дл€ вариантов отображени€ при просмотре рефлектограмм и в пам€ти
-//      switch(VerFW_LCD[3])
-//      {
-//      case '2':
-//        TypeLCD=0;
-//        KnowLCD = 1;
-//        break;
-//      case '5':
-//        TypeLCD=1;
-//        KnowLCD = 1;
-//        break;
-//      default:
-//        TypeLCD=0;
-//        KnowLCD = 0;
-//        break;
-//      }
-//    }
-
+  //  
+  //  // перенастроим UART7  дл€ NEXTION
+  //  huart7.Init.BaudRate = 9600;
+  //  if (HAL_UART_Init(&huart7) != HAL_OK)
+  //  {
+  //    Error_Handler();
+  //  }
+  //  HAL_Delay(10);
+  //  sprintf((void*)Str,"bauds=115200€€€");
+  //  HAL_UART_Transmit(&huart7, (void*)Str,strlen((void*)Str),20); // выдаем 
+  //  
+  //  //NEX_Transmit(Str);// 
+  //  HAL_Delay(10);
+  //  huart7.Init.BaudRate = 115200;
+  //  if (HAL_UART_Init(&huart7) != HAL_OK)
+  //  {
+  //    Error_Handler();
+  //  }
+  //  //  myBeep(100);
+  //  HAL_Delay(10);
+  //  sprintf((void*)Str, "page 0€€€"); // < START>
+  //  NEX_Transmit((void*)Str);    //
+  ////       StartRecievNEX (500);
+  ////    sprintf((void*)Str,"get t10.txt€€€");
+  ////    NEX_Transmit((void*)Str);//
+  //    //NEX_Transmit((void*)CmdBuf);//
+  //  HAL_Delay(10);
+  //  sprintf((void*)Str, "page 0€€€"); // < START>
+  //  NEX_Transmit((void*)Str);    //
+  //  HAL_Delay(10);
+  //       StartRecievNEX (600);
+  //    sprintf((void*)Str,"get t10.txt€€€");
+  //    NEX_Transmit((void*)Str);//
+  //  HAL_Delay(200);
+  //   // while(!((g_WtRdyNEX)||(ReadyNEX==4)));
+  //    // здесь просто можем повиснуть не дождавшись ответов от индикатора
+  //    // это плохо при плохих индикаторах
+  //    // надо ждать получени€ ответа
+  //    //CreatDelay (2000000); // 168 м— - пока без ответа (подтверждени€) 83nS*30000 надо приблизительно 2 м—
+  //    if(RX_BufNEX[0] == 0x70) // есть ответ! перепишем буффер
+  //    {
+  //      for(int i=0;i<25;++i)VerFW_LCD[i]=RX_BufNEX[i+1];
+  //      VerFW_LCD[23]=0;
+  //      // здесь получим идентификатор индикатора (если его прочтем)
+  //      // он нужен дл€ вариантов отображени€ при просмотре рефлектограмм и в пам€ти
+  //      switch(VerFW_LCD[3])
+  //      {
+  //      case '2':
+  //        TypeLCD=0;
+  //        KnowLCD = 1;
+  //        break;
+  //      case '5':
+  //        TypeLCD=1;
+  //        KnowLCD = 1;
+  //        break;
+  //      default:
+  //        TypeLCD=0;
+  //        KnowLCD = 0;
+  //        break;
+  //      }
+  //    }
+  
   // так как по€вилось I2C - конфигураци€ прибора и управление клавиатурой 
   // будет первым настраиватьс€
   // так как повтор€ем конфигурацию из 7kAR, то скомбинируем из DataDevice MemFlash(у нас PCA955x)
@@ -601,24 +601,24 @@ int main(void)
   // test SD_Card
   //SDMMC_SDCard_Test(999);
   // перенастроим UART7  дл€ NEXTION
-//  huart7.Init.BaudRate = 9600;
-//  if (HAL_UART_Init(&huart7) != HAL_OK)
-//  {
-//    Error_Handler();
-//  }
-//  HAL_Delay(100);
-//  sprintf((void*)Str,"bauds=115200€€€");
-//  HAL_UART_Transmit(&huart7, (void*)Str,strlen((void*)Str),20); // выдаем 
-//  
-//  //NEX_Transmit(Str);// 
-//  HAL_Delay(100);
-//  huart7.Init.BaudRate = 115200;
-//  if (HAL_UART_Init(&huart7) != HAL_OK)
-//  {
-//    Error_Handler();
-//  }
-//  //  myBeep(100);
-//  HAL_Delay(100);
+  //  huart7.Init.BaudRate = 9600;
+  //  if (HAL_UART_Init(&huart7) != HAL_OK)
+  //  {
+  //    Error_Handler();
+  //  }
+  //  HAL_Delay(100);
+  //  sprintf((void*)Str,"bauds=115200€€€");
+  //  HAL_UART_Transmit(&huart7, (void*)Str,strlen((void*)Str),20); // выдаем 
+  //  
+  //  //NEX_Transmit(Str);// 
+  //  HAL_Delay(100);
+  //  huart7.Init.BaudRate = 115200;
+  //  if (HAL_UART_Init(&huart7) != HAL_OK)
+  //  {
+  //    Error_Handler();
+  //  }
+  //  //  myBeep(100);
+  //  HAL_Delay(100);
   
   HAL_TIM_Base_Start(&htim7); // запуск таймера 7
   
@@ -631,7 +631,7 @@ int main(void)
   HAL_TIM_PWM_Start_IT (&htim5, TIM_CHANNEL_4 ); // дл€ подсчета времени когда начать ссумировать
   //HAL_Delay(10);
   TIM7->CR1 &= ~TIM_CR1_CEN; // STop генератора TIM7 (вспомогательный генратор()
-
+  
   StopAllTIM(1);  // остановка таймеров (OTDR)
   
   //инициализаци€ DCMI DMA (пока 10 точек но это не важно)
@@ -674,7 +674,7 @@ int main(void)
   // здесь запускаетс€ "долгий" процесс св€зи с компьютером, и мешает инициализации, стоит
   // что-то предприн€ть
   /* USER CODE END 2 */
-
+  
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -682,13 +682,13 @@ int main(void)
     //ContinueModulation(); // продолжение модул€ции источника дл€ режимов 270√ц и 2к√ц
     //HAL_GPIO_TogglePin(KTS_GPIO_Port, KTS_Pin);
     // вынесем сюда управление источником в режиме CW* и прив€жем к таймеру
-   // счетчику  1м—
-            // управление лазером в режиме CW*
-      if(ModeLS == 4) // ¬ј∆Ќќ при переходе в другие режимы без исользовани€ источником, сбрасывать режим Ћј«≈–ј
-      {
-        Run_SCWP(); // вызовем функцию управлени€ лазером по признакам уставливаемым
-        // в таймере по времени и сбросе по выполнению
-      }
+    // счетчику  1м—
+    // управление лазером в режиме CW*
+    if(ModeLS == 4) // ¬ј∆Ќќ при переходе в другие режимы без исользовани€ источником, сбрасывать режим Ћј«≈–ј
+    {
+      Run_SCWP(); // вызовем функцию управлени€ лазером по признакам уставливаемым
+      // в таймере по времени и сбросе по выполнению
+    }
     // проверка кнопок 
     if((GetSysTick(0)>30)&&(!ProgFW_LCD))// каждые 30 м— или больше...
     {
@@ -699,9 +699,9 @@ int main(void)
       // управление красным лазером
       // управление лазерами в режиме CW*
       // поконтролить батарейку
-
+      
       if (!CheckLevelBattery ()) BadBattery();;
-
+      
       if(++PeriodIntADC > 15)// 450 mS
       {
         // здесь можно запустить »змерение ј÷ѕ
@@ -715,15 +715,15 @@ int main(void)
         CountSeqMeas++;
       }
     }
-      // если измеритель то можно почитать медленное ј÷ѕ 7782
-      // вызвать раз в +30 м— дл€ апроса и проверки готовности данных
-      //if(GetModePowerMeter() != NOTMODE)
-      //{
-              // запуск и контоль измерител€ P1
-      //GetPMData(); // получаем текущие значени€ ј÷ѕ
-      //}
-        //    LED_KTS(0);
-
+    // если измеритель то можно почитать медленное ј÷ѕ 7782
+    // вызвать раз в +30 м— дл€ апроса и проверки готовности данных
+    //if(GetModePowerMeter() != NOTMODE)
+    //{
+    // запуск и контоль измерител€ P1
+    //GetPMData(); // получаем текущие значени€ ј÷ѕ
+    //}
+    //    LED_KTS(0);
+    
     // проверка приема по UART EXT
     if (RSDecYes) // вызов программы обработки комманды прин€той по UART
     {
@@ -901,11 +901,11 @@ int main(void)
       //        NEX_Transmit((void*)Str);// 
       //      }
     }
-        // проверка окончани€ записи индикатора
+    // проверка окончани€ записи индикатора
     if(ProgFW_LCD==2) ProgFW_LCD=0;
-
+    
     /* USER CODE END WHILE */
-
+    
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */

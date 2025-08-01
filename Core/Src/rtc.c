@@ -21,7 +21,8 @@
 #include "rtc.h"
 
 /* USER CODE BEGIN 0 */
-  #define TIMELASTVERSION  1748858400 //2025/06/02 10:00:00 v029
+  #define TIMELASTVERSION  1754031600 //2025/08/01 10:00:00 v037
+//  #define TIMELASTVERSION  1748858400 //2025/06/02 10:00:00 v029
 //  #define TIMELASTVERSION  1743145200 //2025/03/28 10:00:00 v020
 //  #define TIMELASTVERSION  1742799600 //2025/03/25 10:00:00
 //  #define TIMELASTVERSION  1741158000 //2025/03/05 10:00:00
@@ -93,8 +94,8 @@ void MX_RTC_Init(void)
     Error_Handler();
   }
   sDate.WeekDay = RTC_WEEKDAY_MONDAY;
-  sDate.Month = RTC_MONTH_JUNE;
-  sDate.Date = 02;
+  sDate.Month = RTC_MONTH_AUGUST;
+  sDate.Date = 01;
   sDate.Year = 25;
 
   if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK)
@@ -332,16 +333,23 @@ unsigned int TotalSec( RTCTime CurrentTime) // подсчет общего времени в сек
   
 }
 
-void GetFolder (char *Str) // получение названия папки по текущему времени каждые 7 дней меняется папка
+void GetFolder (char *Str, int mod) // получение названия папки по текущему времени каждые 7 дней меняется папка
 {
-    unsigned int MDays[]={0,31,59,90,120,151,181,212,243,273,304,334};
+  //  unsigned int MDays[]={0,31,59,90,120,151,181,212,243,273,304,334};
   RTC_DateTypeDef          Date;  
-  uint32_t AllDay;
+  //uint32_t AllDay;
   k_GetDate(&Date);  
-  AllDay = MDays[Date.Month-1] + Date.Date;
-  if((!((Date.Year) % 4))&&(Date.Month>2)) AllDay++;
-  AllDay = AllDay/7+1;
-  sprintf(Str, "%2d_%02d",Date.Year%100, AllDay);
+  //AllDay = MDays[Date.Month-1] + Date.Date;
+  //if((!((Date.Year) % 4))&&(Date.Month>2)) AllDay++;
+  //AllDay = AllDay/7+1;
+  //sprintf(Str, "%2d_%02d",Date.Year%100, AllDay);
+  if(mod)
+  sprintf(Str, "%2d_%02d",Date.Year%100, Date.Month);
+  else
+  sprintf(Str, "%02d",Date.Date);
+    
+  
+  
 }
 
 void Sec2Date( unsigned long TimeSec, RTCTime* CurrentTime) // перевод секунд в дату

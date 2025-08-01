@@ -155,14 +155,19 @@ extern DWORD CountTimerPA; // счетчик времен для режима автомат PM
 
 
 extern char NameDir[100][6];
+extern char NameDirD[32][6];
 extern char NameFiles[1000][17];
 extern uint32_t NumNameDir; // число имен директорий
 extern uint32_t IndexNameDir;// индекс дирректории на которую указываем
 extern uint32_t IndexLCDNameDir;// индекс указателя на индикаторе дирректории на которую указываем
+extern uint32_t NumNameDirD; // число имен директорий
+extern uint32_t IndexNameDirD;// индекс дирректории на которую указываем
+extern uint32_t IndexLCDNameDirD;// индекс указателя на индикаторе дирректории на которую указываем
 extern uint32_t NumNameFiles; // число имен файлов
 extern uint32_t IndexNameFiles;// индекс файла на который указываем
 extern uint32_t IndexLCDNameFiles;// индекс указателя на индикаторе файла на который указываем
 extern uint32_t PageDir; 
+extern uint32_t PageDirD; 
 extern uint32_t PageFiles; 
 
 extern BYTE KnowLCD ;

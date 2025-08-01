@@ -194,11 +194,16 @@ unsigned InvalidDBNAME() //boolean actually
     }
     res = (res<<1) | err_str;
   }
- 
+  // счетчик волокна
+  if(NameDB.FiberID>999)
+  {
+    res |=0x40;
+  }
   return res;
 }
 void InitDBNAME(unsigned Err)
 {
+  if (Err && 0x40) NameDB.FiberID=1; //  устанавливаем счетчик волокна 
   if (Err && 0x20) NameDB.Ena_DB=1; // плохой режим , установим ТОПАЗ (Not Alternate)
 
   if (Err && 0x10) // string BAD!

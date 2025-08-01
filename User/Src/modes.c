@@ -699,10 +699,10 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
     if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
     {
       myBeep(10);
-//      if(g_AutoSave) g_AutoSave = 0;
-//      else g_AutoSave = 1;
-//      if(GetIndexVRM()>3) // время реальное или непрерываное не ставится авто сохранение
-//      g_AutoSave = 0; 
+      //      if(g_AutoSave) g_AutoSave = 0;
+      //      else g_AutoSave = 1;
+      //      if(GetIndexVRM()>3) // время реальное или непрерываное не ставится авто сохранение
+      //      g_AutoSave = 0; 
       if((g_AutoSave)||(GetIndexVRM()>3)) g_AutoSave = 0;
       else g_AutoSave = 1;
       // переключатель вывода в зависимости от комбинации 
@@ -718,17 +718,17 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
       g_FirstScr = 1; // Need reDraw Screen
       if(GetIndexVRM()>3) // время реальное или непрерываное не ставится авто сохранение
       {
-      if (SettingRefl.SetModeLW>0)SettingRefl.SetModeLW--;
-       else
-       SettingRefl.SetModeLW =GetSetNumLS(0)-1  ;
+        if (SettingRefl.SetModeLW>0)SettingRefl.SetModeLW--;
+        else
+          SettingRefl.SetModeLW =GetSetNumLS(0)-1  ;
       }
       else
       {
-      if (SettingRefl.SetModeLW>0)SettingRefl.SetModeLW--;
-      else
-      {
-        SettingRefl.SetModeLW = (1<<GetSetNumLS(0))-2;
-      }
+        if (SettingRefl.SetModeLW>0)SettingRefl.SetModeLW--;
+        else
+        {
+          SettingRefl.SetModeLW = (1<<GetSetNumLS(0))-2;
+        }
       }
       // переключатель вывода в зависимости от комбинации
       SetPlaceNew(1);
@@ -742,15 +742,15 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
       {
         if(SettingRefl.SetModeLW<(GetSetNumLS(0)-1)) SettingRefl.SetModeLW++;
         else         SettingRefl.SetModeLW = 0;
-
+        
       }
       else
       {
-      if ((SettingRefl.SetModeLW+1)<((1<<GetSetNumLS(0))-1))SettingRefl.SetModeLW++;
-      else
-      {
-        SettingRefl.SetModeLW = 0;
-      }
+        if ((SettingRefl.SetModeLW+1)<((1<<GetSetNumLS(0))-1))SettingRefl.SetModeLW++;
+        else
+        {
+          SettingRefl.SetModeLW = 0;
+        }
       }
       // переключатель вывода в зависимости от комбинации
       SetPlaceNew(1);
@@ -782,9 +782,9 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
     {
       myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
-//123      PosCursorMain (-4100); // сброс курсора в начало
+      //123      PosCursorMain (-4100); // сброс курсора в начало
       IndexVerSize  = 0;// установка вертикального размера отображения рефлектограммы ( самый крупный)
-//123      GetSetHorizontScale (5); // сброс масштаба уст самый крупный
+      //123      GetSetHorizontScale (5); // сброс масштаба уст самый крупный
       if (!GetSubModRefl ())// ручной
       { 
         if ((GetIndexLN()==0)&&(IndexSmall==0))
@@ -800,7 +800,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
         SettingRefl.SubModeRef = MANUAL;
         SetIndexLN(0);
         IndexSmall=0;
-//123        GetSetHorizontScale (-2); // масштаб для 0.5 км
+        //123        GetSetHorizontScale (-2); // масштаб для 0.5 км
       }
       //ClrKey (BTN_RIGHT);
     }
@@ -808,9 +808,9 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
     {
       myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
-//123      PosCursorMain (-4100); // сброс курсора в начало
+      //123      PosCursorMain (-4100); // сброс курсора в начало
       IndexVerSize  = 0;// установка вертикального размера отображения рефлектограммы ( самый крупный)
-//123      GetSetHorizontScale (5); // сброс масштаба уст самый крупный
+      //123      GetSetHorizontScale (5); // сброс масштаба уст самый крупный
       if (!GetSubModRefl ())// ручной
       {
         if (GetIndexLN()>0)
@@ -823,7 +823,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
           if ((GetIndexLN()==0)&&(IndexSmall==1))
           {
             IndexSmall=0;
-//123            GetSetHorizontScale (-2); // масштаб для 0.5 км
+            //123            GetSetHorizontScale (-2); // масштаб для 0.5 км
           }
           else
           {
@@ -879,13 +879,22 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
     }
     break; //длительность импульса
   case 3: //время измерения или для автомата номер волокна
+    if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
+    {
+      if (g_AutoSave)
+      {
+      g_NeedScr = 1; // Need reDraw Screen
+      myBeep(10);
+      NumFiber=1;
+      }
+    }
     if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
     {
       myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
-    // 22.11.2022 изменение индикации строк 4-5 надо привязать к режиму с автоматическим сохранением
-    //if (GetSetModeLW(0))
-    if (g_AutoSave)
+      // 22.11.2022 изменение индикации строк 4-5 надо привязать к режиму с автоматическим сохранением
+      //if (GetSetModeLW(0))
+      if (g_AutoSave)
       {
         if (NumFiber<999) NumFiber++;
         else NumFiber=1;
@@ -905,9 +914,9 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
     {
       myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
-    // 22.11.2022 изменение индикации строк 4-5 надо привязать к режиму с автоматическим сохранением
-    //if (GetSetModeLW(0))
-    if (g_AutoSave)
+      // 22.11.2022 изменение индикации строк 4-5 надо привязать к режиму с автоматическим сохранением
+      //if (GetSetModeLW(0))
+      if (g_AutoSave)
       {
         if (NumFiber<989) NumFiber=NumFiber+10;
         else NumFiber=1;
@@ -918,22 +927,22 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
     {
       myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
-    // 22.11.2022 изменение индикации строк 4-5 надо привязать к режиму с автоматическим сохранением
-    //if (GetSetModeLW(0))
-    if (g_AutoSave)
+      // 22.11.2022 изменение индикации строк 4-5 надо привязать к режиму с автоматическим сохранением
+      //if (GetSetModeLW(0))
+      if (g_AutoSave)
       {
         if (NumFiber>10) NumFiber=NumFiber-10;
         else NumFiber=990;
       }
-      ClrKey (BTN_LEFT);
+      //ClrKey (BTN_LEFT);
     }
     if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
     {
       myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
-    // 22.11.2022 изменение индикации строк 4-5 надо привязать к режиму с автоматическим сохранением
-    //if (GetSetModeLW(0))
-    if (g_AutoSave)
+      // 22.11.2022 изменение индикации строк 4-5 надо привязать к режиму с автоматическим сохранением
+      //if (GetSetModeLW(0))
+      if (g_AutoSave)
       {
         if (NumFiber>1) NumFiber--;
         else NumFiber=999;
@@ -1037,7 +1046,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
   // заполняем новый индикатор если в первый раз в основном не изменяемые поля
   if(g_FirstScr)
   {
-    
+    NumFiber = NameDB.FiberID; // востанавливаем счетчик волокон из памяти
     // столбцы названий 
     // переключатель вывода в зависимости от комбинации
     
@@ -1046,10 +1055,10 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
     case 1: // одиночные длины волн
     case 2:
     case 4:
-    sprintf(Str,"t0.txt=\"%s\"яяя", MsgMass[17][CurrLang]); // длина волны
+      sprintf(Str,"t0.txt=\"%s\"яяя", MsgMass[17][CurrLang]); // длина волны
       break;
     default: // комбинации
-    sprintf(Str,"t0.txt=\"%s\"яяя", MsgMass[125][CurrLang]); // дл. волн авто
+      sprintf(Str,"t0.txt=\"%s\"яяя", MsgMass[125][CurrLang]); // дл. волн авто
       
       break;
     }
@@ -1107,11 +1116,11 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
     }
     
     // первая строка длина волны
-//    if (GetSetModeLW(0)) 
-//     // sprintf(Str,"t1.txt=\"%s\"яяя",MsgMass[21][CurrLang]); // auto
-//      sprintf(Str,"t1.txt=\"13,15,85\"яяя"); // test
-//    else
-//      sprintf(Str,"t1.txt=\"%d%s\"яяя",GetLengthWaveLS (GetPlaceLS(CURRENT)),MsgMass[18][CurrLang]); // nm
+    //    if (GetSetModeLW(0)) 
+    //     // sprintf(Str,"t1.txt=\"%s\"яяя",MsgMass[21][CurrLang]); // auto
+    //      sprintf(Str,"t1.txt=\"13,15,85\"яяя"); // test
+    //    else
+    //      sprintf(Str,"t1.txt=\"%d%s\"яяя",GetLengthWaveLS (GetPlaceLS(CURRENT)),MsgMass[18][CurrLang]); // nm
     NEX_Transmit((void*)Str);// 
     // вторая строка - диапазон
     if (!GetSubModRefl ()) // manual
@@ -1184,10 +1193,10 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
     NEX_Transmit((void*)Str);// 
     // покраска поля t1 в зависимости от режима
     if(g_AutoSave)
-        sprintf(Str,"t1.bco=YELLOWяяя"); // оранжевый
+      sprintf(Str,"t1.bco=YELLOWяяя"); // оранжевый
     else
-        sprintf(Str,"t1.bco=WHITEяяя"); // белый
-
+      sprintf(Str,"t1.bco=WHITEяяя"); // белый
+    
     NEX_Transmit((void*)Str);//
     
     //FIO1PIN &=~LEDSTART;//Off  LED
@@ -1207,6 +1216,8 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
     myBeep(10);
     // сохраняем установки измерения если запустили
     EEPROM_write(&SettingRefl, ADR_ReflSetting, sizeof(SettingRefl));
+    NameDB.FiberID = NumFiber; // сохраняем счетчик волокон из памяти
+    EEPROM_write(&NameDB, ADR_NameDB, sizeof(NameDB));// сохраняем счетчик волокон
     ReSaveWAV_SC (); // пересохраняем если есть изменения
     LSEL0(0);
     LSEL1(0);
@@ -1219,12 +1230,12 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
     ModeDevice = MODEMEASURE;
     //IndexVerSize  = 0;// установка вертикального размера отображения рефлектограммы ( самый крупный)
     SubModeMeasOTDR = SETPOWER;
-//123    SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
+    //123    SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
     rawPressKeyS=0;
     CntLS=0;
     //CreatDelay (30000); // 3.3 мС
-  HAL_Delay(3);
-  CmdInitPage(16);// посылка команды переключения окна на начало измерения Measuring
+    HAL_Delay(3);
+    CmdInitPage(16);// посылка команды переключения окна на начало измерения Measuring
   }
   if(NeedKeyB ) // необходимость переключения в клавиатуру для редактирования PreFix
   {
@@ -1877,6 +1888,9 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
           {
             if (NumFiber<999) NumFiber++;
             else NumFiber =1;
+            NameDB.FiberID = NumFiber; // сохраняем счетчик волокон из памяти
+            EEPROM_write(&NameDB, ADR_NameDB, sizeof(NameDB));// сохраняем счетчик волокон
+            
             CntLS = 0;// ??? так как автомат то надо оставить 0
             SetMode(ModeSetupOTDR);  //  переход в режим установок рефлектометра (было)
             ModeDevice = MODESETREFL;
@@ -2946,6 +2960,9 @@ void ModeKeyBoardOTDR(void) // режим отображения клавиатуры редактора комментари
 // "правильных" директорий, устанавливаем курсоры если они не изменились,
 // если не совпадают с полученными размерами сбрасываем в начало
 // вызываем ОКНО 33
+// нужно двойное отображения окна двух вложенных папок
+// папка года_месяц и папка числа введем переменную ???LevelDir - определяющую что рисовать и откуда
+
 void ModeFileMngDir(void) // режим файл менеджера директорий
 {
   char Str[32];
@@ -2964,7 +2981,7 @@ void ModeFileMngDir(void) // режим файл менеджера директорий
   }
   if (g_FirstScr)
   {
-    SDMMC_SDCard_DIR(); // прочитаем дирректроии
+    SDMMC_SDCard_DIR(); // прочитаем дирректории
     // здесь заполняем данными поля нового индикатора
     // не требущие изменения при первичной инициализации
     sprintf(Str, "t0.txt=\"0:/_OTDR\"яяя"); // < событиe >
@@ -3011,6 +3028,101 @@ void ModeFileMngDir(void) // режим файл менеджера директорий
   {
     // вызов окна выбора файлов при просмотре памяти
     myBeep(10);
+      SetMode(ModeFileMngDirD);
+      ModeDevice = MODEMEMR;
+      ModeMemDraw = VIEWNEXT;
+      ReturnMemView = 1; // надо вернуться сюда же по ESC
+         // посылка команды переключения окна на Mem_OTDR_garaph (вызов)  
+      //KeyP = 0;
+      ClrKey(BTN_OK);
+      CmdInitPage(33); // новое окно лист бокс перечня файлов в текущей дирректории
+       //CreatDelay(1000000);
+      HAL_Delay(100);
+  }
+
+  if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
+  {
+    // здесь над витвится в зависимости от признака откуда пришли
+    if(ReturnMemView)
+    {
+      //DeleteTrace = 0;
+      SetMode(ModeSelectMEM);
+      ModeDevice = MODEOTHER;
+      myBeep(10);
+      // посылка команды переключения окна на Memory (возврат)  
+      CmdInitPage(4);
+    }
+  }
+}
+
+// второй уровень подпапок по дате
+// папка года_месяц и папка числа введем переменную ???LevelDir - определяющую что рисовать и откуда
+
+void ModeFileMngDirD(void) // режим файл менеджера директорий
+{
+  char Str[32];
+  
+  if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED)) 
+  {
+    myBeep(10);
+    if(IndexNameDirD>0)IndexNameDirD--;
+    g_NeedScr=1;
+  }
+  if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
+  {
+    myBeep(10);
+    if((IndexNameDirD+1)<NumNameDirD)IndexNameDirD++;
+    g_NeedScr=1;
+  }
+  if (g_FirstScr)
+  {
+    SDMMC_SDCard_DIRD(); // прочитаем дирректории
+    // здесь заполняем данными поля нового индикатора
+    // не требущие изменения при первичной инициализации
+    sprintf(Str, "t0.txt=\"0:/_OTDR/%s\"яяя",NameDir[IndexNameDir]); // < событиe >
+    NEX_Transmit((void*)Str);    //
+    sprintf(Str, "t14.txt=\"%d\"яяя", NumNameDirD); // < сколько папок нашли >
+    NEX_Transmit((void*)Str);    //
+    
+    
+    g_FirstScr = 0;
+    g_NeedScr = 1;
+  }
+  if (g_NeedScr)
+  {
+    sprintf(Str, "t13.txt=\"%d\"яяя", IndexNameDirD+1); // < какая папка выбрана >
+    NEX_Transmit((void*)Str);    //
+    if (IndexNameDirD > NumNameDirD) IndexNameDirD = 0; 
+    // тут нужен сложный подсчет указателя на папки в индикации
+    // из выполнения условий текущий индекс папки должен быть меньше
+    // числа паПок,и индикационный тндекс должен устанавливаться в соответствии с 
+    // текущим индексом выбранной папки
+    IndexLCDNameDirD = IndexNameDirD%12; // как как у нас 12 полей
+    PageDirD = IndexNameDirD/12; // получим страницу перечня директорий котрую нужно отображать
+    // заполним поля индикатора именами директорий
+    for (int i=0; i<12; i++)
+    {
+      
+      sprintf(Str, "t%d.txt=\"%s\"яяя",i+1 ,NameDirD[PageDirD*12+i]); // < событиe >
+      NEX_Transmit((void*)Str);    //
+      
+    }
+    for (int i=0; i<12; i++)
+    {
+      // закрасим бэкграунды  и установим требуемый
+      sprintf(Str,"t%d.bco=WHITEяяя",i+1); // белый
+      NEX_Transmit((void*)Str);// 
+    }
+    sprintf(Str,"t%d.bco=GREENяяя",IndexLCDNameDirD+1); // GREEN
+    NEX_Transmit((void*)Str);    //
+    // код подсветки требуемой строки если есть есть маркер строки
+    g_NeedScr = 0;
+  }
+  // обработка кнопки "OK"
+  if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==UP_SHORT_PRESSED)) // переход в режим просмотра с переключением зума
+  {
+    // вызов окна выбора файлов при просмотре памяти
+    myBeep(10);
       SetMode(ModeFileMngFiles);
       ModeDevice = MODEMEMR;
       ModeMemDraw = VIEWNEXT;
@@ -3029,11 +3141,11 @@ void ModeFileMngDir(void) // режим файл менеджера директорий
     if(ReturnMemView)
     {
       //DeleteTrace = 0;
-      SetMode(ModeSelectMEM);
+      SetMode(ModeFileMngDir);
       ModeDevice = MODEOTHER;
       myBeep(10);
       // посылка команды переключения окна на Memory (возврат)  
-      CmdInitPage(4);
+      CmdInitPage(33);
     }
   }
 }
@@ -3083,7 +3195,7 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (Окно 34)
     SDMMC_SDCard_FILES(); // прочитаем файлы, 
     // здесь заполняем данными поля нового индикатора
     // не требущие изменения при первичной инициализации
-    sprintf(Str, "t0.txt=\"0:/_OTDR/%s\"яяя",NameDir[IndexNameDir]); // < событиe >
+    sprintf(Str, "t0.txt=\"0:/_OTDR/%s/%s\"яяя",NameDir[IndexNameDir],NameDirD[IndexNameDirD]); // < событиe >
     NEX_Transmit((void*)Str);    //
     sprintf(Str, "t14.txt=\"%d\"яяя", NumNameFiles); // < сколько файлов нашли >
     NEX_Transmit((void*)Str);    //
@@ -3114,7 +3226,7 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (Окно 34)
     FR_Status = f_mount(&FatFs, SDPath, 1);
     
     // здесь можно прочитать файл на котрый указываем и разобрать его
-    sprintf(FilPath, "0:/_OTDR/%s/%s",NameDir[IndexNameDir],NameFiles[IndexNameFiles]); // путь к файлу
+    sprintf(FilPath, "0:/_OTDR/%s/%s/%s",NameDir[IndexNameDir],NameDirD[IndexNameDirD],NameFiles[IndexNameFiles]); // путь к файлу
     // откроем файл и прочитаем размер блока
     FR_Status = f_open(&Fil, FilPath, FA_READ);
     if(FR_Status == FR_OK)

@@ -5,15 +5,20 @@
 #include "system.h"
 #include "fatfs.h"
 
-char NameDir[100][6];
+char NameDir[100][6]; // список дирректорий по году-месяцу
+char NameDirD[32][6]; // список дирректорий по дате
 char NameFiles[1000][17];
-uint32_t NumNameDir=0; // число имен директорий
-uint32_t IndexNameDir=0;// индекс дирректории на которую указываем
-uint32_t IndexLCDNameDir=0;// индекс указателя на индикаторе дирректории на которую указываем
+uint32_t NumNameDir=0; // число имен директорий год-месяц
+uint32_t IndexNameDir=0;// индекс дирректории на которую указываем год-месяц
+uint32_t IndexLCDNameDir=0;// индекс указателя на индикаторе дирректории на которую указываем год-месяц
+uint32_t NumNameDirD=0; // число имен директорий дата число
+uint32_t IndexNameDirD=0;// индекс дирректории на которую указываем дата число
+uint32_t IndexLCDNameDirD=0;// индекс указателя на индикаторе дирректории на которую указываем дата число
 uint32_t NumNameFiles=0; // число имен файлов
 uint32_t IndexNameFiles=0;// индекс файла на который указываем
 uint32_t IndexLCDNameFiles=0;// индекс указателя на индикаторе файла на который указываем
 uint32_t PageDir; 
+uint32_t PageDirD; 
 uint32_t PageFiles; // страница файлов
 
   float TmpACI;
@@ -35,10 +40,13 @@ St_File_Sor F_SOR; // содержимое основных параметров файла SOR
   char*   fn;
   const  char PathMainDir[9]={"0:/_OTDR\0"}; // 
   char PathF[64];
+  char PathD[64];
+  char PathDirD[24]; // путь ко второму уровню директорий (дата число)
   //char   path=;
   uint32_t TotalSize, FreeSpace;
     char FileNameS[32]; // имя файла куда сохраняем
     char FileSDir[8]; // директория файла куда сохраняем
+    char FileDDir[8]; // директория даты вложена в FileSDir файла куда сохраняем
     char PathFileS[64]; // полный путь файла куда сохраняем
     
   char RW_Buffer[200];
@@ -156,7 +164,7 @@ void SDMMC_SDCard_FILES(void) // прочитаем список файлов в директории
     memset(&NameFiles,0,sizeof(NameFiles));
     // почитаем список файлов в данной директории (по указателю на директорию берем путь к файлам...
           //создадим полны путь к директории  чтобы её открыть
-    sprintf(PathFileS,"%s/%s",PathMainDir,NameDir[IndexNameDir]);
+    sprintf(PathFileS,"%s/%s/%s",PathMainDir,NameDir[IndexNameDir],NameDirD[IndexNameDirD]);
    
     res = f_opendir(&dir, PathFileS);
     if(res == FR_OK)
@@ -426,6 +434,113 @@ void SDMMC_SDCard_DIR(void) // прочитаем дирректроии
     //    }
     //    */
   } while(0);
+  //------------------[ Test Complete! Unmount The SD Card ]--------------------
+  FR_Status = f_mount(NULL, "", 0);
+  // думал не закрывать флэшку
+  //        sprintf(TxBuffer, "\r\nSD Card NO   Un-mounted Successfully! \r\n");
+  //    HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
+//  if (FR_Status != FR_OK)
+//
+//  {
+//      sprintf(TxBuffer, "\r\nError! While Un-mounting SD Card, Error Code: (%i)\r\n", FR_Status);
+//      HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
+//  } else{
+//      sprintf(TxBuffer, "\r\nSD Card Un-mounted Successfully! \r\n");
+//      HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
+//  }
+}
+
+// Новая система работы с файлами, они хранятся на SD card
+//Чужая программа теста работы FATFS in SDMMC2 with SD_Card
+void SDMMC_SDCard_DIRD(void) // прочитаем дирректории вторго уровня (даты)
+{
+  do
+  {
+    //------------------[ Mount The SD Card ]--------------------
+    FR_Status = f_mount(&FatFs, SDPath, 1);
+    if (FR_Status != FR_OK)
+    {
+      break;
+    }
+        HAL_Delay(2);
+
+    // создаем или проверяем наличие дирректории _OTDR
+    sprintf(PathDirD,"%s/%s",PathMainDir,NameDir[IndexNameDir]);
+
+    
+    res = f_mkdir(PathDirD);//"0:/_OTDR"
+    if(res == FR_EXIST)
+    {
+      //sprintf ((char*)TxBuffer,"Make MainDir Already Is\r");
+      res = FR_OK;
+    }
+    // надо добавить путь от предыдущего поиска
+    
+    uint32_t OldIndexNameDirD = IndexNameDirD;
+    NumNameDirD=0; // число имен директорий
+    IndexNameDirD=0;// индекс дирректории на которую указываем
+    IndexLCDNameDirD=0;// индекс указателя на индикаторе дирректории на которую указываем
+    //NameDir[IndexNameDir][0] = 0; // обнулим массив  
+    memset(&NameDirD,0,sizeof(NameDirD));
+    // почитаем директории...
+    res = f_opendir(&dir, PathDirD);
+    if(res == FR_OK)
+    {
+      while(1)
+      {
+        res = f_readdir(&dir, &fno);
+        
+        if(res != FR_OK || fno.fname[0] == 0) // нет дирректорий выходим
+          break;
+        
+        //      if(fno.fname[0] != 0) // вроде это имена файлов
+        //      {
+        //        fn = fno.fname;
+        //              sprintf(TxBuffer, "file/%s\r",fn);
+        //      UARTSendExt((void*)TxBuffer,strlen(TxBuffer)); // выдаем 
+        //        
+        //      }
+        //      
+        //if(fno.fname[0] == '.')
+        //{ // выводим имена дирректорий
+        //continue;
+        
+        fn = fno.fname; 
+        
+        if((fno.fattrib & AM_DIR) == AM_DIR) // дирректории
+        {
+          // это директории - надо проверить имя и записть в список
+          if(strlen(fn) == 2) // наш размер теперь проверим содержимое
+          {
+            // проверка на состав имени директории только двузначные (даты числа)
+            if((fn[0]>='0'&&fn[0]<='3')&&(fn[1]>='0'&&fn[1]<='9'))
+            {
+              memcpy( &NameDirD[NumNameDirD],fn,2);
+              NameDirD[NumNameDirD][3]=0;
+              NumNameDirD++;
+              //            sprintf(TxBuffer, "dir/%s\r",fn);
+            }
+          }
+          else
+            TxBuffer[0] = 0;
+          
+        }
+        //        else // файлы,
+        //        {
+        //                        sprintf(TxBuffer, "file/%s\r",fn);
+        //
+        //        }
+        //      UARTSendExt((void*)TxBuffer,strlen(TxBuffer)); // выдаем 
+        
+        //}
+      }
+    }
+    if(OldIndexNameDirD <= NumNameDirD)
+      IndexNameDirD = OldIndexNameDirD;
+    f_closedir(&dir);
+    
+    
+   } while(0);
   //------------------[ Test Complete! Unmount The SD Card ]--------------------
   FR_Status = f_mount(NULL, "", 0);
   // думал не закрывать флэшку
@@ -1355,10 +1470,26 @@ void SaveFileSD(int Mod)
     if(Mod) // сохраняем в дирректроию недели и с именем файла по времени
     {
       // подготовим путь
-      // папка для сохранения делаем папку  
-      GetFolder(FileSDir);
+      // папка для сохранения делаем папку из года и месяца  
+      GetFolder(FileSDir,1);
 
-    sprintf(PathF,"%s/%s",PathMainDir,FileSDir);
+    sprintf(PathD,"%s/%s",PathMainDir,FileSDir);
+    res = f_mkdir(PathD);
+    //res = f_unlink(PathF);
+    if(res == FR_EXIST)
+    {
+      //sprintf ((char*)TxBuffer,"Make MainDir Already Is\r");
+      res = FR_OK;
+    }
+        HAL_Delay(2);
+    // почитаем директории...только что созданные 
+    res = f_opendir(&dir, PathD);
+        HAL_Delay(2);
+    f_closedir(&dir);
+    // папка создана
+    // делаем подпапку с датой
+      GetFolder(FileSDir,0);
+    sprintf(PathF,"%s/%s",PathD,FileSDir);
     res = f_mkdir(PathF);
     //res = f_unlink(PathF);
     if(res == FR_EXIST)
@@ -1371,7 +1502,8 @@ void SaveFileSD(int Mod)
     res = f_opendir(&dir, PathF);
         HAL_Delay(2);
     f_closedir(&dir);
-    // папка создана
+    
+    
       // имя файла
       sprintf(FileNameS,"%02d%02d%02d_%02d%02d%01d.sor",TimeSaveOTDR.RTC_Year%100,
           TimeSaveOTDR.RTC_Mon,
