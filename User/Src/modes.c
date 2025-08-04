@@ -4913,14 +4913,14 @@ void ModeSelectMEM(void) // режим выбора работы с пам€тью CHECK_OFF
   {
     myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
-    FrSelectMEM = ChangeFrSet (FrSelectMEM, 2+PowerMeter, 1, MINUS);// установка курсора в рамках заданных параметров
+    FrSelectMEM = ChangeFrSet (FrSelectMEM, 1+PowerMeter, 1, MINUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_UP);
   }
   if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
   {
     myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
-    FrSelectMEM = ChangeFrSet (FrSelectMEM, 2+PowerMeter, 1, PLUS);// установка курсора в рамках заданных параметров
+    FrSelectMEM = ChangeFrSet (FrSelectMEM, 1+PowerMeter, 1, PLUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_DOWN);
   }
   
@@ -4933,14 +4933,14 @@ void ModeSelectMEM(void) // режим выбора работы с пам€тью CHECK_OFF
     sprintf(Str, "t0.txt=\"%s\"€€€", MsgMass[42][CurrLang]);
     NEX_Transmit((void*)Str);    // ѕам€ть
     
-    sprintf(Str, "t1.txt=\"%s\"€€€", MsgMass[43][CurrLang]);
-    NEX_Transmit((void*)Str);    // свободно
+    //sprintf(Str, "t1.txt=\"%s\"€€€", MsgMass[43][CurrLang]);
+    //NEX_Transmit((void*)Str);    // свободно
     
     sprintf(Str, "t2.txt=\"%s\"€€€", MsgMass[7][CurrLang]);
     NEX_Transmit((void*)Str);    // –≈‘Ћ≈ “ќћ≈“–
     
-    sprintf(Str, "t3.txt=\"%4d\"€€€", MAXMEMALL-GetNumTraceSaved(0));
-    NEX_Transmit((void*)Str);    // сколько свободно
+    //sprintf(Str, "t3.txt=\"%4d\"€€€", MAXMEMALL-GetNumTraceSaved(0));
+    //NEX_Transmit((void*)Str);    // сколько свободно
     
     if (PowerMeter) // есть измеритель
     {
@@ -4948,16 +4948,20 @@ void ModeSelectMEM(void) // режим выбора работы с пам€тью CHECK_OFF
       sprintf(Str, "t4.txt=\"%s\"€€€", MsgMass[74][CurrLang]);
       NEX_Transmit((void*)Str);    // »«ћ≈–»“≈Ћ№
       
-      sprintf(Str, "t5.txt=\"%4d\"€€€",MaxMemPM-GetCellMem(0));
-      NEX_Transmit((void*)Str);    // »«ћ≈–»“≈Ћ№ (число €чеек)
+      //sprintf(Str, "t5.txt=\"%4d\"€€€",MaxMemPM-GetCellMem(0));
+      //NEX_Transmit((void*)Str);    // »«ћ≈–»“≈Ћ№ (число €чеек)
       
-      sprintf(Str, "t6.txt=\"%s\"€€€", MsgMass[44][CurrLang]);
-      NEX_Transmit((void*)Str);    // ќ„»—“ ј
+      //sprintf(Str, "t6.txt=\"%s\"€€€", MsgMass[44][CurrLang]);
+      //NEX_Transmit((void*)Str);    // ќ„»—“ ј
+      sprintf(Str, "t6.txt=\"\"€€€");
+      NEX_Transmit((void*)Str);    // ќ„»—“ ј- пуста€
     }
     else  // измерител€ нет
     {
-      sprintf(Str, "t4.txt=\"%s\"€€€", MsgMass[44][CurrLang]);
-      NEX_Transmit((void*)Str);    // ќ„»—“ ј
+      //sprintf(Str, "t4.txt=\"%s\"€€€", MsgMass[44][CurrLang]);
+      //NEX_Transmit((void*)Str);    // ќ„»—“ ј
+      sprintf(Str, "t4.txt=\"\"€€€");
+      NEX_Transmit((void*)Str);    // ќ„»—“ ј- пуста€
       sprintf(Str, "t5.txt=\"\"€€€");
       NEX_Transmit((void*)Str);    // пустые
       
@@ -5025,24 +5029,25 @@ void ModeSelectMEM(void) // режим выбора работы с пам€тью CHECK_OFF
           CmdInitPage(20);
         }
       }
-      else
-      {
-        myBeep(10);
-        SetMode(ModeClearMEM);
-        FrClearMEM = 2 + PowerMeter;
-        // посылка команды переключени€ окна на Select_MEM_Clr(вызов)  
-        CmdInitPage(21);
-        //NeedReturn = 4; // что бы вернутс€ сюда же
-      }
+//      else   // !!! убрали очистку пам€ти
+//      {
+//        myBeep(10);
+//        SetMode(ModeClearMEM);
+//        FrClearMEM = 2 + PowerMeter;
+//        // посылка команды переключени€ окна на Select_MEM_Clr(вызов)  
+//        CmdInitPage(21);
+//        //NeedReturn = 4; // что бы вернутс€ сюда же
+//      }
       break;
-    case 3: // переход в режим выбора стирани€ пам€ти
-      myBeep(10);
-      SetMode(ModeClearMEM);
-      FrClearMEM = 2 + PowerMeter;
-      // посылка команды переключени€ окна на Select_MEM_Clr(вызов)  
-      CmdInitPage(21);
-      //NeedReturn = 4; // что бы вернутс€ сюда же
-      break;
+      //// !!! убрали очистку пам€ти
+//    case 3: // переход в режим выбора стирани€ пам€ти
+//      myBeep(10);
+//      SetMode(ModeClearMEM);
+//      FrClearMEM = 2 + PowerMeter;
+//      // посылка команды переключени€ окна на Select_MEM_Clr(вызов)  
+//      CmdInitPage(21);
+//      //NeedReturn = 4; // что бы вернутс€ сюда же
+//      break;
     }
     
   }
