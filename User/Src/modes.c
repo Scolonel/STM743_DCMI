@@ -3324,7 +3324,7 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (Окно 34)
     // здесь над витвится в зависимости от признака откуда пришли
     if(ReturnMemView)
     {
-      SetMode(ModeFileMngDir);
+      SetMode(ModeFileMngDirD);
       ModeDevice = MODEMEMR;
       ModeMemDraw = VIEWNEXT;
       ReturnMemView = 1; // надо вернуться сюда же по ESC
