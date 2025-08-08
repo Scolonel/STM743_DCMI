@@ -146,15 +146,16 @@ typedef struct  // основные конфигурационные настройки прибора режимы работы Gen
   char LC[2]; // Language Code EN-English RU- Russian 
   char CID[16];  // Cable ID  
   char FID[16];  // Cable ID  
+  short int FT;  // Fiber Type (652)
   short int NW;  // Nominal WaveLenght (1310)
   char OL[16];   // Originating Location
   char TL[16];   // Terminating Location
   char CCD[16];  // Cable Code
-  char CC[2];    // Current Data Flag (CC,BC,RT or OT)
+  char CDF[2];    // Current Data Flag (CC,BC,RT or OT)
   int32_t UO;    // User Offset у нас 0 (смещение в 100 пС от начала
   int32_t UOD;    // User Offset Distance у нас 0 (смещение в размерностях дистанции (km,m,ft...) от начала
   char OP[16];   // Operator Name or Operator Code
-  char CMT[20];  // Commemt User Added information about trace 
+  char CMT[20];  // Comment User Added information about trace 
 } GPB_STR;
 
 typedef struct  // основные данные прибора SupplierParams

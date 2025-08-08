@@ -42,6 +42,8 @@ St_File_Sor F_SOR; // содержимое основных параметров файла SOR
   char PathF[64];
   char PathD[64];
   char PathDirD[24]; // путь ко второму уровню директорий (дата число)
+  char pFile[MAX_PATH_LEN];   //  путь к файлу
+
   //char   path=;
   uint32_t TotalSize, FreeSpace;
     char FileNameS[32]; // им€ файла куда сохран€ем
@@ -1563,13 +1565,21 @@ void SaveFileSD(int Mod)
        // им€ файла есть
       //создадим полны путь к файлу чтобы его открыть
     sprintf(PathFileS,"%s/%s",PathF,FileNameS);
-      
+    sprintf(pFile,"%s/B%s",PathF,FileNameS); // путь дл€ белкора 2
+  
     }
     
     //Open the file
     //FR_Status = f_open(&Fil, "MyTextFile.txt", FA_WRITE | FA_READ | FA_CREATE_ALWAYS);
     else
+    {
     sprintf(PathFileS,"0.sor");
+    sprintf(pFile,"B20.sor"); // путь дл€ белкора 2
+    }
+    
+    //попробуем записать Ѕелкор 2.0
+    FR_Status = WriteSorFile(pFile, 0, LogData);
+    //
     FR_Status = f_open(&Fil, PathFileS, FA_WRITE  | FA_CREATE_ALWAYS);
     //    if(FR_Status != FR_OK)
     //    {

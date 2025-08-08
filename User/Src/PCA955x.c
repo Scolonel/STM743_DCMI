@@ -297,6 +297,10 @@ uint32_t BeginConfig (void) // начальная конфигурация
     // прочитаем блок основных параметров белкора
     EEPROM_read(&GenParams, ADR_GenParamBelcore, sizeof(GenParams));
     DWORD Blkr_err =  CheckBelcore ();  // Проверка установок Белкора и исправление
+    if (Blkr_err)
+    {
+      EEPROM_write(&GenParams, ADR_GenParamBelcore, sizeof(SettingRefl));
+    }
     
     //  // поуправляем переферией
     //  CntrlExpUnit (DSBL, EN_FLTR); // выкл. фильтр усилителя 

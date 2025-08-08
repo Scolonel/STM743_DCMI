@@ -1315,6 +1315,9 @@
                     <name>$PROJ_DIR$\..\User\Src\PM.c</name>
                 </file>
                 <file>
+                    <name>$PROJ_DIR$\..\User\Src\SorData.c</name>
+                </file>
+                <file>
                     <name>$PROJ_DIR$\..\User\Src\UartEXT.c</name>
                     <configuration>
                         <name>BASE32H743_DCMI</name>

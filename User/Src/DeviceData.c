@@ -1476,8 +1476,83 @@ BYTE CheckSavedTrace(void) // функция контроля сохраненной рефлектограммы
 uint32_t CheckBelcore(void)
 {
   uint32_t Err = 0;
-  if((GenParams.LC[0]<'A')||(GenParams.LC[0]>'Z')||(GenParams.LC[1]<'A')||(GenParams.LC[1]>'Z')) Err|=0x01;
-  //for 
+  if((GenParams.LC[0]<'A')||(GenParams.LC[0]>'Z')||(GenParams.LC[1]<'A')||(GenParams.LC[1]>'Z'))
+  {
+    Err|=0x01;
+    GenParams.LC[0] = 'R';
+    GenParams.LC[1] = 'U';
+  }
+  //for
+  if(GenParams.CID[15] != 0)
+  {
+    Err|=0x2;
+    GenParams.CID[15] = 0;
+    sprintf(GenParams.CID,"Green");
+  }
+  if(GenParams.FID[15] != 0)
+  {
+    Err|=0x4;
+    GenParams.FID[15] = 0;
+    sprintf(GenParams.FID,"Fiber");
+  }
+      if((GenParams.FT > 600)||(GenParams.FT < 700))
+  {
+    Err|=0x8;
+    GenParams.FT = 652;
+  }
+      if((GenParams.NW < 700)||(GenParams.NW > 1700))
+  {
+    Err|=0x10;
+    GenParams.NW = 1310;
+  }
+  if(GenParams.OL[15] != 0)
+  {
+    Err|=0x20;
+    GenParams.OL[15] = 0;
+    sprintf(GenParams.OL,"Begin");
+  }
+  if(GenParams.TL[15] != 0)
+  {
+    Err|=0x40;
+    GenParams.TL[15] = 0;
+    sprintf(GenParams.TL,"End");
+  }
+  if(GenParams.CCD[15] != 0)
+  {
+    Err|=0x80;
+    GenParams.CCD[15] = 0;
+    sprintf(GenParams.CCD,"Empty");
+  }
+  if((GenParams.CDF[0]<'A')||(GenParams.CDF[0]>'Z')||(GenParams.CDF[1]<'A')||(GenParams.CDF[1]>'Z'))
+  {
+    Err|=0x100;
+    GenParams.CDF[0] = 'B';
+    GenParams.CDF[1] = 'C';
+  }
+  if(GenParams.UO > 0)
+  {
+    Err|=0x200;
+    GenParams.UO = 0;
+  }
+  if(GenParams.UOD > 0)
+  {
+    Err|=0x400;
+    GenParams.UOD = 0;
+  }
+  if(GenParams.OP[15] != 0)
+  {
+    Err|=0x800;
+    GenParams.OP[15] = 0;
+    sprintf(GenParams.OP,"Operator");
+  }
+  if(GenParams.CMT[19] != 0)
+  {
+    Err|=0x1000;
+    GenParams.CMT[19] = 0;
+    sprintf(GenParams.CMT,"Commets");
+  }
+  
+
   return Err;
 }
 
