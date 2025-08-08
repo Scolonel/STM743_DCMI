@@ -5,7 +5,7 @@
 
 // Структура событий в KeyEvents
 #pragma pack(2)
-typedef struct   // Size 32 Byte
+typedef struct   // Size 32+20=52 Byte (B2.0)
 {
   unsigned short EN;      // EN - Event Number
   unsigned int EPT;       // EPT Event Propagation Time 0
@@ -14,6 +14,7 @@ typedef struct   // Size 32 Byte
   long ER ;               // ER Events Reflectance -45000 = -45.0 dB 
   char EC[6] ;            // EC Event Code 0/1/2-A/M/E/F/O-9999  
   char LMT[2];            // 2P/LS 2-point LSA 
+  long ML[5];     // Marker Location
   char COMM_EVN[10] ;     // коммментарии к событию
 } EVENTS;  // параметры рефлектограммы
 

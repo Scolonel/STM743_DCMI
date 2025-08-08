@@ -66,6 +66,9 @@
 
 #define BELCORESIZE 224
 #define ENAOLDLCD 0 //разрешение прорисовки на старый LCD 1-разрешено, 0-запрещено
+// from SorData
+#define MAX_PATH_LEN 256
+#define ArraySize(a)    (sizeof(a)/sizeof(a[0]))
 
 
 #include "integer.h"
@@ -141,6 +144,8 @@
     0x6e17, 0x7e36, 0x4e55, 0x5e74, 0x2e93, 0x3eb2, 0x0ed1, 0x1ef0
   };
 
+// from SorData
+int   WriteSorFile(const char* pszFileName, int iPlaceLS, unsigned short* pDataPoints);
 
       // тики опроса клавиатура взято из Т7К_АР
 uint32_t GetSysTick( int Mode); // получение тиков 1 мС. 0 - получение счетчика от предыдущего сброса 1- сброс
@@ -172,6 +177,7 @@ extern uint32_t PageFiles;
 
 extern BYTE KnowLCD ;
 
+extern char* g_pszFileNames[LSPLACENUM];  // массив указателей на строки с именами файлов
 
 // структура хранения памяти измерителя
 struct tag_PON

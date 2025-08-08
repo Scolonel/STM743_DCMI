@@ -45,6 +45,9 @@ void AlarmReWriteTrace (void);
 void SDMMC_SDCard_DIR(void); // прочитаем дирректроии
 void SDMMC_SDCard_DIRD(void); // прочитаем дирректроии
 void SDMMC_SDCard_FILES(void); // прочитаем files
+// расчет и получение таблицы событий
+unsigned short MakeEvents (void);
+
 void SaveFileSD(int Mod); // запись 0.sor на карточку в главную дирректорию
 uint32_t StartInitSDcard (void); 
 

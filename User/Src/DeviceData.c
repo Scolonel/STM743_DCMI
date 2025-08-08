@@ -10,8 +10,8 @@ char NumVer[10];// = "180      \0";
 
 const unsigned WAVE_LENGTHS[WAVE_LENGTHS_NUM] = {850,1310,1490,1550,1625};
 
-const char *Ides[2] = {"OOO NPK SvyazServis,\0","OPTOKON Co. Ltd,\0"};
-const char *VerFW[2] = {",SW_rev \0",",SW_rev \0"};
+const char *Ides[2] = {"OOO NPK SvyazServis\0","OPTOKON Co. Ltd\0"};
+const char *VerFW[2] = {"SW_rev \0","SW_rev \0"};
 //const char *Device[2][LANG_NUM] = {{"ТОПАЗ-7\0","TOPAZ-7\0","TOPAZ-7\0"},{"MOT-700\0","MOT-700\0","MOT-700\0"}};
 const char *Device[2][2][2] = {{{"ТОПАЗ-7\0","ТОПАЗ-7\0"},{"TOPAZ-7\0","TOPAZ-7\0"}},{{"MOT-700\0","MOT-950\0"},{"MOT-700\0","MOT-950\0"}}};
 
@@ -51,6 +51,16 @@ REFL_SET SettingRefl;
 CFG_DEV ConfigDevice;
 //// структура пользоваетьских установок
 CFG_USR UserSet;
+//// структура блока General Parametrs BelCore
+GPB_STR GenParams;
+// Supplai Params
+SPB_STR SupParams;
+// FixParams
+FPB_STR FixParams;
+// header data points
+DPNTS_STR HeadDataPoints;
+
+
 //typedef struct
 //{
 //  WORD NumDevice;  // (999) № прибора,
@@ -432,35 +442,46 @@ void GetDeviceName( char* name ) // from Computer
 {
   char c[10];
   char Str[8];
-  strcpy( name, Ides[ConfigDevice.ID_Device] );//, strlen(Ides[device->ID_Device])
-    strcat( name, Device[GetID_Dev()][1][1]);//, strlen(Idesl[device->ID_Device]) // чтобы отвечал английскими
-   switch ( ConfigDevice.ID_Device)
-   {
-   case 0: // RUS-SvyazService
+  //strcpy( name, Ides[ConfigDevice.ID_Device] );//, strlen(Ides[device->ID_Device])
+  // тут же пропишем в структуру для белкора SupplierParams
+  //strcpy( SupParams.SN, Ides[ConfigDevice.ID_Device] );//, strlen(Ides[device->ID_Device])
+  sprintf(SupParams.SN,"%s",Ides[ConfigDevice.ID_Device]);
+  // составим НАИМЕНОВАНИЕ ПРИБОРА
+  SupParams.MFID[0]=0;
+    strcat( SupParams.MFID, Device[GetID_Dev()][1][1]);//, strlen(Idesl[device->ID_Device]) // чтобы отвечал английскими
+    
+   //switch ( ConfigDevice.ID_Device)
+   //{
+   //case 0: 
+    // RUS-SvyazService
      strcpy(c,PMset[ConfigDevice.CfgPM]);
-     strcat( name, c);
+     strcat( SupParams.MFID, c);
      c[1]=0;
      c[0]= 0x30 + ConfigDevice.TypeDevice;
-     strcat( name,c);
+     strcat( SupParams.MFID,c);
      c[0]= 'R';
-     strcat( name,c);
+     strcat( SupParams.MFID,c);
      if (ConfigDevice.CfgRE) c[0]='+';
      else c[0]=' ';
-     strcat( name,c);
+     strcat( SupParams.MFID,c);
      c[0]= 'A';
-     strcat( name,c);
+     strcat( SupParams.MFID,c);
      //if (ConfigDevice.ApdiSet) c[0]='X';
      if ((ConfigDevice.ApdiSet)&&(NameDB.Ena_DB)) c[0]='X'; // для IDN там так напишем!
      else c[0]=' ';
-     strcat( name,c);
-     sprintf(c,",%04d",ConfigDevice.NumDevice) ;
-     strcat( name,c);
-     break;
-   case 1: // CZE-OPTOKON
+     strcat( SupParams.MFID,c);
+     // Запишем номер прибора
+     //sprintf(c,",%04d",ConfigDevice.NumDevice) ;
+     sprintf(SupParams.OTDR,"%04d",ConfigDevice.NumDevice) ;
+     //strcat( name,c);
+   //  break;
+   //case 1: 
+     // CZE-OPTOKON (пропишем в оптический модуль SupParams.OMID)
+     SupParams.OMID[0]=0;
      c[1]=0;
      if (ConfigDevice.ApdiSet) c[0]='D';
      else c[0]=0;
-     strcat( name,c);
+     strcat( SupParams.OMID,c);
   //длины волн лазеров
   for (int i=0; i<ARRAY_SIZE(ConfigDevice.PlaceLS); ++i)
   {
@@ -469,7 +490,7 @@ void GetDeviceName( char* name ) // from Computer
       sprintf (c,"%4d", ConfigDevice.PlaceLS[i]);
       c[0] = '-';
       c[3] = 0; // два знака 
-      strcat(name,c);
+      strcat(SupParams.OMID,c);
     }
   } 
      strcpy(c,PMset[3]); //-PMH
@@ -478,28 +499,38 @@ void GetDeviceName( char* name ) // from Computer
      {
    case 0: // нет измерителя
      c[0]= 0;
-     strcat( name,c);
+     strcat( SupParams.OMID,c);
      break;
    case 1: // простой измеритель
      c[3]= 0;
-     strcat( name,c);
+     strcat( SupParams.OMID,c);
      break;
    case 2: // измеритель со сферой
-     strcat( name,c);
+     strcat( SupParams.OMID,c);
      break;
      }
      strcpy(c,PMset[4]); //-VFL
      if (!(ConfigDevice.CfgRE)) c[0]=0;
-     strcat( name,c);
-     sprintf(c,",MT%04d",ConfigDevice.NumDevice) ;
-     strcat( name,c);
-     break;
-   }
-     strcat( name, VerFW[ConfigDevice.ID_Device]);  
+     strcat( SupParams.OMID,c);
+     // как бы номер Оптического модуля
+     
+     sprintf(SupParams.OMSN,"MT%04d",ConfigDevice.NumDevice) ;
+     //strcat( name,c);
+   //  break;
+   //}
+   // Версия программного обеспечения
+   SupParams.SR[0]=0;
+     strcat(  SupParams.SR, VerFW[ConfigDevice.ID_Device]);  
      GetNumVer(Str);
-     sprintf (c, "%s(%s)\r",Str,NumVer);
-     strcat( name, c);   
-  
+     sprintf (c, "%s(%s)",Str,NumVer);
+     strcat(  SupParams.SR, c); 
+     // другое
+        SupParams.OT[0]=0;
+     sprintf(SupParams.OT," ") ;
+     // формируем ответ name
+     
+     sprintf (name, "%s,%s,%s,%s\r",SupParams.SN,(ConfigDevice.ID_Device)?(SupParams.OMID):(SupParams.MFID),(ConfigDevice.ID_Device)?(SupParams.OMSN):(SupParams.OTDR),SupParams.SR);
+ 
 }
 // получение порога шумов для типа лавинника, для событий!
 unsigned short GetNoiseLvl (void)
@@ -1441,6 +1472,15 @@ BYTE CheckSavedTrace(void) // функция контроля сохраненной рефлектограммы
   return Err;
 }
 
+// контроль сохраненных параметров белкора (!НОВОЕ!)
+uint32_t CheckBelcore(void)
+{
+  uint32_t Err = 0;
+  if((GenParams.LC[0]<'A')||(GenParams.LC[0]>'Z')||(GenParams.LC[1]<'A')||(GenParams.LC[1]>'Z')) Err|=0x01;
+  //for 
+  return Err;
+}
+
 void SetNumAverag (unsigned Data) // Запись числа накоплений в память рефлектограмм
 {
   SettingRefl.NumAvrag = Data;
@@ -1639,6 +1679,11 @@ unsigned short GetPointsShift (void)
   return Data;
 }
 
+int32_t Get_AR (void)
+{
+  return    (int32_t)(MultIndex[GetIndexLN()]*(ADCPeriod*5*POINTSIZE)/NumPointsPeriod[GetIndexLN()]); //  устанавливаем значения AR для установленного режима измерения
+
+}
 
 void GetHeaderBelcore (char* Name, unsigned short Block, unsigned short NumEvents) // заполняем шапку белкора
 {
@@ -1723,7 +1768,8 @@ void GetHeaderBelcore (char* Name, unsigned short Block, unsigned short NumEvent
       DataInt = SettingRefl.NumAvrag;
       memcpy( &Name[189-118], &DataInt, 4);
       // ###(192) AR  длина измеряемого участка (грубо число измерений на шаг) DS*NPPW/10000
-      DataInt = (unsigned long)(MultIndex[GetIndexLN()]*(ADCPeriod*5*POINTSIZE)/NumPointsPeriod[GetIndexLN()]); //  устанавливаем значения DS для установленного режима измерения
+      DataInt = (unsigned long)Get_AR(); 
+      //DataInt = (unsigned long)(MultIndex[GetIndexLN()]*(ADCPeriod*5*POINTSIZE)/NumPointsPeriod[GetIndexLN()]); //  устанавливаем значения DS для установленного режима измерения
       memcpy( &Name[193-118], &DataInt, 4);
       // ###(200) NF нижний уровень шумов равен 65535
       DataInt =  ReflParam.NF;

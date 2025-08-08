@@ -1387,31 +1387,20 @@ unsigned short SaveTrace(void) // сохранение рефлектограммы
   return NumTrace;
   //PaintLCD();
 }
-
-void SaveFileSD(int Mod)
+// расчет и получение таблицы событий
+unsigned short MakeEvents (void)
 {
-  //        //        unsigned long NowEND;
-  //        //        unsigned long NowBEG;
-  unsigned short NumEventNow = GetNumEvents();
-  //        unsigned short NumTr = (unsigned short)(atoi((char*)&RX_Buf[17]));
-  //        if (NumTr > GetNumTraceSaved(0)) NumTr = 0; // заданная рефлектограмма не существует
-  //        SetNumTrace (NumTr); // установка номера трассы
-  //SetModeDevice (MODEMEMR); // принудительная установка режима прибора 
-  //        // надо прочитать указанную рефлектограмму
-  //        // первое заполнение надо прочитать файл
-  //        if (GetNumTrace()) // если не нулевая то читаем по таблице
-  //          TraceREAD(GetNumTraceSaved(GetNumTrace()));//  читаем файл который надо передать// 27/01/2011 неадекватно считывала рефлектограмму
-  //        else  TraceREAD(0);
+   unsigned short NumEventGets = 0;
   //        // ищем события в линии (25.05.2011 пока конец линии)
   InitEventsTable (); // инициализация структур событий
   //        // признак разрешения событий при передаче
   if (GetSetEnaEvents (0)) // проверяем признак разрешения событий
   {
     // ищем события и заполняем файл
-    NumEventNow =  (CalkEventsKeys (LogData, PointsInImpulse(0), 1)); 
+    NumEventGets =  (CalkEventsKeys (LogData, PointsInImpulse(0), 1)); 
     //          // расчет погонного затухания если есть точка
     //          /**/
-    if (NumEventNow)          //имеем события - 
+    if (NumEventGets)          //имеем события - 
     {
       if (EndEvenBlk.ELMP[0]!=EndEvenBlk.ELMP[1]) // есть линия! занесем параметры
       {
@@ -1423,9 +1412,9 @@ void SaveFileSD(int Mod)
         
       }
       // цикл заполнения событий 
-      if (NumEventNow>1)
+      if (NumEventGets>1)
       {
-        for (int i=1;i<NumEventNow;++i)
+        for (int i=1;i<NumEventGets;++i)
         {
           TmpACI = GetPosLine(EvenTrace[i].EPT-EvenTrace[i-1].EPT);
           TmpACI = (LogData[EvenTrace[i].EPT]-(LogData[EvenTrace[i-1].EPT]+EvenTrace[i-1].EL))/TmpACI;
@@ -1437,16 +1426,76 @@ void SaveFileSD(int Mod)
       }
       // Заполнение события и конец линии
       
-      for (int i=0;i<NumEventNow;++i)
+      for (int i=0;i<NumEventGets;++i)
       {
         EvenTrace[i].EPT = CalkEPT (EvenTrace[i].EPT); // расчет значений EPT для событий от положения курсора
       }
     }
     
   }
-  // тест загрузка формирование событий
-  //NumEventNow = 9;
-  //TestLoadEvents (NumEventNow);
+ return NumEventGets; 
+}
+
+void SaveFileSD(int Mod)
+{
+  //        //        unsigned long NowEND;
+  //        //        unsigned long NowBEG;
+  unsigned short NumEventNow = MakeEvents();
+// перенес в отдельную функцию (06.08.2025)  
+//  //        unsigned short NumTr = (unsigned short)(atoi((char*)&RX_Buf[17]));
+//  //        if (NumTr > GetNumTraceSaved(0)) NumTr = 0; // заданная рефлектограмма не существует
+//  //        SetNumTrace (NumTr); // установка номера трассы
+//  //SetModeDevice (MODEMEMR); // принудительная установка режима прибора 
+//  //        // надо прочитать указанную рефлектограмму
+//  //        // первое заполнение надо прочитать файл
+//  //        if (GetNumTrace()) // если не нулевая то читаем по таблице
+//  //          TraceREAD(GetNumTraceSaved(GetNumTrace()));//  читаем файл который надо передать// 27/01/2011 неадекватно считывала рефлектограмму
+//  //        else  TraceREAD(0);
+//  //        // ищем события в линии (25.05.2011 пока конец линии)
+//  InitEventsTable (); // инициализация структур событий
+//  //        // признак разрешения событий при передаче
+//  if (GetSetEnaEvents (0)) // проверяем признак разрешения событий
+//  {
+//    // ищем события и заполняем файл
+//    NumEventNow =  (CalkEventsKeys (LogData, PointsInImpulse(0), 1)); 
+//    //          // расчет погонного затухания если есть точка
+//    //          /**/
+//    if (NumEventNow)          //имеем события - 
+//    {
+//      if (EndEvenBlk.ELMP[0]!=EndEvenBlk.ELMP[1]) // есть линия! занесем параметры
+//      {
+//        TmpACI = GetPosLine(EvenTrace[0].EPT);
+//        //TmpACI = ;
+//        TmpACI = (LogData[EvenTrace[0].EPT]-LogData[0])/TmpACI;//GetPosLine(EvenTrace[0].EPT);
+//        EvenTrace[0].ACI = (short int)TmpACI;
+//        EndEvenBlk.ELMP[1] = CalkEPT (EndEvenBlk.ELMP[1]); // расчет значений ELMP для конца линии от положения курсора
+//        
+//      }
+//      // цикл заполнения событий 
+//      if (NumEventNow>1)
+//      {
+//        for (int i=1;i<NumEventNow;++i)
+//        {
+//          TmpACI = GetPosLine(EvenTrace[i].EPT-EvenTrace[i-1].EPT);
+//          TmpACI = (LogData[EvenTrace[i].EPT]-(LogData[EvenTrace[i-1].EPT]+EvenTrace[i-1].EL))/TmpACI;
+//          EvenTrace[i].ACI = (short int)TmpACI;
+//          //EvenTrace[i].ACI = (LogData[EvenTrace[i].EPT]-(LogData[EvenTrace[i-1].EPT]+EvenTrace[i-1].EL))/GetPosLine(EvenTrace[i].EPT-EvenTrace[i-1].EPT);
+//          
+//          //EvenTrace[i-1].EPT = CalkEPT (EvenTrace[i-1].EPT); // расчет значений EPT для событий от положения курсора
+//        }
+//      }
+//      // Заполнение события и конец линии
+//      
+//      for (int i=0;i<NumEventNow;++i)
+//      {
+//        EvenTrace[i].EPT = CalkEPT (EvenTrace[i].EPT); // расчет значений EPT для событий от положения курсора
+//      }
+//    }
+//    
+//  }
+//  // тест загрузка формирование событий
+//  //NumEventNow = 9;
+//  //TestLoadEvents (NumEventNow);
   //< < < < <  !!! В Н И М А Н И Е !!! > > > > >
   // попробуем записать файл
   // откроем SD Card, сохраняем всегда в файл 0.sor 

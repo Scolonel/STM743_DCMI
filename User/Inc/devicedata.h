@@ -141,6 +141,68 @@ typedef struct  // основные конфигурационные настройки прибора режимы работы
   
 } CFG_USR;
 
+typedef struct  // основные конфигурационные настройки прибора режимы работы GenParams
+{
+  char LC[2]; // Language Code EN-English RU- Russian 
+  char CID[16];  // Cable ID  
+  char FID[16];  // Cable ID  
+  short int NW;  // Nominal WaveLenght (1310)
+  char OL[16];   // Originating Location
+  char TL[16];   // Terminating Location
+  char CCD[16];  // Cable Code
+  char CC[2];    // Current Data Flag (CC,BC,RT or OT)
+  int32_t UO;    // User Offset у нас 0 (смещение в 100 пС от начала
+  int32_t UOD;    // User Offset Distance у нас 0 (смещение в размерностях дистанции (km,m,ft...) от начала
+  char OP[16];   // Operator Name or Operator Code
+  char CMT[20];  // Commemt User Added information about trace 
+} GPB_STR;
+
+typedef struct  // основные данные прибора SupplierParams
+{
+  char SN[24]; // OTDR Manufacturer's Name 
+  char MFID[16];  // OTDR Mainframe Model  
+  char OTDR[16];  // Mainfraim Serial number 
+  char OMID[20];   // Plug-In Model Number
+  char OMSN[16];   // Plug-In Serial Number
+  char SR[20];  // Vercion of software/firmware
+  char OT[16];    // Other infomation (trace, hardware, software,firmware)
+} SPB_STR;
+
+typedef struct  // основные фиксированные параметры прибора FixedParams
+{
+  uint32_t DTS; // Current Time/Date Seconds since 00:00 1 January 1970 
+  char UD[2];  // unit Distance (km, mt, ft, kf, mi)  
+  uint16_t AW;  // actual measured wavelength (nm) = NW from GeneralParams
+  int32_t AO;   
+  int32_t AOD;
+  int16_t TPW; // число импульсов (если не один дальше не разбираем)
+  int16_t PWU; // длительность импульса в nS
+  int32_t DS;  // Data Spacing 
+  int32_t NPPW;  // число точек для каждого импульса 
+  int32_t GI;  // Group Index - коэфф преломления, в формате белкора 
+  int16_t BC; //Backscatter Coefficient
+  int32_t NAV; // Number of Averages
+  uint16_t AT; // Averaging Time in seconds
+  int32_t AR; // Acquisition Range (100 pS - диапазон
+  int32_t ARD; // Acquisition Range in units distance (UD)
+  int32_t FPO; // Front Panel Offset начальное смещение
+  uint16_t NF; //Noise Floor Level (65535)
+  int16_t NFSF; //Noise Floor Scale Factor 1000=1.000
+  uint16_t PO; // PowerOffset First Point Add Attenuators 10000=10.0dB
+  uint16_t LT; // Loss Threshold 200=0.2dB (200)
+  uint16_t RT; // Reflectance Threshold 40000=40.0 dB(40000)
+  uint16_t ET; // Enf-Of-Fibet Threshold 3000=3.0 dB (3000)
+  char TT[2]; // Trace Type (ST, RT, DT, RT)
+  int32_t WC[4]; // Window Coordinates
+} FPB_STR;
+
+typedef struct  // Block Data Points у нас одиночный масштаб
+{
+  int32_t TNDP; //Number of Data Points
+  int16_t TSF; // Total Number Scale Factor Used
+  int32_t TPS; // Total Data points Using 
+  int16_t SF; // Scale Factor
+} DPNTS_STR;
 // получение индекса DS
 unsigned GetValueDS (void);
 
@@ -174,6 +236,8 @@ void GetDeviceHW( char* name ); // from Computer
 
 void GetTesterName( char* name ); // Tester
 void GetMFID( char* name ); // for Belcore
+int32_t Get_AR (void);
+
 //void GetHeaderBelcore (char* Name);  заполняем шапку белкора
 void GetHeaderBelcore (char* Name, unsigned short Block, unsigned short NumEvents); // заполняем шапку белкора
 BYTE GetEnIncFiber (BYTE Dir);// установка - запрос состояния признака разрешения авто инкремента счетчика волокна
@@ -234,6 +298,7 @@ DWORD GetEndCheckLvl (void); // возврат порога при контроле конца линии
 BYTE SetIndexCommOTDR (BYTE Index); // установка индекса коммкнтария в структкру для сохранения
 void CheckCommOTDR (void); // проверка и корректировка строки комментариев OTDR
 BYTE CheckSavedTrace(void); // функция контроля сохраненной рефлектограммы 
+uint32_t CheckBelcore(void); // функция контроля сохраненной рефлектограммы 
 
 BYTE GetApdiSet (void); //получение признака наличия лавинного фотодиода
 BYTE SetupApdiSet (BYTE Data); //Setup признака наличия лавинного фотодиода
@@ -298,6 +363,13 @@ extern JDSU_COM SetJDSU;
 
 extern CFG_DEV ConfigDevice;
 extern CFG_USR UserSet;
+extern GPB_STR GenParams;
+extern SPB_STR SupParams;
+extern FPB_STR FixParams;
+extern DPNTS_STR HeadDataPoints;
+
+extern const char *IdnsBC[2];
+
 #endif  /* __DEVICEDATA_H__ */
 
 
