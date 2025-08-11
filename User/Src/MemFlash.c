@@ -1662,9 +1662,20 @@ void SaveFileSD(int Mod)
       for (int s=0; s<NumEventNow; s++)
       {
         //UARTSendExt ((BYTE*)&EvenTrace[s], 32);
-        FR_Status = f_write(&Fil, (BYTE*)&EvenTrace[s], 32,&WWC);
+        //FR_Status = f_write(&Fil, (BYTE*)&EvenTrace[s], 32,&WWC);
+        FR_Status = f_write(&Fil, (BYTE*)&EvenTrace[s], 22,&WWC);
         c = (unsigned char*)&EvenTrace[s];
-        for (int i=0;i<32;i++)
+        for (int i=0;i<22;i++)
+        {
+          /* —читаем контрольную сумму переданного блока                                             */		
+          value = *c;
+          new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+          old_crc = new_crc;
+          c++;
+        }
+        FR_Status = f_write(&Fil, (BYTE*)&EvenTrace[s].COMM_EVN, 10,&WWC);
+        c = (unsigned char*)&EvenTrace[s];
+        for (int i=0;i<10;i++)
         {
           /* —читаем контрольную сумму переданного блока                                             */		
           value = *c;

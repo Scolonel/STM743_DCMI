@@ -54,6 +54,9 @@ void InitEventsTable (void) // инициализация структур событий
     EvenTrace[i].EC[5] = '9';
     EvenTrace[i].LMT[0] = '2';
     EvenTrace[i].LMT[1] = 'P';
+    // от Belcore 2.0
+  for (int k=0;k<5;++k)
+    EvenTrace[i].ML[k] = 0;
   for (int j=0;j<9;++j)
   {
     EvenTrace[i].COMM_EVN[j] = ' ';
