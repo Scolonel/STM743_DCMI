@@ -60,6 +60,11 @@ typedef struct
 
 // структура параметров рефлектограммы ( текущего измерения)
 extern TR_PARAM ReflParam;
+// структура параметров рефлектограммы ( from Memory)
+// берем из файла белкор
+extern TR_PARAM MemReflParam;
+// структура параметров рефлектограммы ( из текущего измерения для востановления)
+extern TR_PARAM ResetReflParam;
 
 // Структура Установок рефлектометра (14 byte)
 typedef struct
@@ -273,6 +278,17 @@ float GetWAV_SC(BYTE Index);// получение индекса преломления в зависимости от ме
 float SetWAV_SC(float Data, BYTE Index);// запись измененного коэфф в структуру
 void ReSaveWAV_SC (void);// сохранение текущего коэфф в установленном месте (для динамичного сохранения)
 
+// вычисление индекса  длины импульса по его значению
+BYTE CalkIndexIM (uint16_t IM); // получение индекса длины Pulse
+// вычисление индекса  длины линии по  её значению (у нас в метрах)
+BYTE CalkIndexLN (long int LN); // получение индекса длины линии (диапазона)
+// вычисление индекса посадочного места по длине волны, по  её значению (nm)
+BYTE CalkIndexSC (long int LW); // получение индекса посадочного места
+// вычисление индекса времени усреднения по ее значению (проверяем на первые 4)
+BYTE CalkIndexWRM (uint16_t WRM); // получение индекса времени накопления
+
+void InitMemReflSet (void); // инициализация установок рефлектометра полученных из файла
+
 void InitReflSet (void); // инициализация установок рефлектометра
 BYTE GetCfgPM (void); // получение установки измерителя
 BYTE SetCfgPM (BYTE Data); // Setup установки измерителя
@@ -351,9 +367,14 @@ BYTE GetSetNumLS (BYTE a);
 unsigned long GetSetCntFiles (BYTE Dir);
 void SetCurCntFiles (void);
 
+extern char MsgErrMem[20]; // сообщение об ошибке чтения файла
 
 // структура настройки рефлектометра ( текущего измерения)
 extern REFL_SET SettingRefl;
+// структура настройки рефлектометра ( из памяти)
+extern REFL_SET MemSetRefl;
+// структура настройки рефлектометра ( из установок для востановления)
+extern REFL_SET ReSetRefl;
 // структура коэффициентов измерителя мощности
 extern TAB_SET CoeffPM;
 

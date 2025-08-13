@@ -39,6 +39,11 @@ const char HeaderBelcore[241] = {
 
 // структура параметров рефлектограммы ( текущего измерения)
 TR_PARAM ReflParam;
+// структура параметров рефлектограммы ( from Memory)
+// берем из файла белкор
+TR_PARAM MemReflParam;
+// структура параметров рефлектограммы ( из текущего измерения для востановления)
+TR_PARAM ResetReflParam;
 // структура параметров поддержки JDSU
 JDSU_COM SetJDSU;
 // структура альтернативного имени
@@ -47,6 +52,10 @@ DB_NAME_ENA NameDB;
 TAB_SET CoeffPM;
 // структура настройки рефлектометра ( текущего измерения)
 REFL_SET SettingRefl;
+// структура настройки рефлектометра ( из памяти)
+REFL_SET MemSetRefl;
+// структура настройки рефлектометра ( из установок для востановления)
+REFL_SET ReSetRefl;
 //// структура конфигурации прибора
 CFG_DEV ConfigDevice;
 //// структура пользоваетьских установок
@@ -88,7 +97,7 @@ static volatile BYTE ModeRE = 0; // режим VFL
 static DWORD CurrentBegShiftZone = 0;
 uint8_t NeedFreq=0; // необходимо перезапустить генерацию через ДМА
 
-
+char MsgErrMem[20]="Not Error          \0"; // сообщение об ошибке чтения файла
 static volatile BYTE IndBkLight = 0; // указатель на выбор длительности подсветки
 static volatile unsigned short LogarifmNoise = 65535; // уровень логарифмического шума, установка
 
@@ -1040,6 +1049,47 @@ BYTE GetIndexIM (void) // получение индекса длины Pulse
   return SettingRefl.Index_Im;
 }
 
+// вычисление индекса  длины импульса по его значению
+BYTE CalkIndexIM (uint16_t IM) // получение индекса длины Pulse
+{
+  int i;
+  for(i=0;i<WIDTH_PULSE_NUM;i++)
+  {
+    if(GetWidthPulse(i)>= IM) break;
+  }
+  return i;
+}
+// вычисление индекса  длины линии по  её значению (у нас в метрах)
+BYTE CalkIndexLN (long int LN) // получение индекса длины линии (диапазона)
+{
+  int i;
+  for(i=0;i<LENGTH_LINE_NUM;i++)
+  {
+    if((GetLengthLine(i)*1000)>= LN) break;
+  }
+  return i;
+}
+// вычисление индекса посадочного места по длине волны, по  её значению (nm)
+BYTE CalkIndexSC (long int LW) // получение индекса посадочного места
+{
+  int i;
+  for(i=0;i<LSPLACENUM;i++)
+  {
+        if(ConfigDevice.PlaceLS[i]== LW) break;
+  }
+  return i;
+}
+// вычисление индекса времени усреднения по ее значению (проверяем на первые 4)
+BYTE CalkIndexWRM (uint16_t WRM) // получение индекса длины линии (диапазона)
+{
+  int i;
+  for(i=0;i<4;i++)
+  {
+    if(GetTimeAvrg(i)>= WRM) break;
+  }
+  return i;
+}
+
 void SetIndexIM (BYTE Index) // установка индекса длины Pulse
 {
   // 0 - 4нС
@@ -1345,6 +1395,20 @@ BYTE OffModeRE(void) // выключает красный гдлаз
   ModeRE =0;
  return ModeRE;
  
+}
+
+void InitMemReflSet (void) // инициализация установок рефлектометра полученных из файла
+{
+  
+  MemSetRefl.Index_Ln=0; // индекс значений длины линии в пользовательском режиме
+  MemSetRefl.Index_Im=0; // индекс значений длительности импульса 
+  MemSetRefl.Index_Vrm=0; // индекс значений времени работы 
+  MemSetRefl.Index_Comm=0;  // местоположения курсора в комментариях 
+  MemSetRefl.SW_LW=0;  // признак длинны волны лазера (переключает длину волны лазера)
+  MemSetRefl.K_pr=1.4680; // коэфф преломления 
+  MemSetRefl.SubModeRef = AUTO; // режим рефлектометра
+  MemSetRefl.LogNoise = 65535; // уровень логарифмического шума,
+  MemSetRefl.SetModeLW = 0; // показываем на первую возможную конфигурацию, формируем ее при включении из установленных лазеров
 }
 
 

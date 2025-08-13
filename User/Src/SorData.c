@@ -14,6 +14,7 @@
 
 char* g_pszFileNames[LSPLACENUM]; // массив указателей на строки с именами файлов
 
+uint8_t tempBuffer[256];
 
 #define DEF_REVISION        200
 #define COM_SERV_REVISION   100
@@ -200,8 +201,8 @@ char szTest[100];
 
 #pragma pack(pop)
 
-//static FRESULT f_readCks(FIL* pFile, void* pvBuffer, UINT cBytesToR);
-//static FRESULT f_readDummyCks(FIL* pFile, UINT cBytesToR);
+static FRESULT f_readCks(FIL* pFile, void* pvBuffer, UINT cBytesToR);
+static FRESULT f_readDummyCks(FIL* pFile, UINT cBytesToR);
 
 // отметки времени измерения, сек
 // данный массив должен заполняться значениями в моменты завершения (или начала?)
@@ -214,7 +215,7 @@ const char szBlockGenParams[]  = "GenParams";
 const char szBlockSupParams[]  = "SupParams";
 const char szBlockFixParams[]  = "FxdParams";
 const char szBlockKeyEvents[]  = "KeyEvents";
-//const char szBlockLinkParams[] = "LnkParams";   // пока не используем
+const char szBlockLinkParams[] = "LnkParams";   // пока не используем
 const char szBlockDataPts[]    = "DataPts";
 //const char szBlockSpecPropr[]  = "UserName";    // default, но м.б. и другим
 const char szBlockCksum[]      = "Cksum";
@@ -226,7 +227,7 @@ static struct SBlockInfo  genParamsInfo;
 static struct SBlockInfo  supParamsInfo;
 static struct SBlockInfo  fixParamsInfo;
 static struct SBlockInfo  keyEventsInfo;
-//static SBlockInfo  linkParamsInfo; // не используется
+static struct SBlockInfo  linkParamsInfo; // не используется
 static struct SBlockInfo  dataPtsInfo;
 //static SBlockInfo  specProprInfo;  // не используется
 static struct SBlockInfo  userDefInfo;
@@ -355,33 +356,33 @@ inline FRESULT f_writeWTC(FIL* fp, const void* buff, UINT btw, UINT* bw)
 /* Get a zero-closed string from the file                                */
 /*-----------------------------------------------------------------------*/
 // надо разрешить!!!  Потом
-//// портировано из f_gets()
-//static TCHAR* f_getsz(TCHAR*  buff,  // Pointer to the string buffer to read
-//                      int     len,   // Size of string buffer (characters)
-//                      FIL*    fp)    // Pointer to the file object
-//{
-//  int     n = 0;
-//  TCHAR   c;
-//  TCHAR*  p = buff;
-//
-//  while(n < len - 1)  /* Read characters until buffer gets filled */
-//  {
-//    /* Read a character without conversion */
-//    if(f_readCks(fp, &c, 1) != FR_OK)
-//      break;
-//
-//    n++;
-//
-//    if(c == (TCHAR)0)
-//      break;
-//
-//    *p++ = c;
-//  }
-//
-//  *p = 0;
-//
-//  return n ? buff : 0;      /* When no data read (eof or error), return with error. */
-//}
+// портировано из f_gets()
+static TCHAR* f_getsz(TCHAR*  buff,  // Pointer to the string buffer to read
+                      int     len,   // Size of string buffer (characters)
+                      FIL*    fp)    // Pointer to the file object
+{
+  int     n = 0;
+  TCHAR   c;
+  TCHAR*  p = buff;
+
+  while(n < len - 1)  /* Read characters until buffer gets filled */
+  {
+    /* Read a character without conversion */
+    if(f_readCks(fp, &c, 1) != FR_OK)
+      break;
+
+    n++;
+
+    if(c == (TCHAR)0)
+      break;
+
+    *p++ = c;
+  }
+
+  *p = 0;
+
+  return n ? buff : 0;      /* When no data read (eof or error), return with error. */
+}
 
 // расчёт значений параметров между маркерами
 //int CalcParamsBetweenMarkers(int iPlaceLS)
@@ -635,7 +636,7 @@ static int PrepareSorData(int iPlaceLS, uint16_t* pDataPoints)
   fixParams.sBackscatterCoefficient_dB = (int16_t)ReflParam.BC;; //BC from TR_PARAM ReflParam  DeviceData.h
   fixParams.lNumberOfAverages = SettingRefl.NumAvrag; //NAV 
   //fixParams.usAveragingTime_01sec = g_FileParamInfo.usAveragingTime;  //AT   ???оба значения в [0.1sec]???
-  fixParams.usAveragingTime_01sec = GetTimeAvrg(GetIndexVRM());//AT   время накопления в сек
+  fixParams.usAveragingTime_01sec = GetTimeAvrg(GetIndexVRM())*10;//AT   время накопления в сек
  // fixParams.lAcquisitionRange_100ps = (int32_t)((double)(StatusFile.ValueDS/10000.0)*g_FileParamInfo.iNumPoints);  // AR StatusFile.NumPtsMain
   fixParams.lAcquisitionRange_100ps = Get_AR();  // AR StatusFile.NumPtsMain
   // ARD = диапазон измерений в метрах (у нас так!?) 
@@ -646,7 +647,7 @@ static int PrepareSorData(int iPlaceLS, uint16_t* pDataPoints)
 //#else
 //  fixParams.lAcquisitionRangeDistance = (int32_t)(g_fDistStep * (g_FileParamInfo.iNumPoints - 1) * 10.);    // [0.1m]
 //#endif
-  fixParams.lAcquisitionRangeDistance = (int32_t)(GetLengthLine(GetIndexLN()) * 1000.);    // ARD[0.1m]
+  fixParams.lAcquisitionRangeDistance = (int32_t)(GetLengthLine(GetIndexLN()) * 10000.);    // ARD[0.1m]в десятках см
   fixParams.lFrontPanelOffset_100ps = 0;
   fixParams.usNoiseFloorLevel_dB = 65535;
   fixParams.sNoiseFloorScaleFactor = 1000;
@@ -1307,8 +1308,6 @@ int WriteSorFile(const char* pszFileName, int iPlaceLS, uint16_t* pDataPoints)
 };
 
 //
-// выключим пока чтение!!!
-#if 0
 // чтение из файл и пополнение контрольной суммы
 //
 // pFile        указатель на FIL-структуру
@@ -1361,147 +1360,151 @@ static FRESULT f_readDummyCks(FIL* pFile, UINT cBytesToR)
 
   return res;
 }
+// выключим пока чтение!!!
+
 
 // чтение данных одного события
-int ReadEvent(FIL* pFile, SKeyEvent &rEvent)
-{
-  UINT  cBytesToR;      // кол-во байтов для чтения
-  int   iRes = OTDR_OKAY;
-
-  do  // once
-  {
-    cBytesToR = sizeof(rEvent.sEventNumber);
-    if(f_readCks(pFile, &rEvent.sEventNumber, cBytesToR) != FR_OK)
-    {
-      iRes = OTDR_FILE_READ_ERROR;
-      break;
-    }
-
-    cBytesToR = sizeof(rEvent.lEventPropagationTime);
-    if(f_readCks(pFile, &rEvent.lEventPropagationTime, cBytesToR) != FR_OK)
-    {
-      iRes = OTDR_FILE_READ_ERROR;
-      break;
-    }
-
-    cBytesToR = sizeof(rEvent.sAttenuationCoefficient_dBkm);
-    if(f_readCks(pFile, &rEvent.sAttenuationCoefficient_dBkm, cBytesToR) != FR_OK)
-    {
-      iRes = OTDR_FILE_READ_ERROR;
-      break;
-    }
-
-    cBytesToR = sizeof(rEvent.sEventLoss_dB);
-    if(f_readCks(pFile, &rEvent.sEventLoss_dB, cBytesToR) != FR_OK)
-    {
-      iRes = OTDR_FILE_READ_ERROR;
-      break;
-    }
-
-    cBytesToR = sizeof(rEvent.lEventReflectance_dB);
-    if(f_readCks(pFile, &rEvent.lEventReflectance_dB, cBytesToR) != FR_OK)
-    {
-      iRes = OTDR_FILE_READ_ERROR;
-      break;
-    }
-
-    cBytesToR = sizeof(rEvent.chsEventCode);
-    if(f_readCks(pFile, &rEvent.chsEventCode, cBytesToR) != FR_OK)
-    {
-      iRes = OTDR_FILE_READ_ERROR;
-      break;
-    }
-
-    cBytesToR = sizeof(rEvent.chsLossMeasurementTechnique);
-    if(f_readCks(pFile, &rEvent.chsLossMeasurementTechnique, cBytesToR) != FR_OK)
-    {
-      iRes = OTDR_FILE_READ_ERROR;
-      break;
-    }
-
-    cBytesToR = sizeof(rEvent.lMarkerLocation1);
-    if(f_readCks(pFile, &rEvent.lMarkerLocation1, cBytesToR) != FR_OK)
-    {
-      iRes = OTDR_FILE_READ_ERROR;
-      break;
-    }
-    if(f_readCks(pFile, &rEvent.lMarkerLocation2, cBytesToR) != FR_OK)
-    {
-      iRes = OTDR_FILE_READ_ERROR;
-      break;
-    }
-    if(f_readCks(pFile, &rEvent.lMarkerLocation3, cBytesToR) != FR_OK)
-    {
-      iRes = OTDR_FILE_READ_ERROR;
-      break;
-    }
-    if(f_readCks(pFile, &rEvent.lMarkerLocation4, cBytesToR) != FR_OK)
-    {
-      iRes = OTDR_FILE_READ_ERROR;
-      break;
-    }
-    if(f_readCks(pFile, &rEvent.lMarkerLocation5, cBytesToR) != FR_OK)
-    {
-      iRes = OTDR_FILE_READ_ERROR;
-      break;
-    }
-
-    if(!f_getsz(rEvent.szComment, ArraySize(rEvent.szComment), pFile))
-    {
-      iRes = OTDR_FILE_READ_ERROR;
-      break;
-    }
-  } while(0);
-
-  return iRes;
-}
-
-// чтение структуры данных потерь
-int ReadLossesOfLink(FIL* pFile, SLossesOfLink& rLosses)
-{
-  UINT  cBytesToR;      // кол-во байтов для чтения
-  int   iRes = OTDR_OKAY;
-
-  do  // once
-  {
-    cBytesToR = sizeof(rLosses.lEndToEndLoss);
-    if(f_readCks(pFile, &rLosses.lEndToEndLoss, cBytesToR) != FR_OK)
-    {
-      iRes = OTDR_FILE_READ_ERROR;
-      break;
-    }
-    cBytesToR = sizeof(rLosses.lEndToEndMarkerPos1);
-    if(f_readCks(pFile, &rLosses.lEndToEndMarkerPos1, cBytesToR) != FR_OK)
-    {
-      iRes = OTDR_FILE_READ_ERROR;
-      break;
-    }
-    if(f_readCks(pFile, &rLosses.lEndToEndMarkerPos2, cBytesToR) != FR_OK)
-    {
-      iRes = OTDR_FILE_READ_ERROR;
-      break;
-    }
-    cBytesToR = sizeof(rLosses.uOpticalReturnLoss);
-    if(f_readCks(pFile, &rLosses.uOpticalReturnLoss, cBytesToR) != FR_OK)
-    {
-      iRes = OTDR_FILE_READ_ERROR;
-      break;
-    }
-    cBytesToR = sizeof(rLosses.lReturnLossMarkerPos1);
-    if(f_readCks(pFile, &rLosses.lReturnLossMarkerPos1, cBytesToR) != FR_OK)
-    {
-      iRes = OTDR_FILE_READ_ERROR;
-      break;
-    }
-    if(f_readCks(pFile, &rLosses.lReturnLossMarkerPos2, cBytesToR) != FR_OK)
-    {
-      iRes = OTDR_FILE_READ_ERROR;
-      break;
-    }
-  } while(0);
-
-  return iRes;
-}
+// у нас можно убрать и сделать пустое чтение блоков без заполнения
+// т.к. мы пересчитываем события по данным рефлектограммы
+//int ReadEvent(FIL* pFile, SKeyEvent &rEvent)
+//{
+//  UINT  cBytesToR;      // кол-во байтов для чтения
+//  int   iRes = OTDR_OKAY;
+//
+//  do  // once
+//  {
+//    cBytesToR = sizeof(rEvent.sEventNumber);
+//    if(f_readCks(pFile, &rEvent.sEventNumber, cBytesToR) != FR_OK)
+//    {
+//      iRes = OTDR_FILE_READ_ERROR;
+//      break;
+//    }
+//
+//    cBytesToR = sizeof(rEvent.lEventPropagationTime);
+//    if(f_readCks(pFile, &rEvent.lEventPropagationTime, cBytesToR) != FR_OK)
+//    {
+//      iRes = OTDR_FILE_READ_ERROR;
+//      break;
+//    }
+//
+//    cBytesToR = sizeof(rEvent.sAttenuationCoefficient_dBkm);
+//    if(f_readCks(pFile, &rEvent.sAttenuationCoefficient_dBkm, cBytesToR) != FR_OK)
+//    {
+//      iRes = OTDR_FILE_READ_ERROR;
+//      break;
+//    }
+//
+//    cBytesToR = sizeof(rEvent.sEventLoss_dB);
+//    if(f_readCks(pFile, &rEvent.sEventLoss_dB, cBytesToR) != FR_OK)
+//    {
+//      iRes = OTDR_FILE_READ_ERROR;
+//      break;
+//    }
+//
+//    cBytesToR = sizeof(rEvent.lEventReflectance_dB);
+//    if(f_readCks(pFile, &rEvent.lEventReflectance_dB, cBytesToR) != FR_OK)
+//    {
+//      iRes = OTDR_FILE_READ_ERROR;
+//      break;
+//    }
+//
+//    cBytesToR = sizeof(rEvent.chsEventCode);
+//    if(f_readCks(pFile, &rEvent.chsEventCode, cBytesToR) != FR_OK)
+//    {
+//      iRes = OTDR_FILE_READ_ERROR;
+//      break;
+//    }
+//
+//    cBytesToR = sizeof(rEvent.chsLossMeasurementTechnique);
+//    if(f_readCks(pFile, &rEvent.chsLossMeasurementTechnique, cBytesToR) != FR_OK)
+//    {
+//      iRes = OTDR_FILE_READ_ERROR;
+//      break;
+//    }
+//
+//    cBytesToR = sizeof(rEvent.lMarkerLocation1);
+//    if(f_readCks(pFile, &rEvent.lMarkerLocation1, cBytesToR) != FR_OK)
+//    {
+//      iRes = OTDR_FILE_READ_ERROR;
+//      break;
+//    }
+//    if(f_readCks(pFile, &rEvent.lMarkerLocation2, cBytesToR) != FR_OK)
+//    {
+//      iRes = OTDR_FILE_READ_ERROR;
+//      break;
+//    }
+//    if(f_readCks(pFile, &rEvent.lMarkerLocation3, cBytesToR) != FR_OK)
+//    {
+//      iRes = OTDR_FILE_READ_ERROR;
+//      break;
+//    }
+//    if(f_readCks(pFile, &rEvent.lMarkerLocation4, cBytesToR) != FR_OK)
+//    {
+//      iRes = OTDR_FILE_READ_ERROR;
+//      break;
+//    }
+//    if(f_readCks(pFile, &rEvent.lMarkerLocation5, cBytesToR) != FR_OK)
+//    {
+//      iRes = OTDR_FILE_READ_ERROR;
+//      break;
+//    }
+//
+//    if(!f_getsz(rEvent.szComment, ArraySize(rEvent.szComment), pFile))
+//    {
+//      iRes = OTDR_FILE_READ_ERROR;
+//      break;
+//    }
+//  } while(0);
+//
+//  return iRes;
+//}
+//
+//// чтение структуры данных потерь
+//int ReadLossesOfLink(FIL* pFile, SLossesOfLink& rLosses)
+//{
+//  UINT  cBytesToR;      // кол-во байтов для чтения
+//  int   iRes = OTDR_OKAY;
+//
+//  do  // once
+//  {
+//    cBytesToR = sizeof(rLosses.lEndToEndLoss);
+//    if(f_readCks(pFile, &rLosses.lEndToEndLoss, cBytesToR) != FR_OK)
+//    {
+//      iRes = OTDR_FILE_READ_ERROR;
+//      break;
+//    }
+//    cBytesToR = sizeof(rLosses.lEndToEndMarkerPos1);
+//    if(f_readCks(pFile, &rLosses.lEndToEndMarkerPos1, cBytesToR) != FR_OK)
+//    {
+//      iRes = OTDR_FILE_READ_ERROR;
+//      break;
+//    }
+//    if(f_readCks(pFile, &rLosses.lEndToEndMarkerPos2, cBytesToR) != FR_OK)
+//    {
+//      iRes = OTDR_FILE_READ_ERROR;
+//      break;
+//    }
+//    cBytesToR = sizeof(rLosses.uOpticalReturnLoss);
+//    if(f_readCks(pFile, &rLosses.uOpticalReturnLoss, cBytesToR) != FR_OK)
+//    {
+//      iRes = OTDR_FILE_READ_ERROR;
+//      break;
+//    }
+//    cBytesToR = sizeof(rLosses.lReturnLossMarkerPos1);
+//    if(f_readCks(pFile, &rLosses.lReturnLossMarkerPos1, cBytesToR) != FR_OK)
+//    {
+//      iRes = OTDR_FILE_READ_ERROR;
+//      break;
+//    }
+//    if(f_readCks(pFile, &rLosses.lReturnLossMarkerPos2, cBytesToR) != FR_OK)
+//    {
+//      iRes = OTDR_FILE_READ_ERROR;
+//      break;
+//    }
+//  } while(0);
+//
+//  return iRes;
+//}
 
 //
 // чтение Sor-файла
@@ -1513,15 +1516,15 @@ int ReadLossesOfLink(FIL* pFile, SLossesOfLink& rLosses)
 int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsMax)
 {
   extern int16_t  g_aCurrEvent[LSPLACENUM];
-  SKeyEvents  &keyEvents = g_keyEvents[0];
+  //SKeyEvents  &keyEvents = g_keyEvents[0];
   FIL         file;           // структура данных файла
   FIL*        pFile = &file;  // указатель для краткости
   UINT        cBytesToR;      // кол-во байтов для чтения
   int         iRes = OTDR_OKAY;
   FRESULT     fRes;
 
-  keyEvents.sNumberOfEvents = 0;
-  g_aCurrEvent[0] = 0;
+  //keyEvents.sNumberOfEvents = 0;
+  //g_aCurrEvent[0] = 0;
 
   do  // Once
   {
@@ -1536,13 +1539,13 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
 
     // ключевая строка
     cBytesToR = sizeof(szBlockMap);
-
+    // считываем мар блок
     if(f_readCks(pFile, g_szBuffer, cBytesToR) != FR_OK)
     {
       iRes = OTDR_FILE_READ_ERROR;
       break;
     }
-
+    // сверяем что строка равна "Map"
     if(memcmp(g_szBuffer, szBlockMap, cBytesToR))
     {
       iRes = OTDR_FILE_STRUCT_ERROR;  // It is not sor-file
@@ -1550,92 +1553,100 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
     }
 
     cBytesToR = sizeof(map);
-
+    // считываем содержимое мар блока (1)
     if(f_readCks(pFile, &map, cBytesToR) != FR_OK)
     {
       iRes = OTDR_FILE_READ_ERROR;
       break;
     }
-
+    // разбираем содержимое, проверяем версию
     if(map.info.revision < 200 || 299 < map.info.revision)
     {
       iRes = OTDR_FILE_SYNTAX_ERROR;  // Unknown version of sor-file
       break;
     }
-
+    // у наших файлов число блоков ограничено, то есть 
+    // 7 -если события и 6- без событий с блоком Map 
+    // первый блок GenParams - 
     cBytesToR = sizeof(szBlockGenParams);
-
+    // считываем название блока "GenParams" (2 блок)
     if(f_readCks(pFile, g_szBuffer, cBytesToR) != FR_OK)
     {
       iRes = OTDR_FILE_READ_ERROR;
       break;
     }
-
+    // сравниваем название
     if(memcmp(g_szBuffer, szBlockGenParams, cBytesToR))
     {
       iRes = OTDR_FILE_STRUCT_ERROR;  // It is not sor-file
       break;
     }
-
-    cBytesToR = sizeof(SBlockInfo);
-
+    // 
+    cBytesToR = sizeof(struct SBlockInfo);
+    // считываем блок инфо - версию и размер (2)
     if(f_readCks(pFile, &genParamsInfo, cBytesToR) != FR_OK)
     {
       iRes = OTDR_FILE_READ_ERROR;
       break;
     }
-
+     // здесь бы получить размер блока GenParams для расчета "прыжка"?
     cBytesToR = sizeof(szBlockSupParams);
-
+    
+    // считываем название блока "SupParams" (3 блок)
     if(f_readCks(pFile, g_szBuffer, cBytesToR) != FR_OK)
     {
       iRes = OTDR_FILE_READ_ERROR;
       break;
     }
-
+    // сравниваем название
     if(memcmp(g_szBuffer, szBlockSupParams, cBytesToR))
     {
       iRes = OTDR_FILE_STRUCT_ERROR;
       break;
     }
 
-    cBytesToR = sizeof(SBlockInfo);
-
+    cBytesToR = sizeof(struct SBlockInfo);
+    // считываем блок инфо - версию и размер (3)
     if(f_readCks(pFile, &supParamsInfo, cBytesToR) != FR_OK)
     {
       iRes = OTDR_FILE_READ_ERROR;
       break;
     }
+     // здесь бы получить размер блока GenParams для расчета "прыжка"?
 
     cBytesToR = sizeof(szBlockFixParams);
-
+    // считываем название блока "FixParams" (4 блок)
     if(f_readCks(pFile, g_szBuffer, cBytesToR) != FR_OK)
     {
       iRes = OTDR_FILE_READ_ERROR;
       break;
     }
-
+    // сравниваем название
     if(memcmp(g_szBuffer, szBlockFixParams, cBytesToR))
     {
       iRes = OTDR_FILE_STRUCT_ERROR;
       break;
     }
 
-    cBytesToR = sizeof(SBlockInfo);
-
+    cBytesToR = sizeof(struct SBlockInfo);
+    // считываем блок инфо - версию и размер (4)
     if(f_readCks(pFile, &fixParamsInfo, cBytesToR) != FR_OK)
     {
       iRes = OTDR_FILE_READ_ERROR;
       break;
     }
-
+    // вроде просто считываем 256 байт, в буфер
+    // или пока не встретим 0 ()
+    // если встретили 0 то считали в буффер только символы строки
+    // с ее размером а не все 256, даже если это другой блок...
+    // другое название
     // необязательный блок, когда имеется DataPts
     if(!f_getsz(g_szBuffer, ArraySize(g_szBuffer), pFile))
     {
       iRes = OTDR_FILE_READ_ERROR;
       break;
     }
-
+    // проверяем не заголовок ли это блока "KeyEvents"
     if(memcmp(g_szBuffer, szBlockKeyEvents, sizeof(szBlockKeyEvents)))
     {
       // это какой-то другой блок; ниже выясняется, какой
@@ -1643,15 +1654,15 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
       keyEventsInfo.size = 0;
     }
     else
-    {
-      cBytesToR = sizeof(SBlockInfo);
-
+    { // это объявление блока "KeyEvents" (блок 5 из 7)
+      cBytesToR = sizeof(struct SBlockInfo);
+    // считываем блок инфо - версию и размер 
       if(f_readCks(pFile, &keyEventsInfo, cBytesToR) != FR_OK)
       {
         iRes = OTDR_FILE_READ_ERROR;
         break;
       }
-
+      // опять считываем блок до следующего нуля(0) ,
       // чтение имени следующего блока
       if(!f_getsz(g_szBuffer, ArraySize(g_szBuffer), pFile))
       {
@@ -1659,8 +1670,10 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
         break;
       }
     }
-
-    // необязательный блок
+    // я этот блок исключил так как его не должно быть в наших файлах
+    // можно вообще его исключить...
+    // проверяем что это 
+    // необязательный блок  "LnkParams";   // пока не используем
     if(memcmp(g_szBuffer, szBlockLinkParams, sizeof(szBlockLinkParams)))
     {
       // это какой-то другой блок; ниже выясняется, какой
@@ -1668,8 +1681,8 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
       linkParamsInfo.size = 0;
     }
     else
-    {
-      cBytesToR = sizeof(SBlockInfo);
+    { // если это "LnkParams" считываем его
+      cBytesToR = sizeof(struct SBlockInfo);
 
       if(f_readCks(pFile, &linkParamsInfo, cBytesToR) != FR_OK)
       {
@@ -1700,7 +1713,7 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
     }
     else
     {
-      cBytesToR = sizeof(SBlockInfo);
+      cBytesToR = sizeof(struct SBlockInfo);
 
       if(f_readCks(pFile, &dataPtsInfo, cBytesToR) != FR_OK)
       {
@@ -1718,56 +1731,56 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
 
     // перед BlockCksum могут присутствовать дополнительные блоки, заданные производителем
     // ------------------------------------------------------------------
-
-    // необязательный блок ComServ01
-    if(memcmp(g_szBuffer, szBlockComServ01, sizeof(szBlockComServ01)))
-    {
-      // это какой-то другой блок; ниже выясняется, какой
-      comServ01Info.revision = DEF_REVISION;
-      comServ01Info.size = 0;
-    }
-    else
-    {
-      cBytesToR = sizeof(SBlockInfo);
-
-      if(f_readCks(pFile, &comServ01Info, cBytesToR) != FR_OK)
-      {
-        iRes = OTDR_FILE_READ_ERROR;
-        break;
-      }
-
-      // чтение имени следующего блока
-      if(!f_getsz(g_szBuffer, ArraySize(g_szBuffer), pFile))
-      {
-        iRes = OTDR_FILE_READ_ERROR;
-        break;
-      }
-    }
-
-    // необязательный блок ComServ02
-    if(memcmp(g_szBuffer, szBlockComServ02, sizeof(szBlockComServ02)))
-    {
-      // это какой-то другой блок; ниже выясняется, какой
-      comServ02Info.revision = DEF_REVISION;
-      comServ02Info.size = 0;
-    }
-    else
-    {
-      cBytesToR = sizeof(SBlockInfo);
-
-      if(f_readCks(pFile, &comServ02Info, cBytesToR) != FR_OK)
-      {
-        iRes = OTDR_FILE_READ_ERROR;
-        break;
-      }
-
-      // чтение имени следующего блока
-      if(!f_getsz(g_szBuffer, ArraySize(g_szBuffer), pFile))
-      {
-        iRes = OTDR_FILE_READ_ERROR;
-        break;
-      }
-    }
+//
+//    // необязательный блок ComServ01
+//    if(memcmp(g_szBuffer, szBlockComServ01, sizeof(szBlockComServ01)))
+//    {
+//      // это какой-то другой блок; ниже выясняется, какой
+//      comServ01Info.revision = DEF_REVISION;
+//      comServ01Info.size = 0;
+//    }
+//    else
+//    {
+//      cBytesToR = sizeof(SBlockInfo);
+//
+//      if(f_readCks(pFile, &comServ01Info, cBytesToR) != FR_OK)
+//      {
+//        iRes = OTDR_FILE_READ_ERROR;
+//        break;
+//      }
+//
+//      // чтение имени следующего блока
+//      if(!f_getsz(g_szBuffer, ArraySize(g_szBuffer), pFile))
+//      {
+//        iRes = OTDR_FILE_READ_ERROR;
+//        break;
+//      }
+//    }
+//
+//    // необязательный блок ComServ02
+//    if(memcmp(g_szBuffer, szBlockComServ02, sizeof(szBlockComServ02)))
+//    {
+//      // это какой-то другой блок; ниже выясняется, какой
+//      comServ02Info.revision = DEF_REVISION;
+//      comServ02Info.size = 0;
+//    }
+//    else
+//    {
+//      cBytesToR = sizeof(SBlockInfo);
+//
+//      if(f_readCks(pFile, &comServ02Info, cBytesToR) != FR_OK)
+//      {
+//        iRes = OTDR_FILE_READ_ERROR;
+//        break;
+//      }
+//
+//      // чтение имени следующего блока
+//      if(!f_getsz(g_szBuffer, ArraySize(g_szBuffer), pFile))
+//      {
+//        iRes = OTDR_FILE_READ_ERROR;
+//        break;
+//      }
+//    }
 
     // инф-ция, касающаяся определённых пользователем блоков
     s_szFirstBlockUserDef[0] = 0;
@@ -1777,7 +1790,7 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
     {
       if(memcmp(g_szBuffer, szBlockCksum, sizeof(szBlockCksum)) == 0)
       {
-        cBytesToR = sizeof(SBlockInfo);
+        cBytesToR = sizeof(struct SBlockInfo);
 
         if(f_readCks(pFile, &chksumInfo, cBytesToR) != FR_OK)
         {
@@ -1792,7 +1805,7 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
         if(s_uUserDefBlocksSize == 0)
           strcpy(s_szFirstBlockUserDef, g_szBuffer);
 
-        cBytesToR = sizeof(SBlockInfo);
+        cBytesToR = sizeof(struct SBlockInfo);
 
         if(f_readCks(pFile, &userDefInfo, cBytesToR) != FR_OK)
         {
@@ -1810,12 +1823,13 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
         }
       }
     }
-
+    // вдруг какие-то ошибки...
     if(iRes != OTDR_OKAY)
       break;
-
+    // получаем место где стоим, это должно быть конец таблицы содержимого белкора
     DWORD dwFilePos = f_tell(pFile);
-
+    // если положение меньше чем объявленный размер блока Map, то делаем пустое считывание
+    //до размера с подсчетом контрольной суммы. 
     if(dwFilePos < map.info.size)
     {
       if(f_readDummyCks(pFile, (UINT)(map.info.size - dwFilePos)) != FR_OK)  // чтение для подсчёта CRC
@@ -1824,7 +1838,7 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
         break;
       }
     }
-
+    // Считываем заголовок GenParams
     cBytesToR = sizeof(szBlockGenParams);
 
     if(f_readCks(pFile, g_szBuffer, cBytesToR) != FR_OK)
@@ -1832,15 +1846,15 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
       iRes = OTDR_FILE_READ_ERROR;
       break;
     }
-
+    // проверяем его на совпадение
     if(memcmp(g_szBuffer, szBlockGenParams, cBytesToR))
     {
       iRes = OTDR_FILE_STRUCT_ERROR;
       break;
     }
-
+    // далее можно разобрать его содержимое по полям или считать в "пустоту" весь блок
     cBytesToR = sizeof(genParams.achLanguageCode);
-
+    // считываем LC
     if(f_readCks(pFile, genParams.achLanguageCode, cBytesToR) != FR_OK)
     {
       iRes = OTDR_FILE_READ_ERROR;
@@ -1852,7 +1866,7 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
 
     *pchBuffer = 0;
     genParams.pszCableId = pchBuffer;
-
+    // CID
     if(!f_getsz(pchBuffer, BUFFER_SIZE, pFile))
     {
       iRes = OTDR_FILE_READ_ERROR;
@@ -1862,7 +1876,7 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
     pchBuffer += strlen(pchBuffer) + 1;
     *pchBuffer = 0;
     genParams.pszFiberId = pchBuffer;
-
+    //FID
     if(!f_getsz(pchBuffer, BUFFER_SIZE, pFile))
     {
       iRes = OTDR_FILE_READ_ERROR;
@@ -1870,7 +1884,7 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
     }
 
     cBytesToR = sizeof(genParams.sFiberType) + sizeof(genParams.sNominalWavelength_nm);
-
+    // считываем два Short Int FT, NW
     if(f_readCks(pFile, &genParams.sFiberType, cBytesToR) != FR_OK)
     {
       iRes = OTDR_FILE_READ_ERROR;
@@ -1880,7 +1894,7 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
     pchBuffer += strlen(pchBuffer) + 1;
     *pchBuffer = 0;
     genParams.pszOriginatingLocation = pchBuffer;
-
+    // get OL
     if(!f_getsz(pchBuffer, BUFFER_SIZE, pFile))
     {
       iRes = OTDR_FILE_READ_ERROR;
@@ -1890,7 +1904,7 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
     pchBuffer += strlen(pchBuffer) + 1;
     *pchBuffer = 0;
     genParams.pszTerminatingLocation = pchBuffer;
-
+    // get TL
     if(!f_getsz(pchBuffer, BUFFER_SIZE, pFile))
     {
       iRes = OTDR_FILE_READ_ERROR;
@@ -1900,28 +1914,28 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
     pchBuffer += strlen(pchBuffer) + 1;
     *pchBuffer = 0;
     genParams.pszCableCode = pchBuffer;
-
+    // get CCD
     if(!f_getsz(pchBuffer, BUFFER_SIZE, pFile))
     {
       iRes = OTDR_FILE_READ_ERROR;
       break;
     }
-
+    // подготавливаемся к считыванию 10 байт = 2+4+4
     cBytesToR =
       sizeof(genParams.achCurrentDataFlag) +
       sizeof(genParams.lUserOffset_100ps) +
       sizeof(genParams.ulUserOffsetDistance);
-
+    // считываем CDF, UO,  UOD
     if(f_readCks(pFile, &genParams.achCurrentDataFlag, cBytesToR) != FR_OK)
     {
       iRes = OTDR_FILE_READ_ERROR;
       break;
     }
-
+    
     pchBuffer += strlen(pchBuffer) + 1;
     *pchBuffer = 0;
     genParams.pszOperator = pchBuffer;
-
+     // get OP (string)
     if(!f_getsz(pchBuffer, BUFFER_SIZE, pFile))
     {
       iRes = OTDR_FILE_READ_ERROR;
@@ -1931,7 +1945,7 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
     pchBuffer += strlen(pchBuffer) + 1;
     *pchBuffer = 0;
     genParams.pszComment = pchBuffer;
-
+    // get CMT - комментарий который можно отобразить!
     if(!f_getsz(pchBuffer, BUFFER_SIZE, pFile))
     {
       iRes = OTDR_FILE_READ_ERROR;
@@ -1940,13 +1954,13 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
 
     // блок SupParams
     cBytesToR = sizeof(szBlockSupParams);
-
+    
     if(f_readCks(pFile, g_szBuffer, cBytesToR) != FR_OK)
     {
       iRes = OTDR_FILE_READ_ERROR;
       break;
     }
-
+    // совпадение
     if(memcmp(g_szBuffer, szBlockSupParams, cBytesToR))
     {
       iRes = OTDR_FILE_STRUCT_ERROR;
@@ -1956,7 +1970,7 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
     pchBuffer += strlen(pchBuffer) + 1;
     *pchBuffer = 0;
     supParams.pszSupplierName = pchBuffer;
-
+    // get SN
     if(!f_getsz(pchBuffer, BUFFER_SIZE, pFile))
     {
       iRes = OTDR_FILE_READ_ERROR;
@@ -1966,7 +1980,7 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
     pchBuffer += strlen(pchBuffer) + 1;
     *pchBuffer = 0;
     supParams.pszOTDRMainframeID = pchBuffer;
-
+    // get MFID
     if(!f_getsz(pchBuffer, BUFFER_SIZE, pFile))
     {
       iRes = OTDR_FILE_READ_ERROR;
@@ -1976,7 +1990,7 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
     pchBuffer += strlen(pchBuffer) + 1;
     *pchBuffer = 0;
     supParams.pszOTDRMainframeSN = pchBuffer;
-
+    // get OTDR
     if(!f_getsz(pchBuffer, BUFFER_SIZE, pFile))
     {
       iRes = OTDR_FILE_READ_ERROR;
@@ -1986,7 +2000,7 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
     pchBuffer += strlen(pchBuffer) + 1;
     *pchBuffer = 0;
     supParams.pszOpticalModuleID = pchBuffer;
-
+    // get OMID
     if(!f_getsz(pchBuffer, BUFFER_SIZE, pFile))
     {
       iRes = OTDR_FILE_READ_ERROR;
@@ -1996,7 +2010,7 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
     pchBuffer += strlen(pchBuffer) + 1;
     *pchBuffer = 0;
     supParams.pszOpticalModuleSN = pchBuffer;
-
+    // get OMSN
     if(!f_getsz(pchBuffer, BUFFER_SIZE, pFile))
     {
       iRes = OTDR_FILE_READ_ERROR;
@@ -2006,7 +2020,7 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
     pchBuffer += strlen(pchBuffer) + 1;
     *pchBuffer = 0;
     supParams.pszSoftwareRevision = pchBuffer;
-
+    // get SR
     if(!f_getsz(pchBuffer, BUFFER_SIZE, pFile))
     {
       iRes = OTDR_FILE_READ_ERROR;
@@ -2016,7 +2030,7 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
     pchBuffer += strlen(pchBuffer) + 1;
     *pchBuffer = 0;
     supParams.pszOther = pchBuffer;
-
+    // get OT
     if(!f_getsz(pchBuffer, BUFFER_SIZE, pFile))
     {
       iRes = OTDR_FILE_READ_ERROR;
@@ -2031,13 +2045,14 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
       iRes = OTDR_FILE_READ_ERROR;
       break;
     }
-
+    // совпадение
     if(memcmp(g_szBuffer, szBlockFixParams, cBytesToR))
     {
       iRes = OTDR_FILE_STRUCT_ERROR;
       break;
     }
-
+    // подготавливаем считывание блока данных 18 байт
+    // DTS, UD, AW, AO, AOD, TPW
     cBytesToR =
       sizeof(fixParams.ulDateTimeStamp) +
       sizeof(fixParams.achUnitsOfDistance) +
@@ -2045,7 +2060,7 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
       sizeof(fixParams.lAcquisitionOffset_100ps) +
       sizeof(fixParams.ulAcquisitionOffsetDistance) +
       sizeof(fixParams.sTotalNumberOfPulseWidthUsed);
-
+    // get: DTS, UD, AW, AO, AOD, TPW
     if(f_readCks(pFile, &fixParams.ulDateTimeStamp, cBytesToR) != FR_OK)
     {
       iRes = OTDR_FILE_READ_ERROR;
@@ -2104,35 +2119,39 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
 #else
     // по одному значению параметров для единственной ширины импульса
     // fixParams.sTotalNumberOfPulseWidthUsed д.б. =1
+    //PWU, DS, NPPW
     cBytesToR =
       sizeof(fixParams.sPulseWidthUsed_ns) +
       sizeof(fixParams.lDataSpacing_100ps) +
       sizeof(fixParams.lNumberOfDataPoints);
-
+    // get PWU, DS, NPPW
     if(f_readCks(pFile, &fixParams.sPulseWidthUsed_ns, cBytesToR) != FR_OK)
     {
       iRes = OTDR_FILE_READ_ERROR;
       break;
     }
 #endif
-    g_FileParamInfo.sPulseW = fixParams.sPulseWidthUsed_ns;
-
+    
+    //g_FileParamInfo.sPulseW = fixParams.sPulseWidthUsed_ns;
+    
+    // остальные поля FixParams
+    // GI, BC, NAV, AT, AR, ARD, FPO, NF .. WCi
     cBytesToR =
-      sizeof(fixParams.lGroupIndex) +
-      sizeof(fixParams.sBackscatterCoefficient_dB) +
-      sizeof(fixParams.lNumberOfAverages) +
-      sizeof(fixParams.usAveragingTime_01sec) +
-      sizeof(fixParams.lAcquisitionRange_100ps) +
-      sizeof(fixParams.lAcquisitionRangeDistance) +
-      sizeof(fixParams.lFrontPanelOffset_100ps) +
-      sizeof(fixParams.usNoiseFloorLevel_dB) +
-      sizeof(fixParams.sNoiseFloorScaleFactor) +
-      sizeof(fixParams.usPowerOffsetFirstPoint_dB) +
-      sizeof(fixParams.usLossThreshold_dB) +
-      sizeof(fixParams.usReflectanceThreshold_dB) +
-      sizeof(fixParams.usEndOfFiberThreshold_dB) +
-      sizeof(fixParams.achTraceType) +
-      4 * sizeof(fixParams.lWinUpperLeftX);
+      sizeof(fixParams.lGroupIndex) + //GI
+      sizeof(fixParams.sBackscatterCoefficient_dB) + //BC
+      sizeof(fixParams.lNumberOfAverages) +  //NAV
+      sizeof(fixParams.usAveragingTime_01sec) +  //AT
+      sizeof(fixParams.lAcquisitionRange_100ps) + //AR
+      sizeof(fixParams.lAcquisitionRangeDistance) +  //ARD
+      sizeof(fixParams.lFrontPanelOffset_100ps) +  //FPO
+      sizeof(fixParams.usNoiseFloorLevel_dB) +  //NF
+      sizeof(fixParams.sNoiseFloorScaleFactor) +  //NFSF
+      sizeof(fixParams.usPowerOffsetFirstPoint_dB) + //PO
+      sizeof(fixParams.usLossThreshold_dB) +   //LT
+      sizeof(fixParams.usReflectanceThreshold_dB) +  //RT
+      sizeof(fixParams.usEndOfFiberThreshold_dB) +   //ET
+      sizeof(fixParams.achTraceType) +  //TT
+      4 * sizeof(fixParams.lWinUpperLeftX); //WC1, WC2, WC3, vWC4
 
     if(f_readCks(pFile, &fixParams.lGroupIndex, cBytesToR) != FR_OK)
     {
@@ -2143,40 +2162,46 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
     // блок KeyEvents (может отсутствовать)
     if(keyEventsInfo.size)
     {
-      // чтение g_keyEvents и aKeyEvent[iPlaceLS][i], если имеются события
-      cBytesToR = sizeof(szBlockKeyEvents);
-
-      if(f_readCks(pFile, g_szBuffer, cBytesToR) != FR_OK)
+            if(f_readDummyCks(pFile, keyEventsInfo.size) != FR_OK)  // пополняем CRC
       {
         iRes = OTDR_FILE_READ_ERROR;
         break;
       }
 
-      if(memcmp(g_szBuffer, szBlockKeyEvents, cBytesToR))
-      {
-        iRes = OTDR_FILE_STRUCT_ERROR;
-        break;
-      }
-
-      cBytesToR = sizeof(keyEvents.sNumberOfEvents);
-
-      if(f_readCks(pFile, &keyEvents.sNumberOfEvents, cBytesToR) != FR_OK)
-      {
-        iRes = OTDR_FILE_READ_ERROR;
-        break;
-      }
-
-      for(int16_t i = 0; i < keyEvents.sNumberOfEvents; ++i)
-      {
-        if((iRes = ReadEvent(pFile, keyEvents.aEvent[i])) != OTDR_OKAY)
-          break;
-      }
-
-      if(iRes != OTDR_OKAY)
-        break;
-
-      if((iRes = ReadLossesOfLink(pFile, keyEvents)) != OTDR_OKAY)
-        break;
+//      // чтение g_keyEvents и aKeyEvent[iPlaceLS][i], если имеются события
+//      cBytesToR = sizeof(szBlockKeyEvents);
+//
+//      if(f_readCks(pFile, g_szBuffer, cBytesToR) != FR_OK)
+//      {
+//        iRes = OTDR_FILE_READ_ERROR;
+//        break;
+//      }
+//
+//      if(memcmp(g_szBuffer, szBlockKeyEvents, cBytesToR))
+//      {
+//        iRes = OTDR_FILE_STRUCT_ERROR;
+//        break;
+//      }
+//      // заголовок блока прочитан
+//      cBytesToR = sizeof(keyEvents.sNumberOfEvents);
+//
+//      if(f_readCks(pFile, &keyEvents.sNumberOfEvents, cBytesToR) != FR_OK)
+//      {
+//        iRes = OTDR_FILE_READ_ERROR;
+//        break;
+//      }
+//
+//      for(int16_t i = 0; i < keyEvents.sNumberOfEvents; ++i)
+//      {
+//        if((iRes = ReadEvent(pFile, keyEvents.aEvent[i])) != OTDR_OKAY)
+//          break;
+//      }
+//
+//      if(iRes != OTDR_OKAY)
+//        break;
+//
+//      if((iRes = ReadLossesOfLink(pFile, keyEvents)) != OTDR_OKAY)
+//        break;
     }
 
     if(linkParamsInfo.size)
@@ -2224,16 +2249,16 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
         break;
       }
 
-      dataPts.pDataPoints = pDataPoints;
+      dataPts.pDataPoints = pDataPoints; // указалка на наш массив
 
-      if(dataPts.lNumPointsUsingScaleFactor > nPointsMax)
+      if(dataPts.lNumPointsUsingScaleFactor > nPointsMax) // проверка на параметр превышения размера получаемых данных
       {
         iRes = OTDR_OUT_OF_MEMORY;
         break;
       }
 
       cBytesToR = dataPts.lNumPointsUsingScaleFactor * sizeof(*dataPts.pDataPoints);
-
+      // считывание данных в наш массив (LogData)
       if(f_readCks(pFile, dataPts.pDataPoints, cBytesToR) != FR_OK)
       {
         iRes = OTDR_FILE_READ_ERROR;
@@ -2246,102 +2271,103 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
       break;
     }
 
-    if(comServ01Info.size)
-    {
-      cBytesToR = sizeof(szBlockComServ01);
-
-      if(f_readCks(pFile, g_szBuffer, cBytesToR) != FR_OK)
-      {
-        iRes = OTDR_FILE_READ_ERROR;
-        break;
-      }
-
-      if(memcmp(g_szBuffer, szBlockComServ01, cBytesToR))
-      {
-        iRes = OTDR_FILE_STRUCT_ERROR;
-        break;
-      }
-
-      cBytesToR = sizeof(comServ01);
-
-      if(f_readCks(pFile, &comServ01, cBytesToR) != FR_OK)
-      {
-        iRes = OTDR_FILE_READ_ERROR;
-        break;
-      }
-    }
-
-    keyEvents.fPrimaryLenOfLink = 0.;
-
-    SLineWithCords& lineWithCords = g_lineWithCords[0];
-    SKeyEvent&      launchEvent = lineWithCords.launchEvent;
-    SKeyEvent&      tailEvent = lineWithCords.tailEvent;
-
-    if(comServ02Info.size)
-    {
-      cBytesToR = sizeof(szBlockComServ02);
-
-      if(f_readCks(pFile, g_szBuffer, cBytesToR) != FR_OK)
-      {
-        iRes = OTDR_FILE_READ_ERROR;
-        break;
-      }
-
-      if(memcmp(g_szBuffer, szBlockComServ02, cBytesToR))
-      {
-        iRes = OTDR_FILE_STRUCT_ERROR;
-        break;
-      }
-
-      cBytesToR = sizeof(comServ02);
-
-      if(f_readCks(pFile, &comServ02, cBytesToR) != FR_OK)
-      {
-        iRes = OTDR_FILE_READ_ERROR;
-        break;
-      }
-
-      if(keyEvents.sNumberOfEvents)
-        keyEvents.fPrimaryLenOfLink = comServ02.lPrimaryLenOfLink_cm * 0.01;
-
-      if(comServ02.lLaunchCordLen_cm)
-      {
-        if((iRes = ReadEvent(pFile, lineWithCords.launchEvent)) != OTDR_OKAY)
-          break;
-      }
-      else
-      {
-        // "затираем" содержимое структуры
-        memset(&launchEvent, 0, sizeof(launchEvent));
-        launchEvent.szComment[0] = ' '; // формирование строки по-умолчанию " \0"
-      }
-
-      if(comServ02.lTailCordLen_cm)
-      {
-        if((iRes = ReadEvent(pFile, lineWithCords.tailEvent)) != OTDR_OKAY)
-          break;
-      }
-      else
-      {
-        // "затираем" содержимое структуры
-        memset(&tailEvent, 0, sizeof(tailEvent));
-        tailEvent.szComment[0] = ' '; // формирование строки по-умолчанию " \0"
-      }
-
-      if((iRes = ReadLossesOfLink(pFile, lineWithCords)) != OTDR_OKAY)
-        break;
-    }
-    else
-    {
-      // обнуление содержимого структур данных событий-концов катушек
-      memset(&launchEvent, 0, sizeof(launchEvent));
-      launchEvent.szComment[0] = ' ';
-      memset(&tailEvent, 0, sizeof(tailEvent));
-      tailEvent.szComment[0] = ' ';
-
-      // Note: используется стандартное преобразование указателей с производного на базовый класс
-      memset(static_cast<SLossesOfLink*>(&lineWithCords), 0, sizeof(SLossesOfLink));
-    }
+// попробуем выключить за ненадобностью...
+//    if(comServ01Info.size)
+//    {
+//      cBytesToR = sizeof(szBlockComServ01);
+//
+//      if(f_readCks(pFile, g_szBuffer, cBytesToR) != FR_OK)
+//      {
+//        iRes = OTDR_FILE_READ_ERROR;
+//        break;
+//      }
+//
+//      if(memcmp(g_szBuffer, szBlockComServ01, cBytesToR))
+//      {
+//        iRes = OTDR_FILE_STRUCT_ERROR;
+//        break;
+//      }
+//
+//      cBytesToR = sizeof(comServ01);
+//
+//      if(f_readCks(pFile, &comServ01, cBytesToR) != FR_OK)
+//      {
+//        iRes = OTDR_FILE_READ_ERROR;
+//        break;
+//      }
+//    }
+//
+//    keyEvents.fPrimaryLenOfLink = 0.;
+//
+//    SLineWithCords& lineWithCords = g_lineWithCords[0];
+//    SKeyEvent&      launchEvent = lineWithCords.launchEvent;
+//    SKeyEvent&      tailEvent = lineWithCords.tailEvent;
+//
+//    if(comServ02Info.size)
+//    {
+//      cBytesToR = sizeof(szBlockComServ02);
+//
+//      if(f_readCks(pFile, g_szBuffer, cBytesToR) != FR_OK)
+//      {
+//        iRes = OTDR_FILE_READ_ERROR;
+//        break;
+//      }
+//
+//      if(memcmp(g_szBuffer, szBlockComServ02, cBytesToR))
+//      {
+//        iRes = OTDR_FILE_STRUCT_ERROR;
+//        break;
+//      }
+//
+//      cBytesToR = sizeof(comServ02);
+//
+//      if(f_readCks(pFile, &comServ02, cBytesToR) != FR_OK)
+//      {
+//        iRes = OTDR_FILE_READ_ERROR;
+//        break;
+//      }
+//
+//      if(keyEvents.sNumberOfEvents)
+//        keyEvents.fPrimaryLenOfLink = comServ02.lPrimaryLenOfLink_cm * 0.01;
+//
+//      if(comServ02.lLaunchCordLen_cm)
+//      {
+//        if((iRes = ReadEvent(pFile, lineWithCords.launchEvent)) != OTDR_OKAY)
+//          break;
+//      }
+//      else
+//      {
+//        // "затираем" содержимое структуры
+//        memset(&launchEvent, 0, sizeof(launchEvent));
+//        launchEvent.szComment[0] = ' '; // формирование строки по-умолчанию " \0"
+//      }
+//
+//      if(comServ02.lTailCordLen_cm)
+//      {
+//        if((iRes = ReadEvent(pFile, lineWithCords.tailEvent)) != OTDR_OKAY)
+//          break;
+//      }
+//      else
+//      {
+//        // "затираем" содержимое структуры
+//        memset(&tailEvent, 0, sizeof(tailEvent));
+//        tailEvent.szComment[0] = ' '; // формирование строки по-умолчанию " \0"
+//      }
+//
+//      if((iRes = ReadLossesOfLink(pFile, lineWithCords)) != OTDR_OKAY)
+//        break;
+//    }
+//    else
+//    {
+//      // обнуление содержимого структур данных событий-концов катушек
+//      memset(&launchEvent, 0, sizeof(launchEvent));
+//      launchEvent.szComment[0] = ' ';
+//      memset(&tailEvent, 0, sizeof(tailEvent));
+//      tailEvent.szComment[0] = ' ';
+//
+//      // Note: используется стандартное преобразование указателей с производного на базовый класс
+//      memset(static_cast<SLossesOfLink*>(&lineWithCords), 0, sizeof(SLossesOfLink));
+//    }
 
     if(s_uUserDefBlocksSize)
     {
@@ -2409,34 +2435,31 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
   if(pFile)
   {
     f_closeWTC(pFile);
-
-    if(iRes == OTDR_FILE_BAD_CHECKSUM)
+ // далее разбор ошибок и сообщений при чтении файла,
+    // какой-то выход или окончение чтения
+    if(iRes == OTDR_FILE_BAD_CHECKSUM) // плохая контрольная сумма 
     {
-      if(MessageBox(trBadCheckSum.get(), trWarning.get(), MB_YESNO) == IDYES)
+      // пишем сообщение о плохой контрольной сумме но переписываем данные
+      sprintf(MsgErrMem,"Bad CheckSum");
+      //if(MessageBox(trBadCheckSum.get(), trWarning.get(), MB_YESNO) == IDYES)
         iRes = OTDR_OKAY;
     }
 
     if(iRes != OTDR_OKAY)
     {
       if(iRes != OTDR_FILE_BAD_CHECKSUM)   // т.к. предупреждение о CRC уже выводилось
-        MessageBox(trFileReadError.get(), trError.get(), MB_OK);
+      sprintf(MsgErrMem,"Bad File Err=%d",iRes);
+      // здесь все плохо. Пишем сообщения но данные не переписываем и файл не открываем...
     }
     else
     {
-      // заполнение структуры для Белкора
-      g_FileParamInfo.iGroupIndex = fixParams.lGroupIndex;
-      g_FileParamInfo.sBackscatter = fixParams.sBackscatterCoefficient_dB;
-      g_FileParamInfo.iNumPoints = fixParams.lNumberOfDataPoints;
-      g_FileParamInfo.iNumAver = fixParams.lNumberOfAverages;
-      g_FileParamInfo.iDS = fixParams.lDataSpacing_100ps;
-      g_FileParamInfo.sPulseW = fixParams.sPulseWidthUsed_ns;
-      g_FileParamInfo.sWaveLengh = genParams.sNominalWavelength_nm;
-      g_FileParamInfo.uTimeStamp = fixParams.ulDateTimeStamp;
-      g_FileParamInfo.usAveragingTime = fixParams.usAveragingTime_01sec;
-      g_FileParamInfo.iAcquisitionOffset_100ps = fixParams.lAcquisitionOffset_100ps;
-      g_FileParamInfo.uAcquisitionOffsetDistance_10cm = fixParams.ulAcquisitionOffsetDistance;
-
-      if(fixParams.lAcquisitionRangeDistance > 0)
+      InitMemReflSet (); // инициализация установок рефлектометра полученных из файла
+      // заполнение структур отображения файла, и настройки подсчета событий,
+      // сохранение текущих установок для востановления после просмотра
+      // пока переписываем в блоки с маркировкой Mem
+      // если чужой файл, пытаемся по парметру восстановить длину линии (диапазон) в метры...
+      int32_t iDistance=0;
+            if(fixParams.lAcquisitionRangeDistance > 0)
       {
         float fDistFactor;
 
@@ -2451,104 +2474,51 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
         else // if(fixParams.achUnitsOfDistance[0] == 'm' && fixParams.achUnitsOfDistance[1] == 't') // [м]
           fDistFactor = 1.;
 
-        g_FileParamInfo.iDistance = (int32_t)(fixParams.lAcquisitionRangeDistance * fDistFactor * 0.1);
+        iDistance = (int32_t)(fixParams.lAcquisitionRangeDistance * fDistFactor * 0.1);
       }
       else
       {
-        g_FileParamInfo.iDistance =
+        iDistance =
           (int32_t)((fixParams.lNumberOfDataPoints - 1) *
                 ((double)LIGHTSPEED * fixParams.lDataSpacing_100ps) /
                   (fixParams.lGroupIndex * 1.e+9));
       }
+      MemSetRefl.Index_Ln = CalkIndexLN(iDistance); // вычисляем индекс длины линии (диапазон) 
+      MemSetRefl.SW_LW = CalkIndexSC(genParams.sNominalWavelength_nm); // индекс посадочного места по длине волны
+      MemSetRefl.Index_Im = CalkIndexIM(fixParams.sPulseWidthUsed_ns); //  индекс длительности импульса
+      MemSetRefl.Index_Vrm = CalkIndexWRM(fixParams.usAveragingTime_01sec); //  индекс времени накопления
+      MemSetRefl.K_pr = (float)(fixParams.lGroupIndex/100000.); // коэфф. преломления
+      
+      MemReflParam.BC = fixParams.sBackscatterCoefficient_dB;
+  MemReflParam.LT= fixParams.usLossThreshold_dB ; //LT
+  MemReflParam.RT = fixParams.usReflectanceThreshold_dB;
+  MemReflParam.ET = fixParams.usEndOfFiberThreshold_dB; //ET
+      //g_FileParamInfo.iGroupIndex = fixParams.lGroupIndex;
+      //g_FileParamInfo.sBackscatter = fixParams.sBackscatterCoefficient_dB;
+//      g_FileParamInfo.iNumPoints = fixParams.lNumberOfDataPoints;
+//      g_FileParamInfo.iNumAver = fixParams.lNumberOfAverages;
+//      g_FileParamInfo.iDS = fixParams.lDataSpacing_100ps;
+//      g_FileParamInfo.sPulseW = fixParams.sPulseWidthUsed_ns;
+//      g_FileParamInfo.sWaveLengh = genParams.sNominalWavelength_nm;
+//      g_FileParamInfo.uTimeStamp = fixParams.ulDateTimeStamp;
+//      g_FileParamInfo.usAveragingTime = fixParams.usAveragingTime_01sec;
+//      g_FileParamInfo.iAcquisitionOffset_100ps = fixParams.lAcquisitionOffset_100ps;
+//      g_FileParamInfo.uAcquisitionOffsetDistance_10cm = fixParams.ulAcquisitionOffsetDistance;
 
-      lpair* plpairD = aPairMeasurDist; // расчет требуемого диапазона
 
-      while(!plpairD->isEnd() && g_FileParamInfo.iDistance > plpairD->val)
-        ++plpairD;
 
-      if(plpairD != aPairMeasurDist)
-        --plpairD;
-
-      g_FileParamInfo.iDistance = plpairD->val;
-
-      g_eventSearch.iSwitch = keyEvents.sNumberOfEvents ? 1 : 0;  // если сохранялись события, то они искались
-      g_eventSearch.fLoss = fixParams.usLossThreshold_dB * 1.e-3;
-      g_eventSearch.fEndOfLine = fixParams.usEndOfFiberThreshold_dB * 1.e-3;
-
-      // преобразуем значение порога по отражению с учётом возможного масштабирования
-      // для значений > 65500
-      if(fixParams.usReflectanceThreshold_dB > 65500)
-        g_eventSearch.fReflectance = -65.5 -
-          floor(((fixParams.usReflectanceThreshold_dB - 65500) * 44. + 22.)/ 35.) * 0.1;
-      else
-        g_eventSearch.fReflectance = fixParams.usReflectanceThreshold_dB * (-1.e-3);
-
-      // преобразование значений параметров для структуры g_eventSearch
-      if(comServ01Info.size)
-      {
-        // коэф-т преобразования из сотен пикосекунд в см
-        float f100psToCm = 100. * LIGHTSPEED / (fixParams.lGroupIndex * 1.e+5);
-
-        g_eventSearch.sUseMarkers =
-          comServ01.lDistToTheLeftMarker_100ps != 0 || comServ01.lDistToTheRightMarker_100ps != 0;
-        g_eventSearch.lDistToMarkerL_cm = (int32_t)(comServ01.lDistToTheLeftMarker_100ps  * f100psToCm);
-        g_eventSearch.lDistToMarkerR_cm = (int32_t)(comServ01.lDistToTheRightMarker_100ps * f100psToCm);
-        g_eventSearch.sApproxType = comServ01.usApproxMethod;
-        g_eventSearch.sDisplayFlag = comServ01.usDisplayFlag;
-
-        g_resBetweenMarkers.fLoss = comServ01.usLossBetweenMarkres / 1000.;
-        g_resBetweenMarkers.fMaxReflection = comServ01.lMaxReflBetweenMarkers / 1000.;
-        g_resBetweenMarkers.fORL = comServ01.usORL_BetweenMarkers / 1000.;
-      }
-      else
-      {
-        g_eventSearch.sUseMarkers = OTDR_NO;
-        g_eventSearch.lDistToMarkerL_cm =
-          g_eventSearch.lDistToMarkerR_cm = 0;
-        g_eventSearch.sApproxType = OTDR_2P;
-        g_eventSearch.sDisplayFlag = OTDR_DISPLAY_MAX_REFLECTION;
-
-        g_resBetweenMarkers.fDist =
-          g_resBetweenMarkers.fLoss =
-          g_resBetweenMarkers.fMaxReflection =
-          g_resBetweenMarkers.fORL = 0.;
-      }
-
-#ifndef USE_CORDS
-      comServ02Info.size = 0;
-#endif
-      if(comServ02Info.size)
-      {
-        g_eventSearch.launchCord.sUsed = comServ02.lLaunchCordLen_cm > 0 ? OTDR_YES : OTDR_NO;
-        g_eventSearch.launchCord.lLen_cm = comServ02.lLaunchCordLen_cm;
-        g_eventSearch.launchCord.sAddConnectionLoss = comServ02.sAddBeginConnectionLoss;
-        g_eventSearch.tailCord.sUsed = comServ02.lTailCordLen_cm > 0 ? OTDR_YES : OTDR_NO;
-        g_eventSearch.tailCord.lLen_cm = comServ02.lTailCordLen_cm;
-        g_eventSearch.tailCord.sAddConnectionLoss = comServ02.sAddEndConnectionLoss;
-      }
-      else
-      {
-        g_eventSearch.launchCord.sUsed =
-          g_eventSearch.tailCord.sUsed =
-          g_eventSearch.launchCord.sAddConnectionLoss =
-          g_eventSearch.tailCord.sAddConnectionLoss = OTDR_NO;
-        g_eventSearch.launchCord.lLen_cm = g_eventSearch.tailCord.lLen_cm = 0;
-      }
     }
   }
 
   return iRes;
 }
 
-#include "Graph.hpp"
-extern CLossGraph lossGraph;        // параметры графика потерь
-
 //
 // чтение данных из SOR-файла с указанным именем
 //
 // Note: для сохранения данных для графика, а также имени файла,
 //       используются соответствующие буферы с нулевым индексом.
-int ReadSorFile(const char* pszFileName, GUI_COLOR color)
+int ReadSorFileG(const char* pszFileName)
 {
   // была ли выделена память под строку для имени?
   if(!g_pszFileNames[0])
@@ -2560,63 +2530,14 @@ int ReadSorFile(const char* pszFileName, GUI_COLOR color)
     strcpy(g_pszFileNames[0], pszFileName);
 
   // вызов только после копирования имени файла!
-  int iRes = ReadSorFile(g_pszFileNames[0], GraphData[0], ArraySize(GraphData[0]));
+  int iRes = ReadSorFile(g_pszFileNames[0], LogData, 5300);
 
   if(iRes == OTDR_OKAY)
   {
-    float fDistStep =
-            (float)(((double)LIGHTSPEED*g_FileParamInfo.iDS) / (g_FileParamInfo.iGroupIndex*1.e+9));
+    // можно рисовать график 
+//    float fDistStep =
+//            (float)(((double)LIGHTSPEED*g_FileParamInfo.iDS) / (g_FileParamInfo.iGroupIndex*1.e+9));
 
-    // инициализация первого графика
-    lossGraph.SetItem(0, GraphData[0],
-                      (uint16_t)g_FileParamInfo.iNumPoints,
-                      fDistStep,
-                      color);
-    lossGraph.SetItemUserData(0, (int32_t)g_FileParamInfo.sWaveLengh);
-    // верхняя граница отображаемых значений в зависимости от длительности импульса
-    //lossGraph.SetValueRange(0, (g_FileParamInfo.sPulseW < 1000) ? 30000 : 45000);
-    lossGraph.SetValueRange(0, 65000);
-
-    // учёт смещения начала линии по значению времени стартового события
-    float fDistOffset;
-#if 0
-    if(g_FileParamInfo.iAcquisitionOffset_100ps)
-      fDistOffset =
-        (float)(((double)g_FileParamInfo.iAcquisitionOffset_100ps * LIGHTSPEED) / (g_FileParamInfo.iGroupIndex * 1.e+5));
-    else
-      fDistOffset = 0.;
-#else
-    if(g_eventSearch.launchCord.sUsed)
-      fDistOffset =
-        (float)(((double)g_lineWithCords[0].launchEvent.lEventPropagationTime * LIGHTSPEED) / (g_FileParamInfo.iGroupIndex * 1.e+5));
-    else
-      fDistOffset = 0.;
-#endif
-
-    lossGraph.SetDistRange(-fDistOffset, (g_FileParamInfo.iNumPoints - 1) * fDistStep - fDistOffset);
-
-    if(g_eventSearch.sUseMarkers)   // положение маркеров хранилось в прочитанном файле
-    {
-      g_fSavedDistA = 0.01 * g_eventSearch.lDistToMarkerL_cm;
-      g_fSavedDistB = 0.01 * g_eventSearch.lDistToMarkerR_cm;
-
-      if(g_eventSearch.launchCord.sUsed)
-      {
-        g_fSavedDistA -= fDistOffset;
-        g_fSavedDistB -= fDistOffset;
-//        lossGraph.SetMarkerDist(MARKER_A, g_fSavedDistA);
-//        lossGraph.SetMarkerDist(MARKER_B, g_fSavedDistB);
-      }
-    }
-
-    lossGraph.ShowItem(0, 1);
-
-    // отключаем остальные графики
-    for(int iItem = 1; iItem < MAX_GRAPH_ITEM_COUNT; ++iItem)
-      lossGraph.DeleteItem(iItem);
-
-    g_usedLS.iCur = 0;
-    g_usedLS.nUsedNow = 1;
   }
   else
   {
@@ -2626,5 +2547,5 @@ int ReadSorFile(const char* pszFileName, GUI_COLOR color)
 
   return iRes;
 }
-#endif
+
 

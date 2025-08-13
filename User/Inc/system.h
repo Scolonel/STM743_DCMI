@@ -69,6 +69,41 @@
 // from SorData
 #define MAX_PATH_LEN 256
 #define ArraySize(a)    (sizeof(a)/sizeof(a[0]))
+//  Общие коды завершения функций
+//  ==============================
+#define OTDR_OKAY               0   // успешное завершение
+#define OTDR_SUCCESS            OTDR_OKAY
+//  Коды предупреждений имеют положительные значения
+//  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#define OTDR_WARNING            1   // неуточненное предупреждение
+#define OTDR_PARAM_CORRECTED    2   // значение параметра вне допуcтимого
+                                    // диапазона и было откорректировано
+#define OTDR_RESULT_CORRECTED   3   // результат вне области допуcтимых
+                                    // значений был откорректирован
+#define OTDR_NOTHING_TO_DO      4   // нечего делать
+//  Коды ошибок имеют отрицательные значения
+//  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#define OTDR_ERROR              -1  // неуточненная ошибка
+#define OTDR_NULL_PTR           -2  // передан указатель == NULL
+#define OTDR_MEMORY_ERROR       -3  // ошибка при выделении памяти
+#define OTDR_OUT_OF_MEMORY      -4  // нехватка памяти (размер, переданный
+                                    // с помощью пар-ра, недостаточен)
+#define OTDR_FUNCTION_BUSY      -5  // реентерабельный вызов функции
+
+#define OTDR_FILE_ERROR         -10 // неуточненная файловая ошибка
+#define OTDR_FILE_OPEN_ERROR    -11 // неуточненная ошибка при открыти файла
+#define OTDR_PATH_NOT_EXIST     -12 // пути (папки/каталога) не существует
+#define OTDR_FILE_NAME_ERROR    -13 // недопустимое имя файла
+#define OTDR_FILE_NOT_FOUND     -14 // файл не найден
+#define OTDR_FILE_ACCESS_DENIED -15 // невозможен доступ к файлу
+#define OTDR_FILE_TYPE_UNKNOWN  -16 // неизвестный тип файла данных
+#define OTDR_FILE_SYNTAX_ERROR  -17 // синтаксическая ошибка в файле
+#define OTDR_FILE_STRUCT_ERROR  -18 // ошибка в структуре файла
+#define OTDR_FILE_READ_ERROR    -19 // неуточненная ошибка чтения
+#define OTDR_FILE_WRITE_ERROR   -20 // неуточненная ошибка записи
+#define OTDR_FILE_BAD_CHECKSUM  -21 // неверная контрольная сумма
+
+#define BUFFER_SIZE	256
 
 
 #include "integer.h"
@@ -146,6 +181,8 @@
 
 // from SorData
 int   WriteSorFile(const char* pszFileName, int iPlaceLS, unsigned short* pDataPoints);
+int ReadSorFileG(const char* pszFileName);
+
 
       // тики опроса клавиатура взято из Т7К_АР
 uint32_t GetSysTick( int Mode); // получение тиков 1 мС. 0 - получение счетчика от предыдущего сброса 1- сброс
