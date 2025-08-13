@@ -47,6 +47,7 @@ St_File_Sor F_SOR; // содержимое основных параметров файла SOR
   //char   path=;
   uint32_t TotalSize, FreeSpace;
     char FileNameS[32]; // имя файла куда сохраняем
+    char FileNameB[32]; // имя файла куда сохраняем Belcore 2.0
     char FileSDir[8]; // директория файла куда сохраняем
     char FileDDir[8]; // директория даты вложена в FileSDir файла куда сохраняем
     char PathFileS[64]; // полный путь файла куда сохраняем
@@ -1562,10 +1563,17 @@ void SaveFileSD(int Mod)
           TimeSaveOTDR.RTC_Hour,
           TimeSaveOTDR.RTC_Min,
           TimeSaveOTDR.RTC_Sec/10 );
+      // имя файла Belcore 2.0
+      sprintf(FileNameB,"%02d%02d%02d_%02d%02d%01X.sor",TimeSaveOTDR.RTC_Year%100,
+          TimeSaveOTDR.RTC_Mon,
+          TimeSaveOTDR.RTC_Mday,
+          TimeSaveOTDR.RTC_Hour,
+          TimeSaveOTDR.RTC_Min,
+          TimeSaveOTDR.RTC_Sec/10 + 9 );
        // имя файла есть
       //создадим полны путь к файлу чтобы его открыть
     sprintf(PathFileS,"%s/%s",PathF,FileNameS);
-    sprintf(pFile,"%s/B%s",PathF,FileNameS); // путь для белкора 2
+    sprintf(pFile,"%s/%s",PathF,FileNameB); // путь для белкора 2
   
     }
     
