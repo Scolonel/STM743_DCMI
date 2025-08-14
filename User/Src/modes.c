@@ -3179,6 +3179,8 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (ќкно 34)
   FATFS FatFs;
   FIL Fil;
   FRESULT FR_Status;
+  int iRes = 9999; // результат открыти€ файла и проверка его содержимого и
+
 
   if ((PRESS(BTN_UP))&&((getStateButtons(BTN_UP)==SHORT_PRESSED)||(getStateButtons(BTN_UP)==INF_PRESSED))) 
   {
@@ -3232,26 +3234,28 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (ќкно 34)
     
     // здесь можно прочитать файл на котрый указываем и разобрать его
     sprintf(FilPath, "0:/_OTDR/%s/%s/%s",NameDir[IndexNameDir],NameDirD[IndexNameDirD],NameFiles[IndexNameFiles]); // путь к файлу
-    // откроем файл и прочитаем размер блока
-    FR_Status = f_open(&Fil, FilPath, FA_READ);
-    if(FR_Status == FR_OK)
-    {
-      f_lseek (&Fil, 2); // переместимс€ на 2 байта
-      f_read (&Fil, (void*)&BlkSz, 4, &RWC);
-      if(BlkSz==98) // есть событи€
-      {
-        f_lseek (&Fil, 0x44); // переместимс€ на 0x44 байта чтобы прочитать размер блока событий 
-        f_read (&Fil, (void*)&EvntSz, 4, &RWC);
-        PosDataLog = 0xe1 + 16 + EvntSz;
-      }
-      f_lseek (&Fil, BlkSz); // переместимс€ на  байта
-      f_read (&Fil, (void*)&F_SOR, 142, &RWC);
-      // читаем блок данных из файла
-      f_lseek (&Fil, PosDataLog); // переместимс€ на начало блока данных байта
-      f_read (&Fil, (void*)&LogData, F_SOR.NPPW*2, &RWC);
-      
-    }
-    f_close(&Fil);
+    // откроем файл и прочитаем размер блока дл€ белкор 1.0
+//    FR_Status = f_open(&Fil, FilPath, FA_READ);
+//    if(FR_Status == FR_OK)
+//    {
+//      f_lseek (&Fil, 2); // переместимс€ на 2 байта
+//      f_read (&Fil, (void*)&BlkSz, 4, &RWC);
+//      if(BlkSz==98) // есть событи€
+//      {
+//        f_lseek (&Fil, 0x44); // переместимс€ на 0x44 байта чтобы прочитать размер блока событий 
+//        f_read (&Fil, (void*)&EvntSz, 4, &RWC);
+//        PosDataLog = 0xe1 + 16 + EvntSz;
+//      }
+//      f_lseek (&Fil, BlkSz); // переместимс€ на  байта
+//      f_read (&Fil, (void*)&F_SOR, 142, &RWC);
+//      // читаем блок данных из файла
+//      f_lseek (&Fil, PosDataLog); // переместимс€ на начало блока данных байта
+//      f_read (&Fil, (void*)&LogData, F_SOR.NPPW*2, &RWC);
+//      
+//    }
+//    f_close(&Fil);
+   int iRes = ReadSorFileG(FilPath);
+
     FR_Status = f_mount(NULL, "", 0);
     
     for (int i=0; i<12; i++)
@@ -3264,6 +3268,8 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (ќкно 34)
     sprintf(Str,"t%d.bco=GREEN€€€",IndexLCDNameFiles+1); // GREEN
     NEX_Transmit((void*)Str);    //
     // код подсветки требуемой строки если есть есть маркер строки
+    // разбор данных файла белкор 1.0
+#if 0    
     //sprintf(Str, "t15.txt=\"%d %d\"€€€", BlkSz, EvntSz); // < ракзмер заголовка, есть ли там событи€ >
     //CalkRes = LIGHTSPEED*1.e-9;
 //    sprintf(Str, "t20.txt=\"%.3f\"€€€", CalkRes); // < длина линии>
@@ -3280,6 +3286,7 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (ќкно 34)
     //CalkRes = (F_SOR.DS*LIGHTSPEED*1.0e-9*F_SOR.NPPW)/F_SOR.GI;//
     //sprintf(Str, "t15.txt=\"%.3f\"€€€", CalkRes); // < длина линии>
     //sprintf(Str, "t15.txt=\"%d\"€€€", F_SOR.DS); // < шаг измерени€>
+    
     sprintf(Str, "t15.txt=\"%d km\"€€€", (F_SOR.DS/208333)*2 ); // < длина линии>
     NEX_Transmit((void*)Str);    //
     sprintf(Str, "t16.txt=\"%d nm\"€€€", F_SOR.AW/10); // < длина волны >
@@ -3295,6 +3302,48 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (ќкно 34)
     NEX_Transmit((void*)Str);    //
     sprintf(Str, "t19.txt=\"%s\"€€€", F_SOR.CMT); // < комметарий >
     NEX_Transmit((void*)Str);    //
+#endif
+    
+    
+    if(iRes) // ошибки - плохой файл, заполн€ем стоки информационные пустотой, график не рисуем
+      // пишем сообщение об ошибке в поле комментари€
+    {
+    sprintf(Str, "t15.txt=\"---\"€€€" ); // < длина линии>
+    NEX_Transmit((void*)Str);    //
+    sprintf(Str, "t16.txt=\"---\"€€€"); // < длина волны >
+    NEX_Transmit((void*)Str);    //
+    sprintf(Str, "t17.txt=\"---\"€€€"); // < длительность импульса >
+    NEX_Transmit((void*)Str);    //
+    sprintf(Str, "t18.txt=\"---\"€€€"); // < коэфф преломлени€... >
+    NEX_Transmit((void*)Str);    //
+    sprintf(Str, "t19.bco=64000€€€"); // < фон сообщени€>
+    NEX_Transmit((void*)Str);    //
+    sprintf(Str, "t19.txt=\"%s\"€€€",MsgErrMem); // <сообщение об ошибке >
+    NEX_Transmit((void*)Str);    //
+    memset(LogData,0,5300*2);
+    }
+    else
+    {
+     //  заполним данными из промежуточного буффера основных параметров считанных с файла
+    sprintf(Str, "t15.txt=\"%d km\"€€€", (int)(FixParams.ARD/1000.)); // < длина линии>
+    NEX_Transmit((void*)Str);    //
+    sprintf(Str, "t16.txt=\"%d nm\"€€€", FixParams.AW); // < длина волны >
+    NEX_Transmit((void*)Str);    //
+    //    sprintf(Str, "t17.txt=\"%d\"€€€", F_SOR.NPPW); // < число точек >
+    //NEX_Transmit((void*)Str);    //
+    sprintf(Str, "t17.txt=\"%d ns\"€€€", FixParams.PWU); // < длительность импульса >
+    NEX_Transmit((void*)Str);    //
+    //sprintf(Str, "t18.txt=\"%d\"€€€", F_SOR.AR); // < какой файл выбран >
+    //sprintf(Str, "t18.txt=\"%d\"€€€", F_SOR.NAV); // < число накоплений >
+    //sprintf(Str, "t18.txt=\"%d\"€€€", F_SOR.AR); // < длина измер€емого участка... >
+    sprintf(Str, "t18.txt=\"%.5f\"€€€", FixParams.GI/100000.); // < коэфф преломлени€... >
+    NEX_Transmit((void*)Str);    //
+    sprintf(Str, "t19.bco=WHITE€€€"); // < фон сообщени€>
+    NEX_Transmit((void*)Str);    //
+    sprintf(Str, "t19.txt=\"%s\"€€€", GenParams.CMT); // < комметарий >
+    NEX_Transmit((void*)Str);    //
+      
+    }
     // надо нарисовать график 265*160
     //  //объ€влени€ графических установок дл€  индикатора, 
     GraphParams params = {27000,0,20,0,MEMDRAW};//PosCursorMain (0) // масштаб 48 ( дл€ уменьшенной картинки)

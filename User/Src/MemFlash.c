@@ -1569,7 +1569,7 @@ void SaveFileSD(int Mod)
           TimeSaveOTDR.RTC_Mday,
           TimeSaveOTDR.RTC_Hour,
           TimeSaveOTDR.RTC_Min,
-          TimeSaveOTDR.RTC_Sec/10 + 9 );
+          TimeSaveOTDR.RTC_Sec/10 + 10 );
        // имя файла есть
       //создадим полны путь к файлу чтобы его открыть
     sprintf(PathFileS,"%s/%s",PathF,FileNameS);

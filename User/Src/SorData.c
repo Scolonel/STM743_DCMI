@@ -2483,16 +2483,22 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
                 ((double)LIGHTSPEED * fixParams.lDataSpacing_100ps) /
                   (fixParams.lGroupIndex * 1.e+9));
       }
+      // зполняем индексами и дублируем в стркутуру FixParams для индикации
+      FixParams.ARD = iDistance; // в метрах!!!
       MemSetRefl.Index_Ln = CalkIndexLN(iDistance); // вычисляем индекс длины линии (диапазон) 
+      FixParams.AW = genParams.sNominalWavelength_nm; // длина волны
       MemSetRefl.SW_LW = CalkIndexSC(genParams.sNominalWavelength_nm); // индекс посадочного места по длине волны
+      FixParams.PWU = fixParams.sPulseWidthUsed_ns; // длительность импульса
       MemSetRefl.Index_Im = CalkIndexIM(fixParams.sPulseWidthUsed_ns); //  индекс длительности импульса
+      FixParams.AT = fixParams.usAveragingTime_01sec; // время накопления в 0.1 секундах
       MemSetRefl.Index_Vrm = CalkIndexWRM(fixParams.usAveragingTime_01sec); //  индекс времени накопления
+      FixParams.GI = fixParams.lGroupIndex; // спектральный коэффициент (преломления) 
       MemSetRefl.K_pr = (float)(fixParams.lGroupIndex/100000.); // коэфф. преломления
       
       MemReflParam.BC = fixParams.sBackscatterCoefficient_dB;
-  MemReflParam.LT= fixParams.usLossThreshold_dB ; //LT
-  MemReflParam.RT = fixParams.usReflectanceThreshold_dB;
-  MemReflParam.ET = fixParams.usEndOfFiberThreshold_dB; //ET
+      MemReflParam.LT= fixParams.usLossThreshold_dB ; //LT
+      MemReflParam.RT = fixParams.usReflectanceThreshold_dB;
+      MemReflParam.ET = fixParams.usEndOfFiberThreshold_dB; //ET
       //g_FileParamInfo.iGroupIndex = fixParams.lGroupIndex;
       //g_FileParamInfo.sBackscatter = fixParams.sBackscatterCoefficient_dB;
 //      g_FileParamInfo.iNumPoints = fixParams.lNumberOfDataPoints;
@@ -2504,6 +2510,10 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
 //      g_FileParamInfo.usAveragingTime = fixParams.usAveragingTime_01sec;
 //      g_FileParamInfo.iAcquisitionOffset_100ps = fixParams.lAcquisitionOffset_100ps;
 //      g_FileParamInfo.uAcquisitionOffsetDistance_10cm = fixParams.ulAcquisitionOffsetDistance;
+
+  // копируем комментарии
+  memcpy(GenParams.CMT, genParams.pszComment, (strlen(genParams.pszComment)<19)?(strlen(genParams.pszComment)):(19));
+  GenParams.CMT[19]=0;
 
 
 

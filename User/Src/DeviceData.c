@@ -1613,7 +1613,7 @@ uint32_t CheckBelcore(void)
   {
     Err|=0x1000;
     GenParams.CMT[19] = 0;
-    sprintf(GenParams.CMT,"Commets");
+    sprintf(GenParams.CMT,"Comments");
   }
   
 
