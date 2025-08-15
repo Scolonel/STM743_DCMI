@@ -540,7 +540,9 @@ static int PrepareSorData(int iPlaceLS, uint16_t* pDataPoints)
 
 
   genParams.pszOperator = *GenParams.OP ? GenParams.OP : s_szDummy;
-  genParams.pszComment  = *GenParams.CMT ? GenParams.CMT : s_szDummy;
+  //genParams.pszComment  = *GenParams.CMT ? GenParams.CMT : s_szDummy;
+  // сохраняем комментарий из другого места
+  genParams.pszComment  = *NameDB.UserComm ? NameDB.UserComm : s_szDummy;
 
   genParamsInfo.revision = DEF_REVISION;
   genParamsInfo.size =

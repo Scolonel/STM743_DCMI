@@ -1039,7 +1039,7 @@ BYTE SetIndexLN (BYTE Index) // установка индекса длины линии
 return Index;
 }
 
-WORD GetLengthLine (BYTE Index) // получение длины линии по индексу
+DWORD GetLengthLine (BYTE Index) // получение длины линии по индексу
 {
   return LengthLine [Index];
 }
@@ -2052,6 +2052,24 @@ void ContinueModulation(void)
     NeedFreq=0;
   }
   
+}
+
+// сохранение установочных параметров рефлектометра, замена из памяти
+void SaveParamSet (void)
+{
+  memcpy( &ReSetRefl, &SettingRefl, sizeof(SettingRefl));
+  memcpy( &ResetReflParam, &ReflParam, sizeof(ReflParam));
+  memcpy( &SettingRefl, &MemSetRefl, sizeof(SettingRefl));
+  memcpy( &ReflParam, &MemReflParam, sizeof(ReflParam));
+}
+
+// востановление установочных параметров рефлектометра, замена из памяти
+void RestoreParamSet (void)
+{
+  //memcpy(ReSetRefl, SettingRefl, sizeof(SettingRefl));
+  //memcpy(ResetReflParam, ReflParam, sizeof(ReflParam));
+  memcpy( &SettingRefl, &ReSetRefl, sizeof(SettingRefl));
+  memcpy( &ReflParam, &ResetReflParam, sizeof(ReflParam));
 }
 
 unsigned short CalkCheckSum (void)// подсчет контрольной суммы конфигурации прибора

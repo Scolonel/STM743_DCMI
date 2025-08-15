@@ -2518,6 +2518,7 @@ void ModeDrawOTDR(void) // режим отображени€ рефлектограммы
     {
     case VIEWMEM:
     myBeep(10);
+    RestoreParamSet();
       SetMode(ModeFileMngFiles);
       ModeDevice = MODEMEMR;
       ModeMemDraw = VIEWNEXT;
@@ -2916,6 +2917,8 @@ void ModeKeyBoardOTDR(void) // режим отображени€ клавиатуры редактора комментари
     CommentsOTDR[ARRAY_SIZE(CommentsOTDR)-1]=0;
     // сохраним комментарий
    memcpy(NameDB.UserComm,CommentsOTDR,20); 
+   // дублируем в блок GenParams при сохранении
+   //memcpy(GenParams.CMT,NameDB.UserComm,20); 
     //for(int i=0; i<20; i++) 
     //NameDB.UserComm[i]=CommentsOTDR[i];
 
@@ -3203,7 +3206,8 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (ќкно 34)
     // здесь заполн€ем данными пол€ нового индикатора
     // не требущие изменени€ при первичной инициализации
     sprintf(Str, "t0.txt=\"0:/_OTDR/%s/%s\"€€€",NameDir[IndexNameDir],NameDirD[IndexNameDirD]); // < событиe >
-    NEX_Transmit((void*)Str);    //
+    NEX_Transmit((void*)Str); 
+    HAL_Delay(1);//
     sprintf(Str, "t14.txt=\"%d\"€€€", NumNameFiles); // < сколько файлов нашли >
     NEX_Transmit((void*)Str);    //
     
@@ -3308,13 +3312,15 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (ќкно 34)
     if(iRes) // ошибки - плохой файл, заполн€ем стоки информационные пустотой, график не рисуем
       // пишем сообщение об ошибке в поле комментари€
     {
-    sprintf(Str, "t15.txt=\"---\"€€€" ); // < длина линии>
+    sprintf(Str, "t15.txt=\"---\"€€€"); // < длина волны >
     NEX_Transmit((void*)Str);    //
-    sprintf(Str, "t16.txt=\"---\"€€€"); // < длина волны >
+    sprintf(Str, "t16.txt=\"---\"€€€" ); // < длина линии>
     NEX_Transmit((void*)Str);    //
     sprintf(Str, "t17.txt=\"---\"€€€"); // < длительность импульса >
     NEX_Transmit((void*)Str);    //
-    sprintf(Str, "t18.txt=\"---\"€€€"); // < коэфф преломлени€... >
+    sprintf(Str, "t21.txt=\"---\"€€€"); // < коэфф преломлени€... >
+    NEX_Transmit((void*)Str);    //
+    sprintf(Str, "t18.txt=\"---\"€€€"); // < ¬рем€ накоплени€. >
     NEX_Transmit((void*)Str);    //
     sprintf(Str, "t19.bco=64000€€€"); // < фон сообщени€>
     NEX_Transmit((void*)Str);    //
@@ -3325,18 +3331,20 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (ќкно 34)
     else
     {
      //  заполним данными из промежуточного буффера основных параметров считанных с файла
-    sprintf(Str, "t15.txt=\"%d km\"€€€", (int)(FixParams.ARD/1000.)); // < длина линии>
+    sprintf(Str, "t15.txt=\"%d %s\"€€€", FixParams.AW, MsgMass[18][CurrLang]); // < длина волны >
     NEX_Transmit((void*)Str);    //
-    sprintf(Str, "t16.txt=\"%d nm\"€€€", FixParams.AW); // < длина волны >
+    sprintf(Str, "t16.txt=\"%d %s\"€€€", (int)(FixParams.ARD/1000.),MsgMass[20][CurrLang]); // < длина линии>
     NEX_Transmit((void*)Str);    //
     //    sprintf(Str, "t17.txt=\"%d\"€€€", F_SOR.NPPW); // < число точек >
     //NEX_Transmit((void*)Str);    //
-    sprintf(Str, "t17.txt=\"%d ns\"€€€", FixParams.PWU); // < длительность импульса >
+    sprintf(Str, "t17.txt=\"%d %s\"€€€", FixParams.PWU, MsgMass[23][CurrLang]); // < длительность импульса >
     NEX_Transmit((void*)Str);    //
     //sprintf(Str, "t18.txt=\"%d\"€€€", F_SOR.AR); // < какой файл выбран >
     //sprintf(Str, "t18.txt=\"%d\"€€€", F_SOR.NAV); // < число накоплений >
     //sprintf(Str, "t18.txt=\"%d\"€€€", F_SOR.AR); // < длина измер€емого участка... >
-    sprintf(Str, "t18.txt=\"%.5f\"€€€", FixParams.GI/100000.); // < коэфф преломлени€... >
+    sprintf(Str, "t21.txt=\"%.5f\"€€€", FixParams.GI/100000.); // < коэфф преломлени€... >
+    NEX_Transmit((void*)Str);    //
+    sprintf(Str, "t18.txt=\"%d %s\"€€€", FixParams.AT/10,MsgMass[4][CurrLang]); // < врем€ накоплени€... >
     NEX_Transmit((void*)Str);    //
     sprintf(Str, "t19.bco=WHITE€€€"); // < фон сообщени€>
     NEX_Transmit((void*)Str);    //
@@ -3362,7 +3370,11 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (ќкно 34)
   // постобработка выходы в другие ќ Ќј
   if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==UP_SHORT_PRESSED)) // переход в режим просмотра с переключением зума
   {
+    // перед вызовом надо  сохранить установки рефлектометра, заменить их значени€ми из файла
+    // затем по выходу из просотра снова вернуть сохраненные параметры (настройки)
+    SaveParamSet();
     SetMode(ModeDrawOTDR);
+    // 
 // 22.11.2022 надо вернутс€ туда откуда пришли по новой переменной  ReturnMemView
     if(ReturnMemView)
       ReturnModeViewRefl = VIEWMEM;//SETPARAM -  чтобы вернутьс€ в предпросмотр

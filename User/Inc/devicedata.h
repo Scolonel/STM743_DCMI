@@ -265,7 +265,7 @@ BYTE GetSubModRefl (void); // получение режима работы рефлектометра
 void SetSubModRefl (BYTE Mode); // установка режима рефлектометра
 BYTE GetIndexLN (void); // получение индекса длины линии
 BYTE SetIndexLN (BYTE Index); // установка индекса длины линии
-WORD GetLengthLine (BYTE Index); // получение длины линии по индексу
+DWORD GetLengthLine (BYTE Index); // получение длины линии по индексу
 BYTE GetIndexIM (void); // получение индекса длины импульса
 void SetIndexIM (BYTE Index); // установка индекса длины импульса
 WORD GetTimeAvrg (BYTE Index); // получение времени накопления по индексу
@@ -361,6 +361,11 @@ void Run_SCWP(void);
 BYTE GetSetModeLW (int a);
 // установка получение сколько лазеров стоит???
 BYTE GetSetNumLS (BYTE a);
+
+// сохранение установочных параметров рефлектометра, замена из памяти
+void SaveParamSet (void);
+// востановление установочных параметров рефлектометра, замена из памяти
+void RestoreParamSet (void);
 
 
 // получить/инкремент значение счетчика файлов рефлектограмм, старт с 200 
