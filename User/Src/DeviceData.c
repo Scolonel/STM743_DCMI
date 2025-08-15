@@ -24,7 +24,7 @@ const WORD WidthPulse[2][WIDTH_PULSE_NUM]= {{5,20,40,150,500,1000,3000,10000,200
 const DWORD TimeAver[TIME_AVR_NUM]= {15,30,60,180,3,600};
 const unsigned TimeLight[TIME_LIGHT_NUM] = {0,15,30};
 const char *IdnsBC[2]= {"SvyazServis   \0","OPTOKON Co.Ltd\0"};
-const char *MfidBC[2][2]= {{"TOPAZ7\0","TOPAZ7\0"},{"MOT700\0","MOT950\0"}};
+const char *MfidBC[2][2]= {{"TOPAZ-7\0","TOPAZ-7\0"},{"MOT700\0","MOT950\0"}};
 // таблица расчета поправки на наклон для измеряемой линии с установленными параметрами
 const float LSACoef[WAVE_LENGTHS_NUM][LENGTH_LINE_NUM] = {
 {1.283367837, 2.566735673, 5.133471347, 10.26694269, 20.53388539, 30.80082808, 61.60165616},//850
@@ -528,17 +528,20 @@ void GetDeviceName( char* name ) // from Computer
    //  break;
    //}
    // Версия программного обеспечения
-   SupParams.SR[0]=0;
-     strcat(  SupParams.SR, VerFW[ConfigDevice.ID_Device]);  
+//   SupParams.SR[0]=0;
+//     strcat(  SupParams.SR, VerFW[ConfigDevice.ID_Device]);  
      GetNumVer(Str);
-     sprintf (c, "%s(%s)",Str,NumVer);
-     strcat(  SupParams.SR, c); 
+//     sprintf (c, "v%s(%s)",Str,NumVer);
+//     strcat(  SupParams.SR, c); 
+     sprintf (SupParams.SR, "v%s(%s)",Str,NumVer);
      // другое
         SupParams.OT[0]=0;
      sprintf(SupParams.OT," ") ;
      // формируем ответ name
      
-     sprintf (name, "%s,%s,%s,%s\r",SupParams.SN,(ConfigDevice.ID_Device)?(SupParams.OMID):(SupParams.MFID),(ConfigDevice.ID_Device)?(SupParams.OMSN):(SupParams.OTDR),SupParams.SR);
+     //sprintf (name, "%s,%s,%s,%s\r",SupParams.SN,(ConfigDevice.ID_Device)?(SupParams.OMID):(SupParams.MFID),(ConfigDevice.ID_Device)?(SupParams.OMSN):(SupParams.OTDR),SupParams.SR);
+     // приводим в новый формат ответ на IDN
+     sprintf (name, "%s,%s,SN%s\r",(ConfigDevice.ID_Device)?(SupParams.OMID):(SupParams.MFID),SupParams.SR,(ConfigDevice.ID_Device)?(SupParams.OMSN):(SupParams.OTDR));
  
 }
 // получение порога шумов для типа лавинника, для событий!
@@ -2099,7 +2102,7 @@ void GetNumVer (char* Str) // получение номера версии
   int Num = atoi (out);
   //int Num = g_NumVer;
   //Num=Num/5;
-  sprintf (Str, "6%c%c%c", (BYTE)(0x30+(Num/260)), (BYTE)(0x30+(Num/26)), (BYTE)(0x61+(Num%26)));
+  sprintf (Str, "6.%c%c%c", (BYTE)(0x30+(Num/260)), (BYTE)(0x30+(Num/26)), (BYTE)(0x61+(Num%26)));
 }
 
 void SetNewLeveldB (float RPON, int i) // установка нового уроаня привязки по принятым волнам
