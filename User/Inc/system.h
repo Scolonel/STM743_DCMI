@@ -213,6 +213,8 @@ extern uint32_t PageDirD;
 extern uint32_t PageFiles; 
 
 extern BYTE KnowLCD ;
+extern uint8_t g_ErrFW_LCD; // не правильная прошивка индикатора
+extern uint8_t TimerDraw; // время прорисовки ошибки , каждую секунду...
 
 extern char* g_pszFileNames[LSPLACENUM];  // массив указателей на строки с именами файлов
 

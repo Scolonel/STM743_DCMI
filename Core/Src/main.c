@@ -207,6 +207,8 @@ unsigned int TimerValueJDSU; // текущее значение частоты приемника RS
   char LvlBatInd=0; //индикатор уровня батарейки
 char PeriodIntADC=0; // счетчик запуска внутреннего АЦП и измерения уровня батарейки
 //float Ubat=4.1; // начальное напряжение батареи
+uint8_t g_ErrFW_LCD = 0; // не правильная прошивка индикатора
+uint8_t TimerDraw = 0; // время прорисовки ошибки , каждую секунду...
 
 /* USER CODE END PV */
 
@@ -367,6 +369,9 @@ int main(void)
       KnowLCD = 0;
       break;
     }
+         if(VerFW_LCD[6]!='7')
+       g_ErrFW_LCD = 1;;
+
   }
   //  if(!KnowLCD)
   //  {
@@ -704,6 +709,7 @@ int main(void)
       
       if(++PeriodIntADC > 15)// 450 mS
       {
+        TimerDraw = 1;
         // здесь можно запустить Измерение АЦП
         if (HAL_ADC_Start_DMA(&hadc1,(uint32_t *)&BufADC,3) != HAL_OK)
         {
