@@ -336,7 +336,9 @@ void ModeFuncTmp(void)
     // если ошибка индикатора напишем сообщение
   if(g_ErrFW_LCD && TimerDraw)
   {
-    sprintf( StrL,"xstr 0,120,460,60,1,RED,WHITE,1,1,1,\"%s\"€€€","! Error FW LCD !"); //  сообщение об ошибке FW LCD
+    sprintf( StrL,"xstr 10,120,460,40,2,RED,WHITE,1,1,1,\"%s\"€€€","ќЎ»Ѕ ј! ѕќ LCD "); //  сообщение об ошибке FW LCD
+    NEX_Transmit((void*)StrL);//
+    sprintf( StrL,"xstr 10,160,460,40,2,RED,WHITE,1,1,1,\"%s\"€€€","от другого прибора"); //  сообщение об ошибке FW LCD
     NEX_Transmit((void*)StrL);//
     TimerDraw = 0;
   }

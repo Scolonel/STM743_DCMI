@@ -287,23 +287,32 @@ int main(void)
   {
     CheckErrID_Plate=1;
   }
+  CmdInitPage(0);// вызов окна заставки
+  //  sprintf((void*)Str, "t1.txt=\"¬ключение...\"€€€"); // auto
+  //  NEX_Transmit((void*)Str);    // 
+  CmdInitPage(0);// вызов окна заставки
+
   if(CheckErrID_Plate)
   {
     //  myBeep(100);
     HAL_Delay(10);
+//    sprintf((void*)Str, "t0.txt=\"Dummy\"€€€"); // auto
+//    NEX_Transmit((void*)Str);    // 
+//    HAL_Delay(5);
     sprintf((void*)Str, "t0.txt=\"! ќЎ»Ѕ ј !\"€€€"); // auto
     NEX_Transmit((void*)Str);    // 
-    sprintf((void*)Str, "t1.txt=\"!прибор не тот!\"€€€"); // auto
+    HAL_Delay(5);
+    sprintf((void*)Str, "t1.txt=\"ѕќ от другого прибора\"€€€"); // auto
     NEX_Transmit((void*)Str);    // 
     
     while(1);
     
   }
   
-  CmdInitPage(0);// вызов окна заставки
+  //CmdInitPage(0);// вызов окна заставки
   //  sprintf((void*)Str, "t1.txt=\"¬ключение...\"€€€"); // auto
   //  NEX_Transmit((void*)Str);    // 
-  CmdInitPage(0);// вызов окна заставки
+  //CmdInitPage(0);// вызов окна заставки
   // пошлем сообщение о включении ...
   
   //  HAL_Delay(100);
