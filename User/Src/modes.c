@@ -1500,8 +1500,10 @@ void ModeStartOTDR(void) // режим накоплени€ рефлектометра
     {
       sprintf(Str,"t7.txt=\"%s\"€€€",((InputOK)?("OK"):("???"))); // 
       NEX_Transmit((void*)Str);// 
+      HAL_Delay(5);
       sprintf(Str,"t3.txt=\"%s\"€€€",MsgMass[31][CurrLang]); // длина линии
       NEX_Transmit((void*)Str);// 
+      //HAL_Delay(10);
       sprintf(Str,"t8.txt=\"???\"€€€"); //  состо€ние - неопределено
       NEX_Transmit((void*)Str);// 
       
