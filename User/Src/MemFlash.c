@@ -39,10 +39,13 @@ St_File_Sor F_SOR; // содержимое основных параметров файла SOR
 
   char*   fn;
   const  char PathMainDir[9]={"0:/_OTDR\0"}; // 
+  const  char PathPMDir[7]={"0:/_PM\0"}; // 
   char PathF[64];
   char PathD[64];
   char PathDirD[24]; // путь ко второму уровню директорий (дата число)
   char pFile[MAX_PATH_LEN];   //  путь к файлу
+
+  char FileNamePM[32]; // имя файла куда сохраняем
 
   //char   path=;
   uint32_t TotalSize, FreeSpace;
@@ -1737,6 +1740,73 @@ void SaveFileSD(int Mod)
     //UARTSendExt ((BYTE*)&new_crc, 2);
     FR_Status = f_write(&Fil, (BYTE*)&new_crc, 2,&WWC);
         HAL_Delay(2);
+
+    f_close(&Fil);
+    
+  } while(0);
+      HAL_Delay(2);
+
+  //------------------[ Test Complete! Unmount The SD Card ]--------------------
+  FR_Status = f_mount(NULL, "", 0);
+  
+}
+
+// функция записи файла измерений измерителя
+void SaveFilePM(void)
+{
+  //< < < < <  !!! В Н И М А Н И Е !!! > > > > >
+  // попробуем записать файл
+  char BufStrOut[128]; // буффер для ответа
+  do
+  {
+    //------------------[ Mount The SD Card ]--------------------
+    FR_Status = f_mount(&FatFs, SDPath, 1);
+    if (FR_Status != FR_OK)
+    {
+      break;
+    }
+    // создаем или проверяем наличие дирректории _OTDR
+    res = f_mkdir(PathPMDir);//"0:/_PM"
+    if(res == FR_EXIST)
+    {
+      //sprintf ((char*)TxBuffer,"Make MainDir Already Is\r");
+      res = FR_OK;
+    }
+    // откроем файл для записи
+      // подготовим путь
+    
+      // имя файла
+      sprintf(FileNameS,"PM_%02d%02d%02d_%02d%02d%02d.csv",TimeSavePM.RTC_Year%100,
+          TimeSavePM.RTC_Mon,
+          TimeSavePM.RTC_Mday,
+          TimeSavePM.RTC_Hour,
+          TimeSavePM.RTC_Min,
+          TimeSavePM.RTC_Sec/10 );
+       // имя файла есть
+      //создадим полны путь к файлу чтобы его открыть
+    sprintf(PathFileS,"%s/%s",PathPMDir,FileNameS);
+   //
+    FR_Status = f_open(&Fil, PathFileS, FA_WRITE  | FA_CREATE_ALWAYS);
+    //    if(FR_Status != FR_OK)
+    //    {
+    //      sprintf(TxBuffer, "Error! While Creating/Opening A New Text File, Error Code: (%i)\r\n", FR_Status);
+    //      UARTSendExt ((BYTE*)TxBuffer, strlen (TxBuffer));
+    //      break;
+    //    }
+    
+    // Подготовим шапку файла
+    GetDeviceName( BufStrOut ); // запрос сторки идентификатора
+    // тут получим поля для белкора из них составим шапку
+    sprintf(BufStrOut, "Прибор:;%s;Сер.номер:;%04d\n\r",SupParams.MFID,ConfigDevice.NumDevice );
+    //
+    FR_Status = f_write(&Fil, (BYTE*)BufStrOut, strlen(BufStrOut),&WWC);
+    
+    sprintf(BufStrOut, "Дата:;20%02d.%02d.%02d\n\r",TimeSavePM.RTC_Year%100,
+          TimeSavePM.RTC_Mon,
+          TimeSavePM.RTC_Mday);
+    //
+    FR_Status = f_write(&Fil, (BYTE*)BufStrOut, strlen(BufStrOut),&WWC);
+    
 
     f_close(&Fil);
     

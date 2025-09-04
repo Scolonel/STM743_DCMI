@@ -49,6 +49,8 @@ typedef struct {
 extern RTCTime current_time;
 extern RTCTime TimeSaveOTDR; // время сохраненной рефлектограммы
 extern RTCTime TimeSaveOLT; // время сохраненной рефлектограммы
+extern RTCTime TimeSavePM; // время сохраненной памяти измерителя
+extern RTCTime TimeReadOLT; // время прочитанной сохраненной рефлектограммы
 
 /* USER CODE END Private defines */
 

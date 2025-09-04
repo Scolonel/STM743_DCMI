@@ -14,14 +14,14 @@
 //
 #define MANUAL 0
 #define AUTO 1
-#define MaxMemPM 3200
+#define MaxMemPM 512
 #define MaxMemOTDR 200
 #define MaxMemOTDRExt 250
 #define MAXMEMALL ((CheckIDMEM)?(MaxMemOTDR+MaxMemOTDRExt):(MaxMemOTDR))
 //число сообщений и €зыков
 #define LANG_NUM 6  // число столбцов в таблице €зыков
 
-#define MSG_NUM 126
+#define MSG_NUM 130
 #define CMD_NUM 35 //команды Nextion
 
 #define TIMERE 500 //врем€ цикла красного глаза по 500 м—
@@ -235,6 +235,7 @@ struct tag_PON
 }; // blok 64 bytes
 
 extern struct tag_PON PONI;
+extern struct tag_PON R_PONI;
 // выжимка из полей *.sor файла дл€ индикации и обработки, вытащим почти все что устанавливаем сами.
 #pragma pack(push,1)
 typedef struct

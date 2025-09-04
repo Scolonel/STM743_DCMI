@@ -49,6 +49,8 @@ void SDMMC_SDCard_FILES(void); // прочитаем files
 unsigned short MakeEvents (void);
 
 void SaveFileSD(int Mod); // запись 0.sor на карточку в главную дирректорию
+// функция записи файла измерений измерителя
+void SaveFilePM(void);
 uint32_t StartInitSDcard (void); 
 
 

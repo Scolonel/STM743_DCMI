@@ -35,6 +35,8 @@
 
 RTCTime TimeSaveOTDR;
 RTCTime TimeSaveOLT;
+RTCTime TimeSavePM; // время перезаписи данных из ЕЕПРОМ на SD карту
+RTCTime TimeReadOLT;
 RTCTime current_time;
  static unsigned int CurTime;
 /* USER CODE END 0 */
@@ -235,9 +237,10 @@ RTCTime RTCGetTime( void )
   
   RTCTime LocalTime; // выходная структура
   // получим текущее время
+  HAL_Delay(10);
   k_GetDate(&CsDate);
+  HAL_Delay(10);
   k_GetTime(&CsTime);
-  
   LocalTime.RTC_Sec = CsTime.Seconds;
   LocalTime.RTC_Min = CsTime.Minutes;
   LocalTime.RTC_Hour = CsTime.Hours;

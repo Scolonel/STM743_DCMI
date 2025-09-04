@@ -119,7 +119,7 @@ const DWORD DelayBadLength [LENGTH_LINE_NUM-1][LENGTH_LINE_NUM]= //длина установ
 {0,0,0,0,0,0,13900}};
 
 struct tag_PON PONI;
-
+struct tag_PON R_PONI; // что читаем из пам€ти при записи в файл
 
 char CommentsOTDR[20] = {"                   \0"}; //комментарии рефлектометра
 char FileNameOTDR[20] = {"                   \0"}; //комментарии рефлектометра
@@ -5027,8 +5027,10 @@ void ModeSelectMEM(void) // режим выбора работы с пам€тью CHECK_OFF
       sprintf(Str, "t4.txt=\"%s\"€€€", MsgMass[74][CurrLang]);
       NEX_Transmit((void*)Str);    // »«ћ≈–»“≈Ћ№
       
-      //sprintf(Str, "t5.txt=\"%4d\"€€€",MaxMemPM-GetCellMem(0));
+      sprintf(Str, "t5.txt=\"%3d\"€€€",MaxMemPM-GetCellMem(0));
       //NEX_Transmit((void*)Str);    // »«ћ≈–»“≈Ћ№ (число €чеек)
+      //sprintf(Str, "t5.txt=\"%d/%d\"€€€",GetCellMem(0),MaxMemPM);
+      NEX_Transmit((void*)Str);    // »«ћ≈–»“≈Ћ№ (число €чеек)
       
       //sprintf(Str, "t6.txt=\"%s\"€€€", MsgMass[44][CurrLang]);
       //NEX_Transmit((void*)Str);    // ќ„»—“ ј
@@ -5091,42 +5093,40 @@ void ModeSelectMEM(void) // режим выбора работы с пам€тью CHECK_OFF
       
       
       break;
-    case 2: // переход в  пам€ти измерител€
+    case 2: // переход в  пам€ть измерител€ (выбор работы)
       if (PowerMeter) // есть измеритель
       {
         // go to wiev memPM
         if (GetCellMem(0))
         {
-          //123!!!       ReadCellIzm(GetCellMem(0)-1,(unsigned char*)&PONI);//  читаем из пам€ти(flash) в PONI €чейку сохранени€ измерител€
-          
-          Sec2Date (PONI.TotalTimeCell, &TimeSaveOLT);
           myBeep(10);
-          NumCellIzm = GetCellMem(0)-1;
-          SetMode(ModeViewMemOLT);
-          SetModeDevice(MODETESTMEM);
-          // посылка команды переключени€ окна на Mem_OLT_view (вызов)  
-          CmdInitPage(20);
+          SetMode(ModeClearMEM);
+          //SetModeDevice(MODETESTMEM);
+          // посылка команды переключени€ окна на Mem_OLT_Choose (выбор действий)  
+          ClrKey (BTN_OK);
+          CmdInitPage(21);
+          HAL_Delay(100);
         }
       }
-//      else   // !!! убрали очистку пам€ти
-//      {
-//        myBeep(10);
-//        SetMode(ModeClearMEM);
-//        FrClearMEM = 2 + PowerMeter;
-//        // посылка команды переключени€ окна на Select_MEM_Clr(вызов)  
-//        CmdInitPage(21);
-//        //NeedReturn = 4; // что бы вернутс€ сюда же
-//      }
+      //      else   // !!! убрали очистку пам€ти
+      //      {
+      //        myBeep(10);
+      //        SetMode(ModeClearMEM);
+      //        FrClearMEM = 2 + PowerMeter;
+      //        // посылка команды переключени€ окна на Select_MEM_Clr(вызов)  
+      //        CmdInitPage(21);
+      //        //NeedReturn = 4; // что бы вернутс€ сюда же
+      //      }
       break;
       //// !!! убрали очистку пам€ти
-//    case 3: // переход в режим выбора стирани€ пам€ти
-//      myBeep(10);
-//      SetMode(ModeClearMEM);
-//      FrClearMEM = 2 + PowerMeter;
-//      // посылка команды переключени€ окна на Select_MEM_Clr(вызов)  
-//      CmdInitPage(21);
-//      //NeedReturn = 4; // что бы вернутс€ сюда же
-//      break;
+      //    case 3: // переход в режим выбора стирани€ пам€ти
+      //      myBeep(10);
+      //      SetMode(ModeClearMEM);
+      //      FrClearMEM = 2 + PowerMeter;
+      //      // посылка команды переключени€ окна на Select_MEM_Clr(вызов)  
+      //      CmdInitPage(21);
+      //      //NeedReturn = 4; // что бы вернутс€ сюда же
+      //      break;
     }
     
   }
@@ -5145,40 +5145,60 @@ void ModeClearMEM(void) // режим освобождени€ пам€ти измерител€ CHECK_OFF
 {
   char Str[32];
   //(InputOK)?("OK"):("???")
-    BYTE PowerMeter=((GetCfgPM())?(1):(0));
+  BYTE PowerMeter=((GetCfgPM())?(1):(0));
   //static BYTE FrClearMEM = 1; // указатель на курсор
   if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
   {
     switch (FrClearMEM)
     {
-    case 1: // refl
-      DeletingAllTrace (); // "”даление"всех рефлектограммы, просто обнул€ем счетчик сохранени€
+    case 1: // вызов окна просмотра
+      //DeletingAllTrace (); // "”даление"всех рефлектограммы, просто обнул€ем счетчик сохранени€
       myBeep(10);
+      // go to wiev memPM
+      if (GetCellMem(0))
+      {
+        //123!!!       ReadCellIzm(GetCellMem(0)-1,(unsigned char*)&PONI);//  читаем из пам€ти(flash) в PONI €чейку сохранени€ измерител€
+        EEPROM_read(&R_PONI, ADR_MemoryOLT+64*(GetCellMem(0)-1), sizeof(PONI));
+        
+        Sec2Date (R_PONI.TotalTimeCell, &TimeSaveOLT);
+        myBeep(10);
+        NumCellIzm = GetCellMem(0)-1;
+        SetMode(ModeViewMemOLT);
+        SetModeDevice(MODETESTMEM);
+        // посылка команды переключени€ окна на Mem_OLT_view (вызов) 
+        NeedReturn = 20; // что бы вызвать окно!
+        //CmdInitPage(20);
+      }
+      
       g_NeedScr = 1; // Need reDraw Screen
-      NeedReturn = 4; // индекс окна возврата
+      //NeedReturn = 4; // индекс окна возврата
       //SetMode(ModeSelectMEM);
       break;
-    case 2:
-      if (PowerMeter)
-      {
-        DeletedAllCell (); // удаление всех записей измерител€
-        myBeep(10);
-        g_NeedScr = 1; // Need reDraw Screen
-        NeedReturn = 4; // индекс окна возврата
-        //SetMode(ModeSelectMEM);
-      }
-      else
-      {
-        myBeep(10);
-        g_NeedScr = 1; // Need reDraw Screen
-        NeedReturn = 4; // индекс окна возврата
-       // SetMode(ModeSelectMEM);
-      }
-      break;
-    case 3:
+    case 2: // записываем в файл и остаемс€ здесь же
+      //      if (PowerMeter)
+      //      {
+      //        DeletedAllCell (); // удаление всех записей измерител€
+      TimeSavePM = RTCGetTime(); // сохран€ем врем€ создани€ файла
+      // функци€ записи файла измерений измерител€
+      SaveFilePM();
+      
       myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
-      NeedReturn = 4; // индекс окна возврата
+      // NeedReturn = 4; // индекс окна возврата
+      //SetMode(ModeSelectMEM);
+      //      }
+      //      else
+      //      {
+      //        myBeep(10);
+      //        g_NeedScr = 1; // Need reDraw Screen
+      //        NeedReturn = 4; // индекс окна возврата
+      //       // SetMode(ModeSelectMEM);
+      //      }
+      break;
+    case 3: // чистим па€ть дл€ измерител€ 
+      myBeep(10);
+      g_NeedScr = 1; // Need reDraw Screen
+      // NeedReturn = 4; // индекс окна возврата
       //SetMode(ModeSelectMEM);
       break;
     }
@@ -5197,33 +5217,22 @@ void ModeClearMEM(void) // режим освобождени€ пам€ти измерител€ CHECK_OFF
     FrClearMEM = ChangeFrSet (FrClearMEM, 2+PowerMeter, 1, PLUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_DOWN);
   }
-
+  
   if (g_FirstScr)
   {
     // здесь заполн€ем данными пол€ нового индикатора
     // не требущие изменени€ при первичной инициализации     
-    sprintf(Str, "t0.txt=\"%s\"€€€", MsgMass[45][CurrLang]); 
-    NEX_Transmit((void*)Str);    // ќчистка пам€ти
-                                                             
-    sprintf(Str, "t1.txt=\"%s\"€€€", MsgMass[7][CurrLang]);
-    NEX_Transmit((void*)Str);    // –≈‘Ћ≈ “ќћ≈“– 
-
-          if (PowerMeter)
-          {
-    sprintf(Str, "t2.txt=\"%s\"€€€", MsgMass[74][CurrLang]);
-    NEX_Transmit((void*)Str);    // »«ћ≈–»“≈Ћ№     
-
-    sprintf(Str, "t3.txt=\"%s\"€€€", MsgMass[46][CurrLang]); 
-    NEX_Transmit((void*)Str);    // ќ“ћ≈Ќј
-          }
-          else
-          {
-    sprintf(Str, "t2.txt=\"%s\"€€€", MsgMass[46][CurrLang]); 
-    NEX_Transmit((void*)Str);    // ќ“ћ≈Ќј
-    sprintf(Str, "t3.txt=\"\"€€€");
-    NEX_Transmit((void*)Str);    // Empty string    
-
-          }
+    sprintf(Str, "t0.txt=\"%s\"€€€", MsgMass[126][CurrLang]); 
+    NEX_Transmit((void*)Str);    // ѕам€ть тестера
+    
+    sprintf(Str, "t1.txt=\"%s\"€€€", MsgMass[127][CurrLang]);
+    NEX_Transmit((void*)Str);    // ѕросмотр
+    
+    sprintf(Str, "t2.txt=\"%s\"€€€", MsgMass[128][CurrLang]);
+    NEX_Transmit((void*)Str);    // —охранить     
+    
+    sprintf(Str, "t3.txt=\"%s\"€€€", MsgMass[129][CurrLang]); 
+    NEX_Transmit((void*)Str);    // ќчистить удалить
     g_FirstScr = 0;
     g_NeedScr = 1;
   }
@@ -5231,7 +5240,7 @@ void ModeClearMEM(void) // режим освобождени€ пам€ти измерител€ CHECK_OFF
   {
     // здесь заполн€ем данными пол€ нового индикатора
     // по результатам изменений вызваныйх обработчиком клавиатуры
-
+    
     // раскрашивание пол€ выбора 
     // закрасим бэкграунды  и установим требуемый
     sprintf(Str, "t1.bco=WHITE€€€"); // белый
@@ -5240,20 +5249,23 @@ void ModeClearMEM(void) // режим освобождени€ пам€ти измерител€ CHECK_OFF
     NEX_Transmit((void*)Str);// 
     sprintf(Str, "t3.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);//
-
+    
     sprintf(Str, "t%d.bco=GREEN€€€", FrClearMEM); // зеленый
     NEX_Transmit((void*)Str);// 
-                                       // код подсветки требуемой строки если есть есть маркер строки
+    // код подсветки требуемой строки если есть есть маркер строки
     g_NeedScr = 0;
   }
-
+  
   if (((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))||(NeedReturn))
   {
     myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
+    if(!NeedReturn)
+    {
     SetMode(ModeSelectMEM);
-    if(!NeedReturn) NeedReturn = 4;
-            // посылка команды переключени€ окна на MainMenu (возврат)  
+      NeedReturn = 4;
+    }
+    // посылка команды переключени€ окна на Memory (возврат)  
     CmdInitPage(NeedReturn);
     NeedReturn = 0;
     
@@ -5266,24 +5278,29 @@ void ModeViewMemOLT(void) // режим просмотра пам€ти измерител€ CHECK_OFF
   char Str[32];
   char StrO[64];
   if ((PRESS(BTN_LEFT))&&((getStateButtons(BTN_LEFT)==SHORT_PRESSED)||(getStateButtons(BTN_LEFT)==INF_PRESSED)))
-      {
-        if (NumCellIzm > 0) NumCellIzm--;
-        else NumCellIzm = GetCellMem(0)-1;
-//123!!!       ReadCellIzm(NumCellIzm,(unsigned char*)&PONI);//  читаем из пам€ти(flash) в PONI €чейку сохранени€ измерител€
-       Sec2Date (PONI.TotalTimeCell, &TimeSaveOLT);
-       g_NeedScr = 1; // дл€ вызова заполнени€ значений
-       myBeep(10);
-        
-      }
+  {
+    if (NumCellIzm > 0) NumCellIzm--;
+    else NumCellIzm = GetCellMem(0)-1;
+    //123!!!       ReadCellIzm(NumCellIzm,(unsigned char*)&PONI);//  читаем из пам€ти(flash) в PONI €чейку сохранени€ измерител€
+    // чтение структуры €чейки сохранени€ OLT 
+    EEPROM_read(&R_PONI, ADR_MemoryOLT+64*NumCellIzm, sizeof(R_PONI));
+    
+    Sec2Date (R_PONI.TotalTimeCell, &TimeReadOLT);
+    g_NeedScr = 1; // дл€ вызова заполнени€ значений
+    myBeep(10);
+    
+  }
   if ((PRESS(BTN_RIGHT))&&((getStateButtons(BTN_RIGHT)==SHORT_PRESSED)||(getStateButtons(BTN_RIGHT)==INF_PRESSED)))
-      {
-        if (NumCellIzm < GetCellMem(0)-1) NumCellIzm++;
-        else NumCellIzm =0;
-//123!!!       ReadCellIzm(NumCellIzm,(unsigned char*)&PONI);//  читаем из пам€ти(flash) в PONI €чейку сохранени€ измерител€
-       Sec2Date (PONI.TotalTimeCell, &TimeSaveOLT);
-       g_NeedScr = 1; // дл€ вызова заполнени€ значений
-       myBeep(10);
-      }
+  {
+    if (NumCellIzm < GetCellMem(0)-1) NumCellIzm++;
+    else NumCellIzm =0;
+    //123!!!       ReadCellIzm(NumCellIzm,(unsigned char*)&PONI);//  читаем из пам€ти(flash) в PONI €чейку сохранени€ измерител€
+    // чтение структуры €чейки сохранени€ OLT 
+    EEPROM_read(&R_PONI, ADR_MemoryOLT+64*NumCellIzm, sizeof(R_PONI));
+    Sec2Date (R_PONI.TotalTimeCell, &TimeReadOLT);
+    g_NeedScr = 1; // дл€ вызова заполнени€ значений
+    myBeep(10);
+  }
   
   if (g_FirstScr)
   {
@@ -5309,8 +5326,8 @@ void ModeViewMemOLT(void) // режим просмотра пам€ти измерител€ CHECK_OFF
     NEX_Transmit((void*)Str);// 
     sprintf(Str, "t9.txt=\"%s\"€€€", MsgMass[47][CurrLang]); // дЅ
     NEX_Transmit((void*)Str);// 
-
-
+    
+    
     g_NeedScr = 1; // дл€ вызова заполнени€ значений
     g_FirstScr = 0;
   }
@@ -5318,99 +5335,99 @@ void ModeViewMemOLT(void) // режим просмотра пам€ти измерител€ CHECK_OFF
   {
     // здесь заполн€ем данными пол€ нового индикатора
     // по результатам изменений вызваныйх обработчиком клавиатуры
-  // перва€ сторока дата и врем€ файла и его номер в пам€ти
-  sprintf(Str,"%02d.%02d.%02d_%02d:%02d:%02d (%04d)",TimeSaveOLT.RTC_Year%100,
-          TimeSaveOLT.RTC_Mon,
-          TimeSaveOLT.RTC_Mday,
-          TimeSaveOLT.RTC_Hour,
-          TimeSaveOLT.RTC_Min,
-          TimeSaveOLT.RTC_Sec,
-          NumCellIzm+1); // поправлено 23.04.2013 - номер в пам€ти и пор€дковый номер сохранени€ 
+    // перва€ сторока дата и врем€ файла и его номер в пам€ти
+    sprintf(Str,"%02d.%02d.%02d_%02d:%02d:%02d (%04d)",TimeReadOLT.RTC_Year%100,
+            TimeReadOLT.RTC_Mon,
+            TimeReadOLT.RTC_Mday,
+            TimeReadOLT.RTC_Hour,
+            TimeReadOLT.RTC_Min,
+            TimeReadOLT.RTC_Sec,
+            NumCellIzm+1); // поправлено 23.04.2013 - номер в пам€ти и пор€дковый номер сохранени€ 
     sprintf(StrO, "t0.txt=\"%s\"€€€", Str); // 
-   NEX_Transmit((void*)StrO);// 
-  sprintf(Str,"%s",PONI.CommUserPM);
+    NEX_Transmit((void*)StrO);// 
+    sprintf(Str,"%s",R_PONI.CommUserPM);
     sprintf(StrO, "t1.txt=\"%s\"€€€", Str); // 
-   NEX_Transmit((void*)StrO);// 
-  sprintf(Str,"%04d",PONI.NumFix);
+    NEX_Transmit((void*)StrO);// 
+    sprintf(Str,"%04d",R_PONI.NumFix);
     sprintf(StrO, "t10.txt=\"%s\"€€€", Str); // 
-   NEX_Transmit((void*)StrO);// 
-  switch (PONI.Rez) // далее рисуем в зависимости от того кака€ каритнка
-  {
-  case MANUAL:
-    sprintf(Str,"%s", MsgMass[17][CurrLang]);//ƒлина волны
-    sprintf(StrO, "t2.txt=\"%s\"€€€", Str); // 
-   NEX_Transmit((void*)StrO);// 
-    sprintf(Str,"%d%s",PONI.LenWaveMeas,MsgMass[18][CurrLang]);//нм
-    sprintf(StrO, "t6.txt=\"%s\"€€€", Str); // 
-   NEX_Transmit((void*)StrO);// 
-    sprintf(Str,"%s", MsgMass[51][CurrLang]);//”ровень, 
-    sprintf(StrO, "t3.txt=\"%s\"€€€", Str); // 
-   NEX_Transmit((void*)StrO);// 
-    DrawLevelStr(Str); //???? вывод признака в чем выводим W/ dB/ dBm
-    sprintf(StrO, "t7.txt=\"%s\"€€€", Str); // 
-   NEX_Transmit((void*)StrO);// 
-    sprintf(Str,"REF,     %s", MsgMass[48][CurrLang]);//дЅм
-    sprintf(StrO, "t4.txt=\"%s\"€€€", Str); // 
-   NEX_Transmit((void*)StrO);// 
-    sprintf(Str,"%.2f",PONI.BaseLvl[0]);
-    sprintf(StrO, "t8.txt=\"%s\"€€€", Str); // 
-   NEX_Transmit((void*)StrO);// 
-    sprintf(Str,"%s,  %s", MsgMass[52][CurrLang], MsgMass[47][CurrLang]);//ѕотери,  дЅ
-    sprintf(StrO, "t5.txt=\"%s\"€€€", Str); // 
-   NEX_Transmit((void*)StrO);// 
-    sprintf(Str,"%.2f",PONI.PowLevel[1]);
-    sprintf(StrO, "t9.txt=\"%s\"€€€", Str); // 
-   NEX_Transmit((void*)StrO);// 
-    
-    break;
-  case AUTO:
-    sprintf(Str,"%s", MsgMass[53][CurrLang]);//ƒл.волны    
-    sprintf(StrO, "t2.txt=\"%s\"€€€", Str); // 
-   NEX_Transmit((void*)StrO);// 
-    sprintf(Str,"%s", MsgMass[52][CurrLang]);//  ѕотери
-    sprintf(StrO, "t6.txt=\"%s\"€€€", Str); // 
-   NEX_Transmit((void*)StrO);// 
-        for (int i=0; i<3; i++)
-        {
-          if (PONI.PowLevel[i]>-100.0)
-          {
-    sprintf(Str,"%04d %s  ",PONI.LenWaveKlb[i], MsgMass[18][CurrLang]);
-    sprintf(StrO, "t%01d.txt=\"%s\"€€€",3+i, Str); // 
-   NEX_Transmit((void*)StrO);// 
-    sprintf(Str,"%.2f %s",PONI.PowLevel[i], MsgMass[47][CurrLang]);
-    sprintf(StrO, "t%01d.txt=\"%s\"€€€",7+i, Str); // 
-   NEX_Transmit((void*)StrO);// 
-          }
-    else 
+    NEX_Transmit((void*)StrO);// 
+    switch (R_PONI.Rez) // далее рисуем в зависимости от того кака€ каритнка
     {
-    sprintf(Str,"-------");
-    sprintf(StrO, "t%01d.txt=\"%s\"€€€",3+i, Str); // 
-   NEX_Transmit((void*)StrO);// 
-    sprintf(Str,"--------");
-    sprintf(StrO, "t%01d.txt=\"%s\"€€€",7+i, Str); // 
-   NEX_Transmit((void*)StrO);// 
-    }      
-
+    case MANUAL:
+      sprintf(Str,"%s", MsgMass[17][CurrLang]);//ƒлина волны
+      sprintf(StrO, "t2.txt=\"%s\"€€€", Str); // 
+      NEX_Transmit((void*)StrO);// 
+      sprintf(Str,"%d%s",R_PONI.LenWaveMeas,MsgMass[18][CurrLang]);//нм
+      sprintf(StrO, "t6.txt=\"%s\"€€€", Str); // 
+      NEX_Transmit((void*)StrO);// 
+      sprintf(Str,"%s", MsgMass[51][CurrLang]);//”ровень, 
+      sprintf(StrO, "t3.txt=\"%s\"€€€", Str); // 
+      NEX_Transmit((void*)StrO);// 
+      DrawLevelStr(Str); //???? вывод признака в чем выводим W/ dB/ dBm
+      sprintf(StrO, "t7.txt=\"%s\"€€€", Str); // 
+      NEX_Transmit((void*)StrO);// 
+      sprintf(Str,"REF,     %s", MsgMass[48][CurrLang]);//дЅм
+      sprintf(StrO, "t4.txt=\"%s\"€€€", Str); // 
+      NEX_Transmit((void*)StrO);// 
+      sprintf(Str,"%.2f",R_PONI.BaseLvl[0]);
+      sprintf(StrO, "t8.txt=\"%s\"€€€", Str); // 
+      NEX_Transmit((void*)StrO);// 
+      sprintf(Str,"%s,  %s", MsgMass[52][CurrLang], MsgMass[47][CurrLang]);//ѕотери,  дЅ
+      sprintf(StrO, "t5.txt=\"%s\"€€€", Str); // 
+      NEX_Transmit((void*)StrO);// 
+      sprintf(Str,"%.2f",R_PONI.PowLevel[1]);
+      sprintf(StrO, "t9.txt=\"%s\"€€€", Str); // 
+      NEX_Transmit((void*)StrO);// 
+      
+      break;
+    case AUTO:
+      sprintf(Str,"%s", MsgMass[53][CurrLang]);//ƒл.волны    
+      sprintf(StrO, "t2.txt=\"%s\"€€€", Str); // 
+      NEX_Transmit((void*)StrO);// 
+      sprintf(Str,"%s", MsgMass[52][CurrLang]);//  ѕотери
+      sprintf(StrO, "t6.txt=\"%s\"€€€", Str); // 
+      NEX_Transmit((void*)StrO);// 
+      for (int i=0; i<3; i++)
+      {
+        if (R_PONI.PowLevel[i]>-100.0)
+        {
+          sprintf(Str,"%04d %s  ",R_PONI.LenWaveKlb[i], MsgMass[18][CurrLang]);
+          sprintf(StrO, "t%01d.txt=\"%s\"€€€",3+i, Str); // 
+          NEX_Transmit((void*)StrO);// 
+          sprintf(Str,"%.2f %s",R_PONI.PowLevel[i], MsgMass[47][CurrLang]);
+          sprintf(StrO, "t%01d.txt=\"%s\"€€€",7+i, Str); // 
+          NEX_Transmit((void*)StrO);// 
         }
-    break;
-  }
-
+        else 
+        {
+          sprintf(Str,"-------");
+          sprintf(StrO, "t%01d.txt=\"%s\"€€€",3+i, Str); // 
+          NEX_Transmit((void*)StrO);// 
+          sprintf(Str,"--------");
+          sprintf(StrO, "t%01d.txt=\"%s\"€€€",7+i, Str); // 
+          NEX_Transmit((void*)StrO);// 
+        }      
+        
+      }
+      break;
+    }
+    
     // раскрашивание пол€ выбора 
-
+    
     g_NeedScr = 0;
   }
-
-
-    if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
+  
+  
+  if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
   {
     myBeep(10);
     SetMode(ModeSelectMEM);
     ModeDevice = MODEOTHER;
     // посылка команды переключени€ окна на Memory (возврат)  
-      CmdInitPage(4);
+    CmdInitPage(4);
   }
   //ClrKey (BNS_MASK);
-
+  
 }
 
 void ModeSetting(void)// режим установок прибора CHECK_IN
@@ -6809,6 +6826,7 @@ void SavePowerMeter(float Pow_mW)// функци€ сохранени€ в пам€ти »«мерений
 {
   char Str[20];
   int j=0;
+    TimeSaveOLT = RTCGetTime(); // сохран€ем врем€ сбора
   for (int i=0; i<3; i++)
   {
     PONI.LenWaveKlb[i]=0;
@@ -6816,7 +6834,6 @@ void SavePowerMeter(float Pow_mW)// функци€ сохранени€ в пам€ти »«мерений
     PONI.BaseLvl[i]=-100.0;
   }
     PONI.CellMod=0;
-    TimeSaveOLT = RTCGetTime(); // сохран€ем врем€ сбора
     PONI.TotalTimeCell = TotalSec( TimeSaveOLT); // считаем секунды// подсчет общего времени в сек
     PONI.CommUserPM[ARRAY_SIZE(PONI.CommUserPM)-1]=0; // последний элемент в массиве равен 0
       for (int Ind =ARRAY_SIZE(PONI.CommUserPM)-2; Ind>=0; Ind--)
@@ -6882,6 +6899,9 @@ void WriteMemPow(void) // запись в пам€ть непосредственно
 if (TmpCellMem < MaxMemPM)
       {
 //123!!!      WriteCellIzm(TmpCellMem, (unsigned char*)&PONI);
+        // строка записи €чейки в пам€ть
+      EEPROM_write(&PONI, ADR_MemoryOLT+64*TmpCellMem, sizeof(PONI));
+  
       if (TmpCellMem < MaxMemPM) GetCellMem(1);
       if (GetEnIncFiber(0))    // это надо делать только когда сохран€ем
       {

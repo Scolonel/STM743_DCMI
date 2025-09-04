@@ -179,7 +179,12 @@ const char *MsgMass[MSG_NUM][LANG_NUM] =
 {"ДА","YES","Ano","Si","Ja","YES"},//122
 {"tst","tst","tst","tst","tst","tst"},//123
 {"мкм","um","um","um","um","um"},                             //124 микро метры
-{"Длины волн ","WL AutoSave","Vlnova delka","L.Onda","Wellenlange","WL AutoSave"}  //125
+{"Длины волн ","WL AutoSave","Vlnova delka","L.Onda","Wellenlange","WL AutoSave"},  //125
+// Для нового окна работы с памятью тестера
+{"Память Тестера","Tester's Memory :","Pamet :","Memoria","Speicher:","Memory :"},//126
+{"Просмотр","  free","  Volna","Libre","  Frei","  free"},//127 просмотреть
+{"Сохранить","Save","Vymazat","Limpiar","Loschen","Save"},//128 сохранить в файл
+{"Очистка памяти","Clear memory","Vymazat pamet","Vaciar m.","Speicher loschen","Clear memory"}//129 Очистить
 
 };
 
