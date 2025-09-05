@@ -118,6 +118,7 @@ void SavePowerMeter(float Pow_mW);// функци€ сохранени€ в пам€ти »«мерений
 void ReturnToTester (BYTE EnClr); // возврат в измеритель
 void WriteMemPow(void); // запись в пам€ть непосредственно
 void DrawLevelStr(char* Str); //???? вывод признака в чем выводим W/ dB/ dBm
+void DrawLevelToFile(char* Str); //???? вывод признака в чем выводим W/ dB/ dBm
 void SetStringPM(char *Str, float mWatt) ;          // устанавливает строку данных измерени€
 void ReLoadCommOLT (void); // перезагружаем комментарии дл€ измерител€
 

@@ -6959,54 +6959,112 @@ void ReturnToTester (BYTE EnClr) // возврат в измеритель( здесь же выберем окно 
 void  DrawLevelStr(char* Str) //???? вывод признака в чем выводим W/ dB/ dBm
 {
   //char Watt[5];
-         switch (PONI.CellMod)
+         switch (R_PONI.CellMod)
     {
     case 0: // дЅм
     case 1: // дЅ
   switch ( GetCfgPM ()) // получение установки измерител€
   {
     case 1:
-      sprintf(Str,"%s  %.2f", MsgMass[48][CurrLang],PONI.PowLevel[0]);//дЅм
-      if (PONI.PowLevel[0] <= -85.0)
+      sprintf(Str,"%s  %.2f", MsgMass[48][CurrLang],R_PONI.PowLevel[0]);//дЅм
+      if (R_PONI.PowLevel[0] <= -85.0)
       {
       sprintf(Str,"%s  <%.2f", MsgMass[48][CurrLang], -85.0);//дЅм
       }
       break;
     case 2:
-      sprintf(Str,"%s  %.2f", MsgMass[48][CurrLang],PONI.PowLevel[0]);//дЅм
-      if (PONI.PowLevel[0] <= -60.0)
+      sprintf(Str,"%s  %.2f", MsgMass[48][CurrLang],R_PONI.PowLevel[0]);//дЅм
+      if (R_PONI.PowLevel[0] <= -60.0)
       {
       sprintf(Str,"%s  <%.2f", MsgMass[48][CurrLang],-60.0);//дЅм
       }
       break;
     default:
-      sprintf(Str,"%s  %.2f", MsgMass[48][CurrLang],PONI.PowLevel[0]);//дЅм
+      sprintf(Str,"%s  %.2f", MsgMass[48][CurrLang],R_PONI.PowLevel[0]);//дЅм
       break;
   }
       //putWideString(20,2,screen,Str2,1);
       break;
     case 2: // миливаты
-      if (PONI.PowLevel[2] >= 1) // миливатты
+      if (R_PONI.PowLevel[2] >= 1) // миливатты
       {
-        sprintf(Str,"%s  %.2f",MsgMass[97][CurrLang],PONI.PowLevel[2]);
+        sprintf(Str,"%s  %.2f",MsgMass[97][CurrLang],R_PONI.PowLevel[2]);
         //putWideString(20,2,screen,Str2,1);
       }
-      if ((PONI.PowLevel[2] >= 0.001)&&(PONI.PowLevel[2] < 1.0)) // микроватты
+      if ((R_PONI.PowLevel[2] >= 0.001)&&(R_PONI.PowLevel[2] < 1.0)) // микроватты
       {
-        sprintf(Str,"%s  %.2f",MsgMass[96][CurrLang],PONI.PowLevel[2]*1.0e3);
-        //putWideString(20,2,screen,Str2,1);
-      }
-      
-      if ((PONI.PowLevel[2] >= 1e-6)&&(PONI.PowLevel[2] < 0.001)) // нановатты
-      {
-        sprintf(Str,"%s  %.2f",MsgMass[95][CurrLang],PONI.PowLevel[2]*1.0e6);
+        sprintf(Str,"%s  %.2f",MsgMass[96][CurrLang],R_PONI.PowLevel[2]*1.0e3);
         //putWideString(20,2,screen,Str2,1);
       }
       
-      if (PONI.PowLevel[2] < 1e-6) // меньше 1 н¬т
+      if ((R_PONI.PowLevel[2] >= 1e-6)&&(R_PONI.PowLevel[2] < 0.001)) // нановатты
       {
-        if (PONI.PowLevel[2] < 1e-9)PONI.PowLevel[2] = 1e-9;
-        sprintf(Str,"%s  %.2f",MsgMass[94][CurrLang],PONI.PowLevel[2]*1.0e9);
+        sprintf(Str,"%s  %.2f",MsgMass[95][CurrLang],R_PONI.PowLevel[2]*1.0e6);
+        //putWideString(20,2,screen,Str2,1);
+      }
+      
+      if (R_PONI.PowLevel[2] < 1e-6) // меньше 1 н¬т
+      {
+        if (R_PONI.PowLevel[2] < 1e-9)R_PONI.PowLevel[2] = 1e-9;
+        sprintf(Str,"%s  %.2f",MsgMass[94][CurrLang],R_PONI.PowLevel[2]*1.0e9);
+        //putWideString(20,2,screen,Str2,1);
+      }
+      break;
+    }
+}
+
+//
+void  DrawLevelToFile(char* Str) //???? вывод признака в чем выводим W/ dB/ dBm
+{
+  //char Watt[5];
+         switch (R_PONI.CellMod)
+    {
+    case 0: // дЅм
+    case 1: // дЅ
+  switch ( GetCfgPM ()) // получение установки измерител€
+  {
+    case 1:
+      sprintf(Str,"%.2f %s",R_PONI.PowLevel[0], MsgMass[48][CurrLang]);//дЅм
+      if (R_PONI.PowLevel[0] <= -85.0)
+      {
+      sprintf(Str,"<%.2f %s", -85.0, MsgMass[48][CurrLang]);//дЅм
+      }
+      break;
+    case 2:
+      sprintf(Str,"%.2f %s",R_PONI.PowLevel[0], MsgMass[48][CurrLang]);//дЅм
+      if (R_PONI.PowLevel[0] <= -60.0)
+      {
+      sprintf(Str,"<%.2f %s",-60.0, MsgMass[48][CurrLang]);//дЅм
+      }
+      break;
+    default:
+      sprintf(Str,"%.2f %s",R_PONI.PowLevel[0], MsgMass[48][CurrLang]);//дЅм
+      break;
+  }
+      //putWideString(20,2,screen,Str2,1);
+      break;
+    case 2: // миливаты
+      if (R_PONI.PowLevel[2] >= 1) // миливатты
+      {
+        sprintf(Str,"%.2f %s",R_PONI.PowLevel[2],MsgMass[97][CurrLang]);
+        //putWideString(20,2,screen,Str2,1);
+      }
+      if ((R_PONI.PowLevel[2] >= 0.001)&&(R_PONI.PowLevel[2] < 1.0)) // микроватты
+      {
+        sprintf(Str,"%.2f %s",R_PONI.PowLevel[2]*1.0e3,MsgMass[96][CurrLang]);
+        //putWideString(20,2,screen,Str2,1);
+      }
+      
+      if ((R_PONI.PowLevel[2] >= 1e-6)&&(R_PONI.PowLevel[2] < 0.001)) // нановатты
+      {
+        sprintf(Str,"%.2f %s",R_PONI.PowLevel[2]*1.0e6,MsgMass[95][CurrLang]);
+        //putWideString(20,2,screen,Str2,1);
+      }
+      
+      if (R_PONI.PowLevel[2] < 1e-6) // меньше 1 н¬т
+      {
+        if (R_PONI.PowLevel[2] < 1e-9)R_PONI.PowLevel[2] = 1e-9;
+        sprintf(Str,"%.2f %s",R_PONI.PowLevel[2]*1.0e9,MsgMass[94][CurrLang]);
         //putWideString(20,2,screen,Str2,1);
       }
       break;

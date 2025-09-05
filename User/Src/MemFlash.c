@@ -1757,6 +1757,8 @@ void SaveFilePM(void)
   //< < < < <  !!! В Н И М А Н И Е !!! > > > > >
   // попробуем записать файл
   char BufStrOut[128]; // буффер для ответа
+  char StrTime[24]; // строка время записи
+  char StrRes[16]; // строка результат
   do
   {
     //------------------[ Mount The SD Card ]--------------------
@@ -1806,8 +1808,43 @@ void SaveFilePM(void)
           TimeSavePM.RTC_Mday);
     //
     FR_Status = f_write(&Fil, (BYTE*)BufStrOut, strlen(BufStrOut),&WWC);
-    
+    // заголовок таблицы
+    sprintf(BufStrOut, "Дата и время;№ Волокна;Длина волны;Результат;Эталонный уровень;Режим;Комментарий;Номер записи\n\r");
+    FR_Status = f_write(&Fil, (BYTE*)BufStrOut, strlen(BufStrOut),&WWC);
+    // заполнение таблицы
+    // в цикле читаем ячейку и разбираем ее...
+    for (int i=0;i<GetCellMem(0);i++)
+    {
+          // чтение структуры ячейки сохранения OLT 
+    EEPROM_read(&R_PONI, ADR_MemoryOLT+64*i, sizeof(R_PONI));
+    Sec2Date (R_PONI.TotalTimeCell, &TimeReadOLT); // заполняем структуру времени
+      // строка время записи c ;
+      sprintf(StrTime,"20%02d%02d%02dT%02d%02d%02d;",TimeReadOLT.RTC_Year%100,
+          TimeReadOLT.RTC_Mon,
+          TimeReadOLT.RTC_Mday,
+          TimeReadOLT.RTC_Hour,
+          TimeReadOLT.RTC_Min,
+          TimeReadOLT.RTC_Sec);
+      // разбор по полю от кого измерение
+      if(R_PONI.Rez==0) // ручной, пишем одно измерение, но там надо разобрать какое поле, 
+      {
+        DrawLevelToFile(StrRes); // заполняем строку со значениями
+    sprintf(BufStrOut, "%s%d;%d нм;%s;%.2f дБм;P1;%s;%03d\n\r",StrTime,R_PONI.NumFix,R_PONI.LenWaveMeas,StrRes,R_PONI.BaseLvl[0],R_PONI.CommUserPM,i+1 );
+    FR_Status = f_write(&Fil, (BYTE*)BufStrOut, strlen(BufStrOut),&WWC);
+        
+      }
+      else // автомат, 3 поля заполняем
+      {
+        for(int j=0;j<3;j++)
+        {
+    sprintf(BufStrOut, "%s%d;%d нм;%.3f дБ;%.2f дБм;Pa;%s;%03d\n\r",StrTime,R_PONI.NumFix,R_PONI.LenWaveKlb[j],R_PONI.PowLevel[j],R_PONI.BaseLvl[j],R_PONI.CommUserPM,i+1 );
+    FR_Status = f_write(&Fil, (BYTE*)BufStrOut, strlen(BufStrOut),&WWC);
+          
+        }
+      }
+      
 
+    }
     f_close(&Fil);
     
   } while(0);
