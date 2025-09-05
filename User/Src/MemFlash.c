@@ -1799,17 +1799,17 @@ void SaveFilePM(void)
     // Подготовим шапку файла
     GetDeviceName( BufStrOut ); // запрос сторки идентификатора
     // тут получим поля для белкора из них составим шапку
-    sprintf(BufStrOut, "Прибор:;%s;Сер.номер:;%04d\n\r",SupParams.MFID,ConfigDevice.NumDevice );
+    sprintf(BufStrOut, "Прибор:;%s;Сер.номер:;%04d\n",SupParams.MFID,ConfigDevice.NumDevice );
     //
     FR_Status = f_write(&Fil, (BYTE*)BufStrOut, strlen(BufStrOut),&WWC);
     
-    sprintf(BufStrOut, "Дата:;20%02d.%02d.%02d\n\r",TimeSavePM.RTC_Year%100,
+    sprintf(BufStrOut, "Дата:;20%02d.%02d.%02d\n",TimeSavePM.RTC_Year%100,
           TimeSavePM.RTC_Mon,
           TimeSavePM.RTC_Mday);
     //
     FR_Status = f_write(&Fil, (BYTE*)BufStrOut, strlen(BufStrOut),&WWC);
     // заголовок таблицы
-    sprintf(BufStrOut, "Дата и время;№ Волокна;Длина волны;Результат;Эталонный уровень;Режим;Комментарий;Номер записи\n\r");
+    sprintf(BufStrOut, "Дата и время;№ Волокна;Длина волны;Результат;Эталонный уровень;Режим;Комментарий;Номер записи\n");
     FR_Status = f_write(&Fil, (BYTE*)BufStrOut, strlen(BufStrOut),&WWC);
     // заполнение таблицы
     // в цикле читаем ячейку и разбираем ее...
@@ -1819,7 +1819,7 @@ void SaveFilePM(void)
     EEPROM_read(&R_PONI, ADR_MemoryOLT+64*i, sizeof(R_PONI));
     Sec2Date (R_PONI.TotalTimeCell, &TimeReadOLT); // заполняем структуру времени
       // строка время записи c ;
-      sprintf(StrTime,"20%02d%02d%02dT%02d%02d%02d;",TimeReadOLT.RTC_Year%100,
+    sprintf(StrTime,"20%02d.%02d.%02dT%02d:%02d:%02d;",TimeReadOLT.RTC_Year%100,
           TimeReadOLT.RTC_Mon,
           TimeReadOLT.RTC_Mday,
           TimeReadOLT.RTC_Hour,
@@ -1829,7 +1829,7 @@ void SaveFilePM(void)
       if(R_PONI.Rez==0) // ручной, пишем одно измерение, но там надо разобрать какое поле, 
       {
         DrawLevelToFile(StrRes); // заполняем строку со значениями
-    sprintf(BufStrOut, "%s%d;%d нм;%s;%.2f дБм;P1;%s;%03d\n\r",StrTime,R_PONI.NumFix,R_PONI.LenWaveMeas,StrRes,R_PONI.BaseLvl[0],R_PONI.CommUserPM,i+1 );
+    sprintf(BufStrOut, "%s%d;%d нм;%s;%.2f дБм;P1;%s;%03d\n",StrTime,R_PONI.NumFix,R_PONI.LenWaveMeas,StrRes,R_PONI.BaseLvl[0],R_PONI.CommUserPM,i+1 );
     FR_Status = f_write(&Fil, (BYTE*)BufStrOut, strlen(BufStrOut),&WWC);
         
       }
@@ -1837,7 +1837,7 @@ void SaveFilePM(void)
       {
         for(int j=0;j<3;j++)
         {
-    sprintf(BufStrOut, "%s%d;%d нм;%.3f дБ;%.2f дБм;Pa;%s;%03d\n\r",StrTime,R_PONI.NumFix,R_PONI.LenWaveKlb[j],R_PONI.PowLevel[j],R_PONI.BaseLvl[j],R_PONI.CommUserPM,i+1 );
+    sprintf(BufStrOut, "%s%d;%d нм;%.3f дБ;%.2f дБм;Pa;%s;%03d\n",StrTime,R_PONI.NumFix,R_PONI.LenWaveKlb[j],R_PONI.PowLevel[j],R_PONI.BaseLvl[j],R_PONI.CommUserPM,i+1 );
     FR_Status = f_write(&Fil, (BYTE*)BufStrOut, strlen(BufStrOut),&WWC);
           
         }
