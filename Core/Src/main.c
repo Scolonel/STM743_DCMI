@@ -1057,7 +1057,7 @@ WORD TimerPA (BYTE Set)
 void myBeep (unsigned sound)
 {
   extern unsigned beepTick; // 
-
+  if(UserSet.TimeLight)
 	beepTick = sound + 1;
 }
 

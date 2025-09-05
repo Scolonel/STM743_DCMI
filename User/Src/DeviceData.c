@@ -792,6 +792,12 @@ DWORD CheckUserGonfig (void)  // Проверка пользовательских настроек
     Err |=0x400;
     UserSet.EnIncFiber=MANUAL;
   }
+  // переставим значение времени подсветки в 1 , что будет соответствовать разрешению звуков
+  if (UserSet.TimeLight>1)
+  {
+    //Err |=0x800;
+    UserSet.TimeLight=1;
+  }
   if (UserSet.CellMem>MaxMemPM)
   {
     Err |=0x800;

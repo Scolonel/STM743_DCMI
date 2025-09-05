@@ -21,7 +21,7 @@
 //число сообщений и €зыков
 #define LANG_NUM 6  // число столбцов в таблице €зыков
 
-#define MSG_NUM 130
+#define MSG_NUM 131
 #define CMD_NUM 35 //команды Nextion
 
 #define TIMERE 500 //врем€ цикла красного глаза по 500 м—

@@ -5481,7 +5481,7 @@ void ModeSetting(void)// режим установок прибора CHECK_IN
     //ClrKey (BTN_OK);
   }
   break;
-  case 4: // BlackLight (1)
+  case 4: // BlackLight (1) // теперь будет вкл./выкл. «¬” ј
   if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
   {
     myBeep(10);
@@ -5525,10 +5525,16 @@ void ModeSetting(void)// режим установок прибора CHECK_IN
         //ClrKey (BTN_OK);
   }
   break;// рефлектометр
-  case 3: //Contrast (4)
+  case 3: //Contrast (4)Sound
   if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
   {
     myBeep(10);
+    if(UserSet.TimeLight)  UserSet.TimeLight = 0;
+    else
+    {
+      UserSet.TimeLight = 1;
+      myBeep(50);
+    }
     g_NeedScr = 1; // Need reDraw Screen
 //xxx    ChangeUserContr (1); // изменеие пользовательской контрастности
     //ClrKey (BTN_RIGHT);
@@ -5536,24 +5542,30 @@ void ModeSetting(void)// режим установок прибора CHECK_IN
   if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
   {
     myBeep(10);
+    if(UserSet.TimeLight)  UserSet.TimeLight = 0;
+    else
+    {
+      UserSet.TimeLight = 1;
+      myBeep(50);
+    }
     g_NeedScr = 1; // Need reDraw Screen
 //xxx    ChangeUserContr (-1); // изменеие пользовательской контрастности
     //ClrKey (BTN_LEFT);
   }
-  if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==INF_PRESSED))
-  {
-    myBeep(10);
-    g_NeedScr = 1; // Need reDraw Screen
-//xxx    ChangeUserContr (1); // изменеие пользовательской контрастности
-    //ClrKey (BTN_RIGHT);
-  }
-  if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==INF_PRESSED))
-  {
-    myBeep(10);
-    g_NeedScr = 1; // Need reDraw Screen
-//xxx    ChangeUserContr (-1); // изменеие пользовательской контрастности
-    //ClrKey (BTN_LEFT);
-  }
+//  if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==INF_PRESSED))
+//  {
+//    myBeep(10);
+//    g_NeedScr = 1; // Need reDraw Screen
+////xxx    ChangeUserContr (1); // изменеие пользовательской контрастности
+//    //ClrKey (BTN_RIGHT);
+//  }
+//  if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==INF_PRESSED))
+//  {
+//    myBeep(10);
+//    g_NeedScr = 1; // Need reDraw Screen
+////xxx    ChangeUserContr (-1); // изменеие пользовательской контрастности
+//    //ClrKey (BTN_LEFT);
+//  }
 //  if (((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==LONG_PRESSED))&&(ChangeUserContr (0)==66))
 //  {
 //    myBeep(10);
@@ -5572,7 +5584,7 @@ void ModeSetting(void)// режим установок прибора CHECK_IN
 //    SetMode(KeyTestGame);
 //    
 //  }
-  break;// Contrast
+  break;// Contrast// Sound
   }
 
   
@@ -5590,8 +5602,8 @@ void ModeSetting(void)// режим установок прибора CHECK_IN
     sprintf(Str, "t2.txt=\"%s\"€€€", MsgMass[100][CurrLang]); //!
     NEX_Transmit((void*)Str);    // OTDR Params
   
-    sprintf(Str, "t3.txt=\"%s\"€€€", MsgMass[121][CurrLang]); //!
-    NEX_Transmit((void*)Str);    // яркость
+    sprintf(Str, "t3.txt=\"%s\"€€€", MsgMass[130][CurrLang]); //!
+    NEX_Transmit((void*)Str);    // «вук
   
     g_FirstScr = 0;
     g_NeedScr = 1;
@@ -5603,7 +5615,7 @@ void ModeSetting(void)// режим установок прибора CHECK_IN
     sprintf(Str, "t6.txt=\"%s\"€€€", MsgMass[0][CurrLang]);
     NEX_Transmit((void*)Str);    // English
   
-    sprintf(Str, "t7.txt=\"%d\"€€€", 55);
+    sprintf(Str, "t7.txt=\"%s\"€€€", (UserSet.TimeLight)?(MsgMass[113][CurrLang]):(MsgMass[114][CurrLang]));
     NEX_Transmit((void*)Str);    // ???
   
     // раскрашивание пол€ выбора 
