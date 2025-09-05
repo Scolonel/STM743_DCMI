@@ -5178,13 +5178,18 @@ void ModeClearMEM(void) // режим освобождени€ пам€ти измерител€ CHECK_OFF
       //      if (PowerMeter)
       //      {
       //        DeletedAllCell (); // удаление всех записей измерител€
+      myBeep(10);
       TimeSavePM = RTCGetTime(); // сохран€ем врем€ создани€ файла
       // функци€ записи файла измерений измерител€
+      sprintf( Str,"xstr 10,150,460,40,2,RED,WHITE,1,1,1,\"%s\"€€€","—ќ’–јЌ≈Ќќ"); //  сообщение об ошибке FW LCD
+      NEX_Transmit((void*)Str);//
       SaveFilePM();
       
-      myBeep(10);
-      g_NeedScr = 1; // Need reDraw Screen
-      // NeedReturn = 4; // индекс окна возврата
+      HAL_Delay(800);
+      myBeep(30);
+      //g_FirstScr = 1; // Need reDraw Screen
+      SetMode(ModeSelectMEM);
+      NeedReturn = 4; // индекс окна возврата
       //SetMode(ModeSelectMEM);
       //      }
       //      else
@@ -5195,11 +5200,17 @@ void ModeClearMEM(void) // режим освобождени€ пам€ти измерител€ CHECK_OFF
       //       // SetMode(ModeSelectMEM);
       //      }
       break;
-    case 3: // чистим па€ть дл€ измерител€ 
+    case 3: // чистим пам€ть дл€ измерител€ 
       myBeep(10);
-      g_NeedScr = 1; // Need reDraw Screen
-      // NeedReturn = 4; // индекс окна возврата
-      //SetMode(ModeSelectMEM);
+      DeletedAllCell (); // удаление всех записей измерител€
+      sprintf( Str,"xstr 10,150,460,40,2,RED,WHITE,1,1,1,\"%s\"€€€","ќ„»ў≈Ќќ"); //  сообщение об ошибке FW LCD
+      NEX_Transmit((void*)Str);//
+      HAL_Delay(800);
+      myBeep(30);
+      //g_FirstScr = 1; // Need reDraw Screen
+      SetMode(ModeSelectMEM);
+      NeedReturn = 4;
+
       break;
     }
   }
