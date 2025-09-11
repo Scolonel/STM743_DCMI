@@ -1993,6 +1993,7 @@ void  SetupSource (BYTE NewModeLS) // установка режима работы лазера
     break;
   case 4: // выключаем источник и перестраиваем UART на скорость 1200
     PHLD(0);
+    HAL_UART_DMAStop(&huart5);
     huart5.Init.BaudRate = 1200;
     if (HAL_UART_Init(&huart5) != HAL_OK)
     {

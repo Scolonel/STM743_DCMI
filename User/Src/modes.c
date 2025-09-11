@@ -3988,7 +3988,7 @@ void ModeMeasManualOLT(void) // режим работы тестера в ручном режиме CHECK_OFF
   }
   
   // установка длинны волны если включен Wide и JDSU поддержка
-  SetAutoLamdaJDSU (TimerValueJDSU);
+  //SetAutoLamdaJDSU (TimerValueJDSU);
   // Для источника и красного лазера
 //AddRed =  DrawSourceVFL (&FrManualOLT, Str, KeyP, CurrLang, 3, 1);
 DrawSourceVFL (&FrManualOLT, Str, KeyP, CurrLang, 3, 1);
