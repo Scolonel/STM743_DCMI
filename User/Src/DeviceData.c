@@ -10,7 +10,7 @@ char NumVer[10];// = "180      \0";
 
 const unsigned WAVE_LENGTHS[WAVE_LENGTHS_NUM] = {850,1310,1490,1550,1625};
 
-const char *Ides[2] = {"OOO NPK SvyazServis\0","OPTOKON Co. Ltd\0"};
+const char *Ides[2] = {"OOO NPK SvyazServis,\0","OPTOKON Co. Ltd,\0"};
 const char *VerFW[2] = {"SW_rev \0","SW_rev \0"};
 //const char *Device[2][LANG_NUM] = {{"ТОПАЗ-7\0","TOPAZ-7\0","TOPAZ-7\0"},{"MOT-700\0","MOT-700\0","MOT-700\0"}};
 const char *Device[2][2][2] = {{{"ТОПАЗ-7\0","ТОПАЗ-7\0"},{"TOPAZ-7\0","TOPAZ-7\0"}},{{"MOT-700\0","MOT-950\0"},{"MOT-700\0","MOT-950\0"}}};
@@ -448,6 +448,82 @@ void GetDeviceHW( char* name ) // from Computer
 }
 
 void GetDeviceName( char* name ) // from Computer
+{
+  char c[10];
+  char Str[8];
+  strcpy( name, Ides[ConfigDevice.ID_Device] );//, strlen(Ides[device->ID_Device])
+    strcat( name, Device[GetID_Dev()][1][1]);//, strlen(Idesl[device->ID_Device]) // чтобы отвечал английскими
+   switch ( ConfigDevice.ID_Device)
+   {
+   case 0: // RUS-SvyazService
+     strcpy(c,PMset[ConfigDevice.CfgPM]);
+     //if(!(FIO1PIN & TABLET_95)) c[0] = '5';
+     //if(!(FIO1PIN & TABLET_95)) c[0] = '5';
+     strcat( name, c);
+     c[1]=0;
+     c[0]= 0x30 + ConfigDevice.TypeDevice;
+     strcat( name,c);
+     c[0]= 'R';
+     strcat( name,c);
+     if (ConfigDevice.CfgRE) c[0]='+';
+     else c[0]=' ';
+     strcat( name,c);
+     c[0]= 'A';
+     strcat( name,c);
+     //if (ConfigDevice.ApdiSet) c[0]='X';
+     if ((ConfigDevice.ApdiSet)&&(NameDB.Ena_DB)) c[0]='X'; // для IDN там так напишем!
+     else c[0]=' ';
+     strcat( name,c);
+     sprintf(c,",%04d",ConfigDevice.NumDevice) ;
+     strcat( name,c);
+     break;
+   case 1: // CZE-OPTOKON
+     c[1]=0;
+     if (ConfigDevice.ApdiSet) c[0]='D';
+     else c[0]=0;
+     strcat( name,c);
+  //длины волн лазеров
+  for (int i=0; i<ARRAY_SIZE(ConfigDevice.PlaceLS); ++i)
+  {
+    if (ConfigDevice.PlaceLS[i] != 0)
+    {
+      sprintf (c,"%4d", ConfigDevice.PlaceLS[i]);
+      c[0] = '-';
+      c[3] = 0; // два знака 
+      strcat(name,c);
+    }
+  } 
+     strcpy(c,PMset[3]); //-PMH
+  
+     switch (ConfigDevice.CfgPM)
+     {
+   case 0: // нет измерителя
+     c[0]= 0;
+     strcat( name,c);
+     break;
+   case 1: // простой измеритель
+     c[3]= 0;
+     strcat( name,c);
+     break;
+   case 2: // измеритель со сферой
+     strcat( name,c);
+     break;
+     }
+     strcpy(c,PMset[4]); //-VFL
+     if (!(ConfigDevice.CfgRE)) c[0]=0;
+     strcat( name,c);
+     sprintf(c,",MT%04d",ConfigDevice.NumDevice) ;
+     strcat( name,c);
+     break;
+   }
+     strcat( name, VerFW[ConfigDevice.ID_Device]);  
+     GetNumVer(Str);
+     sprintf (c, ",%s(%s)\r",Str,NumVer);
+     strcat( name, c);   
+  
+}
+
+void GetDeviceNameNew( char* name ) // from Computer
 {
   char c[10];
   char Str[8];
