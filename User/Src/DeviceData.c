@@ -11,7 +11,7 @@ char NumVer[10];// = "180      \0";
 const unsigned WAVE_LENGTHS[WAVE_LENGTHS_NUM] = {850,1310,1490,1550,1625};
 
 const char *Ides[2] = {"OOO NPK SvyazServis,\0","OPTOKON Co. Ltd,\0"};
-const char *VerFW[2] = {"SW_rev \0","SW_rev \0"};
+const char *VerFW[2] = {",SW_rev \0",",SW_rev \0"};
 //const char *Device[2][LANG_NUM] = {{"ТОПАЗ-7\0","TOPAZ-7\0","TOPAZ-7\0"},{"MOT-700\0","MOT-700\0","MOT-700\0"}};
 const char *Device[2][2][2] = {{{"ТОПАЗ-7\0","ТОПАЗ-7\0"},{"TOPAZ-7\0","TOPAZ-7\0"}},{{"MOT-700\0","MOT-950\0"},{"MOT-700\0","MOT-950\0"}}};
 
@@ -518,7 +518,7 @@ void GetDeviceName( char* name ) // from Computer
    }
      strcat( name, VerFW[ConfigDevice.ID_Device]);  
      GetNumVer(Str);
-     sprintf (c, ",%s(%s)\r",Str,NumVer);
+     sprintf (c, "%s(%s)\r",Str,NumVer);
      strcat( name, c);   
   
 }
@@ -2185,7 +2185,7 @@ void GetNumVer (char* Str) // получение номера версии
   int Num = atoi (out);
   //int Num = g_NumVer;
   //Num=Num/5;
-  sprintf (Str, "6.%c%c%c", (BYTE)(0x30+(Num/260)), (BYTE)(0x30+(Num/26)), (BYTE)(0x61+(Num%26)));
+  sprintf (Str, "6%c%c%c", (BYTE)(0x30+(Num/260)), (BYTE)(0x30+(Num/26)), (BYTE)(0x61+(Num%26)));
 }
 
 void SetNewLeveldB (float RPON, int i) // установка нового уроаня привязки по принятым волнам
