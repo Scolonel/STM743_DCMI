@@ -209,7 +209,7 @@ char PeriodIntADC=0; // счетчик запуска внутреннего АЦП и измерения уровня батар
 //float Ubat=4.1; // начальное напряжение батареи
 uint8_t g_ErrFW_LCD = 0; // не правильная прошивка индикатора
 uint8_t TimerDraw = 0; // время прорисовки ошибки , каждую секунду...
-
+uint8_t g_SpeedUart = 1; // 1 - LO(57600), 2-ME(115200), 8-HI(460800)
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -742,7 +742,9 @@ int main(void)
     // проверка приема по UART EXT
     if (RSDecYes) // вызов программы обработки комманды принятой по UART
     {
+      TST_KTA(1);
       DecodeCommandRS();
+      TST_KTA(0);
     }
     
     

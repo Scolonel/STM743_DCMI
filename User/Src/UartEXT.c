@@ -255,12 +255,14 @@ void DecodeCommandRS (void)
         {
           Error_Handler();
         }
-        
+        g_SpeedUart = 8; // 1 - LO(57600), 2-ME(115200), 8-HI(460800)
+
         
       }
       if (!memcmp ((void*)RX_Buf, ";SYST:UART:ME",13)) //115200
       {
         UARTSendExt ((BYTE*)"OK\r", 3);
+        
         NeedTransmit = 1;
         // отсылаем на старой скорости
         //while ( !(UART0TxEmpty & 0x01) ); // ждем конца передачи только после этого перестраиваемся
@@ -270,7 +272,8 @@ void DecodeCommandRS (void)
         {
           Error_Handler();
         }
-        
+        g_SpeedUart = 2; // 1 - LO(57600), 2-ME(115200), 8-HI(460800)
+
         
       }
       //  ;syst:uart:lo установка скорости UART 57600 ответ уже на меньшей скорости
@@ -286,6 +289,8 @@ void DecodeCommandRS (void)
         {
           Error_Handler();
         }
+        g_SpeedUart = 1; // 1 - LO(57600), 2-ME(115200), 8-HI(460800)
+
       }
       // 
       // ;MEMM:LOAD:FILE? xx
@@ -455,9 +460,7 @@ void DecodeCommandRS (void)
                 old_crc = new_crc;
                 c++;
               }
-              
-              // блок данных 
-              UARTSendExt ((BYTE*)LogData, OUTSIZE*2);
+              // посчитаем контрольную сумму до передачи
               c = (unsigned char*)&LogData;
               for (int i=0;i<OUTSIZE*2;i++)
               {
@@ -467,8 +470,12 @@ void DecodeCommandRS (void)
                 old_crc = new_crc;
                 c++;
               }
+              // запишем в LogData
+              LogData[OUTSIZE] = new_crc;
+              // блок данных 
+              UARTSendExt ((BYTE*)LogData, OUTSIZE*2+2);
               
-              UARTSendExt ((BYTE*)&new_crc, 2);
+              //UARTSendExt ((BYTE*)&new_crc, 2);
         NeedTransmit = 1;
               
               
@@ -760,10 +767,14 @@ void DecodeCommandRS (void)
           if (Head_RAW.Head[i]== 0x20) sm++;
           else break;
         }
+        //TST_KTA(1);
+        UARTSendExt ((BYTE*)&Head_RAW.Head[sm], sizeof(Head_RAW)-sm);//
+        //TST_KTA(0);
         
-        UARTSendExt ((BYTE*)&Head_RAW.Head[sm], sizeof(Head_RAW)-sm);// 
         // надо передать 2 блока заголовок и дамп
+        //TST_KTA(1);
         UARTSendExt ((BYTE*)&RawData, sizeof(RawData));// 
+        //TST_KTA(0);
         NeedTransmit = 1;
       }
       if (GetCurrentModeDevice()==MODEMEASURE)

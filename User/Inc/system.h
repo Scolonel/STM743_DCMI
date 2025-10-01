@@ -38,6 +38,7 @@
 
 #define NEXSIZE    5300 //4096 //0x1000  //размер дл€ Ќ≈ —“»ќЌ
 #define OUTSIZE    5300 //4096 //0x1000  // выходной массив
+//#define RAWSIZE    0x1200 //4384 //0x1200  //(4096+288)
 #define RAWSIZE    5600 //4384 //0x1200  //(4096+288)
 #define FLTSIZE    5 // размерность фильтра
 // массивы из первичной проверки...перекликаютс€ с размерами объ€вленными ранее
@@ -215,6 +216,8 @@ extern uint32_t PageFiles;
 extern BYTE KnowLCD ;
 extern uint8_t g_ErrFW_LCD; // не правильна€ прошивка индикатора
 extern uint8_t TimerDraw; // врем€ прорисовки ошибки , каждую секунду...
+
+extern uint8_t g_SpeedUart; // 0 - LO(57600), 1-ME(115200), 2-HI(460800)
 
 extern char* g_pszFileNames[LSPLACENUM];  // массив указателей на строки с именами файлов
 

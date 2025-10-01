@@ -437,11 +437,13 @@ static int8_t CDC_Receive(uint8_t cdc_ch, uint8_t *Buf, uint32_t *Len)
   }
   else // переписываем буффер в строку приема
   {
+    TST_KTB(1); // индикация начала приема команды
     RSDecYes = (*Len);
     CntRX = RSDecYes;
     memcpy((void*)RX_Buf,(void*)Buf,*Len);
     Reciev = 2;
-    
+    TST_KTB(0); // индикация конца приема команды
+
   }
        
   
