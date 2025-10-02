@@ -7567,7 +7567,8 @@ unsigned short SpliceProg (unsigned short PII)
 // установка заголовка файла передачи необработанных данных
 void SetHeadFileRaw (DWORD NAV)
 {
-  DWORD NumBt = RAWSIZE*sizeof(DWORD) + 24; // число байт в массиве предачи 24 -32 правильный размер 24
+  //DWORD NumBt = RAWSIZE*sizeof(DWORD) + 24; // число байт в массиве предачи 24 -32 правильный размер 24
+  DWORD NumBt = iRAWSIZE*sizeof(DWORD) + 24; // число байт в массиве предачи 24 -32 правильный размер 24
   WORD Index;
   WORD siZe = sprintf ((void*)Head_RAW.Head,"%d",NumBt);
   // заголовок
@@ -7594,7 +7595,7 @@ void SetHeadFileRaw (DWORD NAV)
           // размер окна блокировки, сейчас число точек на период 
             Head_RAW.SizeFrm = (NumRepit);
           //число отсчетов NPPW (на выбранный импульс, он у нас один)
-              Head_RAW.NumPtsMain = RAWSIZE;//0x1200;
+              Head_RAW.NumPtsMain = iRAWSIZE;//0x1200;
 }
 
 // 26.02.2014 
@@ -7814,7 +7815,7 @@ void SlowON (void) // медленное включение питания
   // сделал с проверкой уже включенных, для ускорения...
   
   POWREF (ON);
-  HAL_Delay (700); // 0.7 С (с этой задержкой вроде работает от USB, без акк)
+  HAL_Delay (400); // 0.7 С (с этой задержкой вроде работает от USB, без акк)
   POWDET(ON);
   // а так по старому
 //  POWALT(ON);
