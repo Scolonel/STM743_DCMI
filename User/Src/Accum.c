@@ -96,7 +96,7 @@ void Averaging (int NumAccum,unsigned AddIndexLN, BYTE EnDrawGraph )// функция н
 // не 0 - устанвливает период согластно индекса диапазона оценивается в StartRunFirst
 { 
   //    CntPointPick=0;
-  
+  TST_KTA(1);
   //CurrTimeAccum = HAL_GetTick();
   OldTimeAccum = CurrTimeAccum;
   SetNumAccumPerSec (NumAccum);// запись числа накоплений
@@ -144,6 +144,7 @@ void Averaging (int NumAccum,unsigned AddIndexLN, BYTE EnDrawGraph )// функция н
     EnaTimerAccum = 1;
     
   }
+  TST_KTA(0);
 }
 
 void DrawPictureMeas (BYTE EnDraw) // рисование картинки при измерении

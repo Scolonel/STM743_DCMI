@@ -423,6 +423,7 @@ static int8_t CDC_Receive(uint8_t cdc_ch, uint8_t *Buf, uint32_t *Len)
   /* USER CODE BEGIN 6 */
   //HAL_UART_Transmit_DMA(CDC_CH_To_UART_Handle(cdc_ch), Buf, *Len);
   // надо проверить если пишем индикатор то просто транслируем блок
+  
   Buf[(*Len)]= 0;
   if(ProgFW_LCD)
   {
@@ -437,13 +438,19 @@ static int8_t CDC_Receive(uint8_t cdc_ch, uint8_t *Buf, uint32_t *Len)
   }
   else // переписываем буффер в строку приема
   {
+    // тут надо посмотреть надо ли принимать что то новое или мы в обработке
+    if(Reciev == STOP_UART)
+    {
     TST_KTB(1); // индикация начала приема команды
+    //if(Buf[*Len-1]=='\r')
+    //{
     RSDecYes = (*Len);
     CntRX = RSDecYes;
     memcpy((void*)RX_Buf,(void*)Buf,*Len);
-    Reciev = 2;
-    TST_KTB(0); // индикация конца приема команды
-
+    Reciev = END_UART; // приняли что то
+    //}
+    //TST_KTB(0); // индикация конца приема команды
+    }
   }
        
   

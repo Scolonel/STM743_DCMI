@@ -774,11 +774,12 @@ void DecodeCommandRS (void)
         // надо передать 2 блока заголовок и дамп
         // передадим блоками по 2048 байт то есть для проверки
         // 0x1200 = 4608 (9*512*4)
-        for(int j=0; j<9; j++)
-            UARTSendExt ((BYTE*)&RawData[j*512], 2048);// 
+        //for(int j=0; j<9; j++)
+        //    UARTSendExt ((BYTE*)&RawData[j*512], 2048);// 
 
         //TST_KTA(1);
         //UARTSendExt ((BYTE*)&RawData, sizeof(RawData));// 
+        UARTSendExt ((BYTE*)&RawData, 0x4800);// 
         //TST_KTA(0);
         NeedTransmit = 1;
       }
@@ -1982,6 +1983,8 @@ void DecodeCommandRS (void)
   }
   RSDecYes = 0;
   Reciev = STOP_UART;
+  TST_KTB(0); // индикация конца приема и обработки команды
+
   //VICINTENABLE = 1 << UART0_INT;  /* Enable Interrupt */
   
 }
