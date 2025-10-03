@@ -46,6 +46,7 @@ St_File_Sor F_SOR; // содержимое основных параметров файла SOR
   char pFile[MAX_PATH_LEN];   //  путь к файлу
 
   char FileNamePM[32]; // имя файла куда сохраняем
+  char pFileRtT[16]; // имя файла B0.sor из которго передаем
 
   //char   path=;
   uint32_t TotalSize, FreeSpace;
@@ -1751,6 +1752,51 @@ void SaveFileSD(int Mod)
   
 }
 
+void ReadToTrans(void)
+{
+    FRESULT FR_Stat;
+
+  do
+  {
+    //------------------[ Mount The SD Card ]--------------------
+    FR_Status = f_mount(&FatFs, SDPath, 1);
+    if (FR_Status != FR_OK)
+    {
+      break;
+    }
+    // создаем или проверяем наличие дирректории _OTDR
+    FR_Stat = f_mkdir(PathMainDir);//"0:/_OTDR"
+    if(FR_Stat == FR_EXIST)
+    {
+      //sprintf ((char*)TxBuffer,"Make MainDir Already Is\r");
+      FR_Stat = FR_OK;
+    }
+    sprintf(pFileRtT,"B20.sor"); // путь для белкора 2
+
+    FR_Stat = f_stat(pFileRtT, &fno);
+    
+    sprintf (TxBuffer, "#5%05d\r",fno.fsize);
+              UARTSendExt ((BYTE*)TxBuffer, 7);
+    // цикл чтения файла и передача его содержимого
+    FR_Stat = f_open(&Fil, pFileRtT, FA_READ);
+    if(FR_Status == FR_OK)
+    {
+      do
+      {
+        f_read (&Fil,(void*)&TxBuffer, 250, &RWC);
+        if(RWC)
+           UARTSendExt ((BYTE*)TxBuffer, RWC);
+
+      }while(RWC);
+    }
+    f_close(&Fil);
+    } while(0);
+      HAL_Delay(2);
+
+  //------------------[ Test Complete! Unmount The SD Card ]--------------------
+  FR_Status = f_mount(NULL, "", 0);
+
+}
 // функция записи файла измерений измерителя
 void SaveFilePM(void)
 {

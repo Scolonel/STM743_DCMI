@@ -48,6 +48,8 @@ void SDMMC_SDCard_FILES(void); // прочитаем files
 // расчет и получение таблицы событий
 unsigned short MakeEvents (void);
 
+void ReadToTrans(void); 
+
 void SaveFileSD(int Mod); // запись 0.sor на карточку в главную дирректорию
 // функция записи файла измерений измерителя
 void SaveFilePM(void);
