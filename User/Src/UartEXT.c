@@ -865,7 +865,7 @@ void DecodeCommandRS (void)
           GetPlaceLS (CURRENT);// установка индекса новой длины волны из списка установленных лазеров CURRENT -текущий, NEW- новый (следующий)
           SetIndexWAV(atof((char*)&RX_Buf[22]));
           SetSubModRefl (MANUAL); // установка режима рефлектометра 
-          SetModeDevice (MODESETREFL); // принудительная установка режима прибора -  установка рефлектометра
+          //SetModeDevice (MODESETREFL); // принудительная установка режима прибора -  установка рефлектометра
           // надо может чуток потупить?
           SendCfgOTDR (BufString); // передача конфигурации рефлектометра (настройки)
           NeedTransmit = 1;
