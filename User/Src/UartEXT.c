@@ -607,8 +607,8 @@ void DecodeCommandRS (void)
         //    UARTSendExt ((BYTE*)&RawData[j*512], 2048);// 
 
         //TST_KTA(1);
-        //UARTSendExt ((BYTE*)&RawData, sizeof(RawData));// 
-        UARTSendExt ((BYTE*)&RawData, 0x4800);// 
+        UARTSendExt ((BYTE*)&RawData, sizeof(RawData));// 
+        //UARTSendExt ((BYTE*)&RawData, 0x4800);// 
         //TST_KTA(0);
         NeedTransmit = 1;
       }

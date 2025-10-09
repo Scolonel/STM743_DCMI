@@ -745,7 +745,7 @@ int main(void)
     // проверка приема по UART EXT
     if (RSDecYes) // вызов программы обработки комманды принятой по UART
     {
-      //TST_KTA(1);
+      TST_KTB(1);
       DecodeCommandRS();
       //TST_KTA(0);
     }

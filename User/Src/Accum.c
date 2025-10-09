@@ -142,7 +142,6 @@ void Averaging (int NumAccum,unsigned AddIndexLN, BYTE EnDrawGraph )// функция н
     EnaTimerAccum = 0;
     DrawPictureMeas (EnDrawGraph); // (28 mS) рисование картинки при измерении
     EnaTimerAccum = 1;
-    
   }
   TST_KTA(0);
 }

@@ -102,7 +102,8 @@ const unsigned char OutOfNoise [40] = {
 
 
 // пусть это будут требуемое значение периодв ТИМ1 при нормальном измерении в мкС
-const int TimeRepitOfLN[PNTSNUM] = { 65, 100, 200, 370, 420, 800, 1600 }; // 
+//const int TimeRepitOfLN[PNTSNUM] = { 65, 100, 200, 370, 420, 800, 1600 }; // 
+const int TimeRepitOfLN[PNTSNUM] = { 65, 120, 200, 370, 420, 800, 1600 }; // 
 //const int KeyPoints[PNTSNUM] = { 96, 172, 344, 688, 1366, 2048, 4608 }; // порги определения индекса установленной длины 4096
  // всеж таки надо брать по конкретной длине а не по полному массиву, так как пересчитываем на реальную длину
 //const int KeyPoints[PNTSNUM] = { 96, 192, 384, 768, 1536, 2304, 4608 }; // порги определения индекса установленной длины для всего массива
@@ -1573,7 +1574,7 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     // время промежуточного вывода на экран 28 мС
     // время одного прохода в заданой длине Mean*333.33 + 14000*NumPointsPeriod[ShadowIndexLN]
     TimeMeasure3S  = 2750000; // uS
-    if (RemoutCtrl) TimeMeasure3S  = 3000000; //uS
+    if (RemoutCtrl) TimeMeasure3S  = 2750000; //uS
     // рассчитаем приблизительное число накоплений
     if(LengthOK) // линия правильная,  
       NumAvrg = (unsigned)(TimeMeasure3S/((NumPointsPeriod[ShadowIndexLN]+1)*TimeRepitOfLN[ShadowIndexLN]+260));//*NumPointsPeriod[ShadowIndexLN])
@@ -7567,8 +7568,8 @@ unsigned short SpliceProg (unsigned short PII)
 // установка заголовка файла передачи необработанных данных
 void SetHeadFileRaw (DWORD NAV)
 {
-  //DWORD NumBt = RAWSIZE*sizeof(DWORD) + 24; // число байт в массиве предачи 24 -32 правильный размер 24
-  DWORD NumBt = iRAWSIZE*sizeof(DWORD) + 24; // число байт в массиве предачи 24 -32 правильный размер 24
+  DWORD NumBt = RAWSIZE*sizeof(DWORD) + 24; // число байт в массиве предачи 24 -32 правильный размер 24
+  //DWORD NumBt = iRAWSIZE*sizeof(DWORD) + 24; // число байт в массиве предачи 24 -32 правильный размер 24
   WORD Index;
   WORD siZe = sprintf ((void*)Head_RAW.Head,"%d",NumBt);
   // заголовок
@@ -7595,7 +7596,8 @@ void SetHeadFileRaw (DWORD NAV)
           // размер окна блокировки, сейчас число точек на период 
             Head_RAW.SizeFrm = (NumRepit);
           //число отсчетов NPPW (на выбранный импульс, он у нас один)
-              Head_RAW.NumPtsMain = iRAWSIZE;//0x1200;
+              Head_RAW.NumPtsMain = RAWSIZE;//0x1200;
+            //  Head_RAW.NumPtsMain = iRAWSIZE;//0x1200;
 }
 
 // 26.02.2014 

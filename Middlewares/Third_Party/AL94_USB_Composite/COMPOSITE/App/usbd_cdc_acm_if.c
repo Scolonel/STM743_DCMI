@@ -441,7 +441,7 @@ static int8_t CDC_Receive(uint8_t cdc_ch, uint8_t *Buf, uint32_t *Len)
     // тут надо посмотреть надо ли принимать что то новое или мы в обработке
     if(Reciev == STOP_UART)
     {
-    TST_KTB(1); // индикация начала приема команды
+    //TST_KTB(1); // индикация начала приема команды
     //if(Buf[*Len-1]=='\r')
     //{
     RSDecYes = (*Len);

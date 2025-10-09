@@ -1779,13 +1779,25 @@ float SetCurrLvldB(int Lambda, float LvldBm)  // устанавливает уровень LvldBm в 
 
 unsigned short PointsInImpulse (int Real)
 {
-  unsigned short Data;
+  volatile unsigned short Data;
+  volatile float x;
   if (Real)
-  Data = (unsigned short)(((GetWidthPulse(GetIndexIM()))*NumPointsPeriod[GetIndexLN()])/ADCPeriod +1);
+  Data = (unsigned short)(((GetWidthPulse(GetIndexIM()))*NumPointsPeriod[GetIndexLN()])/(ADCPeriod*MultIndex[GetIndexLN()]));
   else
   {
   // добавлено 100 нс Какбы фронт сигнала
-  Data = (unsigned short)(((GetWidthPulse(GetIndexIM())+((GetIndexIM()>2)?(0):(50)))*NumPointsPeriod[GetIndexLN()])/ADCPeriod);
+    x = GetWidthPulse(GetIndexIM());
+    x += ((GetIndexIM()>2)?(0):(50));
+    x *= NumPointsPeriod[GetIndexLN()];
+    x /= MultIndex[GetIndexLN()];
+    x /= ADCPeriod;
+    
+   // x = (float)GetWidthPulse(GetIndexIM());
+   // x += (GetIndexIM()>2)?(0.):(50.);
+   // x = x * NumPointsPeriod[GetIndexLN()];
+   // x = x / ADCPeriod;
+    Data = (unsigned short)(x);
+  //Data = (unsigned short)(((GetWidthPulse(GetIndexIM())+((GetIndexIM()>2)?(0):(50)))*NumPointsPeriod[GetIndexLN()])/ADCPeriod);
   if (Data<4) Data = 4;
   } 
   return Data;

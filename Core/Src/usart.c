@@ -411,7 +411,9 @@ void UARTSendExt(BYTE *BufferPtr, DWORD Length )  // буфер и размер
   {
     //int SdSd = (int)((Length/g_SpeedUart)/5.76)+1;
      CDC_Transmit(0, (void*)BufferPtr, Length); // выдаем блок
-     HAL_Delay((int)(Length/(5.76*g_SpeedUart))+1);
+     //HAL_Delay((int)(Length/(5.76*g_SpeedUart))+1);
+     // как бы скорость максимальная 
+     HAL_Delay((int)(Length/(250))+1);
     // HAL_Delay(SdSd);
   }
   else
