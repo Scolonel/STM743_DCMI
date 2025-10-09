@@ -1561,19 +1561,19 @@ void SaveFileSD(int Mod)
     
     
       // имя файла
-      sprintf(FileNameS,"%02d%02d%02d_%02d%02d%01d.sor",TimeSaveOTDR.RTC_Year%100,
-          TimeSaveOTDR.RTC_Mon,
-          TimeSaveOTDR.RTC_Mday,
-          TimeSaveOTDR.RTC_Hour,
-          TimeSaveOTDR.RTC_Min,
-          TimeSaveOTDR.RTC_Sec/10 );
-      // имя файла Belcore 2.0
-      sprintf(FileNameB,"%02d%02d%02d_%02d%02d%01X.sor",TimeSaveOTDR.RTC_Year%100,
+      sprintf(FileNameS,"%02d%02d%02d_%02d%02d%01X.sor",TimeSaveOTDR.RTC_Year%100,
           TimeSaveOTDR.RTC_Mon,
           TimeSaveOTDR.RTC_Mday,
           TimeSaveOTDR.RTC_Hour,
           TimeSaveOTDR.RTC_Min,
           TimeSaveOTDR.RTC_Sec/10 + 10 );
+      // имя файла Belcore 2.0
+      sprintf(FileNameB,"%02d%02d%02d_%02d%02d%01d.sor",TimeSaveOTDR.RTC_Year%100,
+          TimeSaveOTDR.RTC_Mon,
+          TimeSaveOTDR.RTC_Mday,
+          TimeSaveOTDR.RTC_Hour,
+          TimeSaveOTDR.RTC_Min,
+          TimeSaveOTDR.RTC_Sec/10 );
        // имя файла есть
       //создадим полны путь к файлу чтобы его открыть
     sprintf(PathFileS,"%s/%s",PathF,FileNameS);

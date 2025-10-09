@@ -211,7 +211,8 @@ uint8_t g_ErrFW_LCD = 0; // не правильная прошивка индикатора
 uint8_t TimerDraw = 0; // время прорисовки ошибки , каждую секунду...
 uint8_t g_SpeedUart = 1; // 1 - LO(57600), 2-ME(115200), 8-HI(460800)
 /* USER CODE END PV */
-
+uint8_t g_SuperTest = 0; //режим СуперТеста, по кругу проводим измерения на всех 
+// установках,по 3 сек, пишем файлы
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 void PeriphCommonClock_Config(void);
