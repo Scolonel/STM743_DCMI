@@ -220,6 +220,8 @@ extern uint8_t TimerDraw; // врем€ прорисовки ошибки , каждую секунду...
 
 extern uint8_t g_SpeedUart; // 0 - LO(57600), 1-ME(115200), 2-HI(460800)
 extern uint8_t g_SuperTest; //режим —упер“еста, по кругу проводим измерени€ на всех 
+extern uint8_t g_STindx_LN ; //режим —упер“еста, индекс длины линии 
+extern uint8_t g_STindx_IM ; //режим —упер“еста, индекс длительности импульса 
 
 extern char* g_pszFileNames[LSPLACENUM];  // массив указателей на строки с именами файлов
 

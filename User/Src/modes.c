@@ -1343,7 +1343,7 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
   static BYTE NeedResetIM = 0; // признак необходимости переустановки длительности импульса после первого измерения
   //static DWORD CurrentSumDelay; // итоговая суммарная задержка при изменении длины линии для режима накоплений
   //static unsigned CntAvrg; // счетчик накоплений (общий по периодам по 3 сек)
-  char Str[22];
+  char Str[32];
   //BYTE CurrLang;
   //CurrLang=GetLang(CURRENT);
   switch (SubModeMeasOTDR)
@@ -1932,6 +1932,38 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
         RemoutCtrl = 0;
         UARTSendExt ((BYTE*)Str, strlen (Str));
         ClearRS();
+        if(g_SuperTest) // тут можно посмотреть не надо ли запускать снова
+        {
+          sprintf(Str,"%d-%dkm_%dns\r",g_SuperTest,GetLengthLine(GetIndexLN()),GetWidthPulse(GetIndexIM()));//c
+          UARTSendExt ((BYTE*)Str, strlen (Str));
+          //GetLengthLine(GetIndexLN()),GetWidthPulse(GetIndexIM())
+          if(g_STindx_LN<(LENGTH_LINE_NUM))
+          {
+            if(g_STindx_IM<(WIDTH_PULSE_NUM-1))
+            {
+              g_SuperTest++;
+              g_STindx_IM++;
+              SetIndexLN(g_STindx_LN); // индекс длины линии
+              SetIndexIM(g_STindx_IM); // индекс длительности импульса
+            }
+            else
+            {
+              g_STindx_IM=0;
+              SetIndexIM(g_STindx_IM); // индекс длительности импульса
+              g_STindx_LN++;
+              SetIndexLN(g_STindx_LN); // индекс длины линии
+            }
+            if(g_STindx_LN<(LENGTH_LINE_NUM))
+            {
+              RemoutCtrl = 1;
+              SetModeDevice (MODEMEASURE); // принудительная установка режима прибора -  запкск рефлектометрии с установленными параметрами
+            }
+            else
+              g_SuperTest=0; 
+          }
+          else
+            g_SuperTest=0; 
+        }
       }
       
     }
@@ -1987,9 +2019,11 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     }
     if (RemoutCtrl) // выдача окончания сбора если запускали дистанционно
     {
+      // в ручную по кнопке...
       sprintf(Str,"END\r");//c
       RemoutCtrl = 0;
       UARTSendExt ((BYTE*)Str, strlen (Str));
+      g_SuperTest = 0;
     }
   }
   // вызов нового окна, если необходимо (например при ошибке на входе)

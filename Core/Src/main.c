@@ -213,6 +213,9 @@ uint8_t g_SpeedUart = 1; // 1 - LO(57600), 2-ME(115200), 8-HI(460800)
 /* USER CODE END PV */
 uint8_t g_SuperTest = 0; //режим —упер“еста, по кругу проводим измерени€ на всех 
 // установках,по 3 сек, пишем файлы
+uint8_t g_STindx_LN = 0; //режим —упер“еста, индекс длины линии 
+uint8_t g_STindx_IM = 0; //режим —упер“еста, индекс длительности импульса 
+
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 void PeriphCommonClock_Config(void);

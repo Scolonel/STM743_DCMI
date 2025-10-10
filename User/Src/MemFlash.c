@@ -1585,8 +1585,32 @@ void SaveFileSD(int Mod)
     //FR_Status = f_open(&Fil, "MyTextFile.txt", FA_WRITE | FA_READ | FA_CREATE_ALWAYS);
     else
     {
+      if(g_SuperTest) // пишем тестовые файлы
+      {
+        // создадим проверим подпапку "sutest"
+        sprintf(PathD,"%s/sutest",PathMainDir);
+        res = f_mkdir(PathD);
+        //res = f_unlink(PathF);
+        if(res == FR_EXIST)
+        {
+          //sprintf ((char*)TxBuffer,"Make MainDir Already Is\r");
+          res = FR_OK;
+        }
+        HAL_Delay(2);
+        // почитаем директории...только что созданные 
+        res = f_opendir(&dir, PathD);
+        HAL_Delay(2);
+        f_closedir(&dir);
+        // папка создана
+    sprintf(PathFileS,"x.sor");
+    sprintf(pFile,"%s/%dkm_%dns.sor",PathD,GetLengthLine(g_STindx_LN),GetWidthPulse(g_STindx_IM)); // путь для белкора 2
+        
+      }
+      else
+      {
     sprintf(PathFileS,"0.sor");
     sprintf(pFile,"B20.sor"); // путь для белкора 2
+      }
     }
     
     //попробуем записать Белкор 2.0

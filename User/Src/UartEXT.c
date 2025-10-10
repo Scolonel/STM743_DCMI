@@ -225,6 +225,24 @@ void DecodeCommandRS (void)
           NeedTransmit = 1;
           UARTSendExt ((BYTE*)"AlarmReset\r", 11);
         }
+        if (!memcmp ((void*)RX_Buf, "*SUPERTEST",10)) // специальный режим теста
+        {
+          g_SuperTest = 1;
+          g_STindx_LN = 0;
+          g_STindx_IM = 0;
+          // из INIT, подготовка к старту
+            // 15 с измерение с установленными параметрами, расчет событий и выдача их по окончании измерений
+          SetIndexVRM (0); // принудительная установка индекса времени накопления на 15 сек
+          RemoutCtrl = 1;
+          SetModeDevice (MODEMEASURE); // принудительная установка режима прибора -  запкск рефлектометрии с установленными параметрами
+          
+          SetIndexLN(g_STindx_LN); // индекс длины линии
+          SetIndexIM(g_STindx_IM); // индекс длительности импульса
+
+          sprintf(BufString,"StartTest\r");
+          NeedTransmit = 1;
+          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        }
       }
       break;
     case ';':
