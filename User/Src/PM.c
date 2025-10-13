@@ -650,7 +650,7 @@ int AcquireShZeroLowRng(void)                          // Измерение уровней смещ
 int AcquireShZeroRng(void)                          // Измерение уровней смещения
 {
   BYTE i=0, j=0;                                    // Счетчики
- // static unsigned long data;                             // Для усредненния данных
+  // static unsigned long data;                             // Для усредненния данных
   
   
   float AverageData=0;                              // Усредненые данные
@@ -661,23 +661,25 @@ int AcquireShZeroRng(void)                          // Измерение уровней смещени
   for(j=0;j<4;j++)
   {
     SetRange(j);                      // установили диапазон 0  
-    CreatDelay(1.2e6);    //~ 0.1 S
+    //CreatDelay(1.2e6);    //~ 0.1 S
+    HAL_Delay(100);    //~ 0.1 S
     for(i=0;i<3;i++)
     {    
       if(StateADC==FREEADC) GetPMData();
       
       while(StateADC!=READYDATA) 
       {
-                        
+        HAL_Delay(20);    //~ 0.02 S
+        GetPMData();                  
       }     
-    CreatDelay(2e5);    //~ 0.02 S
-
+      //CreatDelay(2e5);    //~ 0.02 S
+      
       SetStateADC(FREEADC);
     }     
     sprintf(Str,"t%d.txt=\"измеряю...\"яяя",2*j+2); //
     //UARTSend2((BYTE*)Str, strlen(Str));    //
     NEX_Transmit((void*)Str);// 
-
+    
     AverageData=0;
     
     
@@ -689,7 +691,9 @@ int AcquireShZeroRng(void)                          // Измерение уровней смещени
       while(StateADC!=READYDATA) 
       {
         
-        CreatDelay(2e5);    //~ 0.02 S
+        //CreatDelay(2e5);    //~ 0.02 S
+        HAL_Delay(20);    //~ 0.1 S
+        GetPMData();                  
       }
       
       AverageData+=GetPMData();
@@ -700,12 +704,13 @@ int AcquireShZeroRng(void)                          // Измерение уровней смещени
     
     sprintf(Str,"t%d.txt=\"%d\"яяя",2*j+1,CoeffPM.ShZeroRng[j]); //
     //UARTSend2((BYTE*)Str, strlen(Str));    //
-      NEX_Transmit((void*)Str);// 
-
+    NEX_Transmit((void*)Str);// 
+    
   }
   
   
-  CreatDelay(1e7);  // ~ 0.8 S
+  //CreatDelay(1e7);  // ~ 0.8 S
+  HAL_Delay(300);    //~ 0.1 S
   return 1;
 }
 
@@ -739,7 +744,11 @@ int AcquireCoefStykRange(BYTE Rng, float* PrevRng, float* CurrRng)         // Вы
   for(i=0;i<3;i++)
   {    
     if(StateADC==FREEADC) GetPMData();
-    while(StateADC!=READYDATA);
+      while(StateADC!=READYDATA) 
+      {
+        HAL_Delay(20);    //~ 0.02 S
+        GetPMData();                  
+      }     
     SetStateADC(FREEADC);
   }     
 
@@ -748,13 +757,11 @@ int AcquireCoefStykRange(BYTE Rng, float* PrevRng, float* CurrRng)         // Вы
   {    
     if(StateADC==FREEADC) GetPMData();
     
-    while(StateADC!=READYDATA) 
-    {
-      //sprintf(Str,"%d",0x800000-DataADC_PM); // nm
-      //putString(82,54,Str,1,0);
-      //PaintLCD();  
-      HAL_Delay(10);
-    }
+      while(StateADC!=READYDATA) 
+      {
+        HAL_Delay(20);    //~ 0.02 S
+        GetPMData();                  
+      }     
     
     *PrevRng+=GetPMData();
     SetStateADC(FREEADC);
@@ -779,7 +786,11 @@ int AcquireCoefStykRange(BYTE Rng, float* PrevRng, float* CurrRng)         // Вы
   for(i=0;i<3;i++)
   {    
     if(StateADC==FREEADC) GetPMData();
-    while(StateADC!=READYDATA);
+      while(StateADC!=READYDATA) 
+      {
+        HAL_Delay(20);    //~ 0.02 S
+        GetPMData();                  
+      }     
     SetStateADC(FREEADC);
   }     
   
@@ -788,13 +799,11 @@ int AcquireCoefStykRange(BYTE Rng, float* PrevRng, float* CurrRng)         // Вы
   {    
     if(StateADC==FREEADC) GetPMData();
     
-    while(StateADC!=READYDATA) 
-    {
-      //sprintf(Str,"%d",0x800000-DataADC_PM); // nm
-      //putString(82,54,Str,1,0);
-      //PaintLCD(); 
-      HAL_Delay(10);
-    }
+      while(StateADC!=READYDATA) 
+      {
+        HAL_Delay(20);    //~ 0.02 S
+        GetPMData();                  
+      }     
     
     *CurrRng+=GetPMData();
     SetStateADC(FREEADC);

@@ -1164,7 +1164,7 @@ void GetLogData (void)
   Noise = (uint32_t)(Noise/25);//40
   uint32_t CurrentMaxLog =(uint32_t)(5000.0*log10((double)Avrgs*(MaxADC))); // максимальный логарифм текщего накопления    
   
-  for(int i=0;i<8000;i++)
+  for(int i=0;i<SizeBuf_ADC;i++) //5700
   {
     LocalRaw = BufNAK[i+j];
     if (LocalRaw<=Noise) LocalRaw=Noise+1;
