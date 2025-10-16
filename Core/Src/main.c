@@ -216,6 +216,8 @@ uint8_t g_SuperTest = 0; //режим —упер“еста, по кругу проводим измерени€ на всех
 uint8_t g_STindx_LN = 0; //режим —упер“еста, индекс длины линии 
 uint8_t g_STindx_IM = 0; //режим —упер“еста, индекс длительности импульса 
 
+uint8_t g_CodeErrorSoft=0; 
+
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 void PeriphCommonClock_Config(void);
@@ -1926,6 +1928,21 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
+  if(g_CodeErrorSoft)
+  {
+    switch(g_CodeErrorSoft)
+    {
+    case 1:
+    sprintf((void*)Str, "t0.txt=\"! ќЎ»Ѕ ј !\"€€€"); // Ќет карточки SD
+    NEX_Transmit((void*)Str);    // 
+    HAL_Delay(50);
+    sprintf((void*)Str, "t1.txt=\"”становите карточку SD\"€€€"); // Ќет карточки SD
+    NEX_Transmit((void*)Str);    // 
+    HAL_Delay(5);
+
+      break;
+    }
+  }
   __disable_irq();
   while (1)
   {

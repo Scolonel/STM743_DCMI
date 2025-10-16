@@ -223,6 +223,9 @@ extern uint8_t g_SuperTest; //режим СуперТеста, по кругу проводим измерения на в
 extern uint8_t g_STindx_LN ; //режим СуперТеста, индекс длины линии 
 extern uint8_t g_STindx_IM ; //режим СуперТеста, индекс длительности импульса 
 
+extern uint8_t g_CodeErrorSoft; 
+
+
 extern char* g_pszFileNames[LSPLACENUM];  // массив указателей на строки с именами файлов
 
 // структура хранения памяти измерителя

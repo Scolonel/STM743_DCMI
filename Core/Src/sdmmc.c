@@ -47,6 +47,9 @@ void MX_SDMMC2_SD_Init(void)
   /* USER CODE BEGIN SDMMC2_Init 2 */
 if(HAL_SD_Init(&hsd2) != HAL_OK)
   {
+    // здесь видим что нет карточки SD
+    g_CodeErrorSoft = 1;
+
     Error_Handler();
   } 
   /* USER CODE END SDMMC2_Init 2 */

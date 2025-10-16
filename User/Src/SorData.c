@@ -562,7 +562,7 @@ static int PrepareSorData(int iPlaceLS, uint16_t* pDataPoints)
     strlen(genParams.pszComment) + 1;
     
     // «аполним структуру SupParams
-    GetDeviceName( szTest ); // запрос сторки идентификатора
+    GetDeviceNameNew( szTest ); // запрос сторки идентификатора
     supParams.pszSupplierName = *SupParams.SN ? SupParams.SN : s_szDummy; // производитель SN
   supParams.pszOTDRMainframeID = *SupParams.MFID ? SupParams.MFID : s_szDummy;
   supParams.pszOTDRMainframeSN =  *SupParams.OTDR ? SupParams.OTDR : s_szDummy;
