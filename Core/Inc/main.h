@@ -103,6 +103,7 @@ void myBeep (unsigned sound);
       extern uint8_t EnaNextAvrg;// признак начала текущего накопления ( старт ДМА с текущими параметрами)
       extern uint32_t Cnt2Timer[128]; // время тамера 2 по окончании цикла ДМА
       extern uint32_t CountDMA; // число совершенных циклов DMA 
+      extern uint32_t g_CountDMA; // место установки смещений по накоплениям
       extern uint32_t CurrCnt2Timer; // время тамера 2 по окончании цикла ДМА
       
 extern volatile  uint8_t Ena_AVRG; // разрешаем накопления, пока циклимся в while

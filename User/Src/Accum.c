@@ -347,7 +347,8 @@ void RUN_SUM (DWORD* RawDataI)//
       LocalRaw = RawData[i+j];
       // добавка перед скачком, то есть перед большим отражением в маленьких сигналах
       // пресловутые 12 метров
-      //LocalRaw += (DWORD)(RawData[i+j+(PointsPerPeriod/3)]*2.56e-5);
+      if(PointsPerPeriod>=4)
+      LocalRaw += (DWORD)(RawData[i+j+(PointsPerPeriod/4)]*1.2e-3);
       
       if (LocalRaw<=Noise) LocalRaw=Noise+1;
       LocalRaw= LocalRaw-Noise;
@@ -372,9 +373,10 @@ void RUN_SUM (DWORD* RawDataI)//
     //TIM1->CR1 &=~TIM_CR1_CEN;
   // CountDMA указывает на смещение в индексе куда суммируем текущий съем
   //Sm_Shift = (CountDMA)&(NumRepit-1);
-  Cnt2Timer[CountDMA%128]=CurrCnt2Timer;
+  //Cnt2Timer[CountDMA%128]=CurrCnt2Timer; //(071)
   //uint32_t PointDMA = (CountDMA&(NumRepit-1));
-  uint32_t PointDMA = (CountDMA%(NumRepit));
+  //uint32_t PointDMA = (CountDMA%(NumRepit));// (071) - точка которая суммируется для данного цикла DMA
+  //uint32_t PointDMA = (g_CountDMA);// (071) - точка которая суммируется для данного цикла DMA
   //LED_START(1);
   //LED_START(0);
   //LED_KT(1); // начали суммирование одного прохода
@@ -384,7 +386,8 @@ void RUN_SUM (DWORD* RawDataI)//
     //BufNAK[NumRepit*i+PointDMA] +=BufADC[i]; 
     // for ADC MS9280 buffer BufADD
     //BufNAK[NumRepit*i+PointDMA] +=BufADD[i]; 
-    BufNAK[NumRepit*i+PointDMA] +=BufADD[i]; 
+    //BufNAK[NumRepit*i+PointDMA] +=BufADD[i]; //(071)
+    BufNAK[NumRepit*i+g_CountDMA] +=BufADD[i]; 
    //BufNAK[NumRepit*i+PointDMA] +=(BufADC[i]+BufADD[i-1])/2; 
     // BufNAK[2*(NumRepit*i+PointDMA)+1] +=BufADC[i]; 
     //BufNAK[2*(NumRepit*i+PointDMA)] +=BufADD[i-1]; 
@@ -395,7 +398,7 @@ void RUN_SUM (DWORD* RawDataI)//
   //LED_START(0);
   //LED_KT(0); // закончили накопление - суммирование можно сбросить линию
     StopAllTIM(0);// останавливаем таймеры которые считают
-
+    SumNumNak++;
   //if(++CountDMA<SumNumNak)
   //if((++CountDMA) >= SumNumNak)// паора заканчивать накопления
   if((++CountDMA) >= NumRepit)// паора заканчивать накопления

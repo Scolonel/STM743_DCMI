@@ -1238,6 +1238,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
     //POWALT(ON);
     //POWREF (ON);
     //POWDET(ON);
+    //SumNumNak = 0; // сброс счетчика проходов DMA
     SetMode(ModeStartOTDR);
     ModeDevice = MODEMEASURE;
     //IndexVerSize  = 0;// установка вертикального размера отображения рефлектограммы ( самый крупный)
@@ -1400,6 +1401,7 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     CurrTimeAccum = 0; // текущее время накопления 1 мкС
     EnaTimerAccum = 1; // разрешаем считать время накопления
     
+    SumNumNak = 0;
     Averaging (5,0,0);//запуск прогревочного измерения
     break;
   case INPUTOTDR:
@@ -1416,6 +1418,7 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
     memset( RawData, 0, RAWSIZE * sizeof(DWORD) );
     CntNumAvrg = 0; // обнуляем счетчик накоплений
+    SumNumNak = 0;
     Averaging (200,0,0);
     for (int i=0; i<RAWSIZE; ++i)
     {
@@ -1481,6 +1484,7 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     InputOK = YES; // обнуляем признак плохого разъема
     memset( RawData, 0, RAWSIZE * sizeof(DWORD) );
     CntNumAvrg = 0; // обнуляем счетчик накоплений
+    SumNumNak = 0;
     Averaging (BEGZONEAVRG,6,0); // измеряем 2км редко (128км)
     LocalMax = 0;
     Mean = (DWORD)(5000.0*log10(1023*BEGZONEAVRG)); // максимальный уровень при данном накопленнн
@@ -1513,6 +1517,7 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
     memset( RawData, 0, RAWSIZE * sizeof(DWORD) );
     CntNumAvrg = 0; // обнуляем счетчик накоплений
+    SumNumNak = 0;
     Averaging (500,0,0);
     CurrentSumDelay = 0;
     Noise = 0;
@@ -1679,11 +1684,11 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     
     g_NeedScr = 1; // используем его для переключения в режим отображения накоплений
     // переключим окно для нового индиктора и сбросим признак
+    SumNumNak = 0;
     Averaging (NumAvrg,IndxAddBad,1);// через 3 сек первый результат
     // установка режима накопления 
     SubModeMeasOTDR = AVERAGING;
     // можно нарисовать окно с рефлектограммой
-    
     //PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
     //memset( RawData, 0, RAWSIZE * sizeof(DWORD) );
     // расчет счетчика накоплений в зависимости от установленного времени усреднения
@@ -1711,6 +1716,7 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
       memset( RawData, 0, RAWSIZE * sizeof(DWORD) ); // обнуляем массив накоплений
       CntNumAvrg = 0; // обнуляем счетчик накоплений
       NeedResetIM = 0;
+      SumNumNak = 0;
     }
     if (GetIndexVRM()==4) // разовый ~1,5 cek ... режим Реал тайм
     {
@@ -1720,6 +1726,7 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
       //123      enable_timer(2);
       CurrTimeAccum = 0;
       EnaTimerAccum = 1;
+      SumNumNak = 0;
       
     }
     Averaging (NumAvrg,IndxAddBad,1); //запуск текущего накопления
