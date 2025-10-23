@@ -6820,15 +6820,21 @@ BYTE SetModeDevice (BYTE Mode) // принудительная установка режима прибора
 
     break;
   case MODEMEASURE:// режим измерения рефлектометра (накопление)
-    CmdInitPage(16);// посылка команды переключения окна на начало измерения Measuring
+        // сохраняем установки измерения если запустили
+    EEPROM_write(&SettingRefl, ADR_ReflSetting, sizeof(SettingRefl));
+    NameDB.FiberID = NumFiber; // сохраняем счетчик волокон из памяти
+    EEPROM_write(&NameDB, ADR_NameDB, sizeof(NameDB));// сохраняем счетчик волокон
+    ReSaveWAV_SC (); // пересохраняем если есть изменения
+
     SlowON();
     //POWALT(ON);
     //POWREF (ON);
     //POWDET(ON);
     //IndexVerSize  = 0;// установка вертикального размера отображения рефлектограммы ( самый крупный)
-    SubModeMeasOTDR = SETPOWER;
     SetMode(ModeStartOTDR);
     ModeDevice = MODEMEASURE;
+    SubModeMeasOTDR = SETPOWER;
+    CmdInitPage(16);// посылка команды переключения окна на начало измерения Measuring
     //123 SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
     
     break;

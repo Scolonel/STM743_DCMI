@@ -337,19 +337,29 @@ void RUN_SUM (DWORD* RawDataI)//
       // попробуем фильтрануть, то есть если разница по модулю между предыдущей и последующей
       // меньше 1/8 от числа накоплений то ппоследующую берем как среднее с предыдущей,
       // если разница больше не меняем
-      if(1) // выкл мини фильтр...
+      if(0) // выкл мини фильтр (1)...по следующему
       {
-      if(abs((int)(RawData[i+j+1]-RawData[i+j]))<(Avrgs/4))
+      if(abs((int)(RawData[i+j+1]-RawData[i+j]))<(Avrgs/2))
       {
         RawData[i+j] = (RawData[i+j+1]+RawData[i+j])>>1;
+      }
+      }
+      if(0) // выкл мини фильтр (2)...по предыдущему
+      {
+      if(abs((int)(RawData[i+j-1]-RawData[i+j]))<(Avrgs/2))
+      {
+        RawData[i+j] = (RawData[i+j-1]+RawData[i+j])>>1;
       }
       }
       LocalRaw = RawData[i+j];
       // добавка перед скачком, то есть перед большим отражением в маленьких сигналах
       // пресловутые 12 метров
+      if(0)
+      {
       if(PointsPerPeriod>=4)
-      LocalRaw += (DWORD)(RawData[i+j+(PointsPerPeriod/4)]*1.2e-3);
-      
+      //LocalRaw += (DWORD)(RawData[i+j+(PointsPerPeriod/4)]*2.8e-3);
+      LocalRaw += (DWORD)(RawData[i+j+2]*2.8e-3);
+      }
       if (LocalRaw<=Noise) LocalRaw=Noise+1;
       LocalRaw= LocalRaw-Noise;
       LogData[i] = (unsigned short)(CurrentMaxLog - (DWORD)(5000.0*log10((double)LocalRaw))) ;

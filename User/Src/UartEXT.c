@@ -354,7 +354,7 @@ void DecodeCommandRS (void)
               //EnaPrintRes =1;
               //PressKey =1;
               SDMMC_SDCard_DIR();
-              NeedTransmit = 1;
+              NeedTransmit = 0;
       //        for (int i = 1 ; i <= GetNumTraceSaved(0); i++)
       //        {
       //          unsigned long PorNom = FlashReadTimeTrace (i);
@@ -448,9 +448,9 @@ void DecodeCommandRS (void)
         BYTE NumMode = (BYTE)(atoi((char*)&RX_Buf[11]));
         if(NumMode > 6) NumMode = 0;
         SetModeDevice (NumMode); // принудительная установка режима прибора
-        
-        //sprintf(BufString,"%01d\r",GetCurrentModeDevice ());// получение текущего режима прибора
-        //UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        // Безответная команда - была
+        sprintf(BufString,"%01d\r",GetCurrentModeDevice ());// получение текущего режима прибора
+        UARTSendExt ((BYTE*)BufString, strlen (BufString));
         NeedTransmit = 1;
       }
       // запрос установленных лазеров 
@@ -530,7 +530,8 @@ void DecodeCommandRS (void)
                 ,SetNewTime.RTC_Year
                   ,SetNewTime.RTC_Mon
                     ,SetNewTime.RTC_Mday);
-        //UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        // Безответная команда - была
+        UARTSendExt ((BYTE*)BufString, strlen (BufString));
         NeedTransmit = 1;
         
       }
@@ -562,7 +563,8 @@ void DecodeCommandRS (void)
                 ,SetNewTime.RTC_Hour
                   ,SetNewTime.RTC_Min
                     ,SetNewTime.RTC_Sec);
-        //UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        // Безответная команда - была
+        UARTSendExt ((BYTE*)BufString, strlen (BufString));
         NeedTransmit = 1;
       }
       // ;syst:key ss -  имитация нажатия кнопки
@@ -737,9 +739,9 @@ void DecodeCommandRS (void)
           RemoutCtrl = 1;
           if (GetIndexVRM()>3) // устанавливаем минимальное время ( для дистанционного управления не подходит)
             SetIndexVRM (0); // установка индекса времени накопления на 15 сек
+          SetModeDevice (MODEMEASURE); // принудительная установка режима прибора -  запкск рефлектометрии с установленными параметрами
           sprintf(BufString,"%d\r", GetTimeAvrg(GetIndexVRM())+5);//c
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
-          SetModeDevice (MODEMEASURE); // принудительная установка режима прибора -  запкск рефлектометрии с установленными параметрами
           NeedTransmit = 1;
           //else  sprintf(BufString,"Not stopрed\r");
         }
