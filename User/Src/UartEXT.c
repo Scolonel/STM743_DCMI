@@ -643,6 +643,26 @@ void DecodeCommandRS (void)
           NeedTransmit = 1;
         }
       }
+              // ;INIT
+        if (!memcmp ((void*)RX_Buf, ";INIT",5)) //
+        { 
+          if (RX_Buf[5]=='E')
+          {
+            // 15 с измерение с установленными параметрами, расчет событий и выдача их по окончании измерений
+            SetIndexVRM (0); // принудительная установка индекса времени накопления на 15 сек
+            if (!GetSetEnaEvents(0))GetSetEnaEvents(1); // устанавливаем признак разрешения событий 
+            SetGetMonEna (1);
+          }
+          RemoutCtrl = 1;
+          if (GetIndexVRM()>3) // устанавливаем минимальное время ( для дистанционного управления не подходит)
+            SetIndexVRM (0); // установка индекса времени накопления на 15 сек
+          sprintf(BufString,"%d\r", GetTimeAvrg(GetIndexVRM())+5);//c
+          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          SetModeDevice (MODEMEASURE); // принудительная установка режима прибора -  запкск рефлектометрии с установленными параметрами
+          NeedTransmit = 1;
+          //else  sprintf(BufString,"Not stopрed\r");
+        }
+
       if ((GetCurrentModeDevice()==MODESETREFL)||(GetCurrentModeDevice()==MODEREFL))
         // режим рефлектометра
       {
@@ -726,25 +746,25 @@ void DecodeCommandRS (void)
           SendCfgOTDR (BufString); // передача конфигурации рефлектометра (настройки)
           NeedTransmit = 1;
         }
-        // ;INIT
-        if (!memcmp ((void*)RX_Buf, ";INIT",5)) //
-        { 
-          if (RX_Buf[5]=='E')
-          {
-            // 15 с измерение с установленными параметрами, расчет событий и выдача их по окончании измерений
-            SetIndexVRM (0); // принудительная установка индекса времени накопления на 15 сек
-            if (!GetSetEnaEvents(0))GetSetEnaEvents(1); // устанавливаем признак разрешения событий 
-            SetGetMonEna (1);
-          }
-          RemoutCtrl = 1;
-          if (GetIndexVRM()>3) // устанавливаем минимальное время ( для дистанционного управления не подходит)
-            SetIndexVRM (0); // установка индекса времени накопления на 15 сек
-          SetModeDevice (MODEMEASURE); // принудительная установка режима прибора -  запкск рефлектометрии с установленными параметрами
-          sprintf(BufString,"%d\r", GetTimeAvrg(GetIndexVRM())+5);//c
-          UARTSendExt ((BYTE*)BufString, strlen (BufString));
-          NeedTransmit = 1;
-          //else  sprintf(BufString,"Not stopрed\r");
-        }
+//        // ;INIT
+//        if (!memcmp ((void*)RX_Buf, ";INIT",5)) //
+//        { 
+//          if (RX_Buf[5]=='E')
+//          {
+//            // 15 с измерение с установленными параметрами, расчет событий и выдача их по окончании измерений
+//            SetIndexVRM (0); // принудительная установка индекса времени накопления на 15 сек
+//            if (!GetSetEnaEvents(0))GetSetEnaEvents(1); // устанавливаем признак разрешения событий 
+//            SetGetMonEna (1);
+//          }
+//          RemoutCtrl = 1;
+//          if (GetIndexVRM()>3) // устанавливаем минимальное время ( для дистанционного управления не подходит)
+//            SetIndexVRM (0); // установка индекса времени накопления на 15 сек
+//          sprintf(BufString,"%d\r", GetTimeAvrg(GetIndexVRM())+5);//c
+//          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+//          SetModeDevice (MODEMEASURE); // принудительная установка режима прибора -  запкск рефлектометрии с установленными параметрами
+//          NeedTransmit = 1;
+//          //else  sprintf(BufString,"Not stopрed\r");
+//        }
         // получение необработанных данных
         if (!memcmp ((void*)RX_Buf, ";GET:RAW:DATA",13)) //
         { 
