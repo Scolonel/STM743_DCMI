@@ -134,7 +134,7 @@ uint32_t CountWait = 0; // счетчик ќжиданий
 uint8_t IndexDist =0;
 uint8_t EndDMA_DCMI =0; // признак окончани€ цикла ƒћј, устанавливаетс€ в прерывании
 
-
+uint8_t DistBad=0; // дистанци€ плоха€ лини€ длинней , дл€ Averaging, 
 // участвует в установках DICM DMA и рассчета суммировани€
 uint32_t CountCC4 = 0; // число совершенных прерываний по TIM4_CH4
 uint32_t CountEndCMI = 0; // число прерываний совершенных циклов DMA по DCMI
@@ -219,6 +219,8 @@ uint8_t g_STindx_LN = 0; //режим —упер“еста, индекс длины линии
 uint8_t g_STindx_IM = 0; //режим —упер“еста, индекс длительности импульса 
 
 uint8_t g_CodeErrorSoft=0; 
+
+uint32_t g_Noise=0;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -753,7 +755,7 @@ int main(void)
     // проверка приема по UART EXT
     if (RSDecYes) // вызов программы обработки комманды прин€той по UART
     {
-      TST_KTB(1);
+      //TST_KTB(1);
       DecodeCommandRS();
       //TST_KTA(0);
     }
@@ -1132,6 +1134,7 @@ void StopAllTIM(int Ext)  // остановка таймеров (OTDR)
 
       Ena_CFG = 0;
         //LED_KT(0); // закончили удержание сброса линии
+        TST_KTB(1); // старт "ћќƒ”Ћ№" 1 (начало основного цикла нкоплени€)
 
       //TIM4->CNT =0;
 
@@ -1721,9 +1724,9 @@ void GetLogData (void)
       // 5000 точек суммируетс€ за приблизительно 305 мк—
       // соотв при более плотных съемах
       // 0.5 2 км - врем€ суммировани€ ~ 40uS
-      // 4 км - врем€ суьмировани€ ~ 80uS
-      // 8 км - врем€ суьмировани€ ~ 160uS
-      // 16 км - врем€ суьмировани€ ~ 320uS
+      // 4 км - врем€ суммировани€ ~ 80uS
+      // 8 км - врем€ суммировани€ ~ 160uS
+      // 16 км - врем€ суммировани€ ~ 320uS
       TIM5->ARR = 15;
       TIM5->CCR4 = 5;
       // восстановим частоту - так на вс€кий случай
@@ -1731,9 +1734,9 @@ void GetLogData (void)
        // здесь надо разделить период повторени€ и параметр съема
        switch(IndexDist) // устанвливаем параметры —ъема
        {
-       case 0: //0.5 2.0 km - 33.3nS*700=24uS = “нак (прореживание = 4)
+       case 0: //0.5 2.0 km - 33.3nS*700=24uS = “нак (прореживание = 8)
          // “сумм = 42 мк— > “нак !!! поэтому можем суммировать сразу 
-         TIM1->ARR = TimeRepitOfLN[IndexDist];
+         TIM1->ARR = TimeRepitOfLN[IndexDist]; //65 uS
          //TIM1->ARR = 65;
          //NumRepit = 8; 
          //TIM2->PSC = 0;
@@ -1748,7 +1751,7 @@ void GetLogData (void)
          break;
        case 1: //4 km - 33.3nS*1400=47uS = “нак (прореживание = 4)
          // “сумм = 84 мк— > “нак !!! поэтому можем суммировать сразу 
-         TIM1->ARR = TimeRepitOfLN[IndexDist];
+         TIM1->ARR = TimeRepitOfLN[IndexDist]; //120uS
          //TIM1->ARR = 100;
          //NumRepit = 4; 
          //TIM2->PSC = 0;
@@ -1761,7 +1764,7 @@ void GetLogData (void)
          break;
        case 2: //8 km - 33.3nS*2800=94uS = “нак (прореживание = 2)
          // “сумм = 168 мк— > “нак !!! поэтому можем суммировать сразу 
-         TIM1->ARR = TimeRepitOfLN[IndexDist];
+         TIM1->ARR = TimeRepitOfLN[IndexDist]; //200 uS
          //TIM1->ARR = 200;
          //NumRepit = 2; 
          //TIM2->PSC = 0;
@@ -1774,7 +1777,7 @@ void GetLogData (void)
          break;
        case 3: //16 km - 186uS 33.3nS*5600=186uS  = “нак врем€ накоплени€
          // “сумм = 336 мк— > “нак !!! поэтому можем суммировать сразу 
-         TIM1->ARR = TimeRepitOfLN[IndexDist];
+         TIM1->ARR = TimeRepitOfLN[IndexDist]; //390 uS
          //TIM1->ARR = 350;
          //NumRepit = 1; 
          //TIM2->PSC = 0;
@@ -1787,7 +1790,7 @@ void GetLogData (void)
          break;
        case 4: //32km - 330uS 66.6nS*5600=373uS = “нак
          // “сумм = 336 мк—
-         TIM1->ARR = TimeRepitOfLN[IndexDist];
+         TIM1->ARR = TimeRepitOfLN[IndexDist]; //440 uS
          //TIM1->ARR = 420;
          //NumRepit = 1; 
          //TIM2->PSC = 1;
@@ -1800,7 +1803,7 @@ void GetLogData (void)
          break;
        case 5: //64km - 660uS 133.3nS*5600=750uS = “нак
          // “сумм = 336 мк—
-         TIM1->ARR = TimeRepitOfLN[IndexDist];
+         TIM1->ARR = TimeRepitOfLN[IndexDist]; // 800 uS
          //TIM1->ARR = 800;
          //NumRepit = 1; 
          //TIM2->PSC = 3;
@@ -1813,7 +1816,7 @@ void GetLogData (void)
          break;
        case 6: //128km - 1300uS 266.6н— *5600=1493uS = “нак
          // “сумм = 336 мк—
-         TIM1->ARR = TimeRepitOfLN[IndexDist];
+         TIM1->ARR = TimeRepitOfLN[IndexDist]; //1600 uS
          //TIM1->ARR = 1600; // “повт
          //NumRepit = 1; 
          //TIM2->PSC = 7;
@@ -1821,8 +1824,8 @@ void GetLogData (void)
          //TIM2->CCR1 = 32;
          //TIM4->PSC = 7;
          //TIM4->ARR = 64;
-         TIM5->CCR4 = 288000;//240*1200;1493 мк— < через 1200 мк— + 336 мк— (сумм 5600) < 1493 мк—
-         TIM5->ARR = 288001;//1201;
+         TIM5->CCR4 = 360000;//288000;//240*1200;1493 мк— < через 1200 мк— + 336 мк— (сумм 5600) < 1493 мк—
+         TIM5->ARR = 360001;//288001;//1201;
          break;
        default:
          TIM1->ARR = 75;

@@ -243,6 +243,22 @@ void DecodeCommandRS (void)
           NeedTransmit = 1;
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
         }
+                if (!memcmp ((void*)RX_Buf, "*RAWD",5)) // специальный режим теста
+        {
+          int PtrS = (int)atoi((char*)&RX_Buf[5]);
+          sprintf(BufString,"%d\n", g_Noise);
+          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          sprintf(BufString,"%d\n", GetCntNumAvrg());
+          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          
+          for (int i = PtrS; i< PtrS+60; i++)
+          {
+          sprintf(BufString,"%d\n", RawData[i]);
+          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          }
+          NeedTransmit = 1;
+
+        }
       }
       break;
     case ';':
@@ -1852,7 +1868,7 @@ void DecodeCommandRS (void)
   }
   RSDecYes = 0;
   Reciev = STOP_UART;
-  TST_KTB(0); // индикация конца приема и обработки команды
+  //TST_KTB(0); // индикация конца приема и обработки команды
 
   //VICINTENABLE = 1 << UART0_INT;  /* Enable Interrupt */
   

@@ -1115,7 +1115,7 @@ BYTE GetIndexLN (void) // получение индекса длины линии
 
 BYTE SetIndexLN (BYTE Index) // установка индекса длины линии
 {
-  if (Index>LENGTH_LINE_NUM-1) Index=LENGTH_LINE_NUM-1;
+  if (Index>LENGTH_LINE_NUM-1) Index=LENGTH_LINE_NUM-1;//
   if (Index==0xFF) Index=0;
     SettingRefl.Index_Ln = Index;
     if ((Index == 5) && (GetIndexIM()>6)) SetIndexIM (6);

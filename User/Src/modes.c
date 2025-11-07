@@ -103,7 +103,8 @@ const unsigned char OutOfNoise [40] = {
 
 // пусть это будут требуемое значение периодв ТИМ1 при нормальном измерении в мкС
 //const int TimeRepitOfLN[PNTSNUM] = { 65, 100, 200, 370, 420, 800, 1600 }; // 
-const int TimeRepitOfLN[PNTSNUM] = { 65, 120, 200, 390, 440, 800, 1600 }; // 
+//const int TimeRepitOfLN[PNTSNUM] = { 65, 120, 200, 390, 440, 800, 1600 }; // 
+const int TimeRepitOfLN[PNTSNUM] = { 65, 120, 200, 390, 440, 800, 1900 }; // 05.11.2025
 //const int KeyPoints[PNTSNUM] = { 96, 172, 344, 688, 1366, 2048, 4608 }; // порги определения индекса установленной длины 4096
  // всеж таки надо брать по конкретной длине а не по полному массиву, так как пересчитываем на реальную длину
 //const int KeyPoints[PNTSNUM] = { 96, 192, 384, 768, 1536, 2304, 4608 }; // порги определения индекса установленной длины для всего массива
@@ -1486,6 +1487,7 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     CntNumAvrg = 0; // обнуляем счетчик накоплений
     SumNumNak = 0;
     Averaging (BEGZONEAVRG,6,0); // измеряем 2км редко (128км)
+    //Averaging (BEGZONEAVRG,6,0); // измеряем 2км редко (128км)
     LocalMax = 0;
     Mean = (DWORD)(5000.0*log10(1023*BEGZONEAVRG)); // максимальный уровень при данном накопленнн
     for (int i=0; i<BEGZONEPNT; ++i)
@@ -1579,13 +1581,13 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     // время промежуточного вывода на экран 28 мС
     // время одного прохода в заданой длине Mean*333.33 + 14000*NumPointsPeriod[ShadowIndexLN]
     TimeMeasure3S  = 2750000; // uS
-    if (RemoutCtrl) TimeMeasure3S  = 2750000; //uS
+    if (RemoutCtrl) TimeMeasure3S  = 3000000; //uS
     // рассчитаем приблизительное число накоплений
     if(LengthOK) // линия правильная,  
-      NumAvrg = (unsigned)(TimeMeasure3S/((NumPointsPeriod[ShadowIndexLN]+1)*TimeRepitOfLN[ShadowIndexLN]+260));//*NumPointsPeriod[ShadowIndexLN])
+      NumAvrg = (unsigned)(TimeMeasure3S/((NumPointsPeriod[ShadowIndexLN])*TimeRepitOfLN[ShadowIndexLN]+260));//*NumPointsPeriod[ShadowIndexLN])
     // линия плохая
     else
-      NumAvrg = (unsigned)(TimeMeasure3S/((NumPointsPeriod[ShadowIndexLN]+1)*TimeRepitOfLN[IndxAddBad]+260));//*NumPointsPeriod[ShadowIndexLN])
+      NumAvrg = (unsigned)(TimeMeasure3S/((NumPointsPeriod[ShadowIndexLN])*TimeRepitOfLN[IndxAddBad]+260));//*NumPointsPeriod[ShadowIndexLN])
     
     
     // число накоплений как деление времени 2.75 сек на промеренную длину в тиках сбора 333ns 
@@ -1597,7 +1599,7 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
       ShadowIndexIM = IndexSeek(Mean);
       // NumAvrg = (unsigned)(8250000L/(KeyPoints[ShadowIndexLN]+50)); // число накоплений , было +30
       //NumAvrg = (unsigned)(TimeMeasure3S/(NumPointsPeriod[ShadowIndexLN]*TimeRepitOfLN[ShadowIndexLN]));//*NumPointsPeriod[ShadowIndexLN])
-      NumAvrg = (unsigned)(TimeMeasure3S/((NumPointsPeriod[ShadowIndexLN]+1)*TimeRepitOfLN[ShadowIndexLN]+260));//*NumPointsPeriod[ShadowIndexLN])
+      NumAvrg = (unsigned)(TimeMeasure3S/((NumPointsPeriod[ShadowIndexLN])*TimeRepitOfLN[ShadowIndexLN]+260));//*NumPointsPeriod[ShadowIndexLN])
       CurrentSumDelay = 1;
     }
     SetIndexLN(ShadowIndexLN);
@@ -1685,6 +1687,8 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     g_NeedScr = 1; // используем его для переключения в режим отображения накоплений
     // переключим окно для нового индиктора и сбросим признак
     SumNumNak = 0;
+    
+   
     Averaging (NumAvrg,IndxAddBad,1);// через 3 сек первый результат
     // установка режима накопления 
     SubModeMeasOTDR = AVERAGING;

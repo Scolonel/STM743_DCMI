@@ -348,6 +348,7 @@ void DMA1_Stream2_IRQHandler(void)
     // где подцепим признак продолжени€ накоплени€
     //TIM2->CR1 &= ~TIM_CR1_CEN; // притупим таймер основной
        // StopAllTIM(2);
+     TST_KTB(0); // конец "ћќƒ”Ћ№" 1 ( останов основного цикла накоплени€)
 
   }
   /* USER CODE END DMA1_Stream2_IRQn 0 */

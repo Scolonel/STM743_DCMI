@@ -13,14 +13,17 @@ static int WT_R = 0;
 void RUN_SUM (DWORD* RawDataI);//
 
 
-void SUMMER (DWORD* RawDataS)//
+void SUMMER (DWORD* RawDataS)
+
 {
   //надо запустить измерение с утановленными параметрами
       //memset(&BufADD, 0, sizeof(BufADD));
-     //LED_KT(1); // начало одного суммир
-  
+     LED_KTT(1); // начало одного суммир "МОДУЛЬ" 2 (~102мкС)
+// блок задержки обнуления буффера накопления одного прохода
       memset(&BufNAK, 0, sizeof(BufNAK));
-     //LED_KT(0); // начало одного суммир
+     LED_KTT(0);  // конец задержки "МОДУЛЬ" 2
+     if(!DistBad)
+  TIM1->CNT = TIM1->CCR1 - 15;
 
   // запустим накопление 
   TIM1->CR1 |=TIM_CR1_CEN;
@@ -67,12 +70,14 @@ void SUMMER (DWORD* RawDataS)//
     //StopAllTIM(1); // stop all timers
   // в буффере BufNAK лежит одно накопление 
      //LED_KT(1); // начало одного суммир
+  TST_KTA(1);
 
-   for (int i=0;i<RAWSIZE;i++)                                  // !!!!!!!!!!! 
-    RawDataS[i] += BufNAK[i];     // суммирование с шины данных непосредственно (есть тики для АЦП) !!!!!!!!!!!
+//   for (int i=0;i<RAWSIZE;i++)                                  // !!!!!!!!!!! 
+//    RawDataS[i] += BufNAK[i];     // суммирование с шины данных непосредственно (есть тики для АЦП) !!!!!!!!!!!
     // другой способ копирования
     //    memcpy( RawDataS, BufNAK, RAWSIZE * sizeof(DWORD) );
     // LED_KT(0); // конец одног суммир
+  TST_KTA(0);
 
   //STARTPP(1); // устанавливаем в "1" START                            !!!!!!!!!!!
   //ADC_DATA_EN(1);// снимаем строб                            !!!!!!!!!!!
@@ -96,8 +101,9 @@ void Averaging (int NumAccum,unsigned AddIndexLN, BYTE EnDrawGraph )// функция н
 // не 0 - устанвливает период согластно индекса диапазона оценивается в StartRunFirst
 { 
   //    CntPointPick=0;
-  TST_KTA(1);
+  //TST_KTA(1);
   //CurrTimeAccum = HAL_GetTick();
+  DistBad = AddIndexLN;
   OldTimeAccum = CurrTimeAccum;
   SetNumAccumPerSec (NumAccum);// запись числа накоплений
   // тут устанавливаются параметры съема и генерации зондирующего импульса при установленных ранее
@@ -143,7 +149,7 @@ void Averaging (int NumAccum,unsigned AddIndexLN, BYTE EnDrawGraph )// функция н
     DrawPictureMeas (EnDrawGraph); // (28 mS) рисование картинки при измерении
     EnaTimerAccum = 1;
   }
-  TST_KTA(0);
+ // TST_KTA(0);
 }
 
 void DrawPictureMeas (BYTE EnDraw) // рисование картинки при измерении
@@ -265,6 +271,9 @@ void RUN_SUM (DWORD* RawDataI)//
     OldTimeAccum = CurrTimeAccum;  
     //RawData[RAWSIZE-1]= GetTimer(2);
     static DWORD Noise =0;
+    DWORD NoiseSqr =0; // корень квадратный из шума(смещения)
+    DWORD AvergSqr =0; // корень квадратный из накопления
+
     DWORD NoiseBegin =0; //0-49
     DWORD NoiseEnd =0;   //5530-5580
     DWORD NoiseAdd =0; // расчетные шумы по добавленым точкам в конце линии при 64 и 128 км
@@ -319,6 +328,7 @@ void RUN_SUM (DWORD* RawDataI)//
       CntAddNoise++;
       Noise = (DWORD)1*(NoiseAdd/CntAddNoise);
     }
+    g_Noise = Noise; 
     //Noise = (DWORD)1*(Noise/(j-1));
     DWORD CurrentMaxLog =(DWORD)(5000.0*log10((double)Avrgs*1023)); // максимальный логарифм текщего накопления
     // расчет логарифмического шума (перед импульсом)
@@ -337,6 +347,13 @@ void RUN_SUM (DWORD* RawDataI)//
       // попробуем фильтрануть, то есть если разница по модулю между предыдущей и последующей
       // меньше 1/8 от числа накоплений то ппоследующую берем как среднее с предыдущей,
       // если разница больше не меняем
+      if(1) // выкл мини фильтр (1)...по следующему (8)
+      {
+      if(abs((int)(RawData[i+j+1]-RawData[i+j]))<(Avrgs/8))
+      {
+        RawData[i+j] = (RawData[i+j+1]+RawData[i+j])>>1;
+      }
+      }
       if(0) // выкл мини фильтр (1)...по следующему
       {
       if(abs((int)(RawData[i+j+1]-RawData[i+j]))<(Avrgs/2))
@@ -389,7 +406,7 @@ void RUN_SUM (DWORD* RawDataI)//
   //uint32_t PointDMA = (g_CountDMA);// (071) - точка которая суммируется для данного цикла DMA
   //LED_START(1);
   //LED_START(0);
-  //LED_KT(1); // начали суммирование одного прохода
+  TST_KTA(1); // начали суммирование одного прохода МОДУЛЬ3
 
   for(int i=0;i<SizeBlockNak; i++)
   {
@@ -397,7 +414,8 @@ void RUN_SUM (DWORD* RawDataI)//
     // for ADC MS9280 buffer BufADD
     //BufNAK[NumRepit*i+PointDMA] +=BufADD[i]; 
     //BufNAK[NumRepit*i+PointDMA] +=BufADD[i]; //(071)
-    BufNAK[NumRepit*i+g_CountDMA] +=BufADD[i]; 
+    //BufNAK[NumRepit*i+g_CountDMA] +=BufADD[i]; 
+    RawData[NumRepit*i+g_CountDMA]+=BufADD[i];
    //BufNAK[NumRepit*i+PointDMA] +=(BufADC[i]+BufADD[i-1])/2; 
     // BufNAK[2*(NumRepit*i+PointDMA)+1] +=BufADC[i]; 
     //BufNAK[2*(NumRepit*i+PointDMA)] +=BufADD[i-1]; 
@@ -406,7 +424,7 @@ void RUN_SUM (DWORD* RawDataI)//
   //LED_START(1);
     //TIM1->CR1 |=TIM_CR1_CEN;
   //LED_START(0);
-  //LED_KT(0); // закончили накопление - суммирование можно сбросить линию
+  TST_KTA(0); // закончили накопление - суммирование можно сбросить линию "МОДУЛЬ" 3
     StopAllTIM(0);// останавливаем таймеры которые считают
     SumNumNak++;
   //if(++CountDMA<SumNumNak)

@@ -217,6 +217,7 @@ extern uint8_t ModeSCWP; // режим времени для переключения лазеров
 extern uint16_t TimeSCWP; // счетчик времени для переключения лазеров
 extern DWORD CountTimerPA; // счетчик времен для режима автомат PM 
 
+extern uint8_t DistBad; // дистанция плохая линия длинней , для Averaging, 
 
 extern char NameDir[100][6];
 extern char NameDirD[32][6];
@@ -244,6 +245,7 @@ extern uint8_t g_STindx_LN ; //режим СуперТеста, индекс длины линии
 extern uint8_t g_STindx_IM ; //режим СуперТеста, индекс длительности импульса 
 
 extern uint8_t g_CodeErrorSoft; 
+extern uint32_t g_Noise;
 
 
 extern char* g_pszFileNames[LSPLACENUM];  // массив указателей на строки с именами файлов
