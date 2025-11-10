@@ -672,7 +672,7 @@ void DecodeCommandRS (void)
           RemoutCtrl = 1;
           if (GetIndexVRM()>3) // устанавливаем минимальное время ( для дистанционного управления не подходит)
             SetIndexVRM (0); // установка индекса времени накопления на 15 сек
-          sprintf(BufString,"%d\r", GetTimeAvrg(GetIndexVRM())+5);//c
+          sprintf(BufString,"%d\r", GetTimeAvrg(GetIndexVRM())+7);//c
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
           SetModeDevice (MODEMEASURE); // принудительная установка режима прибора -  запкск рефлектометрии с установленными параметрами
           NeedTransmit = 1;

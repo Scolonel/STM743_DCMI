@@ -23,8 +23,10 @@ void SUMMER (DWORD* RawDataS)
       memset(&BufNAK, 0, sizeof(BufNAK));
      LED_KTT(0);  // конец задержки "ћќƒ”Ћ№" 2
      if(!DistBad)
+     {
   TIM1->CNT = TIM1->CCR1 - 15;
-
+  //TIM1->CNT = TIM1->CCR1 - (15 + (rand()%13)); // дл€ "размазывани€"
+     }
   // запустим накопление 
   TIM1->CR1 |=TIM_CR1_CEN;
 
@@ -59,25 +61,25 @@ void SUMMER (DWORD* RawDataS)
        // LED_START(0);
        // BufNAK[1] = CountWait;
         // тут бы поизмен€ть начало ссумировани€
-        WT_R = rand()%25;
-        while(WT_R)
-        {
-          WT_R--;
-          asm("NOP");
-        }
+//        WT_R = rand()%25;
+//        while(WT_R)
+//        {
+//          WT_R--;
+//          asm("NOP");
+//        }
              ContNextAvrg();
       }
     //StopAllTIM(1); // stop all timers
   // в буффере BufNAK лежит одно накопление 
      //LED_KT(1); // начало одного суммир
-  TST_KTA(1);
+ // TST_KTA(1);
 
 //   for (int i=0;i<RAWSIZE;i++)                                  // !!!!!!!!!!! 
 //    RawDataS[i] += BufNAK[i];     // суммирование с шины данных непосредственно (есть тики дл€ ј÷ѕ) !!!!!!!!!!!
     // другой способ копировани€
     //    memcpy( RawDataS, BufNAK, RAWSIZE * sizeof(DWORD) );
     // LED_KT(0); // конец одног суммир
-  TST_KTA(0);
+ // TST_KTA(0);
 
   //STARTPP(1); // устанавливаем в "1" START                            !!!!!!!!!!!
   //ADC_DATA_EN(1);// снимаем строб                            !!!!!!!!!!!
@@ -347,7 +349,7 @@ void RUN_SUM (DWORD* RawDataI)//
       // попробуем фильтрануть, то есть если разница по модулю между предыдущей и последующей
       // меньше 1/8 от числа накоплений то ппоследующую берем как среднее с предыдущей,
       // если разница больше не мен€ем
-      if(1) // выкл мини фильтр (1)...по следующему (8)
+      if(0) // выкл мини фильтр (1)...по следующему (8)
       {
       if(abs((int)(RawData[i+j+1]-RawData[i+j]))<(Avrgs/8))
       {
@@ -407,6 +409,8 @@ void RUN_SUM (DWORD* RawDataI)//
   //LED_START(1);
   //LED_START(0);
   TST_KTA(1); // начали суммирование одного прохода ћќƒ”Ћ№3
+  
+  TIM5->CR1 &= ~TIM_CR1_CEN; // STop генератора TIM5 (врем€ когда надо суммировать)
 
   for(int i=0;i<SizeBlockNak; i++)
   {
