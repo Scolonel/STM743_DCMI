@@ -268,14 +268,23 @@ void RUN_SUM (DWORD* RawDataI)//
   if ((CntAccumulat > GetNumAccumPerSec())||((CurrTimeAccum/1000)>GetTimeAvrg(GetIndexVRM())))//получение значения накоплений в данном режиме по числу накоплений
     
   { // Закончили цикл накоплений можно по числу а можно и по времени!?
-        StopAllTIM(1);
-
+    StopAllTIM(1);
+    // если ручное управление попробуем выдать время 
+    if((RemoutCtrl)&&(Measuring() == AVERAGING))
+    {
+      char Str[8];
+      g_TimeAvrg -=3;
+      sprintf(Str,"t10.txt=\"%d%s\"яяя",g_TimeAvrg,MsgMass[4][CurrLang]); //Идет измерение: XXс 
+      NEX_Transmit((void*)Str);// 
+      
+    }
     OldTimeAccum = CurrTimeAccum;  
     //RawData[RAWSIZE-1]= GetTimer(2);
+    unsigned Avrgs = (GetCntNumAvrg()+CntAccumulat-1); // запись числа накоплений, на данный момент
     static DWORD Noise =0;
     DWORD NoiseSqr =0; // корень квадратный из шума(смещения)
     DWORD AvergSqr =0; // корень квадратный из накопления
-
+    
     DWORD NoiseBegin =0; //0-49
     DWORD NoiseEnd =0;   //5530-5580
     DWORD NoiseAdd =0; // расчетные шумы по добавленым точкам в конце линии при 64 и 128 км
@@ -284,7 +293,6 @@ void RUN_SUM (DWORD* RawDataI)//
     int j=GetCurrentBegShiftZone (); //получение текущего смещения по индексу
     //int j=0; //получение текущего смещения по индексу
     DWORD LocalRaw;
-    unsigned Avrgs = (GetCntNumAvrg()+CntAccumulat-1); // запись числа накоплений, на данный момент
     SetCntNumAvrg(Avrgs); // сохранение
     // filtr (WOW Super)
     //if (GetCntNumAvrg()>=GetFinAvrg())
@@ -299,21 +307,21 @@ void RUN_SUM (DWORD* RawDataI)//
       Noise +=RawData[i];
     }
     Noise = (DWORD)1*(Noise/(50));
-//    NoiseBegin = Noise;
-//    // посчитаем в конце 
-//      for (int i=5530;i<5580;++i) // берем 30 точек в конце отображения окна
-//      {
-//          //CntAddNoise++;
-//          NoiseEnd +=RawData[i];
-//      }
-//    NoiseEnd = (DWORD)1*(NoiseEnd/(50));// смешение в конце
-//     if(NoiseEnd>NoiseBegin) 
-//       Noise = NoiseEnd;
-//     else
-//       Noise = NoiseBegin;
-//// а теперь просто увеличим смещение посчитанное в начале на половину накоплений
-//            Noise = NoiseBegin + Avrgs/4;
-
+    //    NoiseBegin = Noise;
+    //    // посчитаем в конце 
+    //      for (int i=5530;i<5580;++i) // берем 30 точек в конце отображения окна
+    //      {
+    //          //CntAddNoise++;
+    //          NoiseEnd +=RawData[i];
+    //      }
+    //    NoiseEnd = (DWORD)1*(NoiseEnd/(50));// смешение в конце
+    //     if(NoiseEnd>NoiseBegin) 
+    //       Noise = NoiseEnd;
+    //     else
+    //       Noise = NoiseBegin;
+    //// а теперь просто увеличим смещение посчитанное в начале на половину накоплений
+    //            Noise = NoiseBegin + Avrgs/4;
+    
     
     //if (GetIndexLN()>5)// длинные линии -> добавим точек по расчету шумов
     if (1)// длинные линии -> добавим точек по расчету шумов
@@ -349,44 +357,72 @@ void RUN_SUM (DWORD* RawDataI)//
       // попробуем фильтрануть, то есть если разница по модулю между предыдущей и последующей
       // меньше 1/8 от числа накоплений то ппоследующую берем как среднее с предыдущей,
       // если разница больше не меняем
-      if(1) // выкл мини фильтр (1)...по следующему (8)
+          LocalRaw = RawData[i+j];
+      if(0)
       {
-      if(abs((int)(RawData[i+j+1]-RawData[i+j]))<(Avrgs/8))
-      {
-        RawData[i+j] = (RawData[i+j+1]+RawData[i+j])>>1;
+        if((abs((RawData[i+j+1])-(RawData[i+j]))<(Avrgs/2))&&(abs((RawData[i+j-1])-(RawData[i+j]))<(Avrgs/2)))
+        {
+          LED_KTS(1);
+          
+          LocalRaw = (int)(RawData[i+j+1]+RawData[i+j]+RawData[i+j-1])/3;
+          LED_KTS(0);
+          
+        }
       }
+      if(0)
+      {
+        if((abs((int)(500*log10(RawData[i+j+1]))-(int)(500*log10(RawData[i+j])))<(15))&&(abs((int)(500*log10(RawData[i+j-1]))-(int)(500*log10(RawData[i+j])))<(15)))
+        {
+          //LED_KTS(1);
+          
+          LocalRaw = (int)(RawData[i+j+1]+RawData[i+j]+RawData[i+j-1])/3;
+          //LED_KTS(0);
+          
+        }
+        
+      }
+      if(0) // выкл мини фильтр (1)...по следующему (8)
+      {
+        if(abs((int)(RawData[i+j+1]-RawData[i+j]))<(Avrgs/8))
+        {
+          //RawData[i+j] = (RawData[i+j+1]+RawData[i+j])>>1;
+          LocalRaw = (RawData[i+j+1]+RawData[i+j])>>1;
+        }
+        else
+          LocalRaw = RawData[i+j];
+
       }
       if(0) // выкл мини фильтр (1)...по следующему
       {
-      if(abs((int)(RawData[i+j+1]-RawData[i+j]))<(Avrgs/2))
-      {
-        RawData[i+j] = (RawData[i+j+1]+RawData[i+j])>>1;
-      }
+        if(abs((int)(RawData[i+j+1]-RawData[i+j]))<(Avrgs/2))
+        {
+          RawData[i+j] = (RawData[i+j+1]+RawData[i+j])>>1;
+        }
       }
       if(0) // выкл мини фильтр (2)...по предыдущему
       {
-      if(abs((int)(RawData[i+j-1]-RawData[i+j]))<(Avrgs/2))
-      {
-        RawData[i+j] = (RawData[i+j-1]+RawData[i+j])>>1;
+        if(abs((int)(RawData[i+j-1]-RawData[i+j]))<(Avrgs/2))
+        {
+          RawData[i+j] = (RawData[i+j-1]+RawData[i+j])>>1;
+        }
       }
-      }
-      LocalRaw = RawData[i+j];
+      //LocalRaw = RawData[i+j];
       // добавка перед скачком, то есть перед большим отражением в маленьких сигналах
       // пресловутые 12 метров
       if(0)
       {
-      if(PointsPerPeriod>=4)
-      //LocalRaw += (DWORD)(RawData[i+j+(PointsPerPeriod/4)]*2.8e-3);
-      LocalRaw += (DWORD)(RawData[i+j+2]*2.8e-3);
+        if(PointsPerPeriod>=4)
+          //LocalRaw += (DWORD)(RawData[i+j+(PointsPerPeriod/4)]*2.8e-3);
+          LocalRaw += (DWORD)(RawData[i+j+2]*2.8e-3);
       }
       if (LocalRaw<=Noise) LocalRaw=Noise+1;
       LocalRaw= LocalRaw-Noise;
       LogData[i] = (unsigned short)(CurrentMaxLog - (DWORD)(5000.0*log10((double)LocalRaw))) ;
-        if (LogData[i] > CurrentMaxLog)
-        { 
-          //__no_operation();
-          CurrentMaxLog+=1;
-        }
+      if (LogData[i] > CurrentMaxLog)
+      { 
+        //__no_operation();
+        CurrentMaxLog+=1;
+      }
       
     }
     CntAccumulat =  0;

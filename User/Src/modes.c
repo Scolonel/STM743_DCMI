@@ -104,7 +104,10 @@ const unsigned char OutOfNoise [40] = {
 // пусть это будут требуемое значение периодв “»ћ1 при нормальном измерении в мк—
 //const int TimeRepitOfLN[PNTSNUM] = { 65, 100, 200, 370, 420, 800, 1600 }; // 
 //const int TimeRepitOfLN[PNTSNUM] = { 65, 120, 200, 390, 440, 800, 1600 }; // 
-const int TimeRepitOfLN[PNTSNUM] = { 65, 120, 200, 390, 440, 800, 1900 }; // 05.11.2025
+// в это врем€ должно входить наибольшее значение из времени сбора и суммировани€
+// дл€ малых рассто€ний, или сумма врмени накоплени€ и суммировани€ дл€ рассто€ний 
+// без прореживани€, врем€ сммировани€ без прореживани€ 336 мк—
+const int TimeRepitOfLN[PNTSNUM] = { 65, 120, 200, 390, 775, 1150, 1900 }; // 05.11.2025
 //const int KeyPoints[PNTSNUM] = { 96, 172, 344, 688, 1366, 2048, 4608 }; // порги определени€ индекса установленной длины 4096
  // всеж таки надо брать по конкретной длине а не по полному массиву, так как пересчитываем на реальную длину
 //const int KeyPoints[PNTSNUM] = { 96, 192, 384, 768, 1536, 2304, 4608 }; // порги определени€ индекса установленной длины дл€ всего массива
@@ -1634,7 +1637,7 @@ void ModeStartOTDR(void) // режим накоплени€ рефлектометра
       NEX_Transmit((void*)Str);// 
       sprintf(Str,"t10.txt=\"%d%s\"€€€",GetTimeAvrg(GetIndexVRM()),MsgMass[4][CurrLang]); //»дет измерение: XXс 
       NEX_Transmit((void*)Str);// 
-      
+      g_TimeAvrg = GetTimeAvrg(GetIndexVRM());
       g_NeedScr = 0;
     }
     
@@ -4386,7 +4389,7 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
   case MEASUR:
     if (TimerAutoPM >= 2500) //~1.5S
     {
-            LED_KTT(1);
+           // LED_KTT(1);
 
       RPON[IndWavePON] = Watt2dB(Str, tmpPOW , 1);
       ModAutoPM = REWAIT; // режим измерител€ авто ожидаем
@@ -4572,7 +4575,7 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
           // посылка команды переключени€ окна на Tester (возврат)  
       CmdInitPage(24);
   }
-             LED_KTT(0);
+           //  LED_KTT(0);
           //  LED_KTS(0);
 
 }

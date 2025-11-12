@@ -194,6 +194,7 @@ uint8_t WIDE_VER=1; // 1- обычный диапазон 0 - расширенный
 DWORD TimeBegin; // врем€ начала, дл€ контрол€ начальной заставки
 DWORD CountTimerPA = 0; // счетчик времен дл€ режима автомат PM 
 // √руппа основных перемнных участвующих в накоплении
+float fRawData[RAWSIZE]; // блок накоплени€ в основной пам€ти
 DWORD RawData[RAWSIZE]; // блок накоплени€ в основной пам€ти
 unsigned char NexData[NEXSIZE]; // блок данных в пам€ти USB дл€ индикатора 4096 byte
 unsigned int PointsPerPeriod; // „исло точек в периоде 
@@ -222,6 +223,7 @@ uint8_t g_STindx_IM = 0; //режим —упер“еста, индекс длительности импульса
 uint8_t g_CodeErrorSoft=0; 
 
 uint32_t g_Noise=0;
+uint32_t g_TimeAvrg=0; // дл€ индикации времени накоплени€ при ручном управлении
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -1796,7 +1798,7 @@ void GetLogData (void)
          break;
        case 4: //32km - 330uS 66.6nS*5600=373uS = “нак
          // “сумм = 336 мк—
-         TIM1->ARR = TimeRepitOfLN[IndexDist]; //440 uS
+         TIM1->ARR = TimeRepitOfLN[IndexDist]; //375+350+50 = 775 uS
          //TIM1->ARR = 420;
          //NumRepit = 1; 
          //TIM2->PSC = 1;
@@ -1804,13 +1806,13 @@ void GetLogData (void)
          //TIM2->CCR1 = 8;
          //TIM4->PSC = 1;
          //TIM4->ARR = TIM4->CCR4 + DBPRO;//(16)*3;
-         g_Tim5Set = 12000;
+         g_Tim5Set = 90000; // 375
          TIM5->CCR4 = g_Tim5Set;//50*240; 373uS = “нак < через 50 мк— + 336 мк— (сумм 5600) < 420 мк—
          TIM5->ARR = g_Tim5Set+1;//51*240;
          break;
        case 5: //64km - 660uS 133.3nS*5600=750uS = “нак
          // “сумм = 336 мк—
-         TIM1->ARR = TimeRepitOfLN[IndexDist]; // 800 uS
+         TIM1->ARR = TimeRepitOfLN[IndexDist]; // 750+350+50 = 1150 uS
          //TIM1->ARR = 800;
          //NumRepit = 1; 
          //TIM2->PSC = 3;
@@ -1818,13 +1820,13 @@ void GetLogData (void)
          //TIM2->CCR1 = 16;
          //TIM4->PSC = 3;
          //TIM4->ARR = 100+24;
-         g_Tim5Set = 100800;
+         g_Tim5Set = 180000; // 750
          TIM5->CCR4 = g_Tim5Set;//240*420; 750uS < через 420 мк— + 336 мк— (сумм 5600) < 800 мк—
          TIM5->ARR = g_Tim5Set+1;//361;
          break;
        case 6: //128km - 1300uS 266.6н— *5600=1493uS = “нак
          // “сумм = 336 мк—
-         TIM1->ARR = TimeRepitOfLN[IndexDist]; //1600 uS
+         TIM1->ARR = TimeRepitOfLN[IndexDist]; //1500+350+50 uS
          //TIM1->ARR = 1600; // “повт
          //NumRepit = 1; 
          //TIM2->PSC = 7;
@@ -1832,7 +1834,7 @@ void GetLogData (void)
          //TIM2->CCR1 = 32;
          //TIM4->PSC = 7;
          //TIM4->ARR = 64;
-         g_Tim5Set = 360000;
+         g_Tim5Set = 360000; // 1500
          TIM5->CCR4 = g_Tim5Set;//288000;//240*1200;1493 мк— < через 1200 мк— + 336 мк— (сумм 5600) < 1493 мк—
          TIM5->ARR = g_Tim5Set+1;//288001;//1201;
          break;

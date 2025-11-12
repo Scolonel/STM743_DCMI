@@ -247,6 +247,7 @@ extern uint8_t g_STindx_IM ; //режим СуперТеста, индекс длительности импульса
 
 extern uint8_t g_CodeErrorSoft; 
 extern uint32_t g_Noise;
+extern uint32_t g_TimeAvrg; // для индикации времени накопления при ручном управлении
 
 
 extern char* g_pszFileNames[LSPLACENUM];  // массив указателей на строки с именами файлов
@@ -382,6 +383,7 @@ extern uint16_t LogData[SizeBuf_ADC]; // буфер логарифмических данных накопления
 extern uint16_t LogDataSplice[SizeBuf_ADC]; // буфер логарифмических данных накопления, в него добавляем из буфера АЦП
 
 extern unsigned char NexData[NEXSIZE] ; // для графика в Nextion
+extern float fRawData[RAWSIZE] ;// НЕ обработанные данные
 extern DWORD RawData[RAWSIZE] ;// НЕ обработанные данные
 extern unsigned int PointsPerPeriod; // шаг дискретизации
 extern unsigned int PointInPeriod; // шаг дискретизации
