@@ -239,10 +239,10 @@ RTCTime RTCGetTime( void )
   
   RTCTime LocalTime; // выходная структура
   // получим текущее время
-  HAL_Delay(10);
-  k_GetDate(&CsDate);
-  HAL_Delay(10);
+  //HAL_Delay(10);
   k_GetTime(&CsTime);
+  k_GetDate(&CsDate);
+  //HAL_Delay(10);
   LocalTime.RTC_Sec = CsTime.Seconds;
   LocalTime.RTC_Min = CsTime.Minutes;
   LocalTime.RTC_Hour = CsTime.Hours;
@@ -259,17 +259,19 @@ void RTCSetTime( RTCTime Time )
   RTC_TimeTypeDef CsTime = {0};
   RTC_DateTypeDef CsDate = {0};
   
-  CsTime.Seconds = Time.RTC_Sec;
-  CsTime.Minutes = Time.RTC_Min;
-  CsTime.Hours = Time.RTC_Hour;
-  CsDate.Date = Time.RTC_Mday;
-  CsDate.WeekDay = Time.RTC_Wday;
+  CsTime.Seconds = (uint8_t)Time.RTC_Sec;
+  CsTime.Minutes = (uint8_t)Time.RTC_Min;
+  CsTime.Hours = (uint8_t)Time.RTC_Hour;
+  CsDate.Date = (uint8_t)Time.RTC_Mday;
+  CsDate.WeekDay = (uint8_t)Time.RTC_Wday;
   //DOY = Time.RTC_Yday;
-  CsDate.Month = Time.RTC_Mon;
-  CsDate.Year = Time.RTC_Year%100;
+  CsDate.Month = (uint8_t)Time.RTC_Mon;
+  CsDate.Year = (uint8_t)(Time.RTC_Year%100);
   
   k_SetTime(&CsTime);
+  //HAL_Delay(20);
   k_SetDate(&CsDate);
+  //HAL_Delay(1000);
   
   return;
 }

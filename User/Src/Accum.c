@@ -292,7 +292,11 @@ void RUN_SUM (DWORD* RawDataI)//
     DWORD MaxNoise =0;
     int j=GetCurrentBegShiftZone (); //получение текущего смещения по индексу
     //int j=0; //получение текущего смещения по индексу
+    //DWORD LocalRaw;
     DWORD LocalRaw;
+    DWORD LocalRawPre;
+    DWORD LocalRawLast;
+    static volatile int xy;
     SetCntNumAvrg(Avrgs); // сохранение
     // filtr (WOW Super)
     //if (GetCntNumAvrg()>=GetFinAvrg())
@@ -348,16 +352,52 @@ void RUN_SUM (DWORD* RawDataI)//
     //Noise += Avrgs/400; // добавка чуток смещения к шумам
     // сохраение текущих шумов
     //SaveNoise (Noise/2);
+    // перепишем целочисленные значения накопленных данных в массив float
+    LED_KTS(1); // измерим время преобразования (~200uS)
+    for (int i=0; i<RAWSIZE; i++)
+    { 
+      fRawData[i]= (float)RawData[i];
+    }
+    LED_KTS(0);
+    
     for (int i=0; i<OUTSIZE; i++)
     { 
-      
+      xy = i+j;
       // усреднение на коротких линиях пока уберем 
       //if (PointsPerPeriod==48)   LocalRaw = (RawData[i+j-1]+RawData[i+j])>>1;// если самое мелкое то примитивный фильт на 2, иначе пила
       //else  LocalRaw = RawData[i+j];
       // попробуем фильтрануть, то есть если разница по модулю между предыдущей и последующей
       // меньше 1/8 от числа накоплений то ппоследующую берем как среднее с предыдущей,
       // если разница больше не меняем
-          LocalRaw = RawData[i+j];
+      LocalRaw = RawData[xy];
+      LocalRawPre = RawData[xy-1];
+      LocalRawLast = RawData[xy+1];
+      // корректровка перед большим сигналом из Т9400
+      if(1)
+      {
+        // блок преобразования данных в нефильтрованном виде: малых сигналов
+        // условие малости сигнала
+        if((LocalRaw) < (Noise + Avrgs*4))
+          // 1.
+          // Добавка перед "БОльшим" импульсом
+        {
+          //    Huge = (uint32_t)(LocalRawLast/LocalRaw);
+          //    if(Huge>7)
+          // проверялась кооректировка для измерения 128 км , 150нс  множителя =40 было достаточно
+          // 40 нС -  множитель уменьшили до 20 - 50.1,сработало
+          // 10 нС -  разница по множителю составила 19.7,24.8, , чего не хватило
+          // 4 нС -  разница по множителю составила 15.8 (15.4) , чего не хватило
+          
+          if((LocalRawLast) > (LocalRaw + Avrgs*70)&&(xy>500))
+          {
+            if (RawData[xy-1] > Noise)
+              LocalRaw = RawData[i+j-1];
+            else
+              LocalRaw = RawData[i+j-2];
+          }
+          //LocalRaw = RawData[xy];
+        }
+      }      
       if(0)
       {
         if((abs((RawData[i+j+1])-(RawData[i+j]))<(Avrgs/2))&&(abs((RawData[i+j-1])-(RawData[i+j]))<(Avrgs/2)))
@@ -390,7 +430,7 @@ void RUN_SUM (DWORD* RawDataI)//
         }
         else
           LocalRaw = RawData[i+j];
-
+        
       }
       if(0) // выкл мини фильтр (1)...по следующему
       {

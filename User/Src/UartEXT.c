@@ -542,6 +542,7 @@ void DecodeCommandRS (void)
         
         RTCSetTime( SetNewTime ); // запишем новую дату
         //New
+        SetNewTime = RTCGetTime(); // запишем новую дату
         sprintf(BufString,"%d-%d-%d\r" // выдаем дату
                 ,SetNewTime.RTC_Year
                   ,SetNewTime.RTC_Mon

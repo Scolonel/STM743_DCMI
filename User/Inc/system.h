@@ -461,6 +461,8 @@ extern uint16_t PresentUSB ; // признак подключенного USB
 extern uint8_t ModeUSB ; // признак подключенного USB
  // Номер текущей страницы индикатора для востановления
 extern char NumCurrPage ; // 
+// Filtras
+extern float g_fNoiseRange;             // размах значений шума в последнем измерении
 
 //extern   FIL Fil;
 //extern   FRESULT FR_Status;

@@ -804,12 +804,14 @@ static uint8_t *USBD_COMPOSITE_GetUsrStringDesc(USBD_HandleTypeDef *pdev, uint8_
   if (index <= USBD_Track_String_Index)
   {
 #if (USBD_USE_CDC_ACM == 1)
-    char str_buffer[16] = "";
+    //char str_buffer[16] = "";
+    char str_buffer[36] = "";
     for (uint8_t i = 0; i < USBD_CDC_ACM_COUNT; i++)
     {
       if (index == CDC_STR_DESC_IDX[i])
       {
-        snprintf(str_buffer, sizeof(str_buffer), CDC_ACM_STR_DESC, i);
+        //snprintf(str_buffer, sizeof(str_buffer), CDC_ACM_STR_DESC, i);
+        sprintf(str_buffer,  CDC_ACM_STR_DESC);
         USBD_GetString((uint8_t *)str_buffer, USBD_StrDesc, length);
       }
     }
