@@ -185,7 +185,8 @@ const char *MsgMass[MSG_NUM][LANG_NUM] =
 {"Просмотр","  free","  Volna","Libre","  Frei","  free"},//127 просмотреть
 {"Сохранить","Save","Vymazat","Limpiar","Loschen","Save"},//128 сохранить в файл
 {"Очистка памяти","Clear memory","Vymazat pamet","Vaciar m.","Speicher loschen","Clear memory"},//129 Очистить
-{"Звук","Sound","Sound","Sound","Sound","Sound"}//130 ЗВУК
+{"Звук","Sound","Sound","Sound","Sound","Sound"},//130 ЗВУК
+{"мкc","us","us","us","us","us"}                             //131
 
 };
 

@@ -1152,15 +1152,24 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
       SetIndexLN (0); // установка индекса длины линии
     }
     NEX_Transmit((void*)Str);// 
-    
+    HAL_Delay(1);
     // треть€ сторка - длительность импульса
-    if (!GetSubModRefl ()) sprintf(Str,"t5.txt=\"%d%s\"€€€", GetWidthPulse(GetIndexIM()),MsgMass[23][CurrLang]);//ns
+    if (!GetSubModRefl ())
+    {
+      sprintf(Str,"t5.txt=\"%d%s\"€€€", GetWidthPulse(GetIndexIM()),MsgMass[23][CurrLang]);//ns
+//      DWORD ImSize = GetWidthPulse(GetIndexIM());
+//      if(ImSize>999)
+//      sprintf(Str,"t5.txt=\"%d%s\"€€€", ImSize/1000,MsgMass[131][CurrLang]);//us
+//      else
+//      sprintf(Str,"t5.txt=\"%d%s\"€€€", ImSize,MsgMass[23][CurrLang]);//ns
+    }
     else 
     {
       sprintf(Str,"t5.txt=\"%s\"€€€", MsgMass[21][CurrLang]);
       SetIndexIM (0); // установка индекса длины импульса
     }
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(1);
     // четверта€ строка в зависимости от положени€ длины волны
     // строка отображени€ времени измерени€ или номера волокна
     // 22.11.2022 изменение индикации строк 4-5 надо прив€зать к режиму с автоматическим сохранением
@@ -1178,6 +1187,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
         sprintf(Str,"t7.txt=\"%s\"€€€", MsgMass[26][CurrLang]);//"разов."
     }
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(1);
     // п€та€ строка - индекс измерени€ или префикс при авто
     // строка отображени€ коэфф преломлени€ или префикса имани файла
     //if (GetSetModeLW(0))
@@ -1631,7 +1641,12 @@ void ModeStartOTDR(void) // режим накоплени€ рефлектометра
       sprintf(Str,"t4.txt=\"%s\"€€€",MsgMass[29][CurrLang]); // ƒлит.импульса: XXнс
       NEX_Transmit((void*)Str);// 
       HAL_Delay(1);
-      sprintf(Str,"t9.txt=\"%d%s\"€€€",GetWidthPulse(GetIndexIM()),MsgMass[23][CurrLang]); // ƒлит.импульса: XXнс
+      //sprintf(Str,"t9.txt=\"%d%s\"€€€",GetWidthPulse(GetIndexIM()),MsgMass[23][CurrLang]); // ƒлит.импульса: XXнс
+      DWORD ImSize = GetWidthPulse(GetIndexIM());
+      if(ImSize > 999)
+      sprintf(Str,"t9.txt=\"%d%s\"€€€",ImSize/1000,MsgMass[131][CurrLang]); // ƒлит.импульса: XXнс
+      else
+      sprintf(Str,"t9.txt=\"%d%s\"€€€",ImSize,MsgMass[23][CurrLang]); // ƒлит.импульса: XXнс
       NEX_Transmit((void*)Str);// 
       sprintf(Str,"t5.txt=\"%s\"€€€",MsgMass[30][CurrLang]); //»дет измерение: XXс 
       NEX_Transmit((void*)Str);// 

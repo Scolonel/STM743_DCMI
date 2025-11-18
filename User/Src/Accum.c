@@ -388,7 +388,7 @@ void RUN_SUM (DWORD* RawDataI)//
           // 10 н— -  разница по множителю составила 19.7,24.8, , чего не хватило
           // 4 н— -  разница по множителю составила 15.8 (15.4) , чего не хватило
           
-          if((LocalRawLast) > (LocalRaw + Avrgs*70)&&(xy>500))
+          if((LocalRawLast) > (LocalRaw + Avrgs*70)&&(xy>100))
           {
             if (RawData[xy-1] > Noise)
               LocalRaw = RawData[i+j-1];
