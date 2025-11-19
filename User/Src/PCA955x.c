@@ -299,7 +299,7 @@ uint32_t BeginConfig (void) // начальная конфигурация
     DWORD Blkr_err =  CheckBelcore ();  // Проверка установок Белкора и исправление
     if (Blkr_err)
     {
-      EEPROM_write(&GenParams, ADR_GenParamBelcore, sizeof(SettingRefl));
+      EEPROM_write(&GenParams, ADR_GenParamBelcore, sizeof(GenParams));
     }
     
     //  // поуправляем переферией

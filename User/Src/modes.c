@@ -1065,7 +1065,9 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
     NumFiber = NameDB.FiberID; // востанавливаем счетчик волокон из пам€ти
     // столбцы названий 
     // переключатель вывода в зависимости от комбинации
-    
+    // востанавливаем им€ влокна(префикс файла)
+    sprintf(PrefixFileNm,"%s",GenParams.FID);
+    PrefixFileNm[10]=0;
     switch (GetCombLS(SettingRefl.SetModeLW))
     {
     case 1: // одиночные длины волн
@@ -1196,7 +1198,8 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
     // надо разобратьс€ , пока пишу “≈—“
     if (g_AutoSave)
     {
-      sprintf(Str,"t9.txt=\"%03d/%03d\"€€€",GetNumTraceSaved(0),MAXMEMALL);// сколько зан€то
+      //sprintf(Str,"t9.txt=\"%03d/%03d\"€€€",GetNumTraceSaved(0),MAXMEMALL);// сколько зан€то
+      sprintf(Str,"t9.txt=\"\"€€€");// пуста€ строка
     }
     else
     {
@@ -5023,6 +5026,11 @@ void ModeKeyBoardPrefix(void) // режим отображени€ клавиатуры редактора prefixNa
     for(int i=IndexPrefix; i< ARRAY_SIZE(PrefixFileNm); ++i) PrefixFileNm[i]=' ';
     PrefixFileNm[ARRAY_SIZE(PrefixFileNm)-1]=0;
     NeedReturn=1;
+    // надо переписать отредактированную строку в GenParams.FID, и возможно сохранить ее
+        memcpy(GenParams.FID,PrefixFileNm,IndexPrefix+1); 
+        GenParams.FID[IndexPrefix]=0;
+        //sprintf(GenParams.FID,"%s",PrefixFileNm); 
+      EEPROM_write(&GenParams, ADR_GenParamBelcore, sizeof(GenParams));
   }
   
   if (((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))||(NeedReturn))
