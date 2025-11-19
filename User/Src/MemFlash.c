@@ -1528,57 +1528,57 @@ void SaveFileSD(int Mod)
       // подготовим путь
       // папка для сохранения делаем папку из года и месяца  
       GetFolder(FileSDir,1);
-
-    sprintf(PathD,"%s/%s",PathMainDir,FileSDir);
-    res = f_mkdir(PathD);
-    //res = f_unlink(PathF);
-    if(res == FR_EXIST)
-    {
-      //sprintf ((char*)TxBuffer,"Make MainDir Already Is\r");
-      res = FR_OK;
-    }
-        HAL_Delay(2);
-    // почитаем директории...только что созданные 
-    res = f_opendir(&dir, PathD);
-        HAL_Delay(2);
-    f_closedir(&dir);
-    // папка создана
-    // делаем подпапку с датой
+      
+      sprintf(PathD,"%s/%s",PathMainDir,FileSDir);
+      res = f_mkdir(PathD);
+      //res = f_unlink(PathF);
+      if(res == FR_EXIST)
+      {
+        //sprintf ((char*)TxBuffer,"Make MainDir Already Is\r");
+        res = FR_OK;
+      }
+      HAL_Delay(2);
+      // почитаем директории...только что созданные 
+      res = f_opendir(&dir, PathD);
+      HAL_Delay(2);
+      f_closedir(&dir);
+      // папка создана
+      // делаем подпапку с датой
       GetFolder(FileSDir,0);
-    sprintf(PathF,"%s/%s",PathD,FileSDir);
-    res = f_mkdir(PathF);
-    //res = f_unlink(PathF);
-    if(res == FR_EXIST)
-    {
-      //sprintf ((char*)TxBuffer,"Make MainDir Already Is\r");
-      res = FR_OK;
-    }
-        HAL_Delay(2);
-    // почитаем директории...только что созданные 
-    res = f_opendir(&dir, PathF);
-        HAL_Delay(2);
-    f_closedir(&dir);
-    
-    
-      // имя файла
-      sprintf(FileNameS,"%02d%02d%02d_%02d%02d%01X.sor",TimeSaveOTDR.RTC_Year%100,
-          TimeSaveOTDR.RTC_Mon,
-          TimeSaveOTDR.RTC_Mday,
-          TimeSaveOTDR.RTC_Hour,
-          TimeSaveOTDR.RTC_Min,
-          TimeSaveOTDR.RTC_Sec/10 + 10 );
+      sprintf(PathF,"%s/%s",PathD,FileSDir);
+      res = f_mkdir(PathF);
+      //res = f_unlink(PathF);
+      if(res == FR_EXIST)
+      {
+        //sprintf ((char*)TxBuffer,"Make MainDir Already Is\r");
+        res = FR_OK;
+      }
+      HAL_Delay(2);
+      // почитаем директории...только что созданные 
+      res = f_opendir(&dir, PathF);
+      HAL_Delay(2);
+      f_closedir(&dir);
+      
+      
+      // имя файла Белкоре 1.0
+//      sprintf(FileNameS,"%02d%02d%02d_%02d%02d%01X.sor",TimeSaveOTDR.RTC_Year%100,
+//              TimeSaveOTDR.RTC_Mon,
+//              TimeSaveOTDR.RTC_Mday,
+//              TimeSaveOTDR.RTC_Hour,
+//              TimeSaveOTDR.RTC_Min,
+//              TimeSaveOTDR.RTC_Sec/10 + 10 );
       // имя файла Belcore 2.0
       sprintf(FileNameB,"%02d%02d%02d_%02d%02d%01d.sor",TimeSaveOTDR.RTC_Year%100,
-          TimeSaveOTDR.RTC_Mon,
-          TimeSaveOTDR.RTC_Mday,
-          TimeSaveOTDR.RTC_Hour,
-          TimeSaveOTDR.RTC_Min,
-          TimeSaveOTDR.RTC_Sec/10 );
-       // имя файла есть
+              TimeSaveOTDR.RTC_Mon,
+              TimeSaveOTDR.RTC_Mday,
+              TimeSaveOTDR.RTC_Hour,
+              TimeSaveOTDR.RTC_Min,
+              TimeSaveOTDR.RTC_Sec/10 );
+      // имя файла есть
       //создадим полны путь к файлу чтобы его открыть
-    sprintf(PathFileS,"%s/%s",PathF,FileNameS);
-    sprintf(pFile,"%s/%s",PathF,FileNameB); // путь для белкора 2
-  
+      //sprintf(PathFileS,"%s/%s",PathF,FileNameS); // путь для белкора 1.0
+      sprintf(pFile,"%s/%s",PathF,FileNameB); // путь для белкора 2
+      
     }
     
     //Open the file
@@ -1602,91 +1602,61 @@ void SaveFileSD(int Mod)
         HAL_Delay(2);
         f_closedir(&dir);
         // папка создана
-    sprintf(PathFileS,"x.sor");
-    sprintf(pFile,"%s/%dkm_%dns.sor",PathD,GetLengthLine(g_STindx_LN),GetWidthPulse(g_STindx_IM)); // путь для белкора 2
+        //sprintf(PathFileS,"x.sor"); // Belcore 1.0
+        sprintf(pFile,"%s/%dkm_%dns.sor",PathD,GetLengthLine(g_STindx_LN),GetWidthPulse(g_STindx_IM)); // путь для белкора 2
         
       }
       else
       {
-    sprintf(PathFileS,"0.sor");
-    sprintf(pFile,"B20.sor"); // путь для белкора 2
+        //sprintf(PathFileS,"0.sor"); // путь для белкора 1.0
+        sprintf(pFile,"B20.sor"); // путь для белкора 2
       }
     }
     
-    //попробуем записать Белкор 2.0
+    //попробуем записать Белкор 2.0 - функция отдельная пишет ФАЙЛ
     FR_Status = WriteSorFile(pFile, 0, LogData);
-    //
-    FR_Status = f_open(&Fil, PathFileS, FA_WRITE  | FA_CREATE_ALWAYS);
-    //    if(FR_Status != FR_OK)
-    //    {
-    //      sprintf(TxBuffer, "Error! While Creating/Opening A New Text File, Error Code: (%i)\r\n", FR_Status);
-    //      UARTSendExt ((BYTE*)TxBuffer, strlen (TxBuffer));
-    //      break;
-    //    }
-    
-    //unsigned short NumEventNow = 0; // пока без событий
-    // начинаем передачу трассы (Заголовок)
-    //uint32_t HowSizeFile = 8419 + ((NumEventNow)?(NumEventNow*32+40):(0));
-    
-    //sprintf (StartStr, "#4%4d",8419 + ((NumEventNow)?(NumEventNow*32+40):(0)));
-    //UARTSendExt ((BYTE*)StartStr, 6);
-    // Мар страница белкора с учетом Таблицы событий (блок 0)
-    // если есть таблица событий....
-    GetHeaderBelcore (BufString, 0, NumEventNow); // заполняем шапку белкора первые 56 байт Block=0
-    //UARTSendExt ((BYTE*)BufString, 56+16*((NumEventNow)?(1):(0)));
-    FR_Status = f_write(&Fil, (BYTE*)BufString, 56+16*((NumEventNow)?(1):(0)),&WWC);
-    
-    // подготовка для расчета контрольной суммы
-    unsigned short old_crc = 0xffff; 
-    unsigned short new_crc = 0xffff;
-    c = (unsigned char*)&BufString;
-    for (int i=0;i<56+16*((NumEventNow)?(1):(0));i++)
+    if(0) // запись файла в формате Белкор 1.0
     {
-      /* первый вариант подсчета контрольной суммы - табличный                                             */		
-      value = *c;
-      new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-      old_crc = new_crc;
-      c++;
-    }
-    // записали 56 или +16 байт в файл = 56 (72)
-    // заполняем шапку белкора  62 байт Block=1 (продолжение Мар блока + GenParams)
-    GetHeaderBelcore (BufString, 1, NumEventNow); 
-    //UARTSendExt ((BYTE*)BufString, 62);
-    FR_Status = f_write(&Fil, (BYTE*)BufString, 62,&WWC);
-    c = (unsigned char*)&BufString;
-    for (int i=0;i<62;i++)
-    {
-      /* Считаем контрольную сумму переданного блока                                             */		
-      value = *c;
-      new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-      old_crc = new_crc;
-      c++;
-    }
-    // записали 56+62 или +16 байт в файл = 118 (134)
-    // заполняем шапку белкора  94 байт Block=2 - (SupParams FxdParam)
-    GetHeaderBelcore (BufString, 2, NumEventNow); 
-    //UARTSendExt ((BYTE*)BufString, 95);
-    FR_Status = f_write(&Fil, (BYTE*)BufString, 95,&WWC);
-    c = (unsigned char*)&BufString;
-    for (int i=0;i<95;i++)
-    {
-      /* Считаем контрольную сумму переданного блока                                             */		
-      value = *c;
-      new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-      old_crc = new_crc;
-      c++;
-    }
-    // записали 118+95 или +16 байт в файл = 213 (229)
-
-    // Проверяем и передаем блок событий если он есть (блок событий)
-    if (NumEventNow) // если есть события 2 байта +
-      // события в фиксированном размере для каждого 32 байта  +  22 байт общее для всего блока, итого 24+N*32
-    {
-      // передаем  число событий  2 байта
-      //UARTSendExt ((BYTE*)&NumEventNow, 2);
-      FR_Status = f_write(&Fil, (BYTE*)&NumEventNow, 2,&WWC);
-      c = (unsigned char*)&NumEventNow;
-      for (int i=0;i<2;i++)
+      //
+      FR_Status = f_open(&Fil, PathFileS, FA_WRITE  | FA_CREATE_ALWAYS);
+      //    if(FR_Status != FR_OK)
+      //    {
+      //      sprintf(TxBuffer, "Error! While Creating/Opening A New Text File, Error Code: (%i)\r\n", FR_Status);
+      //      UARTSendExt ((BYTE*)TxBuffer, strlen (TxBuffer));
+      //      break;
+      //    }
+      
+      //unsigned short NumEventNow = 0; // пока без событий
+      // начинаем передачу трассы (Заголовок)
+      //uint32_t HowSizeFile = 8419 + ((NumEventNow)?(NumEventNow*32+40):(0));
+      
+      //sprintf (StartStr, "#4%4d",8419 + ((NumEventNow)?(NumEventNow*32+40):(0)));
+      //UARTSendExt ((BYTE*)StartStr, 6);
+      // Мар страница белкора с учетом Таблицы событий (блок 0)
+      // если есть таблица событий....
+      GetHeaderBelcore (BufString, 0, NumEventNow); // заполняем шапку белкора первые 56 байт Block=0
+      //UARTSendExt ((BYTE*)BufString, 56+16*((NumEventNow)?(1):(0)));
+      FR_Status = f_write(&Fil, (BYTE*)BufString, 56+16*((NumEventNow)?(1):(0)),&WWC);
+      
+      // подготовка для расчета контрольной суммы
+      unsigned short old_crc = 0xffff; 
+      unsigned short new_crc = 0xffff;
+      c = (unsigned char*)&BufString;
+      for (int i=0;i<56+16*((NumEventNow)?(1):(0));i++)
+      {
+        /* первый вариант подсчета контрольной суммы - табличный                                             */		
+        value = *c;
+        new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+        old_crc = new_crc;
+        c++;
+      }
+      // записали 56 или +16 байт в файл = 56 (72)
+      // заполняем шапку белкора  62 байт Block=1 (продолжение Мар блока + GenParams)
+      GetHeaderBelcore (BufString, 1, NumEventNow); 
+      //UARTSendExt ((BYTE*)BufString, 62);
+      FR_Status = f_write(&Fil, (BYTE*)BufString, 62,&WWC);
+      c = (unsigned char*)&BufString;
+      for (int i=0;i<62;i++)
       {
         /* Считаем контрольную сумму переданного блока                                             */		
         value = *c;
@@ -1694,13 +1664,69 @@ void SaveFileSD(int Mod)
         old_crc = new_crc;
         c++;
       }
-      // передаем информационные блоки событий  N*32
-      for (int s=0; s<NumEventNow; s++)
+      // записали 56+62 или +16 байт в файл = 118 (134)
+      // заполняем шапку белкора  94 байт Block=2 - (SupParams FxdParam)
+      GetHeaderBelcore (BufString, 2, NumEventNow); 
+      //UARTSendExt ((BYTE*)BufString, 95);
+      FR_Status = f_write(&Fil, (BYTE*)BufString, 95,&WWC);
+      c = (unsigned char*)&BufString;
+      for (int i=0;i<95;i++)
       {
-        //UARTSendExt ((BYTE*)&EvenTrace[s], 32);
-        //FR_Status = f_write(&Fil, (BYTE*)&EvenTrace[s], 32,&WWC);
-        FR_Status = f_write(&Fil, (BYTE*)&EvenTrace[s], 22,&WWC);
-        c = (unsigned char*)&EvenTrace[s];
+        /* Считаем контрольную сумму переданного блока                                             */		
+        value = *c;
+        new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+        old_crc = new_crc;
+        c++;
+      }
+      // записали 118+95 или +16 байт в файл = 213 (229)
+      
+      // Проверяем и передаем блок событий если он есть (блок событий)
+      if (NumEventNow) // если есть события 2 байта +
+        // события в фиксированном размере для каждого 32 байта  +  22 байт общее для всего блока, итого 24+N*32
+      {
+        // передаем  число событий  2 байта
+        //UARTSendExt ((BYTE*)&NumEventNow, 2);
+        FR_Status = f_write(&Fil, (BYTE*)&NumEventNow, 2,&WWC);
+        c = (unsigned char*)&NumEventNow;
+        for (int i=0;i<2;i++)
+        {
+          /* Считаем контрольную сумму переданного блока                                             */		
+          value = *c;
+          new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+          old_crc = new_crc;
+          c++;
+        }
+        // передаем информационные блоки событий  N*32
+        for (int s=0; s<NumEventNow; s++)
+        {
+          //UARTSendExt ((BYTE*)&EvenTrace[s], 32);
+          //FR_Status = f_write(&Fil, (BYTE*)&EvenTrace[s], 32,&WWC);
+          FR_Status = f_write(&Fil, (BYTE*)&EvenTrace[s], 22,&WWC);
+          c = (unsigned char*)&EvenTrace[s];
+          for (int i=0;i<22;i++)
+          {
+            /* Считаем контрольную сумму переданного блока                                             */		
+            value = *c;
+            new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+            old_crc = new_crc;
+            c++;
+          }
+          FR_Status = f_write(&Fil, (BYTE*)&EvenTrace[s].COMM_EVN, 10,&WWC);
+          c = (unsigned char*)&EvenTrace[s];
+          for (int i=0;i<10;i++)
+          {
+            /* Считаем контрольную сумму переданного блока                                             */		
+            value = *c;
+            new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+            old_crc = new_crc;
+            c++;
+          }
+          
+        }
+        // передаем конечный блок событий 22 байта
+        //UARTSendExt ((BYTE*)&EndEvenBlk, 22);
+        FR_Status = f_write(&Fil, (BYTE*)&EndEvenBlk, 22,&WWC);
+        c = (unsigned char*)&EndEvenBlk;
         for (int i=0;i<22;i++)
         {
           /* Считаем контрольную сумму переданного блока                                             */		
@@ -1709,23 +1735,14 @@ void SaveFileSD(int Mod)
           old_crc = new_crc;
           c++;
         }
-        FR_Status = f_write(&Fil, (BYTE*)&EvenTrace[s].COMM_EVN, 10,&WWC);
-        c = (unsigned char*)&EvenTrace[s];
-        for (int i=0;i<10;i++)
-        {
-          /* Считаем контрольную сумму переданного блока                                             */		
-          value = *c;
-          new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-          old_crc = new_crc;
-          c++;
-        }
-        
       }
-      // передаем конечный блок событий 22 байта
-      //UARTSendExt ((BYTE*)&EndEvenBlk, 22);
-      FR_Status = f_write(&Fil, (BYTE*)&EndEvenBlk, 22,&WWC);
-      c = (unsigned char*)&EndEvenBlk;
-      for (int i=0;i<22;i++)
+      
+      // заполняем шапку белкора 12 байт Block=3 (DataPts)
+      GetHeaderBelcore (BufString, 3, NumEventNow); 
+      //UARTSendExt ((BYTE*)BufString, 12);
+      FR_Status = f_write(&Fil, (BYTE*)BufString, 12,&WWC);
+      c = (unsigned char*)&BufString;
+      for (int i=0;i<12;i++)
       {
         /* Считаем контрольную сумму переданного блока                                             */		
         value = *c;
@@ -1733,41 +1750,26 @@ void SaveFileSD(int Mod)
         old_crc = new_crc;
         c++;
       }
-    }
-    
-    // заполняем шапку белкора 12 байт Block=3 (DataPts)
-    GetHeaderBelcore (BufString, 3, NumEventNow); 
-    //UARTSendExt ((BYTE*)BufString, 12);
-    FR_Status = f_write(&Fil, (BYTE*)BufString, 12,&WWC);
-    c = (unsigned char*)&BufString;
-    for (int i=0;i<12;i++)
-    {
-      /* Считаем контрольную сумму переданного блока                                             */		
-      value = *c;
-      new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-      old_crc = new_crc;
-      c++;
-    }
-    
-    // блок данных 
-    //UARTSendExt ((BYTE*)LogData, OUTSIZE*2);
-    FR_Status = f_write(&Fil, (BYTE*)LogData, OUTSIZE*2,&WWC);
-    c = (unsigned char*)&LogData;
-    for (int i=0;i<OUTSIZE*2;i++)
-    {
-      /* первый вариант подсчета контрольной суммы - табличный                                             */		
-      value = *c;
-      new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-      old_crc = new_crc;
-      c++;
-    }
-    
-    //UARTSendExt ((BYTE*)&new_crc, 2);
-    FR_Status = f_write(&Fil, (BYTE*)&new_crc, 2,&WWC);
-        HAL_Delay(2);
-
-    f_close(&Fil);
-    
+      
+      // блок данных 
+      //UARTSendExt ((BYTE*)LogData, OUTSIZE*2);
+      FR_Status = f_write(&Fil, (BYTE*)LogData, OUTSIZE*2,&WWC);
+      c = (unsigned char*)&LogData;
+      for (int i=0;i<OUTSIZE*2;i++)
+      {
+        /* первый вариант подсчета контрольной суммы - табличный                                             */		
+        value = *c;
+        new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+        old_crc = new_crc;
+        c++;
+      }
+      
+      //UARTSendExt ((BYTE*)&new_crc, 2);
+      FR_Status = f_write(&Fil, (BYTE*)&new_crc, 2,&WWC);
+      HAL_Delay(2);
+      
+      f_close(&Fil);
+    } // if(0) - запись файла в формате Белкоре 1.0  
   } while(0);
       HAL_Delay(2);
 
