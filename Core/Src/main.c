@@ -1648,7 +1648,7 @@ void GetLogData (void)
     {
       uint32_t ClkADC_ARR;
       uint32_t ClkADC_CCR1;
-      StopAllTIM(1);
+      StopAllTIM(1); // останавливаем ВСЕ включая Т1
 
       MeasureNow = 1; 
       //LED_Y(1);
@@ -1706,6 +1706,8 @@ void GetLogData (void)
          SizeStrob = 256;
          BeginSet = SizeStrob+((BeginTest)<<IndexDist)-60;// установка местоположения зонд импульса в зависимости от диапазона
          // где 60 - это задержка на выдачу данных после преобразования
+         //if(IndexDist==0)
+         //  BeginSet = 700;
          ClkADC_ARR = 7;
          ClkADC_CCR1 = 4;
          NumRepit = 8>>IndexDist; 
@@ -1793,6 +1795,7 @@ void GetLogData (void)
          //TIM4->PSC = 0;
          //TIM4->ARR = TIM4->CCR4 + (8+1)*2;
          g_Tim5Set = 489;
+         //g_Tim5Set = 45000; //проба суммировать после сбора, период повторения до 590 мкС
          TIM5->CCR4 = g_Tim5Set; // через 1.666 мкС + 336 мкС (сумм 5600) меньше  350мкс
          TIM5->ARR = g_Tim5Set + 1;
          break;

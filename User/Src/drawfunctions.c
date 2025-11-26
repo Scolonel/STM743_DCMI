@@ -438,7 +438,7 @@ unsigned GetLevelCurs (int Dir)
 
 //передача картинки в NEXTION
 //115200, 256 байт парами мин-мах
-void SendDrawNex (unsigned char* array, int ID_lcd, int Points)
+void  SendDrawNex (unsigned char* array, int ID_lcd, int Points)
 {
   char CmdBuf[30];
  // sprintf( CmdBuf,"t1.txt=\"Engl\"€€€"); // 0xff
@@ -446,7 +446,8 @@ void SendDrawNex (unsigned char* array, int ID_lcd, int Points)
  // sprintf( CmdBuf,"t2.txt=\"–ус€\"€€€"); // 0xff
 //  UARTSend2 ((BYTE*)CmdBuf, strlen (CmdBuf));// 
   //  CreatDelay (30000); // 33 м— - пока без ответа (подтверждени€)
-  StartRecievNEX (10);
+   LED_KTT(1); // начало передачи записи в индикатор
+  StartRecievNEX (100);
   sprintf( CmdBuf,"addt %d,1,%d€€€",ID_lcd, Points+1); // 0xff внимание следите за номером элемента куда выводитс€ (оказалось 3 или lcd
 //  g_WtRdyNEX = 0;
 //  ReadyNEX = 0;
@@ -455,13 +456,21 @@ void SendDrawNex (unsigned char* array, int ID_lcd, int Points)
 //  UARTSend2 ((BYTE*)CmdBuf, strlen (CmdBuf));//
   NEX_Transmit((void*)CmdBuf);//
   while(!((g_WtRdyNEX)||(ReadyNEX==2)));
+  if(ReadyNEX!=2) // пробуем еще раз запросить
+  {
+      NEX_Transmit((void*)CmdBuf);//
+  while(!((g_WtRdyNEX)||(ReadyNEX==2)));
+
+  }
   // надо ждать получени€ ответа
   //array[390]=255; 
   //  CreatDelay (400000); // 300000-глючило на 3.5
   array[Points+1]=255;  
   array[Points+2]=255;  
   array[Points+3]=255; 
-  HAL_Delay(250);
+     LED_KTT(0); // начало передачи записи в индикатор
+
+  HAL_Delay(50);
 
 //  g_WtRdyNEX = 0;
 //  ReadyNEX = 0;
@@ -469,11 +478,17 @@ void SendDrawNex (unsigned char* array, int ID_lcd, int Points)
 //  GetRstTMUart2(1); // сбросим таймер Uart2
   // а тут надо передать массив данных без учте символов
   //UARTSend2 ((BYTE*)array, Points+1);//
-  StartRecievNEX (150);
-   HAL_UART_Transmit(&huart7,(void*)array,Points+1,(uint32_t)((Points+1)/8));  //
+       LED_KTT(1); // начало передачи записи в индикатор
+
+  StartRecievNEX (100);
+   HAL_UART_Transmit(&huart7,(void*)array,Points+1,(uint32_t)((Points+1)/7));  //
   // также ждать получение ответа
   while(!((g_WtRdyNEX)||(ReadyNEX==1)));
   
    // CreatDelay (800000); // 70 м— - пока без ответа (подтверждени€)
+   LED_KTT(0); //окончание записи в индикатор данных графика
+   
+
   HAL_Delay(10);
+  
 }
