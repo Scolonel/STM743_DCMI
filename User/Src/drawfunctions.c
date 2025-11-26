@@ -446,8 +446,9 @@ void  SendDrawNex (unsigned char* array, int ID_lcd, int Points)
  // sprintf( CmdBuf,"t2.txt=\"Руся\"яяя"); // 0xff
 //  UARTSend2 ((BYTE*)CmdBuf, strlen (CmdBuf));// 
   //  CreatDelay (30000); // 33 мС - пока без ответа (подтверждения)
-   LED_KTT(1); // начало передачи записи в индикатор
-  StartRecievNEX (100);
+  // LED_KTT(1); // начало передачи записи в индикатор
+  //StartRecievNEX (100);
+  StartRecievNEX (10);
   sprintf( CmdBuf,"addt %d,1,%dяяя",ID_lcd, Points+1); // 0xff внимание следите за номером элемента куда выводится (оказалось 3 или lcd
 //  g_WtRdyNEX = 0;
 //  ReadyNEX = 0;
@@ -456,21 +457,22 @@ void  SendDrawNex (unsigned char* array, int ID_lcd, int Points)
 //  UARTSend2 ((BYTE*)CmdBuf, strlen (CmdBuf));//
   NEX_Transmit((void*)CmdBuf);//
   while(!((g_WtRdyNEX)||(ReadyNEX==2)));
-  if(ReadyNEX!=2) // пробуем еще раз запросить
-  {
-      NEX_Transmit((void*)CmdBuf);//
-  while(!((g_WtRdyNEX)||(ReadyNEX==2)));
-
-  }
+  
+//  if(ReadyNEX!=2) // пробуем еще раз запросить
+//  {
+//      NEX_Transmit((void*)CmdBuf);//
+//  while(!((g_WtRdyNEX)||(ReadyNEX==2)));
+//
+//  }
   // надо ждать получения ответа
   //array[390]=255; 
   //  CreatDelay (400000); // 300000-глючило на 3.5
   array[Points+1]=255;  
   array[Points+2]=255;  
   array[Points+3]=255; 
-     LED_KTT(0); // начало передачи записи в индикатор
+  //   LED_KTT(0); // начало передачи записи в индикатор
 
-  HAL_Delay(50);
+  HAL_Delay(250);
 
 //  g_WtRdyNEX = 0;
 //  ReadyNEX = 0;
@@ -478,15 +480,16 @@ void  SendDrawNex (unsigned char* array, int ID_lcd, int Points)
 //  GetRstTMUart2(1); // сбросим таймер Uart2
   // а тут надо передать массив данных без учте символов
   //UARTSend2 ((BYTE*)array, Points+1);//
-       LED_KTT(1); // начало передачи записи в индикатор
+  //     LED_KTT(1); // начало передачи записи в индикатор
 
-  StartRecievNEX (100);
-   HAL_UART_Transmit(&huart7,(void*)array,Points+1,(uint32_t)((Points+1)/7));  //
+  StartRecievNEX (150);
+   HAL_UART_Transmit(&huart7,(void*)array,Points+1,(uint32_t)((Points+1)/8));  //
+  // HAL_UART_Transmit(&huart7,(void*)array,Points+1,(uint32_t)((Points+1)/7));  //пробовал увеличить время ожидания
   // также ждать получение ответа
   while(!((g_WtRdyNEX)||(ReadyNEX==1)));
   
    // CreatDelay (800000); // 70 мС - пока без ответа (подтверждения)
-   LED_KTT(0); //окончание записи в индикатор данных графика
+  // LED_KTT(0); //окончание записи в индикатор данных графика
    
 
   HAL_Delay(10);
