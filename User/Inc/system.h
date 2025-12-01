@@ -205,6 +205,8 @@ static const uint8_t ShFtAv[128] =
 int   WriteSorFile(const char* pszFileName, int iPlaceLS, unsigned short* pDataPoints);
 int ReadSorFileG(const char* pszFileName);
 
+// однократное измерение с установленными параметрами
+void OnceMeas (void);
 
       // тики опроса клавиатура взято из Т7К_АР
 uint32_t GetSysTick( int Mode); // получение тиков 1 мС. 0 - получение счетчика от предыдущего сброса 1- сброс

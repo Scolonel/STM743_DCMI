@@ -1421,6 +1421,8 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     
     SumNumNak = 0;
     Averaging (5,0,0);//запуск прогревочного измерения
+    // вставим однократное измерение
+    
     break;
   case INPUTOTDR:
     LSEL0(0);
@@ -7904,6 +7906,30 @@ void SlowON (void) // медленное включение питания
 //  CreatDelay (40000); // 3.3 мС
 //  POWREF (ON);
 //  CreatDelay (80000); // 3.3 мС
+  
+}
+// однократное измерение с установленными параметрами
+void OnceMeas (void)
+{
+  LED_START(1);//On  LED
+  //myBeep(10);
+  SlowON();
+  HV_LOW(OFF); //ON HIGH VOLT
+  HV_SW(ON); // ON HIGH VOLT
+  
+  PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
+  memset( RawData, 0, RAWSIZE * sizeof(DWORD) );
+  CntNumAvrg = 0; // обнуляем счетчик накоплений
+  SumNumNak = 0;
+  HAL_Delay(900);
+  
+  Averaging (1,0,0);
+  HV_LOW(ON); //ON LOW HIGH VOLT
+  HV_SW(OFF); // OFF HIGH VOLT
+  //POWDET(OFF);
+  POWREF (OFF);
+  LED_START(0);//Off  LED
+  
   
 }
 

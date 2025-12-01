@@ -259,6 +259,33 @@ void DecodeCommandRS (void)
           NeedTransmit = 1;
 
         }
+                if (!memcmp ((void*)RX_Buf, "*RAWS",5)) // специальный режим теста
+        {
+          sprintf(BufString,"%d\n", g_Noise);
+          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          sprintf(BufString,"%d\n", GetCntNumAvrg());
+          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          
+          for (int i = 0; i< RAWSIZE; i++)
+          {
+          sprintf(BufString,"%d\n", RawData[i]);
+          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          }
+          NeedTransmit = 1;
+
+        }
+        // запрос одного измерения
+                if (!memcmp ((void*)RX_Buf, "*ONCE",5)) // специальный режим теста
+        {
+          OnceMeas();
+          for (int i = 0; i< RAWSIZE; i++)
+          {
+          sprintf(BufString,"%d\n", RawData[i]);
+          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          }
+          NeedTransmit = 1;
+
+        }
       }
       break;
     case ';':

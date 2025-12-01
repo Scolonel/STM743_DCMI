@@ -284,7 +284,7 @@ void RUN_SUM (DWORD* RawDataI)//
     static DWORD Noise =0;
     DWORD NoiseSqr =0; // корень квадратный из шума(смещения)
     DWORD AvergSqr =0; // корень квадратный из накопления
-    
+    int NeedCorrect = 0; // признак коррекции щумов на уровне смещения
     DWORD NoiseBegin =0; //0-49
     DWORD NoiseEnd =0;   //5530-5580
     DWORD NoiseAdd =0; // расчетные шумы по добавленым точкам в конце линии при 64 и 128 км
@@ -305,60 +305,71 @@ void RUN_SUM (DWORD* RawDataI)//
     //for (int i=0; i<j-1; ++i)
     // у нас в начале всегда 63 точки
     // расчет уровня в начале
-    for (int i=0; i<(50); ++i)
+    for (int i=0; i<(50); i++)
     {
       if (RawData[i]>MaxNoise) MaxNoise = RawData[i];
       Noise +=RawData[i];
     }
-    Noise = (DWORD)1*(Noise/(50));
-    //    NoiseBegin = Noise;
-    //    // посчитаем в конце 
-    //      for (int i=5530;i<5580;++i) // берем 30 точек в конце отображения окна
-    //      {
-    //          //CntAddNoise++;
-    //          NoiseEnd +=RawData[i];
-    //      }
-    //    NoiseEnd = (DWORD)1*(NoiseEnd/(50));// смешение в конце
-    //     if(NoiseEnd>NoiseBegin) 
-    //       Noise = NoiseEnd;
-    //     else
-    //       Noise = NoiseBegin;
-    //// а теперь просто увеличим смещение посчитанное в начале на половину накоплений
-    //            Noise = NoiseBegin + Avrgs/4;
-    
-    
-    //if (GetIndexLN()>5)// длинные линии -> добавим точек по расчету шумов
-    if (1)// длинные линии -> добавим точек по расчету шумов
+    Noise = (DWORD)1*(Noise/(51));
+    NoiseBegin = Noise; // пока это смещение в начале
+    // посчитаем в конце 
+    if (GetIndexLN()>3)// длинные линии -> добавим точек по расчету шумов
+    //if (0)// длинные линии -> добавим точек по расчету шумов
     {
       for (int i=5530;i<5580;++i) // берем 30 точек в конце снятых данных без превышения сигнала на 100 ед АЦП от уровня смещения
       {
-        if (RawData[i] < (Noise + 20*Avrgs)) 
+        if (RawData[i] < (Noise + 4*Avrgs)) 
         {
           CntAddNoise++;
           NoiseAdd +=RawData[i];
         }
       }
-      NoiseAdd += Noise;
-      CntAddNoise++;
-      Noise = (DWORD)1*(NoiseAdd/CntAddNoise);
+      //NoiseAdd += Noise; // зачем то хотел добавить к расчету смещенеи в начале..???
+      //CntAddNoise++;
+      NoiseEnd = (DWORD)1*(NoiseAdd/CntAddNoise);
     }
-    g_Noise = Noise; 
+    //  был "простой" расчет смещения в конце, без оценок
+//    if(0)
+//    {
+//      for (int i=5530;i<5580;++i) // берем 30 точек в конце отображения окна
+//      {
+//        //CntAddNoise++;
+//        NoiseEnd +=RawData[i];
+//      }
+//      NoiseEnd = (DWORD)1*(NoiseEnd/(50));// смешение в конце
+//    }
+    // контроль уровней смещения выбор между началом и концом
+    if(NoiseEnd>NoiseBegin) 
+      Noise = NoiseEnd;
+    else
+      Noise = NoiseBegin;
+    // а теперь просто увеличим смещение посчитанное в начале на половину накоплений
+    //Noise = NoiseBegin + Avrgs/4;
+    
+    
+    //g_Noise = Noise; // 400 - 27.8dB
+    g_Noise = Noise + (uint32_t)(Avrgs/200); // 400 - 27.8dB
     //Noise = (DWORD)1*(Noise/(j-1));
     DWORD CurrentMaxLog =(DWORD)(5000.0*log10((double)Avrgs*1023)); // максимальный логарифм текщего накопления
     // расчет логарифмического шума (перед импульсом)
-    SetLogNoise((unsigned short)(CurrentMaxLog - (DWORD)(5000.0*log10((double)(MaxNoise-Noise))))) ;
+    SetLogNoise((unsigned short)(CurrentMaxLog - (DWORD)(5000.0*log10((double)(MaxNoise-g_Noise))))) ;
     
     // 
     //Noise += Avrgs/400; // добавка чуток смещения к шумам
     // сохраение текущих шумов
     //SaveNoise (Noise/2);
     // перепишем целочисленные значения накопленных данных в массив float
-    LED_KTS(1); // измерим время преобразования (~200uS)
-    for (int i=0; i<RAWSIZE; i++)
-    { 
-      fRawData[i]= (float)RawData[i];
-    }
-    LED_KTS(0);
+//    LED_KTS(1); // измерим время преобразования (~200uS)
+//    for (int i=0; i<RAWSIZE; i++)
+//    { 
+//      fRawData[i]= (float)RawData[i];
+//    }
+//    LED_KTS(0);
+        //if ((GetIndexLN()>4)&&(GetIndexVRM()==3)&&(GetIndexIM()>6))// длинные линии (64,128) -> и накопление 3 минуты и импульс 10-20 мкС
+        if ((GetIndexVRM()==3)&&(GetIndexIM()>6))//накопление 3 минуты и импульс 10-20 мкС
+      {
+        NeedCorrect = 1;
+      }
     
     for (int i=0; i<OUTSIZE; i++)
     { 
@@ -377,7 +388,7 @@ void RUN_SUM (DWORD* RawDataI)//
       {
         // блок преобразования данных в нефильтрованном виде: малых сигналов
         // условие малости сигнала
-        if((LocalRaw) < (Noise + Avrgs*4))
+        if((LocalRaw) < (g_Noise + Avrgs*4))
           // 1.
           // Добавка перед "БОльшим" импульсом
         {
@@ -390,25 +401,49 @@ void RUN_SUM (DWORD* RawDataI)//
           
           if((LocalRawLast) > (LocalRaw + Avrgs*70)&&(xy>100))
           {
-            if (RawData[xy-1] > Noise)
+            if (RawData[xy-1] > g_Noise)
               LocalRaw = RawData[i+j-1];
             else
               LocalRaw = RawData[i+j-2];
           }
           //LocalRaw = RawData[xy];
         }
-      }      
-      if(0)
+      }
+      // варианты получения точки с помощью примитивных фильтров   
+      // Ф1 -  если разница между текущей точкой и предыдущей()
+      // и последующей не превышает половину разряда, то вычисляем среднее по 3 точкам,
+      // предыдущая + текущая + последующая
+      //if(GetIndexLN()<=4) // 
+      if(0) // 
       {
         if((abs((RawData[i+j+1])-(RawData[i+j]))<(Avrgs/2))&&(abs((RawData[i+j-1])-(RawData[i+j]))<(Avrgs/2)))
         {
-          LED_KTS(1);
+          //LED_KTS(1);
           
           LocalRaw = (int)(RawData[i+j+1]+RawData[i+j]+RawData[i+j-1])/3;
-          LED_KTS(0);
+          //LED_KTS(0);
           
         }
       }
+      // варианты получения точки с помощью примитивных фильтров   
+      // Ф1.6 -  если разница между текущей точкой и предыдущей()
+      // и последующей не превышает половину разряда, то вычисляем среднее по 3 точкам,
+      // предыдущая + текущая + последующая
+      //if(GetIndexLN()>4) // 
+      if(0) // 
+      {
+        if((abs((RawData[i+j+2])-(RawData[i+j+1]))<(Avrgs/2))&&(abs((RawData[i+j+1])-(RawData[i+j]))<(Avrgs/2))&&(abs((RawData[i+j-1])-(RawData[i+j]))<(Avrgs/2))&&(abs((RawData[i+j-2])-(RawData[i+j-1]))<(Avrgs/2)))
+        {
+          //LED_KTS(1);
+          
+          LocalRaw = (int)(RawData[i+j+2]+RawData[i+j+1]+RawData[i+j]+RawData[i+j-1]+RawData[i+j-2])/5;
+          //LED_KTS(0);
+          
+        }
+      }
+      // Ф2 -  если разница между Логарифмическими значениями текущей точкой и предыдущей()
+      // и последующей не превышает 0.15 дБ, то вычисляем среднее по 3 точкам,
+      // предыдущая()+ текущая + последующая
       if(0)
       {
         if((abs((int)(500*log10(RawData[i+j+1]))-(int)(500*log10(RawData[i+j])))<(15))&&(abs((int)(500*log10(RawData[i+j-1]))-(int)(500*log10(RawData[i+j])))<(15)))
@@ -421,6 +456,9 @@ void RUN_SUM (DWORD* RawDataI)//
         }
         
       }
+      // Ф3 -  если разница между текущей точкой и  последующей
+      // не превышает 1/8 разряда, то вычисляем среднее по этим точкам,
+      // текущая + последующая
       if(0) // выкл мини фильтр (1)...по следующему (8)
       {
         if(abs((int)(RawData[i+j+1]-RawData[i+j]))<(Avrgs/8))
@@ -428,23 +466,21 @@ void RUN_SUM (DWORD* RawDataI)//
           //RawData[i+j] = (RawData[i+j+1]+RawData[i+j])>>1;
           LocalRaw = (RawData[i+j+1]+RawData[i+j])>>1;
         }
-        else
-          LocalRaw = RawData[i+j];
-        
       }
-      if(0) // выкл мини фильтр (1)...по следующему
-      {
-        if(abs((int)(RawData[i+j+1]-RawData[i+j]))<(Avrgs/2))
-        {
-          RawData[i+j] = (RawData[i+j+1]+RawData[i+j])>>1;
-        }
-      }
-      if(0) // выкл мини фильтр (2)...по предыдущему
+      // Ф4 -  если разница между текущей точкой и предыдущей (уже поправленной)
+      // не превышает 1/2 разряда, то вычисляем среднее по этим точкам,
+      // предыдущая() + текущая
+      if(1) // выкл мини фильтр 
       {
         if(abs((int)(RawData[i+j-1]-RawData[i+j]))<(Avrgs/2))
         {
-          RawData[i+j] = (RawData[i+j-1]+RawData[i+j])>>1;
+          LocalRaw = (RawData[i+j-1]+RawData[i+j])>>1;
         }
+      }
+      // Ф5 -  фильтр по пяти точкам просто без анализа быстрых изменений
+      if(0) // выкл мини фильтр ...по предыдущему
+      {
+        LocalRaw = (int)(RawData[i+j+2]+RawData[i+j+1]+RawData[i+j]+RawData[i+j-1]+RawData[i+j-2])/5;
       }
       //LocalRaw = RawData[i+j];
       // добавка перед скачком, то есть перед большим отражением в маленьких сигналах
@@ -455,8 +491,24 @@ void RUN_SUM (DWORD* RawDataI)//
           //LocalRaw += (DWORD)(RawData[i+j+(PointsPerPeriod/4)]*2.8e-3);
           LocalRaw += (DWORD)(RawData[i+j+2]*2.8e-3);
       }
-      if (LocalRaw<=Noise) LocalRaw=Noise+1;
-      LocalRaw= LocalRaw-Noise;
+      // попытка убрать уровень шумов у смещения, в районе 1 разряда 
+      // сравниваем с уровнем смещения если больше но не больше чем число накоплений
+      // то снижаем его разницу относительно смещения в 4 раза
+      //if(1)
+    //if ((GetIndexLN()>4)&&(GetIndexVRM()==3)&&(GetIndexIM()>6))// длинные линии (64,128) -> и накопление 3 минуты и импульс 10-20 мкС
+    if (0)// длинные линии (64,128) -> и накопление 3 минуты и импульс 10-20 мкС
+    if (NeedCorrect)// длинные линии (64,128) -> и накопление 3 минуты и импульс 10-20 мкС
+      {
+        int LevelA = LocalRaw - g_Noise;
+        //if((LevelA > 0)&&(LevelA<Avrgs/4))
+        if((LevelA > 0)&&(LevelA<(int)(Avrgs/42)))
+        {
+          LocalRaw = g_Noise + LevelA/4;
+        }
+      }
+      // подготовили текущую точку , рассчитаем логарифм
+      if (LocalRaw<=g_Noise) LocalRaw=g_Noise+1;
+      LocalRaw= LocalRaw-g_Noise;
       LogData[i] = (unsigned short)(CurrentMaxLog - (DWORD)(5000.0*log10((double)LocalRaw))) ;
       if (LogData[i] > CurrentMaxLog)
       { 

@@ -1721,6 +1721,12 @@
                     <name>$PROJ_DIR$\..\User\Src\events.c</name>
                 </file>
                 <file>
+                    <name>$PROJ_DIR$\..\User\Src\Filtras.c</name>
+                    <excluded>
+                        <configuration>BASE32H743_DCMI</configuration>
+                    </excluded>
+                </file>
+                <file>
                     <name>$PROJ_DIR$\..\User\Src\MemFlash.c</name>
                 </file>
                 <file>
