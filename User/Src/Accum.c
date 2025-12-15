@@ -285,8 +285,8 @@ void RUN_SUM (DWORD* RawDataI)//
     DWORD NoiseSqr =0; // корень квадратный из шума(смещения)
     DWORD AvergSqr =0; // корень квадратный из накопления
     int NeedCorrect = 0; // признак коррекции щумов на уровне смещения
-    DWORD NoiseBegin =0; //0-49
-    DWORD NoiseEnd =0;   //5530-5580
+    static DWORD NoiseBegin =0; //0-49
+    static DWORD NoiseEnd =0;   //5530-5580
     DWORD NoiseAdd =0; // расчетные шумы по добавленым точкам в конце линии при 64 и 128 км
     int CntAddNoise= 0; // счетчик точек добавок
     DWORD MaxNoise =0;
@@ -305,20 +305,22 @@ void RUN_SUM (DWORD* RawDataI)//
     //for (int i=0; i<j-1; ++i)
     // у нас в начале всегда 63 точки
     // расчет уровня в начале
+    Noise = 0;
     for (int i=0; i<(50); i++)
     {
       if (RawData[i]>MaxNoise) MaxNoise = RawData[i];
       Noise +=RawData[i];
     }
-    Noise = (DWORD)1*(Noise/(51));
-    NoiseBegin = Noise; // пока это смещение в начале
+    NoiseBegin = (DWORD)1*(Noise/(50));
+    //NoiseBegin = Noise; // пока это смещение в начале
     // посчитаем в конце 
+    NoiseEnd = 0;
     if (GetIndexLN()>3)// длинные линии -> добавим точек по расчету шумов
     //if (0)// длинные линии -> добавим точек по расчету шумов
     {
       for (int i=5530;i<5580;++i) // берем 30 точек в конце снятых данных без превышения сигнала на 100 ед АЦП от уровня смещения
       {
-        if (RawData[i] < (Noise + 4*Avrgs)) 
+        if (RawData[i] < (NoiseBegin + 4*Avrgs)) 
         {
           CntAddNoise++;
           NoiseAdd +=RawData[i];
@@ -339,7 +341,7 @@ void RUN_SUM (DWORD* RawDataI)//
 //      NoiseEnd = (DWORD)1*(NoiseEnd/(50));// смешение в конце
 //    }
     // контроль уровней смещения выбор между началом и концом
-    if(NoiseEnd>NoiseBegin) 
+    if( NoiseEnd > NoiseBegin) 
       Noise = NoiseEnd;
     else
       Noise = NoiseBegin;
@@ -348,7 +350,8 @@ void RUN_SUM (DWORD* RawDataI)//
     
     
     //g_Noise = Noise; // 400 - 27.8dB
-    g_Noise = Noise + (uint32_t)(Avrgs/200); // 400 - 27.8dB
+    //g_Noise = Noise + (uint32_t)(Avrgs/200); // 400 - 27.8dB
+    g_Noise = Noise + (uint32_t)(4*sqrt((double)Avrgs)); // 400 - 27.8dB
     //Noise = (DWORD)1*(Noise/(j-1));
     DWORD CurrentMaxLog =(DWORD)(5000.0*log10((double)Avrgs*1023)); // максимальный логарифм текщего накопления
     // расчет логарифмического шума (перед импульсом)
@@ -497,11 +500,13 @@ void RUN_SUM (DWORD* RawDataI)//
       //if(1)
     //if ((GetIndexLN()>4)&&(GetIndexVRM()==3)&&(GetIndexIM()>6))// длинные линии (64,128) -> и накопление 3 минуты и импульс 10-20 мкС
     if (0)// длинные линии (64,128) -> и накопление 3 минуты и импульс 10-20 мкС
-    if (NeedCorrect)// длинные линии (64,128) -> и накопление 3 минуты и импульс 10-20 мкС
+      // "халявный" фильтр
+    //if (NeedCorrect)// длинные линии (64,128) -> и накопление 3 минуты и импульс 10-20 мкС
       {
         int LevelA = LocalRaw - g_Noise;
         //if((LevelA > 0)&&(LevelA<Avrgs/4))
-        if((LevelA > 0)&&(LevelA<(int)(Avrgs/42)))
+        //if((LevelA > 0)&&(LevelA<(int)(Avrgs/42)))
+        if((LevelA > 0)&&(LevelA<2000))
         {
           LocalRaw = g_Noise + LevelA/4;
         }
