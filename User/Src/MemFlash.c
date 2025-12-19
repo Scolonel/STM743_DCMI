@@ -1771,10 +1771,11 @@ void SaveFileSD(int Mod)
       f_close(&Fil);
     } // if(0) - запись файла в формате Белкоре 1.0  
   } while(0);
-      HAL_Delay(2);
+      HAL_Delay(10);
 
   //------------------[ Test Complete! Unmount The SD Card ]--------------------
   FR_Status = f_mount(NULL, "", 0);
+      HAL_Delay(30);
   
 }
 
@@ -1817,10 +1818,11 @@ void ReadToTrans(void)
     }
     f_close(&Fil);
     } while(0);
-      HAL_Delay(2);
+      HAL_Delay(10);
 
   //------------------[ Test Complete! Unmount The SD Card ]--------------------
   FR_Status = f_mount(NULL, "", 0);
+      HAL_Delay(30);
 
 }
 // функция записи файла измерений измерителя

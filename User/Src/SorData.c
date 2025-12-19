@@ -1295,6 +1295,7 @@ int WriteSorFile(const char* pszFileName, int iPlaceLS, uint16_t* pDataPoints)
 
   f_closeWTC(pFile);
   //osDelay(30);
+  HAL_Delay(20);
 
   if(res == FR_DISK_ERR)
   {

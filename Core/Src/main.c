@@ -1139,7 +1139,11 @@ void StopAllTIM(int Ext)  // остановка таймеров (OTDR)
       Ena_CFG = 0;
         //LED_KT(0); // закончили удержание сброса линии
         TST_KTB(1); // старт "МОДУЛЬ" 1 (начало основного цикла нкопления)
-
+      uint32_t Del_micro = rand()&0x3ff;
+      while(Del_micro)
+      {
+        Del_micro--;
+      }
       //TIM4->CNT =0;
 
     }
@@ -1697,7 +1701,7 @@ void GetLogData (void)
          //BeginSet = (BeginTest<<IndexDist)-((8<<IndexDist)- 95);//- (32<<(IndexDist-3));
          BeginSet = SizeStrob +(BeginTest<<IndexDist)-(60<<(IndexDist-3));//- (32<<(IndexDist-3));
          ClkADC_ARR = (1<<IndexDist)-1;
-         ClkADC_CCR1 = 1<<(IndexDist-1);
+         ClkADC_CCR1 = (1<<(IndexDist-1));
          NumRepit = 1; 
 
        }

@@ -351,7 +351,8 @@ void RUN_SUM (DWORD* RawDataI)//
     
     //g_Noise = Noise; // 400 - 27.8dB
     //g_Noise = Noise + (uint32_t)(Avrgs/200); // 400 - 27.8dB
-    g_Noise = Noise + (uint32_t)(4*sqrt((double)Avrgs)); // 400 - 27.8dB
+    //g_Noise = Noise + (uint32_t)(4*sqrt((double)Avrgs)); // 400 - 27.8dB
+    g_Noise = Noise + (uint32_t)(Avrgs/84); // 84
     //Noise = (DWORD)1*(Noise/(j-1));
     DWORD CurrentMaxLog =(DWORD)(5000.0*log10((double)Avrgs*1023)); // максимальный логарифм текщего накопления
     // расчет логарифмического шума (перед импульсом)
@@ -484,6 +485,13 @@ void RUN_SUM (DWORD* RawDataI)//
       if(0) // выкл мини фильтр ...по предыдущему
       {
         LocalRaw = (int)(RawData[i+j+2]+RawData[i+j+1]+RawData[i+j]+RawData[i+j-1]+RawData[i+j-2])/5;
+      }
+      // Ф6 -  если разница между текущей точкой и предыдущей (уже поправленной)
+      // не превышает 1/2 разряда, то вычисляем среднее по этим точкам,
+      // предыдущая() + текущая
+      if(0) // выкл мини фильтр 
+      {
+          LocalRaw = (RawData[i+j-1]+RawData[i+j])>>1;
       }
       //LocalRaw = RawData[i+j];
       // добавка перед скачком, то есть перед большим отражением в маленьких сигналах

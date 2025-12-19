@@ -243,7 +243,7 @@ void DecodeCommandRS (void)
           NeedTransmit = 1;
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
         }
-                if (!memcmp ((void*)RX_Buf, "*RAWD",5)) // специальный режим теста
+                if (!memcmp ((void*)RX_Buf, "*RAWD",5)) // чтение дампа смещения первые 60 точек
         {
           int PtrS = (int)atoi((char*)&RX_Buf[5]);
           sprintf(BufString,"%d\n", g_Noise);
@@ -259,7 +259,7 @@ void DecodeCommandRS (void)
           NeedTransmit = 1;
 
         }
-                if (!memcmp ((void*)RX_Buf, "*RAWS",5)) // специальный режим теста
+                if (!memcmp ((void*)RX_Buf, "*RAWS",5)) // специальный режим чтения дампа
         {
           sprintf(BufString,"%d\n", g_Noise);
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
@@ -275,7 +275,7 @@ void DecodeCommandRS (void)
 
         }
         // запрос одного измерения
-                if (!memcmp ((void*)RX_Buf, "*ONCE",5)) // специальный режим теста
+                if (!memcmp ((void*)RX_Buf, "*ONCE",5)) // специальный режим чтения дампа одного измерения
         {
           OnceMeas();
           for (int i = 0; i< RAWSIZE; i++)
