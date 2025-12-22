@@ -1138,12 +1138,12 @@ void StopAllTIM(int Ext)  // остановка таймеров (OTDR)
 
       Ena_CFG = 0;
         //LED_KT(0); // закончили удержание сброса линии
-        TST_KTB(1); // старт "МОДУЛЬ" 1 (начало основного цикла нкопления)
-      uint32_t Del_micro = rand()&0x3ff;
+      uint32_t Del_micro = rand()&0x3f;
       while(Del_micro)
       {
         Del_micro--;
       }
+        TST_KTB(1); // старт "МОДУЛЬ" 1 (начало основного цикла нкопления)
       //TIM4->CNT =0;
 
     }

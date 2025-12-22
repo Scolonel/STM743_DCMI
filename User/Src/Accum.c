@@ -297,6 +297,9 @@ void RUN_SUM (DWORD* RawDataI)//
     DWORD LocalRawPre;
     DWORD LocalRawLast;
     static volatile int xy;
+    uint32_t EnaBags = 0; // уровень меньше смещени€, можно "генерить" шумы
+    uint32_t SmNoise = 0; // уровень меньше смещени€, на часть числа накоплений,дл€ генерации шумов
+
     SetCntNumAvrg(Avrgs); // сохранение
     // filtr (WOW Super)
     //if (GetCntNumAvrg()>=GetFinAvrg())
@@ -345,14 +348,20 @@ void RUN_SUM (DWORD* RawDataI)//
       Noise = NoiseEnd;
     else
       Noise = NoiseBegin;
+    
+    // рассчитаем порог дл€ генерации шумов
+    SmNoise = Noise - Avrgs/168;
+    
     // а теперь просто увеличим смещение посчитанное в начале на половину накоплений
     //Noise = NoiseBegin + Avrgs/4;
     
-    
+    //  if(GetIndexLN()>4) // 
+    //g_Noise = NoiseEnd;
     //g_Noise = Noise; // 400 - 27.8dB
-    //g_Noise = Noise + (uint32_t)(Avrgs/200); // 400 - 27.8dB
+    //g_Noise = Noise - (uint32_t)(Avrgs/200); // 400 - 27.8dB
     //g_Noise = Noise + (uint32_t)(4*sqrt((double)Avrgs)); // 400 - 27.8dB
-    g_Noise = Noise + (uint32_t)(Avrgs/84); // 84
+    //g_Noise = Noise + (uint32_t)(Avrgs/84); // 84
+    g_Noise = Noise ; // 84
     //Noise = (DWORD)1*(Noise/(j-1));
     DWORD CurrentMaxLog =(DWORD)(5000.0*log10((double)Avrgs*1023)); // максимальный логарифм текщего накоплени€
     // расчет логарифмического шума (перед импульсом)
@@ -387,6 +396,10 @@ void RUN_SUM (DWORD* RawDataI)//
       LocalRaw = RawData[xy];
       LocalRawPre = RawData[xy-1];
       LocalRawLast = RawData[xy+1];
+      
+      // встретили сигнал ниже смещени€ можно генерить шумы...
+      //if(LocalRaw < g_Noise)
+      //  EnaBags = 1;
       // корректровка перед большим сигналом из “9400
       if(1)
       {
@@ -433,8 +446,8 @@ void RUN_SUM (DWORD* RawDataI)//
       // ‘1.6 -  если разница между текущей точкой и предыдущей()
       // и последующей не превышает половину разр€да, то вычисл€ем среднее по 3 точкам,
       // предыдуща€ + текуща€ + последующа€
-      //if(GetIndexLN()>4) // 
-      if(0) // 
+      if(GetIndexLN()>4) // 
+      //if(0) // 
       {
         if((abs((RawData[i+j+2])-(RawData[i+j+1]))<(Avrgs/2))&&(abs((RawData[i+j+1])-(RawData[i+j]))<(Avrgs/2))&&(abs((RawData[i+j-1])-(RawData[i+j]))<(Avrgs/2))&&(abs((RawData[i+j-2])-(RawData[i+j-1]))<(Avrgs/2)))
         {
@@ -474,7 +487,8 @@ void RUN_SUM (DWORD* RawDataI)//
       // ‘4 -  если разница между текущей точкой и предыдущей (уже поправленной)
       // не превышает 1/2 разр€да, то вычисл€ем среднее по этим точкам,
       // предыдуща€() + текуща€
-      if(1) // выкл мини фильтр 
+      //if(1) // выкл мини фильтр 
+      if(GetIndexLN()<5) // 
       {
         if(abs((int)(RawData[i+j-1]-RawData[i+j]))<(Avrgs/2))
         {
@@ -518,6 +532,12 @@ void RUN_SUM (DWORD* RawDataI)//
         {
           LocalRaw = g_Noise + LevelA/4;
         }
+      }
+      // "генераци€" шума(смещени€) если был провал ниже нул€...
+      if(0)
+      //if(EnaBags)
+      {
+        LocalRaw = SmNoise + (rand()&(Avrgs/84));
       }
       // подготовили текущую точку , рассчитаем логарифм
       if (LocalRaw<=g_Noise) LocalRaw=g_Noise+1;
