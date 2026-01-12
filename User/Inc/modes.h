@@ -76,6 +76,7 @@ void ModeKeyBoardOLT(void); // режим отображения клавиатуры редактора комментари
 void ModeKeyBoardPrefix(void); // режим отображения клавиатуры редактора Prefix File Name
 void ModeSelectMEM(void); // режим выбора работы с памятью
 void ModeClearMEM(void); // режим освобождения памяти измерителя
+void ModeReadUSB(void); // режим чтения по USB памяти флэшки установка признака
 void ModeViewMemOLT(void); // режим просмотра памяти измерителя
 void ModeSetting(void); // режим установок прибора
 void Mode(void); // режим установок прибора

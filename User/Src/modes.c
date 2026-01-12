@@ -5067,14 +5067,14 @@ void ModeSelectMEM(void) // режим выбора работы с пам€тью CHECK_OFF
   {
     myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
-    FrSelectMEM = ChangeFrSet (FrSelectMEM, 1+PowerMeter, 1, MINUS);// установка курсора в рамках заданных параметров
+    FrSelectMEM = ChangeFrSet (FrSelectMEM, 2+PowerMeter, 1, MINUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_UP);
   }
   if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
   {
     myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
-    FrSelectMEM = ChangeFrSet (FrSelectMEM, 1+PowerMeter, 1, PLUS);// установка курсора в рамках заданных параметров
+    FrSelectMEM = ChangeFrSet (FrSelectMEM, 2+PowerMeter, 1, PLUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_DOWN);
   }
   
@@ -5109,14 +5109,14 @@ void ModeSelectMEM(void) // режим выбора работы с пам€тью CHECK_OFF
       
       //sprintf(Str, "t6.txt=\"%s\"€€€", MsgMass[44][CurrLang]);
       //NEX_Transmit((void*)Str);    // ќ„»—“ ј
-      sprintf(Str, "t6.txt=\"\"€€€");
+      sprintf(Str, "t6.txt=\"USB\"€€€");
       NEX_Transmit((void*)Str);    // ќ„»—“ ј- пуста€
     }
     else  // измерител€ нет
     {
       //sprintf(Str, "t4.txt=\"%s\"€€€", MsgMass[44][CurrLang]);
       //NEX_Transmit((void*)Str);    // ќ„»—“ ј
-      sprintf(Str, "t4.txt=\"\"€€€");
+      sprintf(Str, "t4.txt=\"USB\"€€€");
       NEX_Transmit((void*)Str);    // ќ„»—“ ј- пуста€
       sprintf(Str, "t5.txt=\"\"€€€");
       NEX_Transmit((void*)Str);    // пустые
@@ -5183,25 +5183,25 @@ void ModeSelectMEM(void) // режим выбора работы с пам€тью CHECK_OFF
           HAL_Delay(100);
         }
       }
-      //      else   // !!! убрали очистку пам€ти
-      //      {
-      //        myBeep(10);
-      //        SetMode(ModeClearMEM);
-      //        FrClearMEM = 2 + PowerMeter;
-      //        // посылка команды переключени€ окна на Select_MEM_Clr(вызов)  
-      //        CmdInitPage(21);
-      //        //NeedReturn = 4; // что бы вернутс€ сюда же
-      //      }
+      else   // !!! убрали очистку пам€ти
+      {
+        myBeep(10);
+        SetMode(ModeReadUSB);
+        //FrClearMEM = 2 + PowerMeter;
+        // посылка команды переключени€ окна на Select_MEM_Clr(вызов)  
+        CmdInitPage(21);
+        //NeedReturn = 4; // что бы вернутс€ сюда же
+      }
       break;
-      //// !!! убрали очистку пам€ти
-      //    case 3: // переход в режим выбора стирани€ пам€ти
-      //      myBeep(10);
-      //      SetMode(ModeClearMEM);
-      //      FrClearMEM = 2 + PowerMeter;
-      //      // посылка команды переключени€ окна на Select_MEM_Clr(вызов)  
-      //      CmdInitPage(21);
-      //      //NeedReturn = 4; // что бы вернутс€ сюда же
-      //      break;
+      // !!! убрали очистку пам€ти
+    case 3: // переход в режим выбора стирани€ пам€ти
+      myBeep(10);
+      SetMode(ModeReadUSB);
+      //FrClearMEM = 2 + PowerMeter;
+      // посылка команды переключени€ окна на Select_MEM_Clr(вызов)  
+      CmdInitPage(21);
+      //NeedReturn = 4; // что бы вернутс€ сюда же
+      break;
     }
     
   }
@@ -5213,6 +5213,66 @@ void ModeSelectMEM(void) // режим выбора работы с пам€тью CHECK_OFF
     // посылка команды переключени€ окна на MainMenu (возврат)  
     CmdInitPage(1);
     
+  }
+}
+
+void ModeReadUSB(void) // режим чтени€ по USB пам€ти флэшки установка признака
+{
+  char Str[32];
+  
+  if (g_FirstScr)
+  {
+    // здесь заполн€ем данными пол€ нового индикатора
+    // не требущие изменени€ при первичной инициализации   
+    // сообщение о том что надо переподключить провод USB
+    sprintf(Str, "t0.txt=\"%s\"€€€", MsgMass[132][CurrLang]); 
+    NEX_Transmit((void*)Str);    // ѕереподключите
+    
+    sprintf(Str, "t1.txt=\"%s\"€€€", MsgMass[133][CurrLang]);
+    NEX_Transmit((void*)Str);    // кабель USB
+    
+    sprintf(Str, "t2.txt=\"%s\"€€€", MsgMass[134][CurrLang]);
+    NEX_Transmit((void*)Str);    // дл€ чтени€     
+    
+    sprintf(Str, "t3.txt=\"%s\"€€€", MsgMass[135][CurrLang]); 
+    NEX_Transmit((void*)Str);    // карты пам€ти
+    g_FirstScr = 0;
+    g_NeedScr = 1;
+  }
+  if (g_NeedScr)
+  {
+    // здесь заполн€ем данными пол€ нового индикатора
+    // по результатам изменений вызваныйх обработчиком клавиатуры
+    
+    // раскрашивание пол€ выбора 
+    // закрасим бэкграунды  и установим требуемый
+    sprintf(Str, "t1.bco=WHITE€€€"); // белый
+    NEX_Transmit((void*)Str);// 
+    sprintf(Str, "t2.bco=WHITE€€€"); // белый
+    NEX_Transmit((void*)Str);// 
+    sprintf(Str, "t3.bco=WHITE€€€"); // белый
+    NEX_Transmit((void*)Str);//
+    
+    // код подсветки требуемой строки если есть есть маркер строки
+    g_NeedScr = 0;
+    MSC_or_CDC = 1;
+  }
+  
+  if (((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))||(NeedReturn))
+  {
+    myBeep(10);
+    g_NeedScr = 1; // Need reDraw Screen
+    if(!NeedReturn)
+    {
+    SetMode(ModeSelectMEM);
+      NeedReturn = 4;
+    }
+    MSC_or_CDC = 0;
+    // посылка команды переключени€ окна на Memory (возврат)  
+    CmdInitPage(NeedReturn);
+    NeedReturn = 0;
+    
+    //ModeDevice = MODEMENU;
   }
 }
 
