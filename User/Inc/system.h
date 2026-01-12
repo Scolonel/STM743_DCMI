@@ -206,7 +206,7 @@ int   WriteSorFile(const char* pszFileName, int iPlaceLS, unsigned short* pDataP
 int ReadSorFileG(const char* pszFileName);
 
 // однократное измерение с установленными параметрами
-void OnceMeas (void);
+void OnceMeas (int Num);
 
       // тики опроса клавиатура взято из Т7К_АР
 uint32_t GetSysTick( int Mode); // получение тиков 1 мС. 0 - получение счетчика от предыдущего сброса 1- сброс

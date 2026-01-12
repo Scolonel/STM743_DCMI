@@ -275,9 +275,10 @@ void DecodeCommandRS (void)
 
         }
         // запрос одного измерения
-                if (!memcmp ((void*)RX_Buf, "*ONCE",5)) // специальный режим чтения дампа одного измерения
+                if (!memcmp ((void*)RX_Buf, "*ONCE ",6)) // специальный режим чтения дампа одного измерения
         {
-          OnceMeas();
+        int NumAvrg = (BYTE)(atoi((char*)&RX_Buf[6]));
+          OnceMeas(NumAvrg);
           for (int i = 0; i< RAWSIZE; i++)
           {
           sprintf(BufString,"%d\n", RawData[i]);

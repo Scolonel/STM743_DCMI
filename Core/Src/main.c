@@ -214,7 +214,6 @@ char PeriodIntADC=0; // счетчик запуска внутреннего АЦП и измерения уровня батар
 uint8_t g_ErrFW_LCD = 0; // не правильная прошивка индикатора
 uint8_t TimerDraw = 0; // время прорисовки ошибки , каждую секунду...
 uint8_t g_SpeedUart = 1; // 1 - LO(57600), 2-ME(115200), 8-HI(460800)
-/* USER CODE END PV */
 uint8_t g_SuperTest = 0; //режим СуперТеста, по кругу проводим измерения на всех 
 // установках,по 3 сек, пишем файлы
 uint8_t g_STindx_LN = 0; //режим СуперТеста, индекс длины линии 
@@ -224,6 +223,7 @@ uint8_t g_CodeErrorSoft=0;
 
 uint32_t g_Noise=0;
 uint32_t g_TimeAvrg=0; // для индикации времени накопления при ручном управлении
+/* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -248,22 +248,22 @@ int main(void)
   /* USER CODE BEGIN 1 */
   
   /* USER CODE END 1 */
-  
+
   /* MCU Configuration--------------------------------------------------------*/
-  
+
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-  
+
   /* USER CODE BEGIN Init */
   
   /* USER CODE END Init */
-  
+
   /* Configure the system clock */
   SystemClock_Config();
-  
-  /* Configure the peripherals common clocks */
+
+/* Configure the peripherals common clocks */
   PeriphCommonClock_Config();
-  
+
   /* USER CODE BEGIN SysInit */
   MX_GPIO_Init();
   MX_DMA_Init();
@@ -401,7 +401,7 @@ int main(void)
   //    NEX_Transmit((void*)Str);//
   //  }
   /* USER CODE END SysInit */
-  
+
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
@@ -704,7 +704,7 @@ int main(void)
   // здесь запускается "долгий" процесс связи с компьютером, и мешает инициализации, стоит
   // что-то предпринять
   /* USER CODE END 2 */
-  
+
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -938,7 +938,7 @@ int main(void)
     if(ProgFW_LCD==2) ProgFW_LCD=0;
     
     /* USER CODE END WHILE */
-    
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */

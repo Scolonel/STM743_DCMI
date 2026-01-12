@@ -7909,7 +7909,7 @@ void SlowON (void) // медленное включение питания
   
 }
 // однократное измерение с установленными параметрами
-void OnceMeas (void)
+void OnceMeas (int Num)
 {
   LED_START(1);//On  LED
   //myBeep(10);
@@ -7922,8 +7922,9 @@ void OnceMeas (void)
   CntNumAvrg = 0; // обнуляем счетчик накоплений
   SumNumNak = 0;
   HAL_Delay(900);
+  CurrTimeAccum = 0;
   
-  Averaging (1,0,0);
+  Averaging (Num,0,0);
   HV_LOW(ON); //ON LOW HIGH VOLT
   HV_SW(OFF); // OFF HIGH VOLT
   //POWDET(OFF);
