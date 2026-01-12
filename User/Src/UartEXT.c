@@ -626,6 +626,20 @@ void DecodeCommandRS (void)
         UARTSendExt ((BYTE*)BufString, strlen (BufString));
         NeedTransmit = 1;
       }
+      // ;syst:msc ss -  включение . выключение обращения к памяти
+      if (!memcmp ((void*)RX_Buf, ";SYST:MSC ",10)) //
+      {
+        int i=10;
+        DWORD Num;
+        Num = atoi((char*)&RX_Buf[i]); // 
+        if(Num == 1)
+          MSC_or_CDC = 1;
+        else
+          MSC_or_CDC = 0;
+        sprintf(BufString,"%d\r",MSC_or_CDC); // выдаем // 
+        UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        NeedTransmit = 1;
+      }
       // ;lcd:thup n -  просыпаемся от тача
       if (!memcmp ((void*)RX_Buf, ";LCD:THUP ",10)) //
       {

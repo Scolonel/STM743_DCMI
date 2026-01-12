@@ -123,7 +123,8 @@ int8_t SCSI_ProcessCmd(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *cmd)
   int8_t ret;
   USBD_MSC_BOT_HandleTypeDef *hmsc = (USBD_MSC_BOT_HandleTypeDef *)pdev->pClassData_MSC;
 
-  if (hmsc == NULL)
+  if ((hmsc == NULL)||(!MSC_or_CDC))//блокировка по признаку отсутствия MSC
+  //if (hmsc == NULL)
   {
     return -1;
   }

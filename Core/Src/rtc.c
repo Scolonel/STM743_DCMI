@@ -21,7 +21,8 @@
 #include "rtc.h"
 
 /* USER CODE BEGIN 0 */
-  #define TIMELASTVERSION  1763535600 //2025/11/19 10:00:00 v083
+  #define TIMELASTVERSION  1768212000 //2026/01/12 10:00:00 v096
+//  #define TIMELASTVERSION  1763535600 //2025/11/19 10:00:00 v083
 //  #define TIMELASTVERSION  1759302000 //2025/10/01 10:00:00 v049
 //  #define TIMELASTVERSION  1756710000 //2025/09/01 10:00:00 v049
 //  #define TIMELASTVERSION  1754031600 //2025/08/01 10:00:00 v037
@@ -99,9 +100,9 @@ void MX_RTC_Init(void)
     Error_Handler();
   }
   sDate.WeekDay = RTC_WEEKDAY_MONDAY;
-  sDate.Month = RTC_MONTH_NOVEMBER;
-  sDate.Date = 19;
-  sDate.Year = 25;
+  sDate.Month = RTC_MONTH_JANUARY;
+  sDate.Date = 12;
+  sDate.Year = 26;
 
   if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK)
   {

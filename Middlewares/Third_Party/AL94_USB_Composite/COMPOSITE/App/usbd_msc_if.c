@@ -305,6 +305,11 @@ int8_t STORAGE_Write(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t blk_
 int8_t STORAGE_GetMaxLun(void)
 {
   /* USER CODE BEGIN 8 */
+  // блокировка по признаку отсутствия MSC
+  if(!MSC_or_CDC)
+  {
+    return -1; //отказ устройства
+  }
   return (STORAGE_LUN_NBR - 1);
   /* USER CODE END 8 */
 }
