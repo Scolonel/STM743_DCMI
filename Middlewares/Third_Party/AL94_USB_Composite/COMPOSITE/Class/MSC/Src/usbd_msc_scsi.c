@@ -129,6 +129,11 @@ int8_t SCSI_ProcessCmd(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *cmd)
     return -1;
   }
 
+//  if (!MSC_or_CDC)//блокировка по признаку отсутствия MSC
+//  {
+//    return USBD_FAIL;
+//  }
+  
   switch (cmd[0])
   {
     case SCSI_TEST_UNIT_READY:

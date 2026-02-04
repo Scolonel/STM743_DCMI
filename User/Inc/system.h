@@ -362,6 +362,8 @@ extern uint32_t SumNumNak; // суммарное число проходов при данном числе накоплен
 extern uint8_t MeasureNow; // признак работы накопителя, для обхода, основного цикла
 extern uint32_t Sm_Shift ; // текущее значение сдвига Зонд.Импульса
 
+// пробная функция дернуть ногой открытым коллектором USB_DP
+void ReConnectUSB (void);
 //void GetPointInPeriod
 DWORD CalkZondImpuls (void); // расчет длительности импульса
 

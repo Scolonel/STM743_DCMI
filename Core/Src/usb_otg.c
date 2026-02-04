@@ -81,7 +81,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef* pcdHandle)
     GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF10_OTG1_FS;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
@@ -123,5 +123,35 @@ void HAL_PCD_MspDeInit(PCD_HandleTypeDef* pcdHandle)
 }
 
 /* USER CODE BEGIN 1 */
+// пробная функция дернуть ногой открытым коллектором USB_DP
+void ReConnectUSB (void)
+{
+  uint16_t Pin_SW = GPIO_PIN_12;
+  //uint16_t Pin_DP = GPIO_PIN_12;
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  HAL_GPIO_DeInit(GPIOA, Pin_SW);
+  HAL_GPIO_WritePin(GPIOA, Pin_SW, GPIO_PIN_RESET);
+  //HAL_GPIO_WritePin(GPIOA, Pin_DP, GPIO_PIN_RESET);
+  
+  GPIO_InitStruct.Pin = Pin_SW;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  
+  HAL_Delay(2);
+  HAL_GPIO_WritePin(GPIOA, Pin_SW, GPIO_PIN_RESET);
+  HAL_Delay(50);
+  HAL_GPIO_WritePin(GPIOA, Pin_SW, GPIO_PIN_SET);
+  
+  GPIO_InitStruct.Pin = Pin_SW;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  GPIO_InitStruct.Alternate = GPIO_AF10_OTG1_FS;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  
+  
+}
 
 /* USER CODE END 1 */
