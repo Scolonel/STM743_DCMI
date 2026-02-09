@@ -884,7 +884,7 @@ int main(void)
     //      EnaPrintRes=0;
     //    }
     // все параметры включим до вызова сновного цикала
-    if((!MeasureNow)&&(!ProgFW_LCD))
+    if((!MeasureNow)&(!ProgFW_LCD))
     {
       
       if(ModeUSB) // устанавливаем когда пишем или читаем по USB SDCard
@@ -944,10 +944,6 @@ int main(void)
       //        ModeUSB = 0;
       //        NEX_Transmit((void*)Str);// 
       //      }
-    }
-    else
-    {
-      REDEYE(0); 
     }
     // проверка окончания записи индикатора
     if(ProgFW_LCD==2) ProgFW_LCD=0;
