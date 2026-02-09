@@ -5276,7 +5276,7 @@ void ModeReadUSB(void) // режим чтения по USB памяти флэшки установка признака
       NeedReturn = 4;
     }
     //MX_USB_DEVICE_Init();
-    MSC_or_CDC = 0;
+    //MSC_or_CDC = 0;
 
     // посылка команды переключения окна на Memory (возврат)  
     CmdInitPage(NeedReturn);
