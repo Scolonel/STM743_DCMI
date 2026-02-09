@@ -702,7 +702,7 @@ int main(void)
   CmdInitPage(0);// посылка команды переключения окна на Welcome и установка признака первого входа
   MX_USB_DEVICE_Init();
   // пробная функция дернуть ногой открытым коллектором USB_DP
-  HAL_Delay(250);
+  HAL_Delay(350);
   MSC_or_CDC = 0; // признак активности MSC для инициализации разрешим, и как только сразу запретимпо умолчанию запрещно
 
   //ReConnectUSB ();
@@ -903,6 +903,7 @@ int main(void)
             ModeUSB=2;
             break;
           case 2:
+            // закончили крутить мультик
             HAL_Delay(20);
             break;
           default:
@@ -919,6 +920,8 @@ int main(void)
       {
         // прорисовка основной функции
         ModeFuncTmp();
+        CntrlRE(); // контроль красного глаза
+
       }
       
       // здесь всегда в основном цикле
@@ -941,6 +944,10 @@ int main(void)
       //        ModeUSB = 0;
       //        NEX_Transmit((void*)Str);// 
       //      }
+    }
+    else
+    {
+      REDEYE(0); 
     }
     // проверка окончания записи индикатора
     if(ProgFW_LCD==2) ProgFW_LCD=0;

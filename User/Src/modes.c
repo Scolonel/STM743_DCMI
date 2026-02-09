@@ -216,6 +216,7 @@ volatile int NeedReturn = 0; // необходимость вернутьс€ в окно сохранени€
 static BYTE ReturnMemView = 0; // признак куда возвращаемс€ по Esc из просмотра пам€ти, 1- в пам€ть, там и устанавливаем
  BYTE KnowLCD = 0;
 
+ static uint8_t g_sw_mUSB = 0; // признак что прочитали флэшку по USB
 // 0 - из старта измерений 
 
 
@@ -3878,6 +3879,7 @@ void ModeSelectOLT(void) // режим выбора типа тестера CHECK_OFF
       SetModeRE (Str, CURRENT, CurrLang);
       sprintf(StrI,"t6.txt=\"%s\"€€€",Str); //режим
       NEX_Transmit((void*)StrI);    // 
+      //CntrlRE (); // функци€ контрол€ красным глазом
     }
     
     g_NeedScr=0;
@@ -4629,10 +4631,11 @@ void ModeSourceOnly(void) // режим работы тестера только источник CHECK_OFF
     {
       sprintf(Str,"t3.txt=\"VFL,    0.65 \"€€€"); // Red Eye
       NEX_Transmit((void*)Str);    // 
-      sprintf(Str,"draw 284,159,383,188,BLACK€€€"); // Red Eye
-      NEX_Transmit((void*)Str);    // 
-      sprintf(Str,"draw 285,160,382,187,BLACK€€€"); // Red Eye
-      NEX_Transmit((void*)Str);    // 
+      // это была рамка дл€ режима но не в том месте и дл€ 3.2 дюйма индикатора
+      //sprintf(Str,"draw 284,159,383,188,BLACK€€€"); // Red Eye
+      //NEX_Transmit((void*)Str);    // 
+      //sprintf(Str,"draw 285,160,382,187,BLACK€€€"); // Red Eye
+      //NEX_Transmit((void*)Str);    // 
     }
     else
     {
@@ -5239,6 +5242,11 @@ void ModeReadUSB(void) // режим чтени€ по USB пам€ти флэшки установка признака
     g_FirstScr = 0;
     g_NeedScr = 1;
   }
+  
+  if(ModeUSB == 2)
+  {
+  }
+  
   if (g_NeedScr)
   {
     // здесь заполн€ем данными пол€ нового индикатора
@@ -5267,7 +5275,9 @@ void ModeReadUSB(void) // режим чтени€ по USB пам€ти флэшки установка признака
     SetMode(ModeSelectMEM);
       NeedReturn = 4;
     }
+    //MX_USB_DEVICE_Init();
     MSC_or_CDC = 0;
+
     // посылка команды переключени€ окна на Memory (возврат)  
     CmdInitPage(NeedReturn);
     NeedReturn = 0;
