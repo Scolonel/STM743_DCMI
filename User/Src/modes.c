@@ -7591,12 +7591,15 @@ unsigned short SpliceProg (unsigned short PII)
   //unsigned long Summer=0;
   unsigned short AddSh=0; // добавка к смещению
   unsigned short Index=0;
+  unsigned short NeedHat=0; // свалились в шумы без горизонтального участка
   static unsigned short I_min=0, I_max=0;;
   static unsigned short min = 0xFFFF, max = 0;
   unsigned short deltaU = 150;
   unsigned long medium =0;
+  unsigned long LossAvrg =0; // уменьшение потерь от накоплений
+  
   if(GetLengthWaveLS (GetPlaceLS(CURRENT)) == 850) deltaU = 500;
-  for (int i = (int)(PII+(PII>>1)) ; ((i<OUTSIZE)&&(LogData[i]<20000)&&(!Index)); ++i) // 26/02/2014 анализ начинаем позже на 1.5 импульса
+  for (int i = (int)(PII+(PII>>1)) ; ((i<OUTSIZE)&&(LogData[i]<22000)&&(!Index)); ++i) // 26/02/2014 анализ начинаем позже на 1.5 импульса
   {
     if (LogData[i]>750)
     {
@@ -7605,7 +7608,7 @@ unsigned short SpliceProg (unsigned short PII)
       medium =0;
       I_min = i;
       I_max = i;
-      for( int j = i; j <i+5; ++j )
+      for( int j = i; j <i+5; ++j ) // проверяем пять точек, выбираем Минимальное и максимальное из этих пяти
       {
         medium = medium + LogData[j];
         if( min > LogData[j] )
@@ -7619,13 +7622,32 @@ unsigned short SpliceProg (unsigned short PII)
           max = LogData[j];
         }
       }
+      // Свалились в шумы без горизонтального участка, (20дБ)
+      // взведем признак перерисовки "шапки" от импульса в 1000нС
+      // что бы попасть в процесс переписи "шапки"
+      if(LogData[i]>20000)
+      {
+        NeedHat = i;
+      }
       // для 850 нм на 5 точках при128км набегает более 0.366 дБ
-      
-      if (((max-min)<deltaU)&&(I_max>I_min))
+      // определяем не имеем ли горизонтальный участок на линии выше шумов и спадом не круче затухания
+      // если нашли точку принимаем ее за склейку, 
+      if ((((max-min)<deltaU)&&(I_max>I_min))||NeedHat)
       {
         Index = i+5;
+        if (NeedHat)
+          Index = NeedHat;
         //medium = medium/5;
+        // считаем разницу в точке склейки для разных импульсов
         medium = (unsigned long)LogDataSplice[Index]- (unsigned long)LogData[Index];
+        // если разница колосальная принимаем в районе 5.5 дБ
+         LossAvrg = (unsigned long)(36*sqrt(FinAvrg));
+
+        if (medium > LossAvrg)  // необходимо рассчитать в зависимости от числа накоплений
+        {
+          medium = LossAvrg;
+          //medium = 5500;
+        }
         for (int o=1; o<Index; ++o) // перезапись от короткого импульса
         {
           LogData[o] = LogDataSplice[o];
