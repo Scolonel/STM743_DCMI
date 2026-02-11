@@ -7599,7 +7599,7 @@ unsigned short SpliceProg (unsigned short PII)
   unsigned long LossAvrg =0; // уменьшение потерь от накоплений
   
   if(GetLengthWaveLS (GetPlaceLS(CURRENT)) == 850) deltaU = 500;
-  for (int i = (int)(PII+(PII>>1)) ; ((i<OUTSIZE)&&(LogData[i]<22000)&&(!Index)); ++i) // 26/02/2014 анализ начинаем позже на 1.5 импульса
+  for (int i = (int)(PII+(PII>>1)) ; ((i<OUTSIZE)&&(LogData[i]<26000)&&(!Index)); ++i) // 26/02/2014 анализ начинаем позже на 1.5 импульса
   {
     if (LogData[i]>750)
     {
