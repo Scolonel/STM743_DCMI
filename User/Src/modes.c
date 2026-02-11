@@ -7643,7 +7643,7 @@ unsigned short SpliceProg (unsigned short PII)
         // если разница колосальна€ принимаем в районе 5.5 дЅ
          LossAvrg = (unsigned long)(36*sqrt(FinAvrg));
 
-        if (medium > LossAvrg)  // необходимо рассчитать в зависимости от числа накоплений
+        if (medium > 12000)  // необходимо рассчитать в зависимости от числа накоплений
         {
           medium = LossAvrg;
           //medium = 5500;
