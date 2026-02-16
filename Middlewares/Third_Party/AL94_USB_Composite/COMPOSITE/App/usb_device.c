@@ -62,7 +62,12 @@ USBD_HandleTypeDef hUsbDevice;
 void MX_USB_DEVICE_Init(void)
 {
   /* USER CODE BEGIN USB_DEVICE_Init_PreTreatment */
-
+// здесь дернем признаком разрешения/запрещения MSC
+   // проверим стоит ли признак если не стоит, то поставим а ниже выключим снова
+  // !!!! НЕ РАБОТАЕТ !!!! так как это только в начале а там уже стоит признак разрешения
+  //uint8_t W_Msc = MSC_or_CDC;
+  //if(!W_Msc) 
+  //  MSC_or_CDC = 1;
   /* USER CODE END USB_DEVICE_Init_PreTreatment */
 
   /* Init Device Library, add supported class and start the library. */
@@ -153,6 +158,9 @@ void MX_USB_DEVICE_Init(void)
   }
 
   /* USER CODE BEGIN USB_DEVICE_Init_PostTreatment */
+// здесь дернем признаком разрешения/запрещения MSC
+   // if(!W_Msc) 
+   // MSC_or_CDC = 0;
 
   /* USER CODE END USB_DEVICE_Init_PostTreatment */
 }

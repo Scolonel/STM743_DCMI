@@ -379,6 +379,7 @@ uint8_t USBD_MSC_Setup(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req)
   USBD_StatusTypeDef ret = USBD_OK;
   uint16_t status_info = 0U;
 
+  //if ((hmsc == NULL)||(MSC_or_CDC == 0))
   if (hmsc == NULL)
   {
     return (uint8_t)USBD_FAIL;

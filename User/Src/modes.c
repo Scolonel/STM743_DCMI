@@ -55,6 +55,8 @@
 
 #include "system.h"
 #include "fatfs.h"
+#include "usb_device.h"
+//#include "usbd_cdc_acm_if.h"
 
 // тест картинка
 //static const  unsigned char LOGOS[] = {
@@ -5197,9 +5199,12 @@ void ModeSelectMEM(void) // режим выбора работы с памятью CHECK_OFF
       }
       break;
       // !!! убрали очистку памяти
-    case 3: // переход в режим выбора стирания памяти
+    case 3: // переход в режим чтения флэшки через USB
       myBeep(10);
       SetMode(ModeReadUSB);
+        MSC_or_CDC = 1; // признак активности MSC для инициализации разрешим, и как только сразу запретимпо умолчанию запрещно
+        //MX_USB_DEVICE_Init();
+
       //FrClearMEM = 2 + PowerMeter;
       // посылка команды переключения окна на Select_MEM_Clr(вызов)  
       CmdInitPage(21);
@@ -5276,11 +5281,11 @@ void ModeReadUSB(void) // режим чтения по USB памяти флэшки установка признака
       NeedReturn = 4;
     }
     //MX_USB_DEVICE_Init();
-    //MSC_or_CDC = 0;
 
     // посылка команды переключения окна на Memory (возврат)  
     CmdInitPage(NeedReturn);
     NeedReturn = 0;
+    MSC_or_CDC = 0;
     
     //ModeDevice = MODEMENU;
   }
