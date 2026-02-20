@@ -160,9 +160,9 @@ void RS_com (BYTE temp)
 //  очистка приема по UART0 что бы ждать начала
 void ClearRS (void)
 {
-            CntRX=0;
+          CntRX=0;
           Reciev=STOP_UART;
-
+          RSDecYes = 0;    
 }
 // обработка принятой команды по RS
 void DecodeCommandRS (void)
@@ -1264,8 +1264,8 @@ void DecodeCommandRS (void)
         //        }
         if (!memcmp ((void*)RX_Buf, ";SET:FWLCDON",12)) //
         {
-          SetMode(UploadFW_Nextion);
           CmdInitPage(26); // переключаемся на режим индикации сообщения что в режиме программирования
+          SetMode(UploadFW_Nextion);
           //ProgFW_LCD = 1; // перенесем в First обработку что бы "правильно" работало
           //123          //UART2Count = 0;
           //123          //UART0Count = 0;

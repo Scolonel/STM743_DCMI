@@ -1969,6 +1969,7 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
         sprintf(Str,"END\r");//c
         RemoutCtrl = 0;
         UARTSendExt ((BYTE*)Str, strlen (Str));
+        HAL_Delay(250); // ПОДОЖДЕМ А ПОТОМ ВСЕ ОБНУЛИМ ЧТО БЫ НЕ ПРИНИМАТЬ
         ClearRS();
         if(g_SuperTest) // тут можно посмотреть не надо ли запускать снова
         {
