@@ -109,7 +109,8 @@ const unsigned char OutOfNoise [40] = {
 // в это время должно входить наибольшее значение из времени сбора и суммирования
 // для малых расстояний, или сумма врмени накопления и суммирования для расстояний 
 // без прореживания, время сммирования без прореживания 336 мкС
-const int TimeRepitOfLN[PNTSNUM] = { 65, 120, 200, 390, 775, 1150, 1900 }; // 05.11.2025
+//const int TimeRepitOfLN[PNTSNUM] = { 65, 120, 200, 390, 775, 1150, 1900 }; // 05.11.2025
+const int TimeRepitOfLN[PNTSNUM] = { 125, 160, 250, 426, 800, 1180, 1920 }; // 24.02.2026
 //const int TimeRepitOfLN[PNTSNUM] = { 65, 120, 200, 520, 775, 1150, 1900 }; // 05.11.2025
 //const int KeyPoints[PNTSNUM] = { 96, 172, 344, 688, 1366, 2048, 4608 }; // порги определения индекса установленной длины 4096
  // всеж таки надо брать по конкретной длине а не по полному массиву, так как пересчитываем на реальную длину
@@ -1602,17 +1603,17 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     // число накоплениий за 3 сек можно сосчитать как 
     // время промежуточного вывода на экран 28 мС
     // время одного прохода в заданой длине Mean*333.33 + 14000*NumPointsPeriod[ShadowIndexLN]
-    TimeMeasure3S  = 2750000; // uS
-    if (RemoutCtrl) TimeMeasure3S  = 3000000; //uS
+    TimeMeasure3S  = 2670000; // uS
+    if (RemoutCtrl) TimeMeasure3S  = 2950000; //uS
     // рассчитаем приблизительное число накоплений
     if(LengthOK) // линия правильная,  
-      NumAvrg = (unsigned)(TimeMeasure3S/((NumPointsPeriod[ShadowIndexLN])*TimeRepitOfLN[ShadowIndexLN]+260));//*NumPointsPeriod[ShadowIndexLN])
+      NumAvrg = (unsigned)(TimeMeasure3S/((NumPointsPeriod[ShadowIndexLN])*TimeRepitOfLN[ShadowIndexLN]+1));//*NumPointsPeriod[ShadowIndexLN])
     // линия плохая
     else
-      NumAvrg = (unsigned)(TimeMeasure3S/((NumPointsPeriod[ShadowIndexLN])*TimeRepitOfLN[IndxAddBad]+260));//*NumPointsPeriod[ShadowIndexLN])
+      NumAvrg = (unsigned)(TimeMeasure3S/((NumPointsPeriod[ShadowIndexLN])*TimeRepitOfLN[IndxAddBad]+1));//*NumPointsPeriod[ShadowIndexLN])
     
     
-    // число накоплений как деление времени 2.75 сек на промеренную длину в тиках сбора 333ns 
+    // число накоплений как деление времени 2.69 сек на промеренную длину в тиках сбора 333ns 
     //  NumAvrg = (unsigned)(7300000L/(Mean+10)); // было +30
     // установить соотв. задержку для полученной линии 
     if (GetSubModRefl()) // автоматический - добавку не делаем
@@ -1621,7 +1622,7 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
       ShadowIndexIM = IndexSeek(Mean);
       // NumAvrg = (unsigned)(8250000L/(KeyPoints[ShadowIndexLN]+50)); // число накоплений , было +30
       //NumAvrg = (unsigned)(TimeMeasure3S/(NumPointsPeriod[ShadowIndexLN]*TimeRepitOfLN[ShadowIndexLN]));//*NumPointsPeriod[ShadowIndexLN])
-      NumAvrg = (unsigned)(TimeMeasure3S/((NumPointsPeriod[ShadowIndexLN])*TimeRepitOfLN[ShadowIndexLN]+260));//*NumPointsPeriod[ShadowIndexLN])
+      NumAvrg = (unsigned)(TimeMeasure3S/((NumPointsPeriod[ShadowIndexLN])*TimeRepitOfLN[ShadowIndexLN]+1));//*NumPointsPeriod[ShadowIndexLN])
       CurrentSumDelay = 1;
     }
     SetIndexLN(ShadowIndexLN);
@@ -1705,7 +1706,8 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     //123    enable_timer(2);
     CurrTimeAccum = 0;
     EnaTimerAccum = 1;
-    
+    TST_KTA(1); // начали накопление первая порция( первые 3 сек)
+
     // можно задать 3000 это как бы время накопления за 3 сек
     //    CmdInitPage(17);// посылка команды переключения окна на DrawOTDR
     //    sprintf(Str,"t0.txt=\"%s\"яяя",MsgMass[30][CurrLang]); //Идет измерение: XXс 
@@ -1717,6 +1719,7 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     
    
     Averaging (NumAvrg,IndxAddBad,1);// через 3 сек первый результат
+    g_TimeAvrg -=3; // новый режим через 3 сек, поэтому уже вычтем
     // установка режима накопления 
     SubModeMeasOTDR = AVERAGING;
     // можно нарисовать окно с рефлектограммой
@@ -1969,6 +1972,8 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
         sprintf(Str,"END\r");//c
         RemoutCtrl = 0;
         UARTSendExt ((BYTE*)Str, strlen (Str));
+        TST_KTA(0); // закончили заданное накопление
+
         HAL_Delay(250); // ПОДОЖДЕМ А ПОТОМ ВСЕ ОБНУЛИМ ЧТО БЫ НЕ ПРИНИМАТЬ
         ClearRS();
         if(g_SuperTest) // тут можно посмотреть не надо ли запускать снова

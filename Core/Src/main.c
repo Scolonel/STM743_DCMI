@@ -1809,7 +1809,7 @@ void GetLogData (void)
          //TIM2->CCR1 = 4;
          //TIM4->PSC = 0;
          //TIM4->ARR = TIM4->CCR4 + (8+1)*2;
-         g_Tim5Set = 489;
+         g_Tim5Set = 483;
          //g_Tim5Set = 45000; //проба суммировать после сбора, период повторени€ до 590 мк—
          TIM5->CCR4 = g_Tim5Set; // через 1.666 мк— + 336 мк— (сумм 5600) меньше  350мкс
          TIM5->ARR = g_Tim5Set + 1;
