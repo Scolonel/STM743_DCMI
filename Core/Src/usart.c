@@ -407,6 +407,7 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 // плюс будем отвечать либо через USB-COM либо через UART3
 void UARTSendExt(BYTE *BufferPtr, DWORD Length )  // буфер и размер
 {
+  //LED_KTS(1);
  if (ENAUSBCOM)
   {
     //int SdSd = (int)((Length/g_SpeedUart)/5.76)+1;
@@ -421,6 +422,8 @@ void UARTSendExt(BYTE *BufferPtr, DWORD Length )  // буфер и размер
      HAL_UART_Transmit(&huart3,(void*)BufferPtr, Length,(uint32_t)(Length/8+1));  
 
   }
+  // LED_KTS(0);
+
 }
 
 void SendUartTX (uint8_t *Str_mas)

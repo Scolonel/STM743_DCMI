@@ -199,7 +199,9 @@ void PendSV_Handler(void)
 void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
-  
+  // 
+  //TST_KTB(0); // индикаци€ конца приема команды
+
   /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
@@ -348,7 +350,7 @@ void DMA1_Stream2_IRQHandler(void)
     // где подцепим признак продолжени€ накоплени€
     //TIM2->CR1 &= ~TIM_CR1_CEN; // притупим таймер основной
        // StopAllTIM(2);
-     TST_KTB(0); // конец "ћќƒ”Ћ№" 1 ( останов основного цикла накоплени€)
+    // TST_KTB(0); // конец "ћќƒ”Ћ№" 1 ( останов основного цикла накоплени€)
 
   }
   /* USER CODE END DMA1_Stream2_IRQn 0 */

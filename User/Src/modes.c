@@ -1604,7 +1604,7 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     // время промежуточного вывода на экран 28 мС
     // время одного прохода в заданой длине Mean*333.33 + 14000*NumPointsPeriod[ShadowIndexLN]
     TimeMeasure3S  = 2670000; // uS
-    if (RemoutCtrl) TimeMeasure3S  = 2950000; //uS
+    if (RemoutCtrl) TimeMeasure3S  = 2990000; //uS
     // рассчитаем приблизительное число накоплений
     if(LengthOK) // линия правильная,  
       NumAvrg = (unsigned)(TimeMeasure3S/((NumPointsPeriod[ShadowIndexLN])*TimeRepitOfLN[ShadowIndexLN]+1));//*NumPointsPeriod[ShadowIndexLN])
@@ -1706,7 +1706,6 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     //123    enable_timer(2);
     CurrTimeAccum = 0;
     EnaTimerAccum = 1;
-    TST_KTA(1); // начали накопление первая порция( первые 3 сек)
 
     // можно задать 3000 это как бы время накопления за 3 сек
     //    CmdInitPage(17);// посылка команды переключения окна на DrawOTDR
@@ -1717,11 +1716,23 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     // переключим окно для нового индиктора и сбросим признак
     SumNumNak = 0;
     
+    //TST_KTA(1); // начали накопление первая порция( первые 3 сек)
    
     Averaging (NumAvrg,IndxAddBad,1);// через 3 сек первый результат
+    //TST_KTA(0); // начали накопление первая порция( первые 3 сек)
     g_TimeAvrg -=3; // новый режим через 3 сек, поэтому уже вычтем
     // установка режима накопления 
     SubModeMeasOTDR = AVERAGING;
+        if((RemoutCtrl)&&(Measuring() == AVERAGING))
+    {
+      char Str[8];
+      g_TimeAvrg -=3;
+      //sprintf(Str,"t10.txt=\"%d%s\"яяя",g_TimeAvrg,MsgMass[4][CurrLang]); //Идет измерение: XXс 
+      sprintf(Str,"t10.txt=\"%d%s\"яяя",GetTimeAvrg(GetIndexVRM())-(int)(CurrTimeAccum/1000),MsgMass[4][CurrLang]); //Идет измерение: XXс 
+      NEX_Transmit((void*)Str);// 
+      
+    }
+
     // можно нарисовать окно с рефлектограммой
     //PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
     //memset( RawData, 0, RAWSIZE * sizeof(DWORD) );
@@ -1763,7 +1774,11 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
       SumNumNak = 0;
       
     }
+    //    TST_KTA(1); // начали накопление первая порция( первые 3 сек)
+
     Averaging (NumAvrg,IndxAddBad,1); //запуск текущего накопления
+    //    TST_KTA(0); // начали накопление первая порция( первые 3 сек)
+
     if ((GetCntNumAvrg() >= FinAvrg)||((CurrTimeAccum/1000)>GetTimeAvrg(GetIndexVRM()))) //закончили накопление рисуем рефлектограмму
     {
       
@@ -1972,7 +1987,6 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
         sprintf(Str,"END\r");//c
         RemoutCtrl = 0;
         UARTSendExt ((BYTE*)Str, strlen (Str));
-        TST_KTA(0); // закончили заданное накопление
 
         HAL_Delay(250); // ПОДОЖДЕМ А ПОТОМ ВСЕ ОБНУЛИМ ЧТО БЫ НЕ ПРИНИМАТЬ
         ClearRS();

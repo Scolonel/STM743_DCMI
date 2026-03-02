@@ -274,7 +274,8 @@ void RUN_SUM (DWORD* RawDataI)//
     {
       char Str[8];
       g_TimeAvrg -=3;
-      sprintf(Str,"t10.txt=\"%d%s\"€€€",g_TimeAvrg,MsgMass[4][CurrLang]); //»дет измерение: XXс 
+      //sprintf(Str,"t10.txt=\"%d%s\"€€€",g_TimeAvrg,MsgMass[4][CurrLang]); //»дет измерение: XXс 
+      sprintf(Str,"t10.txt=\"%d%s\"€€€",GetTimeAvrg(GetIndexVRM())-(int)(CurrTimeAccum/1000),MsgMass[4][CurrLang]); //»дет измерение: XXс 
       NEX_Transmit((void*)Str);// 
       
     }

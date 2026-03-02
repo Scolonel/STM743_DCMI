@@ -438,10 +438,10 @@ static int8_t CDC_Receive(uint8_t cdc_ch, uint8_t *Buf, uint32_t *Len)
   }
   else // переписываем буффер в строку приема
   {
+    //TST_KTB(1); // индикация начала приема команды
     // тут надо посмотреть надо ли принимать что то новое или мы в обработке
     if(Reciev == STOP_UART)
     {
-    //TST_KTB(1); // индикация начала приема команды
     //if(Buf[*Len-1]=='\r')
     //{
     RSDecYes = (*Len);
@@ -449,8 +449,8 @@ static int8_t CDC_Receive(uint8_t cdc_ch, uint8_t *Buf, uint32_t *Len)
     memcpy((void*)RX_Buf,(void*)Buf,*Len);
     Reciev = END_UART; // приняли что то
     //}
-    //TST_KTB(0); // индикация конца приема команды
     }
+    //TST_KTB(0); // индикация конца приема команды
   }
        
   
