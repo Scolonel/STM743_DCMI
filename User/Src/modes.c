@@ -5163,12 +5163,16 @@ void ModeSelectMEM(void) // режим выбора работы с пам€тью CHECK_OFF
     // закрасим бэкграунды  и установим требуемый
     sprintf(Str, "t2.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);//
+    HAL_Delay(5);
     sprintf(Str, "t4.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str, "t6.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);//
+    HAL_Delay(5);
     sprintf(Str, "t%d.bco=GREEN€€€", FrSelectMEM<<1); // зеленый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     // код подсветки требуемой строки если есть есть маркер строки
     g_NeedScr = 0;
   }
@@ -5267,9 +5271,22 @@ void ModeReadUSB(void) // режим чтени€ по USB пам€ти флэшки установка признака
     g_FirstScr = 0;
     g_NeedScr = 1;
   }
-  
-  if(ModeUSB == 2)
+
+  if(MemMsgModeUSB)
   {
+// признак работы USB дл€ индикации доп строчки
+    sprintf(Str, "t1.txt=\"%s\"€€€", MsgMass[132][CurrLang]); 
+    NEX_Transmit((void*)Str);    // ѕереподключите
+    
+    sprintf(Str, "t2.txt=\"%s\"€€€", MsgMass[133][CurrLang]);
+    NEX_Transmit((void*)Str);    // кабель USB
+    
+    sprintf(Str, "t0.txt=\"≈сли нет св€зи.\"€€€");
+    NEX_Transmit((void*)Str);    // дл€ чтени€     
+    
+    sprintf(Str, "t3.txt=\"заново\"€€€"); 
+    NEX_Transmit((void*)Str);    // карты пам€ти
+    MemMsgModeUSB = 0;
   }
   
   if (g_NeedScr)

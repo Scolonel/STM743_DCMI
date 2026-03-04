@@ -299,7 +299,8 @@ uint8_t USBD_MSC_Init(USBD_HandleTypeDef *pdev, uint8_t cfgidx)
 
   hmsc = &USBD_MSC_Instance;
 
-  if (hmsc == NULL)
+  //if (hmsc == NULL) 
+  if ((hmsc == NULL)||(!MSC_or_CDC))
   {
     pdev->pClassData_MSC = NULL;
     return (uint8_t)USBD_EMEM;

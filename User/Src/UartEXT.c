@@ -185,6 +185,8 @@ void DecodeCommandRS (void)
     {
       if ((RX_Buf[i] >=0x61) && (RX_Buf[i]<=0x7A))RX_Buf[i] = RX_Buf[i] - 0x20;
     }
+    // если в режиме чтения Flash USB то надо сбросить признак разрешения
+    MSC_or_CDC = 0;
     switch (RX_Buf[0])
     {
     case '*':

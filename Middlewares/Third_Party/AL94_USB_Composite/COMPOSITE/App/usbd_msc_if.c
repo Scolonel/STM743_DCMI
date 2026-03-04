@@ -180,6 +180,10 @@ int8_t STORAGE_Init(uint8_t lun)
 {
   /* USER CODE BEGIN 2 */
 //    LED_START(1);
+//  int8_t ret = -1;
+//  if(MSC_or_CDC)
+//    ret = USBD_OK;
+//  return ret;
   return (USBD_OK);
   /* USER CODE END 2 */
 }
@@ -197,11 +201,12 @@ int8_t STORAGE_GetCapacity(uint8_t lun, uint32_t *block_num, uint16_t *block_siz
   //UNUSED(lun);
 
    //*block_num  = STORAGE_BLK_NBR;
-  // *block_size = STORAGE_BLK_SIZ;
+   //*block_size = STORAGE_BLK_SIZ;
+   //*block_num  = 0;
+   //*block_size = 0;
      HAL_SD_GetCardInfo(&hsd2, &cardInfo);
   *block_num  = cardInfo.BlockNbr;
   *block_size = cardInfo.BlockSize;
-  
    return (USBD_OK);
   
   /* USER CODE END 3 */
@@ -216,11 +221,12 @@ int8_t STORAGE_IsReady(uint8_t lun)
 {
   /* USER CODE BEGIN 4 */
 //    LED_START(0);
-//  int8_t ret = USBD_FAIL;
+// ВНИМАНИЕ! отсутствие номального ответа приводит к нестабильной работе CDC
 //  if(MSC_or_CDC)
-//    ret = USBD_OK;
-//  return ret;
-  return USBD_OK;
+//  return USBD_OK;
+//  else
+//  return -1;  
+return USBD_OK;
   
   /* USER CODE END 4 */
 }

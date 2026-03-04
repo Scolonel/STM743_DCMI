@@ -464,6 +464,8 @@ extern BYTE MemTableExt[MaxMemOTDRExt+1]; // таблица рефлектограмм расширенной я
 extern uint8_t BusyUSB ; // признак передачи данных по USB, с SD картой
 extern uint16_t PresentUSB ; // признак подключенного USB
 extern uint8_t ModeUSB ; // признак подключенного USB
+extern uint8_t MemMsgModeUSB ; // признак работы USB для индикации доп строчки
+
 extern uint8_t MSC_or_CDC; // признак активности MSC по умолчанию запрещно
  // Номер текущей страницы индикатора для востановления
 extern char NumCurrPage ; // 
