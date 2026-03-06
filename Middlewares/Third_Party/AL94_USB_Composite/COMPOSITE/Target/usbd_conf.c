@@ -203,6 +203,8 @@ void HAL_PCD_SuspendCallback(PCD_HandleTypeDef *hpcd)
     SCB->SCR |= (uint32_t)((uint32_t)(SCB_SCR_SLEEPDEEP_Msk | SCB_SCR_SLEEPONEXIT_Msk));
   }
 #endif
+  // здесь когда оторвали кабель, важно если в чтении флэшки надо выйти из режима
+  MemMsgModeUSB = 2; //
   /* USER CODE END 2 */
 }
 

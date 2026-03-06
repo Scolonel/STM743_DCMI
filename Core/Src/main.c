@@ -913,7 +913,8 @@ int main(void)
             
             break;
           default:
-            
+            // перерисовываем страницу 
+            // что бы стереть мультик
             ModeUSB = 0;
             CmdInitPage(NumCurrPage);
             

@@ -187,9 +187,11 @@ const char *MsgMass[MSG_NUM][LANG_NUM] =
 {"Очистка памяти","Clear memory","Vymazat pamet","Vaciar m.","Speicher loschen","Clear memory"},//129 Очистить
 {"Звук","Sound","Sound","Sound","Sound","Sound"},//130 ЗВУК
 {"мкc","us","us","us","us","us"},                             //131
-{"Переподключите","For read","For read","For read","For read","For read"},//132 переподключите
+{"Переподключите","To read","To read","To read","To read","To read"},//132 переподключите
 {"кабель USB","SD Card","SD Card","SD Card","SD Card","SD Card"},//133 кабель USB
 {"для чтения","reconnect","reconnect","reconnect","reconnect","reconnect"},//134 для чтения
-{"карты памяти","cable USB","cable USB","cable USB","cable USB","cable USB"}//135 карты памяти
+{"карты памяти","cable USB","cable USB","cable USB","cable USB","cable USB"},//135 карты памяти
+{"ОТКЛЮЧЕНО","DISCONNECTED","DISCONNECTED","DISCONNECTED","DISCONNECTED","DISCONNECTED"},//136 ОТКЛЮЧЕНО
+{"ПОДКЛЮЧЕНО","CONNECTED","CONNECTED","CONNECTED","CONNECTED","CONNECTED"}//137 ПОДКЛЮЧЕНО
 };
 

@@ -21,7 +21,7 @@
 //число сообщений и языков
 #define LANG_NUM 6  // число столбцов в таблице языков
 
-#define MSG_NUM 136
+#define MSG_NUM 138
 #define CMD_NUM 35 //команды Nextion
 
 #define TIMERE 500 //время цикла красного глаза по 500 мС
@@ -252,6 +252,7 @@ extern uint8_t g_CodeErrorSoft;
 extern uint32_t g_Noise;
 extern uint32_t g_TimeAvrg; // для индикации времени накопления при ручном управлении
 
+extern uint8_t iBadTime; // признак плохого времени для изменения индикации при включении
 
 extern char* g_pszFileNames[LSPLACENUM];  // массив указателей на строки с именами файлов
 

@@ -413,6 +413,16 @@ void ModeWelcome(void)// режим заставки
     sprintf (Str,"t9.txt=\"є%d\"€€€",GetNumDevice()); // Number
     NEX_Transmit((void*)Str);//
     
+    if(iBadTime)// фон даты и времени изменен при плохой дате
+    {
+    sprintf(Str,"t5.bco=64800€€€");
+    NEX_Transmit((void*)Str);//
+    sprintf (Str,"t3.bco=64800€€€");//
+    NEX_Transmit((void*)Str);//
+      
+     iBadTime = 0; 
+    }
+    
   }
   // проверка изменени€ величин дл€ изменений (врем€ и аккумул€тор)
   // time
@@ -5218,6 +5228,8 @@ void ModeSelectMEM(void) // режим выбора работы с пам€тью CHECK_OFF
         SetMode(ModeReadUSB);
         //FrClearMEM = 2 + PowerMeter;
         // посылка команды переключени€ окна на Select_MEM_Clr(вызов)  
+        MSC_or_CDC = 1; // признак активности MSC дл€ инициализации разрешим, и как только сразу запретимпо умолчанию запрещно
+        MemMsgModeUSB = 2; // так как первый вход, карточка не подключена
         CmdInitPage(21);
         //NeedReturn = 4; // что бы вернутс€ сюда же
       }
@@ -5226,11 +5238,12 @@ void ModeSelectMEM(void) // режим выбора работы с пам€тью CHECK_OFF
     case 3: // переход в режим чтени€ флэшки через USB
       myBeep(10);
       SetMode(ModeReadUSB);
-        MSC_or_CDC = 1; // признак активности MSC дл€ инициализации разрешим, и как только сразу запретимпо умолчанию запрещно
-        //MX_USB_DEVICE_Init();
-
+      MSC_or_CDC = 1; // признак активности MSC дл€ инициализации разрешим, и как только сразу запретимпо умолчанию запрещно
+      //MX_USB_DEVICE_Init();
+      
       //FrClearMEM = 2 + PowerMeter;
       // посылка команды переключени€ окна на Select_MEM_Clr(вызов)  
+      MemMsgModeUSB = 2; // так как первый вход, карточка не подключена
       CmdInitPage(21);
       //NeedReturn = 4; // что бы вернутс€ сюда же
       break;
@@ -5268,24 +5281,31 @@ void ModeReadUSB(void) // режим чтени€ по USB пам€ти флэшки установка признака
     
     sprintf(Str, "t3.txt=\"%s\"€€€", MsgMass[135][CurrLang]); 
     NEX_Transmit((void*)Str);    // карты пам€ти
+
+    //MemMsgModeUSB = 2; // так как первый вход, карточка не подключена
     g_FirstScr = 0;
     g_NeedScr = 1;
   }
 
+  // когда переподключили кабель и прочитали флэшку
   if(MemMsgModeUSB)
   {
 // признак работы USB дл€ индикации доп строчки
-    sprintf(Str, "t1.txt=\"%s\"€€€", MsgMass[132][CurrLang]); 
-    NEX_Transmit((void*)Str);    // ѕереподключите
-    
-    sprintf(Str, "t2.txt=\"%s\"€€€", MsgMass[133][CurrLang]);
-    NEX_Transmit((void*)Str);    // кабель USB
-    
-    sprintf(Str, "t0.txt=\"≈сли нет св€зи.\"€€€");
-    NEX_Transmit((void*)Str);    // дл€ чтени€     
-    
-    sprintf(Str, "t3.txt=\"заново\"€€€"); 
-    NEX_Transmit((void*)Str);    // карты пам€ти
+    // изменить цвет и надпись однократно
+    if(MemMsgModeUSB == 1) // зеленый
+    {
+    sprintf(Str, "t4.txt=\"%s\"€€€", MsgMass[137][CurrLang]); 
+    NEX_Transmit((void*)Str);    // отключено
+    sprintf(Str, "t4.bco=GREEN€€€"); // зеленый
+    NEX_Transmit((void*)Str);// 
+    }
+    else
+    {
+    sprintf(Str, "t4.txt=\"%s\"€€€", MsgMass[136][CurrLang]); 
+    NEX_Transmit((void*)Str);    // отключено
+    sprintf(Str, "t4.bco=64800€€€"); // оранжевый
+    NEX_Transmit((void*)Str);// 
+    }
     MemMsgModeUSB = 0;
   }
   
@@ -5323,7 +5343,7 @@ void ModeReadUSB(void) // режим чтени€ по USB пам€ти флэшки установка признака
     CmdInitPage(NeedReturn);
     NeedReturn = 0;
     MSC_or_CDC = 0;
-    
+
     //ModeDevice = MODEMENU;
   }
 }

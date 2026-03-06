@@ -21,7 +21,8 @@
 #include "rtc.h"
 
 /* USER CODE BEGIN 0 */
-  #define TIMELASTVERSION  1768212000 //2026/01/12 10:00:00 v096
+  #define TIMELASTVERSION  1772780400 //2026/03/06 10:00:00 v111
+//  #define TIMELASTVERSION  1768212000 //2026/01/12 10:00:00 v096
 //  #define TIMELASTVERSION  1763535600 //2025/11/19 10:00:00 v083
 //  #define TIMELASTVERSION  1759302000 //2025/10/01 10:00:00 v049
 //  #define TIMELASTVERSION  1756710000 //2025/09/01 10:00:00 v049
@@ -42,6 +43,7 @@ RTCTime TimeSavePM; // время перезаписи данных из ЕЕПРОМ на SD карту
 RTCTime TimeReadOLT;
 RTCTime current_time;
  static unsigned int CurTime;
+ uint8_t iBadTime = 0; // признак плохого времени для изменения индикации при включении
 /* USER CODE END 0 */
 
 RTC_HandleTypeDef hrtc;
@@ -100,8 +102,8 @@ void MX_RTC_Init(void)
     Error_Handler();
   }
   sDate.WeekDay = RTC_WEEKDAY_MONDAY;
-  sDate.Month = RTC_MONTH_JANUARY;
-  sDate.Date = 12;
+  sDate.Month = RTC_MONTH_MARCH;
+  sDate.Date = 06;
   sDate.Year = 26;
 
   if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK)
@@ -109,6 +111,8 @@ void MX_RTC_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN RTC_Init 2 */
+  // время изменилось нужно как то отметится 
+  iBadTime = 1;
   }
   /* USER CODE END RTC_Init 2 */
 
