@@ -255,7 +255,7 @@ float CalkCorelation32 (DWORD* array, unsigned short BeginPoint, unsigned short 
 
 unsigned short CalkEventsKeys (unsigned short* array, unsigned short PII, BYTE Type) // вычисление событий для текущей рефлектограммы
 {
-#define DELTACHNG 400 // изменение сигнала 0.4 дБ
+#define DELTACHNG 200 // изменение сигнала 0.4 дБ
 #define MORED 8 // добавка к PII для правильного расчета безотражающего события после отражения
   
   unsigned short CurLvlVol = DELTACHNG; // текущий уровень сигнала 
@@ -265,14 +265,16 @@ unsigned short CalkEventsKeys (unsigned short* array, unsigned short PII, BYTE T
   unsigned short NumEvents = 0; // счетчик событий
   //long ReflEvents = 0; // значение отражения в отражающем событии
   static unsigned short Count = 0; // длинна события - долгий высокий уровень 
+  volatile unsigned short uPII = PII; // импульс в тиках измерения
+
   unsigned short EventsType1 = 0; // признак наличия отражающего события
   //unsigned short EventsType2 = 0; // признак наличия отражающего события
-  unsigned short PosEventsType1 = 0; // позиция отражающего события чтобы не перепутать с концом линии
+  static unsigned short PosEventsType1 = 0; // позиция отражающего события чтобы не перепутать с концом линии
   //unsigned short PosEventsType2 = 0; // позиция отражающего события чтобы не перепутать с концом линии
   unsigned short PointsShift = GetPointsShift(); // сдвиг измерения 
   unsigned short LvlTrendUp = GetLvlTrend(); // начальный уровень оценки шумов при расчете тренда 
   float LSACoefIN = GetLSACoef();
-  int FindBeg = (int)(LSACoefIN*PII); //+ (DELTACHNG/2) погонное затухание в зависимости от уст. параметов
+  int FindBeg = (int)(LSACoefIN*uPII); //+ (DELTACHNG/2) погонное затухание в зависимости от уст. параметов
   int ChkLvlUp ; // начальный уровень контроля отражающего события
   long BegTemp; // пересчет начала добавка
   
@@ -294,9 +296,9 @@ unsigned short CalkEventsKeys (unsigned short* array, unsigned short PII, BYTE T
   //int CountEvents = 0; // счетчик длительности события
   //unsigned short Sobytie;
   unsigned short LevlRefl; // уровень отражающего события при отражении
-  volatile unsigned short i;
-  unsigned short DeadPoint = 0; // точка до которой не считаем тренд если было отражение
-  unsigned short DeadPointUp = 0; // точка до которой не смотрим следующее отражающее событие
+  static unsigned short i;
+  volatile unsigned short DeadPoint = 0; // точка до которой не считаем тренд если было отражение
+  volatile unsigned short DeadPointUp = 0; // точка до которой не смотрим следующее отражающее событие
 //  unsigned short EndDeadLine = CalkEndRefl ( array,  PII,   LvlTrendUp);
 
   // тестовый вывод параметров установки
@@ -304,8 +306,8 @@ unsigned short CalkEventsKeys (unsigned short* array, unsigned short PII, BYTE T
   //   UARTSend0 ((BYTE*)UartStr, strlen (UartStr));
   float TrOld=0.0, TrCurr=0.0, TrNew=0.0;
   // поиск конца линии , с конца рефлектограммы
-
-  for (i = PII; i<OUTSIZE-2*PII; i++)
+  i = 0;
+  for (i = uPII; i<OUTSIZE-2*uPII; i++)
   
   //for (i = PII; i<=EndDeadLine; i++)
   {
@@ -403,7 +405,7 @@ unsigned short CalkEventsKeys (unsigned short* array, unsigned short PII, BYTE T
     {// без отражательный конец - сигнал упал на уровень больше порога
       NumEvents++;
       memcpy (&EvenTrace[NumEvents-1].COMM_EVN, "BigJmpDwn\0",10);
-      if ((i - IndexCurLvlVol)> (2*PII))
+      if ((i - IndexCurLvlVol)> (2*uPII))
       {
         IndexCurLvlVol = i; // если точка далее последнего изменения чем на 2 длит. импульса 
       memcpy (&EvenTrace[NumEvents-1].COMM_EVN, "BigJmpDnN\0",10);
@@ -459,7 +461,7 @@ unsigned short CalkEventsKeys (unsigned short* array, unsigned short PII, BYTE T
       }
     
     // поиск начала линии после действия зондирующего импульса
-    temp1 = array[i+PII] - array[i];
+    temp1 = array[i+uPII] - array[i];
     // если есть две точки различающиеся меньше чем на 0.2 дБ и не было таких еще 
     if ((temp1<FindBeg)&&(IndexCurBeg == 0)&&(array[i] > 1000))//&&(temp1>0)
       //if ((temp>DELTACHNG/2)&&(IndexCurBeg == 0)&&(array[i] > 3000))
@@ -529,7 +531,7 @@ unsigned short CalkEventsKeys (unsigned short* array, unsigned short PII, BYTE T
           EvenTrace[NumEvents-1].EL = (short int)TrCurr;// Found by software          
           EvenTrace[NumEvents-1].ER = 0;
           memcpy (&EvenTrace[NumEvents-1].COMM_EVN, "NoReflEvt\0",10);
-          DeadPoint = i + PII;
+          DeadPoint = i + uPII;
           //}
         }
       }
@@ -547,7 +549,7 @@ unsigned short CalkEventsKeys (unsigned short* array, unsigned short PII, BYTE T
           EvenTrace[NumEvents-1].EL = (short int)TrCurr;// Found by software          
           EvenTrace[NumEvents-1].ER = 0;
           memcpy (&EvenTrace[NumEvents-1].COMM_EVN, "NpReflEvt\0",10);
-          DeadPoint = i + PII;
+          DeadPoint = i + uPII;
           //}
         }
       }
@@ -630,7 +632,7 @@ unsigned short CalkEventsKeys (unsigned short* array, unsigned short PII, BYTE T
         if (GetIndexLN()) IndexCurLvlVol = i; // фиксируем позицию начала события
         else IndexCurLvlVol = i-1; // для 2 км берем предыдущую
         PosEventsType1 = IndexCurLvlVol;
-        DeadPoint = i + PII + MORED;  // устанавливаем возможную точку конца отражающего события
+        DeadPoint = i + uPII + MORED;  // устанавливаем возможную точку конца отражающего события
         // Надо проверить нет ли провала после события до завершения мертвой зоны
         
       }
@@ -665,16 +667,16 @@ unsigned short CalkEventsKeys (unsigned short* array, unsigned short PII, BYTE T
             // поиск участка после отражения ниже уровня до отражения, так было и есть ПОКА!
             do
             { // ищем точку ниже события и имеющей гор. участок из 2 точек не более
-              int trew = array[PosEventsType1+ PII + step+1]-array[PosEventsType1+ PII + step];
+              int trew = (int)(array[PosEventsType1+ uPII + step+1])-(int)(array[PosEventsType1+ uPII + step]);
               //if (((array[PosEventsType1+ PII + step]-array[PosEventsType1])>0)&&(trew<(DELTACHNG>>2))&&(trew>0)) break;
               // Добавим к первой точке  1 дБ для поиска выхода на горизонтальный участок
-              if (((array[PosEventsType1+ PII + step]-(array[PosEventsType1]+1000))>0)&&(trew<(DELTACHNG>>2))&&(trew>0)) break;
+              if (((array[PosEventsType1+ uPII + step]-(array[PosEventsType1]+100))>0)&&(trew<(DELTACHNG>>2))&&(trew>0)) break;
             }
-            while (step++ < (4095-(PosEventsType1 + 2*PII))); 
+            while (step++ < (5600-(PosEventsType1 + 2*uPII))); 
             //  if (step>50)
             //  {
-            DeadPointUp = PosEventsType1 + PII + step;
-            EvenTrace[NumEvents-1].EL = array[PosEventsType1+PII+step+1]-array[PosEventsType1];// Found by software - уровень затухания
+            DeadPointUp = PosEventsType1 + uPII + step;
+            EvenTrace[NumEvents-1].EL = array[PosEventsType1+uPII+step+1]-array[PosEventsType1];// Found by software - уровень затухания
             // проверим не ОТРИЦАТЕЛЬНЫЙ ЛИ перепад
             if(EvenTrace[NumEvents-1].EL < 0)
             {
@@ -685,7 +687,7 @@ unsigned short CalkEventsKeys (unsigned short* array, unsigned short PII, BYTE T
              
             }
             // проверим значение тренда на тройной длительности импульса для определения конца линии
-             if( (array[PosEventsType1+3*PII+step+1]-array[PosEventsType1+PII+step+1]) > ReflParam.ET)// более 3 дБ
+             if( (array[PosEventsType1+3*uPII+step+1]-array[PosEventsType1+uPII+step+1]) > ReflParam.ET)// более 3 дБ
              {
                memcpy (&EvenTrace[NumEvents-1].COMM_EVN, "ReflEvEnd\0",10);
                EvenTrace[NumEvents-1].EPT = IndexCurLvlVol;
@@ -699,7 +701,7 @@ unsigned short CalkEventsKeys (unsigned short* array, unsigned short PII, BYTE T
              
             //ReflEvents = array[PosEventsType1];
             memcpy (&EvenTrace[NumEvents-1].COMM_EVN, "ReflEvtS \0",10);
-            LevlRefl = CalkMINMAX (&array[PosEventsType1], PII+1, 0);
+            LevlRefl = CalkMINMAX (&array[PosEventsType1], uPII+1, 0);
             if (LevlRefl < 100)
             {
               EvenTrace[NumEvents-1].EC[0] = '2';// reflective events - с перегрузкой

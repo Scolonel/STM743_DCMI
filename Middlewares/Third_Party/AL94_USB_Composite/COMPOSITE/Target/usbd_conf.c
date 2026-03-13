@@ -205,6 +205,8 @@ void HAL_PCD_SuspendCallback(PCD_HandleTypeDef *hpcd)
 #endif
   // здесь когда оторвали кабель, важно если в чтении флэшки надо выйти из режима
   MemMsgModeUSB = 2; //
+  g_CardSD = 0; // признак подключенной карты для правильной индикации
+
   /* USER CODE END 2 */
 }
 

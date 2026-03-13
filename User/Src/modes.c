@@ -5282,6 +5282,9 @@ void ModeReadUSB(void) // режим чтени€ по USB пам€ти флэшки установка признака
     sprintf(Str, "t3.txt=\"%s\"€€€", MsgMass[135][CurrLang]); 
     NEX_Transmit((void*)Str);    // карты пам€ти
 
+    if(g_CardSD) // признак подключенной карты дл€ правильной индикации
+    MemMsgModeUSB = 1; // так как карточка подключена, но идет перерисовка то нужно зеленое
+ 
     //MemMsgModeUSB = 2; // так как первый вход, карточка не подключена
     g_FirstScr = 0;
     g_NeedScr = 1;
@@ -5298,6 +5301,7 @@ void ModeReadUSB(void) // режим чтени€ по USB пам€ти флэшки установка признака
     NEX_Transmit((void*)Str);    // отключено
     sprintf(Str, "t4.bco=GREEN€€€"); // зеленый
     NEX_Transmit((void*)Str);// 
+    g_CardSD = 1; // признак подключенной карты дл€ правильной индикации
     }
     else
     {
@@ -5305,6 +5309,7 @@ void ModeReadUSB(void) // режим чтени€ по USB пам€ти флэшки установка признака
     NEX_Transmit((void*)Str);    // отключено
     sprintf(Str, "t4.bco=64800€€€"); // оранжевый
     NEX_Transmit((void*)Str);// 
+    g_CardSD = 0; // признак подключенной карты дл€ правильной индикации
     }
     MemMsgModeUSB = 0;
   }
@@ -5343,6 +5348,7 @@ void ModeReadUSB(void) // режим чтени€ по USB пам€ти флэшки установка признака
     CmdInitPage(NeedReturn);
     NeedReturn = 0;
     MSC_or_CDC = 0;
+    g_CardSD = 0; // сбросим признак подключенной карты дл€ правильной индикации
 
     //ModeDevice = MODEMENU;
   }

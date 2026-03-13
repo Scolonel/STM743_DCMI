@@ -466,6 +466,8 @@ extern uint8_t BusyUSB ; // признак передачи данных по USB, с SD картой
 extern uint16_t PresentUSB ; // признак подключенного USB
 extern uint8_t ModeUSB ; // признак подключенного USB
 extern uint8_t MemMsgModeUSB ; // признак работы USB для индикации доп строчки
+extern uint8_t g_CardSD; // признак подключенной карты для правильной индикации
+extern uint8_t g_ErrTO; // признак выхода по таймауту при общении с SD картой
 
 extern uint8_t MSC_or_CDC; // признак активности MSC по умолчанию запрещно
  // Номер текущей страницы индикатора для востановления

@@ -237,6 +237,8 @@ void DecodeCommandRS (void)
           SetIndexVRM (0); // принудительна€ установка индекса времени накоплени€ на 15 сек
           RemoutCtrl = 1;
           SetModeDevice (MODEMEASURE); // принудительна€ установка режима прибора -  запкск рефлектометрии с установленными параметрами
+          g_CardSD = 0; // сброс признака подключенной карты дл€ правильной индикации
+          MSC_or_CDC = 0; //сбросим признак активности MSC 
           
           SetIndexLN(g_STindx_LN); // индекс длины линии
           SetIndexIM(g_STindx_IM); // индекс длительности импульса
@@ -494,6 +496,9 @@ void DecodeCommandRS (void)
         BYTE NumMode = (BYTE)(atoi((char*)&RX_Buf[11]));
         if(NumMode > 6) NumMode = 0;
         SetModeDevice (NumMode); // принудительна€ установка режима прибора
+        g_CardSD = 0; // сброс признака подключенной карты дл€ правильной индикации
+        MSC_or_CDC = 0; //сбросим признак активности MSC 
+
         // Ѕезответна€ команда - была
         sprintf(BufString,"%01d\r",GetCurrentModeDevice ());// получение текущего режима прибора
         UARTSendExt ((BYTE*)BufString, strlen (BufString));
