@@ -1801,25 +1801,46 @@ unsigned short PointsInImpulse (int Real)
 {
   volatile unsigned short Data;
   volatile float x;
-  if (Real)
-  Data = (unsigned short)(((GetWidthPulse(GetIndexIM()))*NumPointsPeriod[GetIndexLN()])/(ADCPeriod*MultIndex[GetIndexLN()]));
-  else
+  switch(Real)
   {
-  // добавлено 100 нс Какбы фронт сигнала
+  case 1:
+    
+    Data = (unsigned short)(((GetWidthPulse(GetIndexIM()))*NumPointsPeriod[GetIndexLN()])/(ADCPeriod*MultIndex[GetIndexLN()]));
+    break;
+  case 2:
+    // для коротких импульсов в событиях отраженных добавим 8 метров
+    x = GetWidthPulse(GetIndexIM());
+    x += 80;
+    x *= NumPointsPeriod[GetIndexLN()];
+    x /= MultIndex[GetIndexLN()];
+    x /= ADCPeriod;
+    
+    // x = (float)GetWidthPulse(GetIndexIM());
+    // x += (GetIndexIM()>2)?(0.):(50.);
+    // x = x * NumPointsPeriod[GetIndexLN()];
+    // x = x / ADCPeriod;
+    Data = (unsigned short)(x);
+    //Data = (unsigned short)(((GetWidthPulse(GetIndexIM())+((GetIndexIM()>2)?(0):(50)))*NumPointsPeriod[GetIndexLN()])/ADCPeriod);
+    if (Data<4) Data = 4;
+    break; 
+    
+  default:
+    // добавлено 100 нс Какбы фронт сигнала
     x = GetWidthPulse(GetIndexIM());
     x += ((GetIndexIM()>2)?(0):(50));
     x *= NumPointsPeriod[GetIndexLN()];
     x /= MultIndex[GetIndexLN()];
     x /= ADCPeriod;
     
-   // x = (float)GetWidthPulse(GetIndexIM());
-   // x += (GetIndexIM()>2)?(0.):(50.);
-   // x = x * NumPointsPeriod[GetIndexLN()];
-   // x = x / ADCPeriod;
+    // x = (float)GetWidthPulse(GetIndexIM());
+    // x += (GetIndexIM()>2)?(0.):(50.);
+    // x = x * NumPointsPeriod[GetIndexLN()];
+    // x = x / ADCPeriod;
     Data = (unsigned short)(x);
-  //Data = (unsigned short)(((GetWidthPulse(GetIndexIM())+((GetIndexIM()>2)?(0):(50)))*NumPointsPeriod[GetIndexLN()])/ADCPeriod);
-  if (Data<4) Data = 4;
-  } 
+    //Data = (unsigned short)(((GetWidthPulse(GetIndexIM())+((GetIndexIM()>2)?(0):(50)))*NumPointsPeriod[GetIndexLN()])/ADCPeriod);
+    if (Data<4) Data = 4;
+    break; 
+  }
   return Data;
 }
 

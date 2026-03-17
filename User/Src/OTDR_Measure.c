@@ -127,14 +127,14 @@ return PosCursorSl;
 
 unsigned SetPosCursorMain (unsigned Point)//установка  курсора - главного
 {
-    if (Point>4095) PosCursor = 4095;
+    if (Point>5299) PosCursor = 5299;
     else PosCursor = Point;
 return PosCursor;  
   
 }
 unsigned SetPosCursorSlave (unsigned Point)//установка  курсора - второго
 {
-    if (Point>4095) PosCursorSl = 4095;
+    if (Point>5299) PosCursorSl = 5299;
     else PosCursorSl = Point;
 return PosCursorSl;  
   

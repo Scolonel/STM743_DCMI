@@ -2747,13 +2747,37 @@ void ModeEventsOTDR(void) // режим отображения событий рефлектограммы CHECK_OFF
       // else IndexVerSize = PNTVERTICALSIZE-1;
       IndexVerSize=1;
       SetPosCursorMain (EvenTrace[IndexEvents-1].EPT);     
-      TypeCentral = MEDIUM;
+      SetPosCursorSlave (0);     
+      //TypeCentral = MEDIUM;
+      TypeCentral = BYCUR; // центр куда указывает курсор
+      // установим второй курсор на событиях отражений и простых перепадов
+      // для коротких импульсов IndexIM<4
+      // в остальных случаях в 0
+      if((EvenTrace[IndexEvents-1].EC[1]=='F')&&(GetIndexIM()<4))
+      {
+      // PointsInImpulse
+        switch (EvenTrace[IndexEvents-1].EC[0])
+        {
+        case '0':
+          SetPosCursorSlave (EvenTrace[IndexEvents-1].EPT + PointsInImpulse(2) );     
+          //N - неотражающее событие
+          type_pic = 1;
+          break;
+        case '1':
+          SetPosCursorSlave (EvenTrace[IndexEvents-1].EPT + PointsInImpulse(2) ); //R - отражающее событие
+          break;
+        default:
+          SetPosCursorSlave (0);     
+          break;
+          
+        }
+      }
       ViewMode = VIEWER;
       SetMode(ModeDrawOTDR);
       // с 22.11.2022 надо пересмотреть вариант возврата
       ReturnModeViewRefl = VIEWEVNT;//VIEWMEM -  чтобы вернуться в в установки
       KeyP &=~BTN_OK;
-    // посылка команды переключения окна на DrawOTDRview (возврат)  
+      // посылка команды переключения окна на DrawOTDRview (возврат)  
       // через признак 
       // надо послать команду ниже
       NeedReturn = 18; // необходимо ренуться в окно 18
