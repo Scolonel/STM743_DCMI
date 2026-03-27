@@ -7755,7 +7755,9 @@ unsigned short SpliceProg (unsigned short PII)
         for (int o=Index; o<OUTSIZE; ++o) // изменение "хвоста"
         {
           // новые данные приклееного хвоста ( можно анализировать и измен€ть)
-          if ((GetIndexLN()==6)&&(GetIndexIM()>=6)&&(GetIndexVRM()==3)&&GetApdiSet()) // если установлено врем€ накоплени€ 180с, длина линии 128 км, и длительность импульса 10 мк—
+          // пока выключили
+          //if ((GetIndexLN()==6)&&(GetIndexIM()>=6)&&(GetIndexVRM()==3)&&GetApdiSet()) // если установлено врем€ накоплени€ 180с, длина линии 128 км, и длительность импульса 10 мк—
+          if(0)
           {
 //          case 1:
 //            if (LogData[o]>35000)
