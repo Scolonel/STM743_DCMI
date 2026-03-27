@@ -255,7 +255,7 @@ float CalkCorelation32 (DWORD* array, unsigned short BeginPoint, unsigned short 
 
 unsigned short CalkEventsKeys (unsigned short* array, unsigned short PII, BYTE Type) // вычисление событий для текущей рефлектограммы
 {
-#define DELTACHNG 200 // изменение сигнала 0.4 дБ
+#define DELTACHNG 400 // изменение сигнала 0.4 дБ
 #define MORED 8 // добавка к PII для правильного расчета безотражающего события после отражения
   
   unsigned short CurLvlVol = DELTACHNG; // текущий уровень сигнала 
@@ -271,11 +271,11 @@ unsigned short CalkEventsKeys (unsigned short* array, unsigned short PII, BYTE T
   //unsigned short EventsType2 = 0; // признак наличия отражающего события
   static unsigned short PosEventsType1 = 0; // позиция отражающего события чтобы не перепутать с концом линии
   //unsigned short PosEventsType2 = 0; // позиция отражающего события чтобы не перепутать с концом линии
-  unsigned short PointsShift = GetPointsShift(); // сдвиг измерения 
-  unsigned short LvlTrendUp = GetLvlTrend(); // начальный уровень оценки шумов при расчете тренда 
+  volatile unsigned short PointsShift = GetPointsShift(); // сдвиг измерения 
+  volatile unsigned short LvlTrendUp = GetLvlTrend(); // начальный уровень оценки шумов при расчете тренда 
   float LSACoefIN = GetLSACoef();
   int FindBeg = (int)(LSACoefIN*uPII); //+ (DELTACHNG/2) погонное затухание в зависимости от уст. параметов
-  int ChkLvlUp ; // начальный уровень контроля отражающего события
+  volatile int ChkLvlUp ; // начальный уровень контроля отражающего события
   long BegTemp; // пересчет начала добавка
   
   //float AutoRef = 200;
@@ -316,12 +316,12 @@ unsigned short CalkEventsKeys (unsigned short* array, unsigned short PII, BYTE T
     // UARTSend0 ((BYTE*)UartStr, strlen (UartStr));
     
     // контроль длительности высокого сигнала
-    if ((array[i] < 230)) // &&(i<4*PII)0.23 дБ и начало 4 длительностей импульса
+    if ((array[i] < 250)) // &&(i<4*PII)0.23 дБ и начало 4 длительностей импульса
     {
       if ((i-CurrBig)>1) // новое превышение уровня 3дБ 
       {
         CurrBig = i;
-        Count = 0;
+        Count = 1;
       }
       else // повторяется превышение... считаем
       {
@@ -498,6 +498,8 @@ unsigned short CalkEventsKeys (unsigned short* array, unsigned short PII, BYTE T
     if ((Type)&&(IndexCurBeg))
     {
       unsigned short PIIM = PointsInImpulse(0);
+      short LossInEvnt = (0); //затухание в событиии, тупо по двум точкам
+      
       // Фиксация максим тренда на участке
       // значение тренда определяет затухание на участке
       if ((i > DeadPoint)&&(i > DeadPointUp))
@@ -524,11 +526,13 @@ unsigned short CalkEventsKeys (unsigned short* array, unsigned short PII, BYTE T
           //if ((LvlTrendUp > array[i-1])||(TrCurr >= (0.3*(array[i-1]-LvlTrendUp)+200.0)))
             // если сигнал выше порогга оценки тренда - фиксируем событие (отрицат затухание)
           //{
-            NumEvents++;    
+            NumEvents++; 
+          LossInEvnt = array[i-1+2*uPII] - array[i-1];  
           EvenTrace[NumEvents-1].EPT = i-1;// запомним позицию события
           EvenTrace[NumEvents-1].EC[0] = '0';// NO reflective events
           EvenTrace[NumEvents-1].EC[1] = 'F';// Found by software
-          EvenTrace[NumEvents-1].EL = (short int)TrCurr;// Found by software          
+          //EvenTrace[NumEvents-1].EL = (short int)TrCurr;// Found by software          
+          EvenTrace[NumEvents-1].EL = LossInEvnt;// Found by software          
           EvenTrace[NumEvents-1].ER = 0;
           memcpy (&EvenTrace[NumEvents-1].COMM_EVN, "NoReflEvt\0",10);
           DeadPoint = i + uPII;
@@ -538,19 +542,32 @@ unsigned short CalkEventsKeys (unsigned short* array, unsigned short PII, BYTE T
       // определение неотражающего события при отрицательном затухании
       if ((TrOld<0)&&(TrCurr<0)&&(TrNew<0)) // имеем не нулевые значения тренда, определим экстремум
       {
+        // после возможно определение отражающего события что не верно!
+        // надо разобраться 17.03.2026 (v604l(115))
         if((TrCurr<=TrOld)&&(TrCurr<=TrNew)&&(NumEvents<(SizeTableEvnt-1))&&(-TrCurr<ReflParam.ET))// можно зафиксировать экстремум, он меньше порога конца линии
         {
+          // нашли экстремум тренда, возможно не отражающее отрицательное затухание
+          // проверим уровень сигнала на 2 длительности импульса, ниже по течению
+          // если есть затухание то игноририруем этот подъем
+          // чуть ниже должны поймать отражение....
+          if((array[i]-array[i+2*PIIM])>0)
+          {
           //if (LvlTrendUp > array[i-1])// если сигнал выше порогга оценки тренда - фиксируем событие (отрицат затухание)
           //{
-          NumEvents++;    
+          NumEvents++;   
+          LossInEvnt = array[i-1+2*uPII] - array[i-1];  
           EvenTrace[NumEvents-1].EPT = i-1;// запомним позицию события
           EvenTrace[NumEvents-1].EC[0] = '0';// NO reflective events
           EvenTrace[NumEvents-1].EC[1] = 'F';// Found by software
-          EvenTrace[NumEvents-1].EL = (short int)TrCurr;// Found by software          
+          //EvenTrace[NumEvents-1].EL = (short int)TrCurr;// Found by software          
+          EvenTrace[NumEvents-1].EL = LossInEvnt;// Found by software          
           EvenTrace[NumEvents-1].ER = 0;
           memcpy (&EvenTrace[NumEvents-1].COMM_EVN, "NpReflEvt\0",10);
-          DeadPoint = i + uPII;
+          // отрицательное затухание, что бы не словить отражающее, установим точку ниже события
+          //DeadPoint = i + uPII;
+          DeadPointUp = i + uPII;
           //}
+          }
         }
       }
       
@@ -634,7 +651,12 @@ unsigned short CalkEventsKeys (unsigned short* array, unsigned short PII, BYTE T
         PosEventsType1 = IndexCurLvlVol;
         DeadPoint = i + uPII + MORED;  // устанавливаем возможную точку конца отражающего события
         // Надо проверить нет ли провала после события до завершения мертвой зоны
-        
+        if((array[i]-array[DeadPoint])>0)
+        {
+          // сбросим событие может это отриц затухание
+          DeadPoint = 0;
+          EventsType1=0;
+        }
       }
       // обсчитаем событие....
       if (EventsType1) // время счета события

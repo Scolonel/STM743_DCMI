@@ -238,10 +238,18 @@ unsigned InvalidDBNAME() //boolean actually
   {
     res |=0x40;
   }
+    // проверка делителя поправки
+  if(NameDB.ShiftAddNoise>100)
+  {
+    res |=0x80;
+  }
+
   return res;
 }
 void InitDBNAME(unsigned Err)
 {
+  if (Err && 0x80) NameDB.ShiftAddNoise=1; //  устанавливаем счетчик волокна 
+  
   if (Err && 0x40) NameDB.FiberID=1; //  устанавливаем счетчик волокна 
   if (Err && 0x20) NameDB.Ena_DB=1; // плохой режим , установим ТОПАЗ (Not Alternate)
 

@@ -1104,6 +1104,33 @@ void DecodeCommandRS (void)
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
           NeedTransmit = 1;
         }
+        //
+        if(0)
+        {
+        if (!memcmp ((void*)RX_Buf, ";SET:SHAN?",10)) //делителя подбора смещения
+        {
+          sprintf(BufString,"%d",NameDB.ShiftAddNoise);//c
+          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          NeedTransmit = 1;
+        }
+        // ;set:db*  dbt & dbs
+        if (!memcmp ((void*)RX_Buf, ";SET:SHAN ",10)) //
+        {
+          int Data = atoi((char*)&RX_Buf[10]);
+          sprintf(BufString,"Err param\r"); // 
+          
+          // ;set:DBS  - установка признака разрешения альтернативного имени
+          if ((Data <= 16 )&&(Data > 0)) // запись 
+          {
+            NameDB.ShiftAddNoise = Data;  
+            WriteNeedStruct(0x10);
+            sprintf(BufString,"OK %d\r",Data ); // 
+            
+          }
+          UARTSendExt ((BYTE*)BufString, strlen (BufString));// Возвращает ответ на команду
+          NeedTransmit = 1;
+        }
+        }
         //        if (!memcmp ((void*)RX_Buf, ";SET:DB0 ",9)) //устанавливаем поправочный коэфф для длины волны (пока 850) на простых фотодиодах (носатые)
         //        {
         //          float Data = atof((char*)&RX_Buf[9]);

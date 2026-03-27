@@ -348,8 +348,11 @@ void RUN_SUM (DWORD* RawDataI)//
     if( NoiseEnd > NoiseBegin) 
       Noise = NoiseEnd;
     else
-      Noise = NoiseBegin;
-    
+    {
+     // Noise = NoiseBegin;
+     // 
+      Noise = NoiseEnd + (DWORD)((NoiseBegin-NoiseEnd)/(int)(NameDB.ShiftAddNoise));
+    }
     // рассчитаем порог для генерации шумов
     SmNoise = Noise - Avrgs/168;
     

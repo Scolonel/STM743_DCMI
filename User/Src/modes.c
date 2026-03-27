@@ -2445,6 +2445,14 @@ void ModeDrawOTDR(void) // режим отображени€ рефлектограммы
   // надо что то изменить в пол€х установок 
   if(g_NeedScr)
   {
+    // тестовый вывод 
+//    sprintf(Stra,"%d",PointsInImpulse(0));//дЅ
+//    
+//    if(TypeLCD)
+//      sprintf( Str,"xstr 420,266,60,24,3,GREEN,BLACK,0,1,3,\"%s\"€€€",Stra); // 3_5(3-24) (є шрифта-–азмер) 0
+//    else
+//      sprintf( Str,"xstr 260,0,140,24,2,GREEN,BLACK,0,1,3,\"%s\"€€€",Stra); // 3_2(2-24) (є шрифта-–азмер) 0
+//    NEX_Transmit((void*)Str);// 
     
     // устнавливаем параметры отображени€
     CursorMain = PosCursorMain (0); //123!!!// переустановим курсор после изменений

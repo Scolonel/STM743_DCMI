@@ -1415,7 +1415,7 @@ unsigned short MakeEvents (void)
         //TmpACI = ;
         TmpACI = (LogData[EvenTrace[0].EPT]-LogData[0])/TmpACI;//GetPosLine(EvenTrace[0].EPT);
         EvenTrace[0].ACI = (short int)TmpACI;
-        EndEvenBlk.ELMP[1] = CalkEPT (EndEvenBlk.ELMP[1]); // расчет значений ELMP для конца линии от положения курсора
+        //EndEvenBlk.ELMP[1] = CalkEPT (EndEvenBlk.ELMP[1]); // расчет значений ELMP для конца линии от положения курсора
         
       }
       // цикл заполнения событий 
