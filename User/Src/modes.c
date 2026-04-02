@@ -4160,7 +4160,7 @@ DrawSourceVFL (&FrManualOLT, Str, KeyP, CurrLang, 3, 1);
         sprintf(Str, "t13.txt=\"\"€€€");
     NEX_Transmit((void*)Str);    // 
     // номер заполненой €чейки
-  sprintf(Str,"t9.txt=\"є %04d\"€€€",GetCellMem(0));
+  sprintf(Str,"t9.txt=\"є %04d\"€€€",GetCellMem(0)+1);
   NEX_Transmit((void*)Str);    // є €чейки
     
     // индикаци€ расширенного диапазона
@@ -4531,7 +4531,7 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
     //    sprintf(Str, "t13.txt=\"%s\"€€€",wrd);
     NEX_Transmit((void*)Str);    // 
     // номер заполненой €чейки
-  sprintf(Str,"t12.txt=\"є %04d\"€€€",GetCellMem(0));
+  sprintf(Str,"t12.txt=\"є %04d\"€€€",GetCellMem(0)+1);
   NEX_Transmit((void*)Str);    // є €чейки
     
     // индикаци€ расширенного диапазона
@@ -4910,8 +4910,9 @@ void ModeSaveOLT(void) // режим сохранени€ результатов измерител€ CHECK_OFF
     sprintf(Str, "t0.txt=\"%s\"€€€",PONI.CommUserPM);
     NEX_Transmit((void*)Str);    // 1 строка комментарии
     
-    sprintf(Str, "t1.txt=\"%04d\"€€€", PONI.NumFix);
-    NEX_Transmit((void*)Str);    // номер записи
+    // не надо выводить
+    //sprintf(Str, "t1.txt=\"%04d\"€€€", PONI.NumFix);
+    //NEX_Transmit((void*)Str);    // номер волокна
     
     sprintf(Str, "t2.txt=\"%s\"€€€", MsgMass[54][CurrLang]);
     NEX_Transmit((void*)Str);    // комментариим
@@ -4925,7 +4926,7 @@ void ModeSaveOLT(void) // режим сохранени€ результатов измерител€ CHECK_OFF
     sprintf(Str, "t5.txt=\"%s\"€€€", MsgMass[58][CurrLang]);
     NEX_Transmit((void*)Str);    // —брос счетчика
     
-    sprintf(Str, "t8.txt=\"є %04d\"€€€", GetCellMem(0));
+    sprintf(Str, "t8.txt=\"є %04d\"€€€", GetCellMem(0)+1);
     NEX_Transmit((void*)Str);    // —брос счетчика
     
     g_FirstScr = 0;
@@ -4949,8 +4950,9 @@ void ModeSaveOLT(void) // режим сохранени€ результатов измерител€ CHECK_OFF
     sprintf(Str, "t%d.bco=GREEN€€€", FrSaveOLT+1); // зеленый
     NEX_Transmit((void*)Str);// 
     
-    sprintf(Str, "t1.txt=\"%04d\"€€€", PONI.NumFix);
-    NEX_Transmit((void*)Str);    // номер записи
+    // не надо выводить
+    //sprintf(Str, "t1.txt=\"%04d\"€€€", PONI.NumFix);
+    //NEX_Transmit((void*)Str);    // номер записи
     
     sprintf(Str, "t6.txt=\"%04d\"€€€",PONI.NumFix);
     NEX_Transmit((void*)Str);    ////счетчик волокна
@@ -5560,6 +5562,11 @@ void ModeViewMemOLT(void) // режим просмотра пам€ти измерител€ CHECK_OFF
   
   if (g_FirstScr)
   {
+        // чтение структуры €чейки сохранени€ OLT 
+    EEPROM_read(&R_PONI, ADR_MemoryOLT+64*NumCellIzm, sizeof(R_PONI));
+    
+    Sec2Date (R_PONI.TotalTimeCell, &TimeReadOLT);
+
     // здесь заполн€ем данными пол€ нового индикатора
     // не требущие изменени€ при первичной инициализации   
     sprintf(Str, "t0.txt=\"%s\"€€€", MsgMass[0][CurrLang]); // 
