@@ -294,11 +294,12 @@ void RUN_SUM (DWORD* RawDataI)//
     int j=GetCurrentBegShiftZone (); //получение текущего смещения по индексу
     //int j=0; //получение текущего смещения по индексу
     //DWORD LocalRaw;
-    volatile DWORD LocalRaw;
-    volatile DWORD LocalRawPre=0; // расчитанный и измененный на предыдущем проходе
+    static volatile DWORD LocalRaw;
+    static volatile DWORD LocalRawPre=0; // расчитанный и измененный на предыдущем проходе
     DWORD LocalRawLast;
-    DWORD LocalRawLastTwo;
+    static volatile DWORD LocalRawLastTwo;
     static volatile int xy;
+    static volatile int i;
     uint32_t EnaBags = 0; // уровень меньше смещения, можно "генерить" шумы
     uint32_t SmNoise = 0; // уровень меньше смещения, на часть числа накоплений,для генерации шумов
     uint32_t AlreadyCorr = 0; // уже была корректировка
@@ -311,7 +312,7 @@ void RUN_SUM (DWORD* RawDataI)//
     // у нас в начале всегда 63 точки
     // расчет уровня в начале
     Noise = 0;
-    for (int i=0; i<(50); i++)
+    for ( i=0; i<(50); i++)
     {
       if (RawData[i]>MaxNoise) MaxNoise = RawData[i];
       Noise +=RawData[i];
@@ -323,7 +324,7 @@ void RUN_SUM (DWORD* RawDataI)//
     //if (GetIndexLN()>2)// длинные линии -> добавим точек по расчету шумов
     if (1)// любые линии -> добавим точек по расчету шумов
     {
-      for (int i=5530;i<5580;++i) // берем 30 точек в конце снятых данных без превышения сигнала на 100 ед АЦП от уровня смещения
+      for ( i=5530;i<5580;++i) // берем 30 точек в конце снятых данных без превышения сигнала на 100 ед АЦП от уровня смещения
       {
         //if (RawData[i] < (NoiseBegin + 4*Avrgs)) 
         if (RawData[i] < (NoiseBegin + Avrgs)) 
@@ -396,7 +397,7 @@ void RUN_SUM (DWORD* RawDataI)//
         NeedCorrect = 1;
       }
     
-    for (int i=0; i<OUTSIZE; i++)
+    for ( i=0; i<OUTSIZE; i++)
     { 
       xy = i+j;
       //AlreadyCorr = 0;
@@ -491,7 +492,7 @@ void RUN_SUM (DWORD* RawDataI)//
       // предыдущая + текущая + последующая
       //if(GetIndexLN()>4) // 
       //if(0) // 
-      if(1) // 
+      if(!AlreadyCorr) // 
       {
         if((RawData[xy]< (g_Noise + Avrgs))&&(RawData[xy-1]<(g_Noise + Avrgs))&&(RawData[xy+1]<(g_Noise + Avrgs)))
         {

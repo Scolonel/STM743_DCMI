@@ -760,7 +760,7 @@ int main(void)
         // проверим ошибку и просигнализируем
         if(g_ErrTO)
         {
-          sprintf( Str,"xstr 10,150,460,40,2,RED,WHITE,1,1,1,\"%d\"€€€",g_ErrTO); //  сообщение об ошибке FW LCD
+          sprintf((void*)Str,"xstr 10,150,460,40,2,RED,WHITE,1,1,1,\"%d\"€€€",g_ErrTO); //  сообщение об ошибке FW LCD
           NEX_Transmit((void*)Str);//
           g_ErrTO = 0;
         }
