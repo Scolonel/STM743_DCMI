@@ -294,13 +294,14 @@ void RUN_SUM (DWORD* RawDataI)//
     int j=GetCurrentBegShiftZone (); //получение текущего смещения по индексу
     //int j=0; //получение текущего смещения по индексу
     //DWORD LocalRaw;
-    DWORD LocalRaw;
-    DWORD LocalRawPre;
+    volatile DWORD LocalRaw;
+    volatile DWORD LocalRawPre=0; // расчитанный и измененный на предыдущем проходе
     DWORD LocalRawLast;
+    DWORD LocalRawLastTwo;
     static volatile int xy;
     uint32_t EnaBags = 0; // уровень меньше смещения, можно "генерить" шумы
     uint32_t SmNoise = 0; // уровень меньше смещения, на часть числа накоплений,для генерации шумов
-
+    uint32_t AlreadyCorr = 0; // уже была корректировка
     SetCntNumAvrg(Avrgs); // сохранение
     // filtr (WOW Super)
     //if (GetCntNumAvrg()>=GetFinAvrg())
@@ -319,12 +320,13 @@ void RUN_SUM (DWORD* RawDataI)//
     //NoiseBegin = Noise; // пока это смещение в начале
     // посчитаем в конце 
     NoiseEnd = 0;
-    if (GetIndexLN()>2)// длинные линии -> добавим точек по расчету шумов
-    //if (0)// длинные линии -> добавим точек по расчету шумов
+    //if (GetIndexLN()>2)// длинные линии -> добавим точек по расчету шумов
+    if (1)// любые линии -> добавим точек по расчету шумов
     {
       for (int i=5530;i<5580;++i) // берем 30 точек в конце снятых данных без превышения сигнала на 100 ед АЦП от уровня смещения
       {
-        if (RawData[i] < (NoiseBegin + 4*Avrgs)) 
+        //if (RawData[i] < (NoiseBegin + 4*Avrgs)) 
+        if (RawData[i] < (NoiseBegin + Avrgs)) 
         {
           CntAddNoise++;
           NoiseAdd +=RawData[i];
@@ -348,10 +350,16 @@ void RUN_SUM (DWORD* RawDataI)//
     if( NoiseEnd > NoiseBegin) 
       Noise = NoiseEnd;
     else
-    {
-     // Noise = NoiseBegin;
+    { 
+      if(GetIndexLN()<3) // короткие линии
+      {
+      Noise = NoiseBegin;
+      }
+      else // для длиных от 16 км, корректируемое значение расчета смещения
+      {
      // 
       Noise = NoiseEnd + (DWORD)((NoiseBegin-NoiseEnd)/(int)(NameDB.ShiftAddNoise));
+      }
     }
     // рассчитаем порог для генерации шумов
     SmNoise = Noise - Avrgs/168;
@@ -391,6 +399,8 @@ void RUN_SUM (DWORD* RawDataI)//
     for (int i=0; i<OUTSIZE; i++)
     { 
       xy = i+j;
+      //AlreadyCorr = 0;
+      if(AlreadyCorr>1)AlreadyCorr=0 ;
       // усреднение на коротких линиях пока уберем 
       //if (PointsPerPeriod==48)   LocalRaw = (RawData[i+j-1]+RawData[i+j])>>1;// если самое мелкое то примитивный фильт на 2, иначе пила
       //else  LocalRaw = RawData[i+j];
@@ -398,18 +408,20 @@ void RUN_SUM (DWORD* RawDataI)//
       // меньше 1/8 от числа накоплений то ппоследующую берем как среднее с предыдущей,
       // если разница больше не меняем
       LocalRaw = RawData[xy];
-      LocalRawPre = RawData[xy-1];
+      //LocalRawPre = RawData[xy-1];
       LocalRawLast = RawData[xy+1];
+      LocalRawLastTwo = RawData[xy+2]; // проверим вторую точку
       
       // встретили сигнал ниже смещения можно генерить шумы...
       //if(LocalRaw < g_Noise)
       //  EnaBags = 1;
       // корректровка перед большим сигналом из Т9400
-      if(1)
+      //if(0)
+      if(GetIndexLN()<3) // короткие линии
       {
         // блок преобразования данных в нефильтрованном виде: малых сигналов
         // условие малости сигнала
-        if((LocalRaw) < (g_Noise + Avrgs*4))
+        if((LocalRaw) < (g_Noise + Avrgs*2))
           // 1.
           // Добавка перед "БОльшим" импульсом
         {
@@ -419,112 +431,143 @@ void RUN_SUM (DWORD* RawDataI)//
           // 40 нС -  множитель уменьшили до 20 - 50.1,сработало
           // 10 нС -  разница по множителю составила 19.7,24.8, , чего не хватило
           // 4 нС -  разница по множителю составила 15.8 (15.4) , чего не хватило
-          
-          if((LocalRawLast) > (LocalRaw + Avrgs*70)&&(xy>100))
+          // за две точки до скачка , рассчитаем и превратим среднее по 3 предыдущем  
+          if((LocalRawLastTwo) > (LocalRaw + Avrgs*70)&&(xy>100)&&(AlreadyCorr == 0))
           {
-            if (RawData[xy-1] > g_Noise)
-              LocalRaw = RawData[i+j-1];
-            else
-              LocalRaw = RawData[i+j-2];
+            //            if (RawData[xy-1] > g_Noise)
+            //              LocalRaw = RawData[xy-1];
+            //            else
+            //              LocalRaw = RawData[xy-2];
+            LocalRaw = ((RawData[xy-1]+RawData[xy-2]+RawData[xy-3])/3);
+            AlreadyCorr = 1; 
+          }
+          
+          if((LocalRawLast) > (LocalRaw + Avrgs*70)&&(xy>100)&&(AlreadyCorr == 1))
+          {
+            //            if (RawData[xy-1] > g_Noise)
+            //              LocalRaw = RawData[xy-1];
+            //            else
+            //              LocalRaw = RawData[xy-2];
+            LocalRaw = ((RawData[xy-5]+RawData[xy-4]+RawData[xy-6]+RawData[xy-2]+RawData[xy-3])/5);
+            AlreadyCorr = 2; 
           }
           //LocalRaw = RawData[xy];
         }
       }
       // варианты получения точки с помощью примитивных фильтров   
-      // Ф1 -  если разница между текущей точкой и предыдущей()
+      // Ф.1 -  если разница между текущей точкой и предыдущей()
       // и последующей не превышает половину разряда, то вычисляем среднее по 3 точкам,
       // предыдущая + текущая + последующая
       //if(GetIndexLN()<=4) // 
       if(0) // 
       {
-        if((abs((RawData[i+j+1])-(RawData[i+j]))<(Avrgs/2))&&(abs((RawData[i+j-1])-(RawData[i+j]))<(Avrgs/2)))
+        if((abs((RawData[xy+1])-(RawData[xy]))<(Avrgs/2))&&(abs((RawData[xy-1])-(RawData[xy]))<(Avrgs/2)))
         {
           //LED_KTS(1);
           
-          LocalRaw = (int)(RawData[i+j+1]+RawData[i+j]+RawData[i+j-1])/3;
+          LocalRaw = (int)(RawData[xy+1]+RawData[xy]+RawData[xy-1])/3;
           //LED_KTS(0);
           
         }
       }
       // варианты получения точки с помощью примитивных фильтров   
-      // Ф7 -  если разница между текущей точкой и предыдущей()
+      // Ф.7 -  если разница между текущей точкой и предыдущей()
       //  не превышает  разряд, то вычисляем среднее по 2 точкам,
       // предыдущая + текущая 
-      if(GetIndexLN()>4) // 
-      //if(0) // 
-      {
-        if((RawData[i+j]< (g_Noise + Avrgs))&&(RawData[i+j-1]<(g_Noise + Avrgs)))
-        {
-          //LED_KTS(1);
-          
-          LocalRaw = (int)(RawData[i+j]+RawData[i+j-1])/2;
-          //LED_KTS(0);
-          
-        }
-      }
-      // Ф1.6 -  если разница между текущей точкой и предыдущей()
-      // и последующей не превышает половину разряда, то вычисляем среднее по 5 точкам,
-      // предыдущая + текущая + последующая
       //if(GetIndexLN()>4) // 
       if(0) // 
       {
-        if((abs((RawData[i+j+2])-(RawData[i+j+1]))<(Avrgs/2))&&(abs((RawData[i+j+1])-(RawData[i+j]))<(Avrgs/2))&&(abs((RawData[i+j-1])-(RawData[i+j]))<(Avrgs/2))&&(abs((RawData[i+j-2])-(RawData[i+j-1]))<(Avrgs/2)))
+        if((RawData[xy]< (g_Noise + Avrgs))&&(RawData[xy-1]<(g_Noise + Avrgs)))
         {
           //LED_KTS(1);
           
-          LocalRaw = (int)(RawData[i+j+2]+RawData[i+j+1]+RawData[i+j]+RawData[i+j-1]+RawData[i+j-2])/5;
+          LocalRaw = (int)(RawData[xy]+RawData[xy-1])/2;
           //LED_KTS(0);
           
         }
       }
-      // Ф2 -  если разница между Логарифмическими значениями текущей точкой и предыдущей()
+      // Ф.7.1 -  если разница между текущей точкой и предыдущей()и последующей
+      //  не превышает  разряд, то вычисляем среднее по 3 точкам,
+      // предыдущая + текущая + последующая
+      //if(GetIndexLN()>4) // 
+      //if(0) // 
+      if(1) // 
+      {
+        if((RawData[xy]< (g_Noise + Avrgs))&&(RawData[xy-1]<(g_Noise + Avrgs))&&(RawData[xy+1]<(g_Noise + Avrgs)))
+        {
+          //LED_KTS(1);
+          
+          LocalRaw = (int)(RawData[xy]+RawData[xy-1]+RawData[xy+1])/3;
+          //LED_KTS(0);
+          LocalRaw -=Avrgs/1000;
+          
+        }
+      }
+      // Ф.1.6 -  если разница между текущей точкой и предыдущей()
+      // и последующей не превышает половину разряда, то вычисляем среднее по 5 точкам,
+      // предыдущая + текущая + последующая
+      //if(GetIndexLN()>4) // 
+      if(1) // 
+      {
+        //if((abs((RawData[xy+2])-(RawData[xy+1]))<(Avrgs/2))&&(abs((RawData[xy+1])-(RawData[xy]))<(Avrgs/2))&&(abs((RawData[xy-1])-(RawData[xy]))<(Avrgs/2))&&(abs((RawData[xy-2])-(RawData[xy-1]))<(Avrgs/2)))
+        if((abs((RawData[xy+2])-(RawData[xy+1]))<(Avrgs))&&(abs((RawData[xy+1])-(RawData[xy]))<(Avrgs))&&(abs((RawData[xy-1])-(RawData[xy]))<(Avrgs))&&(abs((RawData[xy-2])-(RawData[xy-1]))<(Avrgs)))
+        {
+          //LED_KTS(1);
+          
+          LocalRaw = (int)(RawData[xy+2]+RawData[xy+1]+RawData[xy]+RawData[xy-1]+RawData[xy-2])/5;
+          //LED_KTS(0);
+          //LocalRaw -=Avrgs/10000;
+          
+        }
+      }
+      // Ф.2 -  если разница между Логарифмическими значениями текущей точкой и предыдущей()
       // и последующей не превышает 0.15 дБ, то вычисляем среднее по 3 точкам,
       // предыдущая()+ текущая + последующая
       if(0)
       {
-        if((abs((int)(500*log10(RawData[i+j+1]))-(int)(500*log10(RawData[i+j])))<(15))&&(abs((int)(500*log10(RawData[i+j-1]))-(int)(500*log10(RawData[i+j])))<(15)))
+        if((abs((int)(500*log10(RawData[xy+1]))-(int)(500*log10(RawData[xy])))<(15))&&(abs((int)(500*log10(RawData[xy-1]))-(int)(500*log10(RawData[xy])))<(15)))
         {
           //LED_KTS(1);
           
-          LocalRaw = (int)(RawData[i+j+1]+RawData[i+j]+RawData[i+j-1])/3;
+          LocalRaw = (int)(RawData[xy+1]+RawData[xy]+RawData[xy-1])/3;
           //LED_KTS(0);
           
         }
         
       }
-      // Ф3 -  если разница между текущей точкой и  последующей
+      // Ф.3 -  если разница между текущей точкой и  последующей
       // не превышает 1/8 разряда, то вычисляем среднее по этим точкам,
       // текущая + последующая
       if(0) // выкл мини фильтр (1)...по следующему (8)
       {
-        if(abs((int)(RawData[i+j+1]-RawData[i+j]))<(Avrgs/8))
+        if(abs((int)(RawData[xy+1]-RawData[xy]))<(Avrgs/8))
         {
-          //RawData[i+j] = (RawData[i+j+1]+RawData[i+j])>>1;
-          LocalRaw = (RawData[i+j+1]+RawData[i+j])>>1;
+          //RawData[xy] = (RawData[xy+1]+RawData[xy])>>1;
+          LocalRaw = (RawData[xy+1]+RawData[xy])>>1;
         }
       }
-      // Ф4 -  если разница между текущей точкой и предыдущей (уже поправленной)
+      // Ф.4 -  если разница между текущей точкой и предыдущей (уже поправленной)
       // не превышает 1/2 разряда, то вычисляем среднее по этим точкам,
       // предыдущая() + текущая
-      //if(1) // выкл мини фильтр 
-      if(GetIndexLN()<5) // 
+      //if(1) // выкл мини фильтр, для уже скорректированной не выполняем
+      if((GetIndexLN()<5)&&(AlreadyCorr==0)) // 
       {
-        if(abs((int)(RawData[i+j-1]-RawData[i+j]))<(Avrgs/2))
+        if(abs((int)(RawData[xy-1]-RawData[xy]))<(Avrgs/2))
         {
-          LocalRaw = (RawData[i+j-1]+RawData[i+j])>>1;
+          LocalRaw = (RawData[xy-1]+RawData[xy])>>1;
         }
       }
-      // Ф5 -  фильтр по пяти точкам просто без анализа быстрых изменений
+      // Ф.5 -  фильтр по пяти точкам просто без анализа быстрых изменений
       if(0) // выкл мини фильтр ...по предыдущему
       {
-        LocalRaw = (int)(RawData[i+j+2]+RawData[i+j+1]+RawData[i+j]+RawData[i+j-1]+RawData[i+j-2])/5;
+        LocalRaw = (int)(RawData[xy+2]+RawData[xy+1]+RawData[xy]+RawData[xy-1]+RawData[xy-2])/5;
       }
-      // Ф6 -  если разница между текущей точкой и предыдущей (уже поправленной)
+      // Ф.6 -  если разница между текущей точкой и предыдущей (уже поправленной)
       // не превышает 1/2 разряда, то вычисляем среднее по этим точкам,
       // предыдущая() + текущая
       if(0) // выкл мини фильтр 
       {
-          LocalRaw = (RawData[i+j-1]+RawData[i+j])>>1;
+        LocalRaw = (RawData[xy-1]+RawData[xy])>>1;
       }
       //LocalRaw = RawData[i+j];
       // добавка перед скачком, то есть перед большим отражением в маленьких сигналах
@@ -533,16 +576,16 @@ void RUN_SUM (DWORD* RawDataI)//
       {
         if(PointsPerPeriod>=4)
           //LocalRaw += (DWORD)(RawData[i+j+(PointsPerPeriod/4)]*2.8e-3);
-          LocalRaw += (DWORD)(RawData[i+j+2]*2.8e-3);
+          LocalRaw += (DWORD)(RawData[xy+2]*2.8e-3);
       }
       // попытка убрать уровень шумов у смещения, в районе 1 разряда 
       // сравниваем с уровнем смещения если больше но не больше чем число накоплений
       // то снижаем его разницу относительно смещения в 4 раза
       //if(1)
-    //if ((GetIndexLN()>4)&&(GetIndexVRM()==3)&&(GetIndexIM()>6))// длинные линии (64,128) -> и накопление 3 минуты и импульс 10-20 мкС
-    if (0)// длинные линии (64,128) -> и накопление 3 минуты и импульс 10-20 мкС
-      // "халявный" фильтр
-    //if (NeedCorrect)// длинные линии (64,128) -> и накопление 3 минуты и импульс 10-20 мкС
+      //if ((GetIndexLN()>4)&&(GetIndexVRM()==3)&&(GetIndexIM()>6))// длинные линии (64,128) -> и накопление 3 минуты и импульс 10-20 мкС
+      if (0)// длинные линии (64,128) -> и накопление 3 минуты и импульс 10-20 мкС
+        // "халявный" фильтр
+        //if (NeedCorrect)// длинные линии (64,128) -> и накопление 3 минуты и импульс 10-20 мкС
       {
         int LevelA = LocalRaw - g_Noise;
         //if((LevelA > 0)&&(LevelA<Avrgs/4))
@@ -554,10 +597,22 @@ void RUN_SUM (DWORD* RawDataI)//
       }
       // "генерация" шума(смещения) если был провал ниже нуля...
       if(0)
-      //if(EnaBags)
+        //if(EnaBags)
       {
         LocalRaw = SmNoise + (rand()&(Avrgs/84));
       }
+      // Ф.8 - по уже корректированным точкам
+      if(1) // по двум не сильно отличающимся точкам  найдем среднее
+      {
+        LocalRawLast = LocalRaw;
+        if(abs((int)(LocalRawLast-LocalRawPre))<(Avrgs*2))
+        {
+          LocalRawLast = (LocalRawLast+LocalRawPre)>>1;
+        }
+        LocalRawPre = LocalRaw;
+        LocalRaw = LocalRawLast;
+      }
+      
       // подготовили текущую точку , рассчитаем логарифм
       if (LocalRaw<=g_Noise) LocalRaw=g_Noise+1;
       LocalRaw= LocalRaw-g_Noise;

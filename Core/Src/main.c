@@ -1146,8 +1146,8 @@ void StopAllTIM(int Ext)  // остановка таймеров (OTDR)
       // при Х (макс) - сдвиг на 1
       // при Х/2 - сдвиг на 2
       // 
-      //g_CountDMA = ((ShFtAv[SumNumNak&0x7f])&(NumRepit-1));// перебор по таблице
-      g_CountDMA = (SumNumNak)&(NumRepit-1);// простой перебор 
+      g_CountDMA = ((ShFtAv[SumNumNak&0x7f])&(NumRepit-1));// перебор по таблице
+      //g_CountDMA = (SumNumNak)&(NumRepit-1);// простой перебор 
       //Sm_Shift = ((ShFtAv[SumNumNak&0xf])&(NumRepit-1));
       Sm_Shift = (NumRepit-1)-g_CountDMA; //(071) - рассчет смещения
       //Sm_Shift = (MAXREPIT/NumRepit)*((NumRepit-1)-((CountDMA)%(NumRepit))); //(071) - рассчет смещения

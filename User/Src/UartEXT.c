@@ -1104,32 +1104,34 @@ void DecodeCommandRS (void)
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
           NeedTransmit = 1;
         }
-        //
-        if(0)
+        // ”становка делител€ подбора смещени€
+        // по умолчанию 1
+        // диапазон 1-16
+        if(1)
         {
-        if (!memcmp ((void*)RX_Buf, ";SET:SHAN?",10)) //делител€ подбора смещени€
-        {
-          sprintf(BufString,"%d",NameDB.ShiftAddNoise);//c
-          UARTSendExt ((BYTE*)BufString, strlen (BufString));
-          NeedTransmit = 1;
-        }
-        // ;set:db*  dbt & dbs
-        if (!memcmp ((void*)RX_Buf, ";SET:SHAN ",10)) //
-        {
-          int Data = atoi((char*)&RX_Buf[10]);
-          sprintf(BufString,"Err param\r"); // 
-          
-          // ;set:DBS  - установка признака разрешени€ альтернативного имени
-          if ((Data <= 16 )&&(Data > 0)) // запись 
+          if (!memcmp ((void*)RX_Buf, ";SET:SHAN?",10)) //делител€ подбора смещени€
           {
-            NameDB.ShiftAddNoise = Data;  
-            WriteNeedStruct(0x10);
-            sprintf(BufString,"OK %d\r",Data ); // 
-            
+            sprintf(BufString,"%d",NameDB.ShiftAddNoise);//c
+            UARTSendExt ((BYTE*)BufString, strlen (BufString));
+            NeedTransmit = 1;
           }
-          UARTSendExt ((BYTE*)BufString, strlen (BufString));// ¬озвращает ответ на команду
-          NeedTransmit = 1;
-        }
+          // ;set:shan
+          if (!memcmp ((void*)RX_Buf, ";SET:SHAN ",10)) //
+          {
+            int Data = atoi((char*)&RX_Buf[10]);
+            sprintf(BufString,"Err param\r"); // 
+            
+            // ;set:shan  - установка значени€ делител€
+            if ((Data <= 16 )&&(Data > 0)) // запись 
+            {
+              NameDB.ShiftAddNoise = Data;  
+              WriteNeedStruct(0x10);
+              sprintf(BufString,"OK %d\r",Data ); // 
+              
+            }
+            UARTSendExt ((BYTE*)BufString, strlen (BufString));// ¬озвращает ответ на команду
+            NeedTransmit = 1;
+          }
         }
         //        if (!memcmp ((void*)RX_Buf, ";SET:DB0 ",9)) //устанавливаем поправочный коэфф дл€ длины волны (пока 850) на простых фотодиодах (носатые)
         //        {
