@@ -787,10 +787,12 @@ void DecodeCommandRS (void)
         // ;syst:set:cfg  - установка ASCII коменда
         if (!memcmp ((void*)RX_Buf, ";SYST:SET:CFG ",14)) //
         {
+          int ShI=0; // сдвиг при индексе импульса больше 9
           SetIndexLN((BYTE)atoi((char*)&RX_Buf[14])); // индекс длины линии
-          SetIndexIM((BYTE)atoi((char*)&RX_Buf[16])); // индекс длины линии
-          SetIndexVRM((BYTE)atoi((char*)&RX_Buf[18])); // индекс длины линии
-          SetPlaceLS ((BYTE)atoi((char*)&RX_Buf[20])); // установка требуемого лазера
+          SetIndexIM((BYTE)atoi((char*)&RX_Buf[16])); // индекс длительности импульса !!!(с 21.04.2026 неожиданно  может быть двухзначным)
+          if(GetIndexIM()>9) ShI = 1;
+          SetIndexVRM((BYTE)atoi((char*)&RX_Buf[18+ShI])); // индекс времени измерения
+          SetPlaceLS ((BYTE)atoi((char*)&RX_Buf[20+ShI])); // установка требуемого лазера
           // индекс рабочего места 0,1,2
           // если стартуем перепишем выбранную длину волны в соответствии с памяти
           SetIndxSeqLS();
@@ -798,7 +800,7 @@ void DecodeCommandRS (void)
           //g_SetModeLW = SettingRefl.SW_LW;
           g_AutoSave = 0; // длина волны одиночная сброс авто сохранения/
           GetPlaceLS (CURRENT);// установка индекса новой длины волны из списка установленных лазеров CURRENT -текущий, NEW- новый (следующий)
-          SetIndexWAV(atof((char*)&RX_Buf[22]));
+          SetIndexWAV(atof((char*)&RX_Buf[22+ShI]));
           SetSubModRefl (MANUAL); // установка режима рефлектометра 
           //SetModeDevice (MODESETREFL); // принудительная установка режима прибора -  установка рефлектометра
           // надо может чуток потупить?

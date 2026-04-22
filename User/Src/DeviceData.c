@@ -20,7 +20,7 @@ const DWORD MultIndex[LENGTH_LINE_NUM]= {1,1,1,1,2,4,8};//множитель уменьшени€ ч
 const DWORD NumPointsPeriod[LENGTH_LINE_NUM]= {8,4,2,1,1,1,1};// число точек на период
 const DWORD LengthLine[LENGTH_LINE_NUM]= {2,4,8,16,32,64,128};
 const DWORD DelayPeriod[LENGTH_LINE_NUM]= {700,1200,4000,8000,10000,0,0};// задержка периода в тиках CreatDelay()~ 83.33 нс
-const WORD WidthPulse[2][WIDTH_PULSE_NUM]= {{5,20,40,150,500,1000,3000,10000,20000},{4,10,40,150,500,1000,3000,10000,20000}};
+const WORD WidthPulse[2][WIDTH_PULSE_NUM]= {{4,10,40,80,150,300,500,1000,3000,10000,20000},{4,10,40,80,150,300,500,1000,3000,10000,20000}};
 const DWORD TimeAver[TIME_AVR_NUM]= {15,30,60,180,3,600};
 const unsigned TimeLight[TIME_LIGHT_NUM] = {0,15,30};
 const char *IdnsBC[2]= {"SvyazServis   \0","OPTOKON Co.Ltd\0"};
@@ -1017,6 +1017,7 @@ BYTE SetTypeDevice (BYTE Data) // установка типа прибора дл€ “ќѕј«ќ¬
 
 void SetPlaceLS (BYTE SetPlace) // установка требуемого лазера 
 {
+  if(SetPlace < 3)
   SettingRefl.SW_LW = SetPlace;
 }
 
@@ -1146,8 +1147,11 @@ BYTE SetIndexLN (BYTE Index) // установка индекса длины линии
   if (Index>LENGTH_LINE_NUM-1) Index=LENGTH_LINE_NUM-1;//
   if (Index==0xFF) Index=0;
     SettingRefl.Index_Ln = Index;
-    if ((Index == 5) && (GetIndexIM()>6)) SetIndexIM (6);
-    if ((Index == 1) && (GetIndexIM()>5)) SetIndexIM (5);
+//    if ((Index == 5) && (GetIndexIM()>6)) SetIndexIM (6);
+//    if ((Index == 1) && (GetIndexIM()>5)) SetIndexIM (5);
+    // 21.04.2026
+    if ((Index == 5) && (GetIndexIM()>8)) SetIndexIM (8);//32km - >1000nS
+    if ((Index == 1) && (GetIndexIM()>7)) SetIndexIM (7);//2km - >500nS
           SetIndexIM(GetIndexIM()); // переустанавливаем мертвые зоны в зависимости от индекса
 return Index;
 }
@@ -1214,9 +1218,22 @@ void SetIndexIM (BYTE Index) // установка индекса длины Pulse
   // 6 - 3000н—
   // 7 - 10000н—
   // 8 - 20000н—
-  
+  // с 21.04.2026
+  // 0 - 4н—
+  // 1 - 10н—
+  // 2 - 40н—
+  // 3 - 80н—
+  // 4 - 150н—
+  // 5 - 300н—
+  // 6 - 500н—
+  // 7 - 1000н—
+  // 8 - 3000н—
+  // 9 - 10000н—
+  // 10 - 20000н—
+   
   if (Index==0xFF) Index=0;
   BYTE LineInx = GetIndexLN ();
+  // 0-4,1-10,2-40,3-80,4-150,5-300,6-500,7-1000,8-3000,9-10000,10-20000
   switch (LineInx) //здесь же установим начальное смещение
   {
   case 0: //2km
@@ -1238,14 +1255,18 @@ void SetIndexIM (BYTE Index) // установка индекса длины Pulse
     break;
   }
   SW_FLTR(ON);
-  if (Index <6)
+//  if (Index <6)
+  if (Index <8)
   {
     SW_FLTR(OFF);
     CurrentBegShiftZone = UserSet.BegShiftZone[LineInx] ;
   }
-  if (Index == 6) CurrentBegShiftZone = UserSet.BegShiftZone[5+LineInx] ;// 3000 ns
-  if (Index == 7) CurrentBegShiftZone = UserSet.BegShiftZone[6+LineInx] ;//10mks for 128km
-  if (Index == 8) CurrentBegShiftZone = UserSet.BegShiftZone[6+LineInx] ;//20mks for 128km
+//  if (Index == 6) CurrentBegShiftZone = UserSet.BegShiftZone[5+LineInx] ;// 3000 ns
+//  if (Index == 7) CurrentBegShiftZone = UserSet.BegShiftZone[6+LineInx] ;//10mks for 128km
+//  if (Index == 8) CurrentBegShiftZone = UserSet.BegShiftZone[6+LineInx] ;//20mks for 128km
+  if (Index == 8) CurrentBegShiftZone = UserSet.BegShiftZone[5+LineInx] ;// 3000 ns
+  if (Index == 9) CurrentBegShiftZone = UserSet.BegShiftZone[6+LineInx] ;//10mks for 128km
+  if (Index == 10) CurrentBegShiftZone = UserSet.BegShiftZone[6+LineInx] ;//20mks for 128km
     
   SettingRefl.Index_Im = Index;
 }

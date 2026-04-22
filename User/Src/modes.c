@@ -117,6 +117,8 @@ const int TimeRepitOfLN[PNTSNUM] = { 125, 160, 250, 426, 800, 1180, 1920 }; // 2
 //const int KeyPoints[PNTSNUM] = { 96, 192, 384, 768, 1536, 2304, 4608 }; // порги определени€ индекса установленной длины дл€ всего массива
 //const int VerticalSize[PNTVERTICALSIZE] = { 22000, 16000, 8000, 4000 }; // вертикальные масштабы  при просмотре
 // врем€ измерни€ в uS в зависимости от длины и прореживани€
+//-------------------------------2km--4km--8km--16km-32km-64km--128km
+//----- импульсы в автомате------4нс--10нс-40нс-150нс500нс1000нс3000нс
 const int KeyPoints[PNTSNUM] = { 105, 146, 229, 395, 726, 1389, 2714 }; // порги определени€ индекса установленной длины теперь у нас 5300 точек реальных, снимаем 5600
 
 const DWORD DelayBadLength [LENGTH_LINE_NUM-1][LENGTH_LINE_NUM]= //длина установленна€,длина полученна€
@@ -1535,7 +1537,8 @@ void ModeStartOTDR(void) // режим накоплени€ рефлектометра
     break;
   case SEARCHENDLINE:
     SetIndexLN(6); //128km
-    SetIndexIM(4); //1000ns // вроде как ошибка была (было 5) ??? 31.08.2012
+    //SetIndexIM(4); //1000ns // вроде как ошибка была (было 5) ??? 31.08.2012
+    SetIndexIM(6); //1000ns //  ??? 21.04.2026
     if(g_NeedScr)
     {
       sprintf(Str,"t7.txt=\"%s\"€€€",((InputOK)?("OK"):("???"))); // 
@@ -1628,8 +1631,37 @@ void ModeStartOTDR(void) // режим накоплени€ рефлектометра
     // установить соотв. задержку дл€ полученной линии 
     if (GetSubModRefl()) // автоматический - добавку не делаем
     {
+      // подбор диапазонов и соотв длительностей импульсов врежиме ј¬“ќ
       ShadowIndexLN = IndexSeek(Mean);
-      ShadowIndexIM = IndexSeek(Mean);
+      // перенастроить на другой набор импульсов 21.04.2026
+      switch(ShadowIndexLN)
+      {
+      case 0: // 2 km - 10nS (1)
+        ShadowIndexIM = 1;
+        break;
+      case 1: // 4 km - 40nS (2)
+        ShadowIndexIM = 2;
+        break;
+      case 2: // 8 km - 150nS (4)
+        ShadowIndexIM = 4;
+        break;
+      case 3: // 16 km - 500nS (6)
+        ShadowIndexIM = 6;
+        break;
+      case 4: // 32 km - 1000nS (7)
+        ShadowIndexIM = 7;
+        break;
+      case 5: // 64 km - 3000nS (8)
+        ShadowIndexIM = 8;
+        break;
+      case 6: // 128 km - 10000nS (9)
+        ShadowIndexIM = 9;
+        break;
+      default: // 0.5 km - 10nS (1)
+        ShadowIndexIM = 1;
+        break;
+      }
+      //ShadowIndexIM = IndexSeek(Mean);
       // NumAvrg = (unsigned)(8250000L/(KeyPoints[ShadowIndexLN]+50)); // число накоплений , было +30
       //NumAvrg = (unsigned)(TimeMeasure3S/(NumPointsPeriod[ShadowIndexLN]*TimeRepitOfLN[ShadowIndexLN]));//*NumPointsPeriod[ShadowIndexLN])
       NumAvrg = (unsigned)(TimeMeasure3S/((NumPointsPeriod[ShadowIndexLN])*TimeRepitOfLN[ShadowIndexLN]+1));//*NumPointsPeriod[ShadowIndexLN])
@@ -1681,9 +1713,12 @@ void ModeStartOTDR(void) // режим накоплени€ рефлектометра
     CntNumAvrg = 0; // обнул€ем счетчик накоплений
     if (GetIndexVRM()==4) NumAvrg = NumAvrg-10; // разовый ~1,5 cek
     ShadowIndexIM = GetIndexIM(); // запоминаем индекс установленного импульса
-    if ((ShadowIndexIM > 5) && (GetIndexVRM()!=4))
+    //if ((ShadowIndexIM > 5) && (GetIndexVRM()!=4)) убрано 21.04.2026
+    if ((ShadowIndexIM > 7) && (GetIndexVRM()!=4))
     {
-      SetIndexIM(5); //1000ns дл€ первого измерени€ устанавливаем импульс если задан большой 3...10мкс
+      //SetIndexIM(5); //1000ns дл€ первого измерени€ устанавливаем импульс если задан большой 3...10мкс
+      // 21.04.2026
+      SetIndexIM(7); //1000ns дл€ первого измерени€ устанавливаем импульс если задан большой 3...10мкс
       //SetIndexShadowIM (ShadowIndexIM); // установка мертвой зоны дл€ теневого импульса
       SW_FLTR(ON);
       NeedResetIM = 1;// признак переустановки импульса
@@ -6463,7 +6498,7 @@ if(g_NeedScr)
 
 void ModeCalibrate(void) // режим установки начального смещени€
 {
-  SetIndexIM (3); // устанавливаем индекс длительности импульса с корректировкой по длинне (500нс
+  SetIndexIM (6); // устанавливаем индекс длительности импульса с корректировкой по длинне (500нс
   SetIndexLN (0); // коротка€ лини€ (2км)
   PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
   PointInPeriod = 0;
@@ -6482,12 +6517,12 @@ void ModeCalibrate(void) // режим установки начального смещени€
     if ((i>6)&&(i<12))
     {
       SetIndexLN (i-5); 
-      SetIndexIM (5);
+      SetIndexIM (7);
     }
     if (i==12)
     {
       SetIndexLN (6); 
-      SetIndexIM (6);
+      SetIndexIM (8);
     }
     PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
     memset( RawData, 0, RAWSIZE * sizeof(DWORD) );
@@ -7939,7 +7974,8 @@ float MeasORL(int NumAvrgThis, int EnaReport)
           CurrTimeAccum = 0;
           EnaTimerAccum = 1;
         }
-  SetIndexIM (1); // 40 ns
+  //SetIndexIM (1); // 40 ns
+  SetIndexIM (2); // 40 ns
   SetIndexLN (3); // 16 km
   PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
   PointInPeriod = 0;
