@@ -392,7 +392,8 @@ void RUN_SUM (DWORD* RawDataI)//
 //    }
 //    LED_KTS(0);
         //if ((GetIndexLN()>4)&&(GetIndexVRM()==3)&&(GetIndexIM()>6))// длинные линии (64,128) -> и накопление 3 минуты и импульс 10-20 мк—
-        if ((GetIndexVRM()==3)&&(GetIndexIM()>6))//накопление 3 минуты и импульс 10-20 мк—
+        //if ((GetIndexVRM()==3)&&(GetIndexIM()>6))//накопление 3 минуты и импульс 10-20 мк—
+        if ((GetIndexVRM()==3)&&(GetIndexIM()>8))//накопление 3 минуты и импульс 10-20 мк—
       {
         NeedCorrect = 1;
       }

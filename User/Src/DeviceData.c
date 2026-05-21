@@ -1230,21 +1230,35 @@ void SetIndexIM (BYTE Index) // установка индекса длины Pulse
   // 8 - 3000н—
   // 9 - 10000н—
   // 10 - 20000н—
+  // с 21.05.2026 A.K.
+  // 0 - 4н—
+  // 1 - 10н—
+  // 2 - 50н—
+  // 3 - 150н—
+  // 4 - 300н—
+  // 5 - 500н—
+  // 6 - 1000н—
+  // 7 - 3000н—
+  // 8 - 10000н—
+  // 9 - 20000н—
    
   if (Index==0xFF) Index=0;
   BYTE LineInx = GetIndexLN ();
   // 0-4,1-10,2-40,3-80,4-150,5-300,6-500,7-1000,8-3000,9-10000,10-20000
+  // 0-4,1-10,2-50,3-150,4-300,5-500,6-1000,7-3000,8-10000,9-20000 // 21/05/2026 A.K.
   switch (LineInx) //здесь же установим начальное смещение
   {
   case 0: //2km
   case 1: //4km
-    if (Index>WIDTH_PULSE_NUM-4)Index = WIDTH_PULSE_NUM-4; //деелаем ограничение на 1000н— (3) без 20000
+    //if (Index>WIDTH_PULSE_NUM-4)Index = WIDTH_PULSE_NUM-4; //делаем ограничение на 1000н— (3) без 20000 при 11 вариантах
+    if (Index>WIDTH_PULSE_NUM-3)Index = WIDTH_PULSE_NUM-3; //делаем ограничение на 1000н— (3) без 20000 при 10 вариантах A.K.
     break;
   case 2: //8km
   case 3: //16km
   case 4: //32km
   case 5: //64km
-    if (Index>WIDTH_PULSE_NUM-3)Index = WIDTH_PULSE_NUM-3; // делаем ограничение на 3000н— (2) без 20000
+    //if (Index>WIDTH_PULSE_NUM-3)Index = WIDTH_PULSE_NUM-3; // делаем ограничение на 3000н— (2) без 20000
+    if (Index>WIDTH_PULSE_NUM-2)Index = WIDTH_PULSE_NUM-2; // делаем ограничение на 3000н— (2) без 20000 A.K.
     
     break;
   case 6: //128km
@@ -1256,7 +1270,8 @@ void SetIndexIM (BYTE Index) // установка индекса длины Pulse
   }
   SW_FLTR(ON);
 //  if (Index <6)
-  if (Index <8)
+//  if (Index <8)
+  if (Index <7)  //A.K. 21.05.2026 выкл фильтра до 1000 н—
   {
     SW_FLTR(OFF);
     CurrentBegShiftZone = UserSet.BegShiftZone[LineInx] ;
@@ -1264,9 +1279,14 @@ void SetIndexIM (BYTE Index) // установка индекса длины Pulse
 //  if (Index == 6) CurrentBegShiftZone = UserSet.BegShiftZone[5+LineInx] ;// 3000 ns
 //  if (Index == 7) CurrentBegShiftZone = UserSet.BegShiftZone[6+LineInx] ;//10mks for 128km
 //  if (Index == 8) CurrentBegShiftZone = UserSet.BegShiftZone[6+LineInx] ;//20mks for 128km
-  if (Index == 8) CurrentBegShiftZone = UserSet.BegShiftZone[5+LineInx] ;// 3000 ns
-  if (Index == 9) CurrentBegShiftZone = UserSet.BegShiftZone[6+LineInx] ;//10mks for 128km
-  if (Index == 10) CurrentBegShiftZone = UserSet.BegShiftZone[6+LineInx] ;//20mks for 128km
+  // 21.04.2026
+//  if (Index == 8) CurrentBegShiftZone = UserSet.BegShiftZone[5+LineInx] ;// 3000 ns
+//  if (Index == 9) CurrentBegShiftZone = UserSet.BegShiftZone[6+LineInx] ;//10mks for 128km
+//  if (Index == 10) CurrentBegShiftZone = UserSet.BegShiftZone[6+LineInx] ;//20mks for 128km
+  // 21.05.2026
+  if (Index == 7) CurrentBegShiftZone = UserSet.BegShiftZone[5+LineInx] ;// 3000 ns
+  if (Index == 8) CurrentBegShiftZone = UserSet.BegShiftZone[6+LineInx] ;//10mks for 128km
+  if (Index == 9) CurrentBegShiftZone = UserSet.BegShiftZone[6+LineInx] ;//20mks for 128km
     
   SettingRefl.Index_Im = Index;
 }
