@@ -1538,7 +1538,7 @@ void ModeStartOTDR(void) // режим накоплени€ рефлектометра
   case SEARCHENDLINE:
     SetIndexLN(6); //128km
     //SetIndexIM(4); //1000ns // вроде как ошибка была (было 5) ??? 31.08.2012
-    SetIndexIM(6); //1000ns //  ??? 21.04.2026
+    SetIndexIM(6); //1000ns //  ??? 21.04.2026 // 21.05.2026 A.K.
     if(g_NeedScr)
     {
       sprintf(Str,"t7.txt=\"%s\"€€€",((InputOK)?("OK"):("???"))); // 
@@ -1643,19 +1643,24 @@ void ModeStartOTDR(void) // режим накоплени€ рефлектометра
         ShadowIndexIM = 2;
         break;
       case 2: // 8 km - 150nS (4)
-        ShadowIndexIM = 4;
+        //ShadowIndexIM = 4;
+        ShadowIndexIM = 3; // 21.05.2026 A.K.
         break;
       case 3: // 16 km - 500nS (6)
-        ShadowIndexIM = 6;
+        //ShadowIndexIM = 6;
+        ShadowIndexIM = 5; // 21.05.2026 A.K.
         break;
       case 4: // 32 km - 1000nS (7)
-        ShadowIndexIM = 7;
+        //ShadowIndexIM = 7;
+        ShadowIndexIM = 6; // 21.05.2026 A.K.
         break;
       case 5: // 64 km - 3000nS (8)
-        ShadowIndexIM = 8;
+        //ShadowIndexIM = 8;
+        ShadowIndexIM = 7; // 21.05.2026 A.K.
         break;
       case 6: // 128 km - 10000nS (9)
-        ShadowIndexIM = 9;
+        //ShadowIndexIM = 9;
+        ShadowIndexIM = 8; // 21.05.2026 A.K.
         break;
       default: // 0.5 km - 10nS (1)
         ShadowIndexIM = 1;
@@ -1714,11 +1719,14 @@ void ModeStartOTDR(void) // режим накоплени€ рефлектометра
     if (GetIndexVRM()==4) NumAvrg = NumAvrg-10; // разовый ~1,5 cek
     ShadowIndexIM = GetIndexIM(); // запоминаем индекс установленного импульса
     //if ((ShadowIndexIM > 5) && (GetIndexVRM()!=4)) убрано 21.04.2026
-    if ((ShadowIndexIM > 7) && (GetIndexVRM()!=4))
+    //if ((ShadowIndexIM > 7) && (GetIndexVRM()!=4))
+    if ((ShadowIndexIM > 6) && (GetIndexVRM()!=4)) //1000ns дл€ первого измерени€ устанавливаем импульс если задан большой 3...10мкс
     {
       //SetIndexIM(5); //1000ns дл€ первого измерени€ устанавливаем импульс если задан большой 3...10мкс
       // 21.04.2026
-      SetIndexIM(7); //1000ns дл€ первого измерени€ устанавливаем импульс если задан большой 3...10мкс
+      //SetIndexIM(7); //1000ns дл€ первого измерени€ устанавливаем импульс если задан большой 3...10мкс
+      // 21.05.2026 A.K.
+      SetIndexIM(6); //1000ns дл€ первого измерени€ устанавливаем импульс если задан большой 3...10мкс
       //SetIndexShadowIM (ShadowIndexIM); // установка мертвой зоны дл€ теневого импульса
       SW_FLTR(ON);
       NeedResetIM = 1;// признак переустановки импульса
@@ -6498,7 +6506,8 @@ if(g_NeedScr)
 
 void ModeCalibrate(void) // режим установки начального смещени€
 {
-  SetIndexIM (6); // устанавливаем индекс длительности импульса с корректировкой по длинне (500нс
+  //SetIndexIM (6); // устанавливаем индекс длительности импульса с корректировкой по длинне (500нс
+  SetIndexIM (5); // устанавливаем индекс длительности импульса с корректировкой по длинне (500нс) 21.05.2026 A.K.
   SetIndexLN (0); // коротка€ лини€ (2км)
   PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
   PointInPeriod = 0;
@@ -6517,12 +6526,14 @@ void ModeCalibrate(void) // режим установки начального смещени€
     if ((i>6)&&(i<12))
     {
       SetIndexLN (i-5); 
-      SetIndexIM (7);
+      //SetIndexIM (7);
+      SetIndexIM (6); // 21.05.2026 A.K.
     }
     if (i==12)
     {
       SetIndexLN (6); 
-      SetIndexIM (8);
+      //SetIndexIM (8);
+      SetIndexIM (7); // 21.05.2026 A.K.
     }
     PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
     memset( RawData, 0, RAWSIZE * sizeof(DWORD) );
@@ -7975,7 +7986,8 @@ float MeasORL(int NumAvrgThis, int EnaReport)
           EnaTimerAccum = 1;
         }
   //SetIndexIM (1); // 40 ns
-  SetIndexIM (2); // 40 ns
+  //SetIndexIM (2); // 40 ns 21/04/2026
+  SetIndexIM (2); // 50 ns  21.05.2026 A.K.
   SetIndexLN (3); // 16 km
   PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
   PointInPeriod = 0;

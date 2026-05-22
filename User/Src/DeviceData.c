@@ -20,7 +20,8 @@ const DWORD MultIndex[LENGTH_LINE_NUM]= {1,1,1,1,2,4,8};//множитель уменьшения ч
 const DWORD NumPointsPeriod[LENGTH_LINE_NUM]= {8,4,2,1,1,1,1};// число точек на период
 const DWORD LengthLine[LENGTH_LINE_NUM]= {2,4,8,16,32,64,128};
 const DWORD DelayPeriod[LENGTH_LINE_NUM]= {700,1200,4000,8000,10000,0,0};// задержка периода в тиках CreatDelay()~ 83.33 нс
-const WORD WidthPulse[2][WIDTH_PULSE_NUM]= {{4,10,40,80,150,300,500,1000,3000,10000,20000},{4,10,40,80,150,300,500,1000,3000,10000,20000}};
+//const WORD WidthPulse[2][WIDTH_PULSE_NUM]= {{4,10,40,80,150,300,500,1000,3000,10000,20000},{4,10,40,80,150,300,500,1000,3000,10000,20000}};
+const WORD WidthPulse[2][WIDTH_PULSE_NUM]= {{4,10,50,150,300,500,1000,3000,10000,20000},{4,10,50,150,300,500,1000,3000,10000,20000}}; //21/05/2026 A.K.
 const DWORD TimeAver[TIME_AVR_NUM]= {15,30,60,180,3,600};
 const unsigned TimeLight[TIME_LIGHT_NUM] = {0,15,30};
 const char *IdnsBC[2]= {"SvyazServis   \0","OPTOKON Co.Ltd\0"};
@@ -1150,8 +1151,11 @@ BYTE SetIndexLN (BYTE Index) // установка индекса длины линии
 //    if ((Index == 5) && (GetIndexIM()>6)) SetIndexIM (6);
 //    if ((Index == 1) && (GetIndexIM()>5)) SetIndexIM (5);
     // 21.04.2026
-    if ((Index == 5) && (GetIndexIM()>8)) SetIndexIM (8);//32km - >1000nS
-    if ((Index == 1) && (GetIndexIM()>7)) SetIndexIM (7);//2km - >500nS
+//    if ((Index == 5) && (GetIndexIM()>8)) SetIndexIM (8);//32km - >1000nS
+//    if ((Index == 1) && (GetIndexIM()>7)) SetIndexIM (7);//2km - >500nS
+    // 21.05.2026 A.K.
+    if ((Index == 5) && (GetIndexIM()>7)) SetIndexIM (7);//32km - >1000nS
+    if ((Index == 1) && (GetIndexIM()>6)) SetIndexIM (6);//2km - >500nS
           SetIndexIM(GetIndexIM()); // переустанавливаем мертвые зоны в зависимости от индекса
 return Index;
 }
@@ -1290,7 +1294,7 @@ void SetIndexIM (BYTE Index) // установка индекса длины Pulse
     
   SettingRefl.Index_Im = Index;
 }
-
+// от 21.05.2026 эта функция не используется, поэтому не правим
 void SetIndexShadowIM (BYTE Index) // установка мертвой зоны для теневого импульса
 {
     BYTE LineInx = GetIndexLN ();
@@ -1998,7 +2002,8 @@ unsigned short GetPointsShift (void)
 {
   WORD Tau;
   unsigned short Data;
-  if ((GetIndexIM()>4)&&(ConfigDevice.ApdiSet)) Tau = TAUFLTR; // 820nc
+  //if ((GetIndexIM()>4)&&(ConfigDevice.ApdiSet)) Tau = TAUFLTR; // 820nc
+  if ((GetIndexIM()>5)&&(ConfigDevice.ApdiSet)) Tau = TAUFLTR; // 820nc 21.05.2026 A.K.
   else Tau = TAUWFLTR; //70нс
   if (GetWidthPulse(GetIndexIM())<Tau) Tau = GetWidthPulse(GetIndexIM());
   Data = (unsigned short)((Tau*NumPointsPeriod[GetIndexLN()])/(ADCPeriod*MultIndex[GetIndexLN()]) +1);
