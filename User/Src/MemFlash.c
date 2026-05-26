@@ -50,6 +50,7 @@ St_File_Sor F_SOR; // содержимое основных параметров файла SOR
 
   //char   path=;
   uint32_t TotalSize, FreeSpace;
+    char FileNameL[10]; // имя файла fil.log 
     char FileNameS[32]; // имя файла куда сохраняем
     char FileNameB[32]; // имя файла куда сохраняем Belcore 2.0
     char FileSDir[8]; // директория файла куда сохраняем
@@ -1825,6 +1826,68 @@ void ReadToTrans(void)
       HAL_Delay(30);
 
 }
+// чтение файла LOG 
+void ReadLogFile(void)
+{
+    FRESULT FR_Stat;
+    char TxLogBuffer[64];
+    Log_Stat ReadLogData;
+    // 
+  do
+  {
+    //------------------[ Mount The SD Card ]--------------------
+    FR_Status = f_mount(&FatFs, SDPath, 1);
+    if (FR_Status != FR_OK)
+    {
+      break;
+    }
+    // создаем или проверяем наличие дирректории _OTDR
+    FR_Stat = f_mkdir(PathMainDir);//"0:/_OTDR"
+    if(FR_Stat == FR_EXIST)
+    {
+      //sprintf ((char*)TxBuffer,"Make MainDir Already Is\r");
+      FR_Stat = FR_OK;
+    }
+    sprintf(pFileRtT,"fil.log"); // путь для LOG файла
+      sprintf(FileNameL,"fil.log");
+       // имя файла есть
+      //создадим полны путь к файлу чтобы его открыть
+    sprintf(pFileRtT,"%s/%s",PathMainDir,FileNameL);
+
+    
+    // цикл чтения файла и передача его содержимого с расшифровкой
+    FR_Stat = f_open(&Fil, pFileRtT, FA_READ);
+    if(FR_Status == FR_OK)
+    {
+      do
+      {
+        f_read (&Fil,(void*)&ReadLogData, 20, &RWC); // прочитаем строку записи
+        if(RWC)
+        {
+          // разберем и выведем строку
+          sprintf (TxLogBuffer, "%d,%d,%d,%d,%d,%.2f,%d\r",
+                   ReadLogData.NumWr, // номер события
+                   ReadLogData.CodeEvnts, //событие
+                   ReadLogData.TimeSysLog, // время события
+                   ReadLogData.EPow_KeyP&0xff, //код нажатой клавиши
+                   (ReadLogData.EPow_KeyP&0x8000)?(1):(0), // внешнее/внутреннее питание
+                   ReadLogData.BatVolt,
+                   ReadLogData.SizeRSCmd );
+          
+           UARTSendExt ((BYTE*)TxLogBuffer, strlen(TxLogBuffer));
+        }
+
+      }while(RWC);
+    }
+    f_close(&Fil);
+    } while(0);
+      HAL_Delay(10);
+
+  //------------------[ Test Complete! Unmount The SD Card ]--------------------
+  FR_Status = f_mount(NULL, "", 0);
+      HAL_Delay(30);
+
+}
 // функция записи файла измерений измерителя
 void SaveFilePM(void)
 {
@@ -1862,7 +1925,7 @@ void SaveFilePM(void)
       //создадим полны путь к файлу чтобы его открыть
     sprintf(PathFileS,"%s/%s",PathPMDir,FileNameS);
    //
-    FR_Status = f_open(&Fil, PathFileS, FA_WRITE  | FA_CREATE_ALWAYS);
+    FR_Status = f_open(&Fil, PathFileS, FA_WRITE  | FA_CREATE_ALWAYS );
     //    if(FR_Status != FR_OK)
     //    {
     //      sprintf(TxBuffer, "Error! While Creating/Opening A New Text File, Error Code: (%i)\r\n", FR_Status);
@@ -1928,7 +1991,52 @@ void SaveFilePM(void)
   FR_Status = f_mount(NULL, "", 0);
   
 }
+//
+// функция записи LogFile
+void LogFileSave(void)
+{
+  //< < < < <  !!! В Н И М А Н И Е !!! > > > > >
+  // попробуем записать файл
+  do
+  {
+    //------------------[ Mount The SD Card ]--------------------
+    FR_Status = f_mount(&FatFs, SDPath, 1);
+    if (FR_Status != FR_OK)
+    {
+      break;
+    }
+    // создаем или проверяем наличие дирректории _OTDR
+    res = f_mkdir(PathMainDir);//"0:/_OTDR"
+    if(res == FR_EXIST)
+    {
+      //sprintf ((char*)TxBuffer,"Make MainDir Already Is\r");
+      res = FR_OK;
+    }
+    // откроем файл для записи
+      // подготовим путь
+    
+      // имя файла
+      sprintf(FileNameL,"fil.log");
+       // имя файла есть
+      //создадим полны путь к файлу чтобы его открыть
+    sprintf(PathFileS,"%s/%s",PathMainDir,FileNameL);
+   //
+    FR_Status = f_open(&Fil, PathFileS, FA_READ | FA_WRITE  | FA_OPEN_ALWAYS );
+    //
+    FR_Status = f_lseek(&Fil, f_size(&Fil));
+    FR_Status = f_write(&Fil, (BYTE*)&LogInfo[CountLogEvnts], 20,&WWC);
+    
+    f_close(&Fil);
+    
+  } while(0);
+      HAL_Delay(2);
 
+  //------------------[ Test Complete! Unmount The SD Card ]--------------------
+  FR_Status = f_mount(NULL, "", 0);
+  
+}
+
+//
 void CopyFileSave (void) // копирование файла "0" в файл который сохраняем
 {
   // откроем карту

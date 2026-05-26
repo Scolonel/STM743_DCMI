@@ -42,7 +42,7 @@ RTCTime TimeSaveOLT;
 RTCTime TimeSavePM; // время перезаписи данных из ЕЕПРОМ на SD карту
 RTCTime TimeReadOLT;
 RTCTime current_time;
- static unsigned int CurTime;
+unsigned int CurTime;
  uint8_t iBadTime = 0; // признак плохого времени для изменения индикации при включении
 /* USER CODE END 0 */
 

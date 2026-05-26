@@ -377,6 +377,17 @@ void DecodeCommandRS (void)
               //ClearScreen(screen);
               
             }
+            if (!memcmp ((void*)RX_Buf, ";MMEM:LOG?",10)) //RX_Buf[17] - номер рефл
+            {
+              
+              //SendBellcore1_0();
+              ReadLogFile();
+              NeedTransmit = 1;
+              
+              
+              //ClearScreen(screen);
+              
+            }
       //123      
       //      // ;MEMM:NAME? -  чтение комментариев сохраненных рефлектограмм
       //      if (!memcmp ((void*)RX_Buf, ";MMEM:NAME?",11)) //

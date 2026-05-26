@@ -106,6 +106,15 @@
 #define OTDR_FILE_BAD_CHECKSUM  -21 // неверная контрольная сумма
 
 #define BUFFER_SIZE	256
+// LOG FILES
+#define KEYB_S 1// 0 - изменение клавиатуры
+#define PW_EXT 2// 1 - питание внешнее
+#define PW_INT 4// 2 - питание от батарей
+#define USB_UART 8// 3 - Прием USB-UART
+#define TM_15 16// 4 - по времени (15 сек)
+#define BEG_RUN 32// 5 - начало работы
+#define PRESS_S 64// 6 - обработка кнопки S
+#define F_ON_BAT 128// 7 - выход из заставки (для батарейки)
 
 
 #include "integer.h"
@@ -329,6 +338,27 @@ typedef struct
 
 extern St_File_Sor F_SOR; // содержимое основных параметров файла SOR
 
+#pragma pack(push,1)
+
+typedef struct
+{
+  // Структура записи LOG файла
+  uint32_t NumWr; // номер записи 
+  uint32_t TimeSysLog; //системное время события( по времени работы от включения HAL_GetTick())
+  float BatVolt;    // системное напряжение питания (Ubat)
+  uint16_t EPow_KeyP;    // признак внешнего питания(15 бит - EXT_POW) и код клавиатуры (KeyP)
+  uint16_t SizeRSCmd; // размер принятой команды по USB-UART (RSDecYes)
+  uint8_t CodeEvnts; // бит кода события
+  uint8_t Reserv; // резервный байт
+  uint16_t Empty; // резервный полуслово
+  // суммарно блок 20 байт
+} Log_Stat;
+#pragma pack(pop)
+
+extern Log_Stat LogInfo[256]; // содержимое LOG file
+extern uint8_t CountLogEvnts; // счетчик событий ЛОГА для перезаписи в память при заполнении 255
+extern uint16_t KeyCodeP; // дубликат KeyP но только на отработке...по коду 
+
 
 typedef struct
 {
@@ -363,6 +393,10 @@ extern uint32_t BufNAK[SizeBuf_ADC]; // буфер накопления, в него добавляем из бу
 extern uint32_t SumNumNak; // суммарное число проходов при данном числе накоплений
 extern uint8_t MeasureNow; // признак работы накопителя, для обхода, основного цикла
 extern uint32_t Sm_Shift ; // текущее значение сдвига Зонд.Импульса
+
+extern unsigned int CurTime; // текущее время при включении в секундах
+extern float Ubat; // напряжение батареи в вольтах
+void WrLogInfo (uint8_t CodeLog);
 
 // пробная функция дернуть ногой открытым коллектором USB_DP
 void ReConnectUSB (void);

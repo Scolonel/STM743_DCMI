@@ -229,6 +229,20 @@ uint8_t g_CodeErrorSoft=0;
 
 uint32_t g_Noise=0;
 uint32_t g_TimeAvrg=0; // для индикации времени накопления при ручном управлении
+
+// переменные контроля изменений для записи ЛОГА
+// контроль каждые 15 сек если ничего не происходит,
+// контроль приема чего то от внешнего USB-UART
+// контроль нажатия кнопок (получение кода)
+// контроль изменения подключения внешнего питания
+uint32_t LastTick=0; // последний тик при изменениях (для счета 15 сек)
+uint8_t CountLogEvnts = 0; // счетчик событий ЛОГА для перезаписи в память при заполнении 255
+uint32_t CntLogEvnts = 0; // счетчик событий ЛОГА сквозной от включения
+uint8_t SysLogByte = 0; // битовое поле событий лога
+uint16_t CurrExtPow = 0;
+uint16_t KeyCodeP = 0; // дубликат KeyP но только на отработке...по коду 
+Log_Stat LogInfo[256]; // содержимое LOG file
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -352,7 +366,10 @@ int main(void)
   //    sprintf((void*)Str, "t0.txt=\"начало\"яяя"); // auto
   //    NEX_Transmit((void*)Str);    // 
   //      HAL_Delay(10);
-  
+  if(!(EXT_POW))
+  CurrExtPow = 0x8000; // зачитаем текущее значение внешнего питания
+  else
+  CurrExtPow = 0; //батарейка
   StartRecievNEX (400);
   sprintf((void*)Str,"get tlcd.txtяяя");
   NEX_Transmit((void*)Str);//
@@ -716,6 +733,9 @@ int main(void)
   // повисим возможно сдесь если подключены  к линии писаноем туда сообщение
   // здесь запускается "долгий" процесс связи с компьютером, и мешает инициализации, стоит
   // что-то предпринять
+  WrLogInfo (BEG_RUN); //пишем первое событие по включению
+  LogInfo[CountLogEvnts].TimeSysLog = CurTime; // запишем время в секундах* текущее определим по признаку начала 
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -739,6 +759,10 @@ int main(void)
       // здесь кроме опроса
       KeyP = SetBtnStates( GetExpand (), 1 ); // опрос клавиатуры
       GetSysTick(1);// сброс системного ожидания
+//      if(KeyP) // Запишем событие
+//      {
+//        WrLogInfo (KEYB_S); //пишем событие по нажатию кнопок
+//      }
       // управление красным лазером
       // управление лазерами в режиме CW*
       // поконтролить батарейку
@@ -747,6 +771,30 @@ int main(void)
       
       if(++PeriodIntADC > 15)// 450 mS
       {
+        // проверим подключение внешнего питания
+        //CurrExtPow== 0-батарейка 1-внешнее
+        if(EXT_POW) // батарейка
+        {
+          // проверим не было ли предыдущая внешним питанием
+          if(CurrExtPow) 
+          {
+            WrLogInfo(PW_INT); //пишем событие включение от батареек
+          }
+        }
+        else
+        {
+          // проверим не было ли предыдущая батарейным  питанием
+          if(!CurrExtPow) 
+          {
+            WrLogInfo(PW_EXT); //пишем событие включение от внешнего питания
+          }
+          
+        }
+        // проверим долгое время
+        if((HAL_GetTick() - LastTick)>60000)
+        {
+            WrLogInfo(TM_15); //пишем событие тупим 60 сек
+        }
         TimerDraw = 1;
         // здесь можно запустить Измерение АЦП
         if (HAL_ADC_Start_DMA(&hadc1,(uint32_t *)&BufADC,3) != HAL_OK)
@@ -779,6 +827,7 @@ int main(void)
     if (RSDecYes) // вызов программы обработки комманды принятой по UART
     {
       //TST_KTB(1);
+      WrLogInfo(USB_UART);
       DecodeCommandRS();
       //TST_KTA(0);
     }
@@ -919,7 +968,7 @@ int main(void)
           case 2:
             // закончили крутить мультик
             HAL_Delay(20);
-
+            
             
             break;
           default:
@@ -939,7 +988,7 @@ int main(void)
         // прорисовка основной функции
         ModeFuncTmp();
         CntrlRE(); // контроль красного глаза
-
+        
       }
       
       // здесь всегда в основном цикле
@@ -967,7 +1016,7 @@ int main(void)
     if(ProgFW_LCD==2) ProgFW_LCD=0;
     
     /* USER CODE END WHILE */
-
+    
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -1973,7 +2022,24 @@ void GetLogData (void)
     // если накопили до конца отключаем основной таймер и тормозим все остаальные
     // если суммируем перустанавливаем основной таймер в пред окончание и его запуск
 
+void WrLogInfo (uint8_t CodeLog)
+{
+  CountLogEvnts++;  
+  LastTick = HAL_GetTick(); // начало работы, или событие
+  LogInfo[CountLogEvnts].BatVolt = Ubat;
+  LogInfo[CountLogEvnts].EPow_KeyP = CurrExtPow + KeyCodeP;
+  LogInfo[CountLogEvnts].NumWr=CntLogEvnts++;
+  LogInfo[CountLogEvnts].SizeRSCmd= RSDecYes;
+  LogInfo[CountLogEvnts].TimeSysLog = LastTick; // запишем время в секундах* текущее определим по признаку начала 
+  LogInfo[CountLogEvnts].CodeEvnts = CodeLog;
+  if(CodeLog == BEG_RUN)
+      LogInfo[CountLogEvnts].TimeSysLog = CurTime; // запишем время в секундах* текущее определим по признаку начала 
 
+  // функция записи LogFile
+  LogFileSave();
+
+  if(CountLogEvnts > 254) CountLogEvnts=0;
+}
 
 
 /* USER CODE END 4 */
