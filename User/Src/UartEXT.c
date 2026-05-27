@@ -377,16 +377,19 @@ void DecodeCommandRS (void)
               //ClearScreen(screen);
               
             }
+      // чтение файла LOG
             if (!memcmp ((void*)RX_Buf, ";MMEM:LOG?",10)) //RX_Buf[17] - номер рефл
             {
-              
-              //SendBellcore1_0();
-              ReadLogFile();
+              //ReadLogFile(1); // читаем весь файл
+              NeedLogFile = 1;
               NeedTransmit = 1;
-              
-              
-              //ClearScreen(screen);
-              
+            }
+      // чтение файла LOG когда включали (возможно сколько раз)
+            if (!memcmp ((void*)RX_Buf, ";MMEM:ONF?",10)) //RX_Buf[17] - номер рефл
+            {
+              //ReadLogFile(2); // читаем только времена включения
+              NeedLogFile = 2;
+              NeedTransmit = 1;
             }
       //123      
       //      // ;MEMM:NAME? -  чтение комментариев сохраненных рефлектограмм
@@ -736,6 +739,7 @@ void DecodeCommandRS (void)
           sprintf(BufString,"%d\r", GetTimeAvrg(GetIndexVRM())+7);//c
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
           SetModeDevice (MODEMEASURE); // принудительная установка режима прибора -  запкск рефлектометрии с установленными параметрами
+          SystLogWord +=START_U;
           NeedTransmit = 1;
           //else  sprintf(BufString,"Not stopрed\r");
         }

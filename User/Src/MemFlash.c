@@ -34,7 +34,7 @@ St_File_Sor F_SOR; // содержимое основных параметров файла SOR
   FILINFO fno;
   DIR dir;
   UINT    br, bw;         // File R/W count
-  FIL Fil;
+  FIL Fil, Fild;
   FRESULT FR_Status, res;
 
   char*   fn;
@@ -1827,12 +1827,15 @@ void ReadToTrans(void)
 
 }
 // чтение файла LOG 
-void ReadLogFile(void)
+void ReadLogFile(uint8_t Mode)
 {
-    FRESULT FR_Stat;
-    char TxLogBuffer[64];
-    Log_Stat ReadLogData;
-    // 
+  FRESULT FR_Stat;
+  char TxLogBuffer[64];
+  Log_Stat ReadLogData;
+  uint32_t countONF = 0;
+  RTCTime TimeONDev;
+  
+  // 
   do
   {
     //------------------[ Mount The SD Card ]--------------------
@@ -1849,11 +1852,11 @@ void ReadLogFile(void)
       FR_Stat = FR_OK;
     }
     sprintf(pFileRtT,"fil.log"); // путь для LOG файла
-      sprintf(FileNameL,"fil.log");
-       // имя файла есть
-      //создадим полны путь к файлу чтобы его открыть
-    sprintf(pFileRtT,"%s/%s",PathMainDir,FileNameL);
-
+    //  sprintf(FileNameL,"fil.log");
+    // имя файла есть
+    //создадим полны путь к файлу чтобы его открыть
+    //sprintf(pFileRtT,"%s/%s",PathMainDir,FileNameL);
+    
     
     // цикл чтения файла и передача его содержимого с расшифровкой
     FR_Stat = f_open(&Fil, pFileRtT, FA_READ);
@@ -1864,29 +1867,50 @@ void ReadLogFile(void)
         f_read (&Fil,(void*)&ReadLogData, 20, &RWC); // прочитаем строку записи
         if(RWC)
         {
-          // разберем и выведем строку
-          sprintf (TxLogBuffer, "%d,%d,%d,%d,%d,%.2f,%d\r",
-                   ReadLogData.NumWr, // номер события
-                   ReadLogData.CodeEvnts, //событие
-                   ReadLogData.TimeSysLog, // время события
-                   ReadLogData.EPow_KeyP&0xff, //код нажатой клавиши
-                   (ReadLogData.EPow_KeyP&0x8000)?(1):(0), // внешнее/внутреннее питание
-                   ReadLogData.BatVolt,
-                   ReadLogData.SizeRSCmd );
-          
-           UARTSendExt ((BYTE*)TxLogBuffer, strlen(TxLogBuffer));
+          // здесь в зависимости от Mode раберем и выведеи информацию
+          switch (Mode)
+          {
+          case 1:
+            // разберем и выведем строку
+            sprintf (TxLogBuffer, "%d,%d,%d,%d,%d,%.2f,%d\r",
+                     ReadLogData.NumWr, // номер события
+                     ReadLogData.CodeEvnts, //событие
+                     ReadLogData.TimeSysLog, // время события
+                     ReadLogData.EPow_KeyP&0xff, //код нажатой клавиши
+                     (ReadLogData.EPow_KeyP&0x8000)?(1):(0), // внешнее/внутреннее питание
+                     ReadLogData.BatVolt, // состояние батареи (это SYST_BAT)питание системы
+                     ReadLogData.SizeRSCmd ); // размер принятой команды по UART
+            UARTSendExt ((BYTE*)TxLogBuffer, strlen(TxLogBuffer));
+            break;
+          case 2:
+            if(ReadLogData.CodeEvnts == 32)
+            {
+              countONF++;
+              Sec2Date (ReadLogData.TimeSysLog, &TimeONDev); // заполняем структуру времени
+              
+              sprintf(TxLogBuffer,"%d--20%02d.%02d.%02dT%02d:%02d:%02d;\r",countONF,
+                      TimeONDev.RTC_Year%100,
+                      TimeONDev.RTC_Mon,
+                      TimeONDev.RTC_Mday,
+                      TimeONDev.RTC_Hour,
+                      TimeONDev.RTC_Min,
+                      TimeONDev.RTC_Sec);
+              UARTSendExt ((BYTE*)TxLogBuffer, strlen(TxLogBuffer));
+            }
+            break;
+          }
         }
-
+        
       }while(RWC);
     }
     f_close(&Fil);
-    } while(0);
-      HAL_Delay(10);
-
+  } while(0);
+  HAL_Delay(10);
+  
   //------------------[ Test Complete! Unmount The SD Card ]--------------------
   FR_Status = f_mount(NULL, "", 0);
-      HAL_Delay(30);
-
+  HAL_Delay(30);
+  
 }
 // функция записи файла измерений измерителя
 void SaveFilePM(void)
@@ -1995,6 +2019,9 @@ void SaveFilePM(void)
 // функция записи LogFile
 void LogFileSave(void)
 {
+  uint32_t u_sizeF; // размер файла
+  BYTE buffer[256];   // file copy buffer
+  
   //< < < < <  !!! В Н И М А Н И Е !!! > > > > >
   // попробуем записать файл
   do
@@ -2013,24 +2040,72 @@ void LogFileSave(void)
       res = FR_OK;
     }
     // откроем файл для записи
-      // подготовим путь
+    // подготовим путь
     
-      // имя файла
-      sprintf(FileNameL,"fil.log");
-       // имя файла есть
-      //создадим полны путь к файлу чтобы его открыть
-    sprintf(PathFileS,"%s/%s",PathMainDir,FileNameL);
-   //
-    FR_Status = f_open(&Fil, PathFileS, FA_READ | FA_WRITE  | FA_OPEN_ALWAYS );
+    // имя файла
+    sprintf(FileNameL,"fil.log");
+    // имя файла есть
+    //создадим полны путь к файлу чтобы его открыть
+    //sprintf(PathFileS,"%s/%s",PathMainDir,FileNameL);
     //
-    FR_Status = f_lseek(&Fil, f_size(&Fil));
+    //FR_Status = f_open(&Fil, PathFileS, FA_READ | FA_WRITE  | FA_OPEN_ALWAYS );
+    // откроем файл с именем
+    FR_Status = f_open(&Fil, FileNameL, FA_READ | FA_WRITE  | FA_OPEN_ALWAYS );
+    // проверим размер если больше нужного сделаем копию и начнем с начала
+    u_sizeF =  f_size(&Fil);
+    if(u_sizeF > 20000000) // можно скопировть файл в другой
+    {
+      strcpy(FileNameS, FileNameL);
+      FileNameS[2] = 'x';          // меняем имя файла
+      FR_Status = f_open(&Fild, FileNameS, FA_CREATE_ALWAYS | FA_WRITE);
+      if (FR_Status)
+        break;
+      FR_Status = f_sync(&Fild);
+      if (FR_Status)
+        break;
+      // Copy source to destination
+      for (;;) {
+        //vTaskSuspendAll();
+        FR_Status = f_read(&Fil, buffer, sizeof(buffer), &RWC);
+        //xTaskResumeAll();
+        if (FR_Status || RWC == 0) break;   // error or eof
+        FR_Status = f_write(&Fild, buffer, RWC, &WWC);
+        
+        if (FR_Status || WWC < RWC)   // error or disk full
+        {
+          FR_Status= FR_DISK_ERR;
+          break;   // error or disk full
+        }
+        FR_Status = f_sync(&Fild);
+        if (FR_Status)
+          break;
+      }
+      
+      // Close all files
+      f_close(&Fild);
+      if (FR_Status == FR_DISK_ERR)
+      {
+        f_unlink(FileNameS); // пробуем удалить файл если плохо записался
+      }
+      
+      FR_Status = f_lseek(&Fil, 0);
+      
+      if(FR_Status == FR_OK)
+        FR_Status = f_truncate(&Fil);
+    }
+    else
+    {
+      FR_Status = f_lseek(&Fil, f_size(&Fil));
+    } 
     FR_Status = f_write(&Fil, (BYTE*)&LogInfo[CountLogEvnts], 20,&WWC);
-    
     f_close(&Fil);
     
   } while(0);
-      HAL_Delay(2);
-
+  if(&Fil != NULL)
+    f_close(&Fil);
+  
+  HAL_Delay(2);
+  
   //------------------[ Test Complete! Unmount The SD Card ]--------------------
   FR_Status = f_mount(NULL, "", 0);
   

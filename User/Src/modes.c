@@ -362,9 +362,22 @@ void ModeFuncTmp(void)
   if(KeyCodeP)
   {
     // Запишем событие
-    WrLogInfo (KEYB_S); //пишем событие по нажатию кнопок
-    KeyCodeP = 0;
+    //WrLogInfo (KEYB_S); //пишем событие по нажатию кнопок
+    SystLogWord += KEYB_S;
+    //KeyCodeP = 0;
   }
+  if(SystLogWord)
+  {
+    WrLogInfo (SystLogWord); //пишем событие 
+    SystLogWord = 0;
+  }
+  if(NeedLogFile)
+  {
+  ReadLogFile(NeedLogFile); // 
+  NeedLogFile = 0;
+  }
+  //ReadLogFile(2); // читаем только времена включения
+
   // обнуляем не обработанную кнопку "S"
   rawPressKeyS=0;
   
@@ -461,7 +474,8 @@ void ModeWelcome(void)// режим заставки
   if ((HAL_GetTick() - TimeBegin) > 4000) //4s
     //if (CntWelcome > WAITWELCOME)
   {
-    WrLogInfo (F_ON_BAT); //пишем значение батарейки по включению
+    //WrLogInfo (F_ON_BAT); //пишем значение батарейки по включению
+    SystLogWord += F_ON_BAT;
 
     SetMode(ModeMainMenu);
     CmdInitPage(1);// посылка команды переключения окна на MainMenu и установка признака первого входа
@@ -1293,7 +1307,8 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
   }
   if (rawPressKeyS) // START Measure из режима установок рефлектометра
   {        
-    WrLogInfo(PRESS_S);
+    //WrLogInfo(PS_START); //старт измерений
+    SystLogWord += PS_START;
     myBeep(10);
     // сохраняем установки измерения если запустили
     EEPROM_write(&SettingRefl, ADR_ReflSetting, sizeof(SettingRefl));
@@ -1379,7 +1394,8 @@ void ModeErrorOTDR(void) // режим отображения "Излучение на входе" CHECK_OFF
   
   if (rawPressKeyS)
   { 
-    WrLogInfo(PRESS_S);
+    //WrLogInfo(BAD_INP); // излучение на входе
+    SystLogWord += BAD_INP;
     myBeep(10);
     //g_NeedScr = 1; // Need reDraw Screen
     SetMode(ModeSetupOTDR);
@@ -2120,7 +2136,8 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
   // прерывание по кнопке S возврат в настройку рефлектометра
   if (rawPressKeyS)
   { 
-    WrLogInfo(PRESS_S);
+    //WrLogInfo(STOP_MEAS); // останока измерений (прерывание)
+    SystLogWord += STOP_MEAS;
     myBeep(10);
     HV_LOW(ON); //ON LOW HIGH VOLT
     HV_SW(OFF); // OFF HIGH VOLT
@@ -2775,7 +2792,8 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
   //ClrKey (BNS_MASK);
   if (rawPressKeyS)// переход в редактор комментариев сохранения
   { 
-    WrLogInfo(PRESS_S);
+    //WrLogInfo(WR_COMM); // вызов редактора комментариев
+    SystLogWord += WR_COMM;
     if(ReturnModeViewRefl==SETPARAM)
     {
       myBeep(10);
@@ -3213,7 +3231,8 @@ void ModeKeyBoardOTDR(void) // режим отображения клавиатуры редактора комментари
   }
   if ((rawPressKeyS)||(NeedSaveTr))// сохранение если в редакторе по кнопке S  кроме кнопки отмена
   {
-    WrLogInfo(PRESS_S);
+    //WrLogInfo(SAVE_F);
+    SystLogWord += SAVE_F;
     if ((!((KbPosY == 2)&&(KbPosX == 11)))||(NeedSaveTr))  SaveNewOTDRTrace (0);
     rawPressKeyS = 0;
     NeedSaveTr = 0;
@@ -3896,7 +3915,8 @@ void ModeMemoryOTDR(void) // режим отображения сохраненных рефлектограмм и работ
   //  {
   if (rawPressKeyS) // 17.11.2022 хотим запустить измерение
   {        
-    WrLogInfo(PRESS_S);
+    //WrLogInfo(PS_START);
+    SystLogWord += PS_START;
     myBeep(10);
     // если стартуем перепишем выбранную длину волны в соответствии с памяти
     SetIndxSeqLS();
@@ -4389,7 +4409,8 @@ void ModeMeasManualOLT(void) // режим работы тестера в ручном режиме CHECK_OFF
   }
   if (rawPressKeyS) // key S первый заход в редактор сохр.
   {        
-    WrLogInfo(PRESS_S);
+    //WrLogInfo(WR_COMM);
+    SystLogWord += WR_COMM;
     myBeep(10);
     SetMode(ModeSaveOLT);
     SavePowerMeter(tmp);
@@ -4798,7 +4819,8 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
   
   if (rawPressKeyS) // key S 
   {        
-    WrLogInfo(PRESS_S);
+    //WrLogInfo(SAVE_PM); // сохраняем измеритель
+    SystLogWord += SAVE_PM;
     myBeep(10);
     SetMode(ModeSaveOLT);
     SavePowerMeter(tmpPOW);
@@ -5135,7 +5157,8 @@ void ModeSaveOLT(void) // режим сохранения результатов измерителя CHECK_OFF
   }
   if (rawPressKeyS) // key S
   {        
-    WrLogInfo(PRESS_S);
+    //WrLogInfo(SAVE_PM); // сохраняем измеритель
+    SystLogWord += SAVE_PM;
     myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
     memcpy (PONI.CommUserPM, CommentsOLT,16);

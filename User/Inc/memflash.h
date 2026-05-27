@@ -50,7 +50,7 @@ unsigned short MakeEvents (void);
 
 void ReadToTrans(void); 
 // чтение файла LOG 
-void ReadLogFile(void);
+void ReadLogFile(uint8_t Mode);
 
 void SaveFileSD(int Mod); // запись 0.sor на карточку в главную дирректорию
 // функция записи файла измерений измерителя

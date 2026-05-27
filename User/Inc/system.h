@@ -113,8 +113,14 @@
 #define USB_UART 8// 3 - Прием USB-UART
 #define TM_15 16// 4 - по времени (15 сек)
 #define BEG_RUN 32// 5 - начало работы
-#define PRESS_S 64// 6 - обработка кнопки S
-#define F_ON_BAT 128// 7 - выход из заставки (для батарейки)
+#define F_ON_BAT 64// 6 - выход из заставки (для батарейки)
+#define PS_START 128// 7 - обработка кнопки S (старт измерения)
+#define BAD_INP 256// 8 - обработка кнопки S (излучение на входе)
+#define STOP_MEAS 512// 9 - обработка кнопки S (прерывание измерений)
+#define WR_COMM 1024// 10 - обработка кнопки S (вызов записи комментариев)
+#define SAVE_F 2048// 11 - обработка кнопки S (Сохраняем рефлектограмму)
+#define SAVE_PM 4096// 12 - обработка кнопки S (Сохраняем измеритель)
+#define START_U 8192// 13 - старт измерений по команде INIT
 
 
 #include "integer.h"
@@ -348,9 +354,7 @@ typedef struct
   float BatVolt;    // системное напряжение питания (Ubat)
   uint16_t EPow_KeyP;    // признак внешнего питания(15 бит - EXT_POW) и код клавиатуры (KeyP)
   uint16_t SizeRSCmd; // размер принятой команды по USB-UART (RSDecYes)
-  uint8_t CodeEvnts; // бит кода события
-  uint8_t Reserv; // резервный байт
-  uint16_t Empty; // резервный полуслово
+  uint32_t CodeEvnts; // бит кода события
   // суммарно блок 20 байт
 } Log_Stat;
 #pragma pack(pop)
@@ -394,9 +398,12 @@ extern uint32_t SumNumNak; // суммарное число проходов при данном числе накоплен
 extern uint8_t MeasureNow; // признак работы накопителя, для обхода, основного цикла
 extern uint32_t Sm_Shift ; // текущее значение сдвига Зонд.Импульса
 
+// LOG FILE
 extern unsigned int CurTime; // текущее время при включении в секундах
 extern float Ubat; // напряжение батареи в вольтах
-void WrLogInfo (uint8_t CodeLog);
+void WrLogInfo (uint32_t CodeLog);
+extern uint32_t SystLogWord; // битовое поле событий лога, взводим в пути а пишем только в одном месте
+extern uint8_t NeedLogFile; // необходимость вызвать функцию передачи LOG файла (после обработки)
 
 // пробная функция дернуть ногой открытым коллектором USB_DP
 void ReConnectUSB (void);

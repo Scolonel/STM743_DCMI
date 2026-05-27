@@ -238,9 +238,10 @@ uint32_t g_TimeAvrg=0; // для индикации времени накопления при ручном управлении
 uint32_t LastTick=0; // последний тик при изменениях (для счета 15 сек)
 uint8_t CountLogEvnts = 0; // счетчик событий ЛОГА для перезаписи в память при заполнении 255
 uint32_t CntLogEvnts = 0; // счетчик событий ЛОГА сквозной от включения
-uint8_t SysLogByte = 0; // битовое поле событий лога
+uint32_t SystLogWord = 0; // битовое поле событий лога, взводим в пути а пишем только в одном месте
 uint16_t CurrExtPow = 0;
 uint16_t KeyCodeP = 0; // дубликат KeyP но только на отработке...по коду 
+uint8_t NeedLogFile = 0; // необходимость вызвать функцию передачи LOG файла (после обработки)
 Log_Stat LogInfo[256]; // содержимое LOG file
 
 /* USER CODE END PV */
@@ -734,7 +735,7 @@ int main(void)
   // здесь запускается "долгий" процесс связи с компьютером, и мешает инициализации, стоит
   // что-то предпринять
   WrLogInfo (BEG_RUN); //пишем первое событие по включению
-  LogInfo[CountLogEvnts].TimeSysLog = CurTime; // запишем время в секундах* текущее определим по признаку начала 
+  //LogInfo[CountLogEvnts].TimeSysLog = CurTime; // запишем время в секундах* текущее определим по признаку начала 
 
   /* USER CODE END 2 */
 
@@ -778,7 +779,9 @@ int main(void)
           // проверим не было ли предыдущая внешним питанием
           if(CurrExtPow) 
           {
-            WrLogInfo(PW_INT); //пишем событие включение от батареек
+            CurrExtPow = 0;
+            //WrLogInfo(PW_INT); //пишем событие включение от батареек
+            SystLogWord += PW_INT;
           }
         }
         else
@@ -786,14 +789,17 @@ int main(void)
           // проверим не было ли предыдущая батарейным  питанием
           if(!CurrExtPow) 
           {
-            WrLogInfo(PW_EXT); //пишем событие включение от внешнего питания
+            CurrExtPow = 0x8000;
+            //WrLogInfo(PW_EXT); //пишем событие включение от внешнего питания
+            SystLogWord += PW_EXT;
           }
           
         }
         // проверим долгое время
         if((HAL_GetTick() - LastTick)>60000)
         {
-            WrLogInfo(TM_15); //пишем событие тупим 60 сек
+            //WrLogInfo(TM_15); //пишем событие тупим 60 сек
+            SystLogWord += TM_15;
         }
         TimerDraw = 1;
         // здесь можно запустить Измерение АЦП
@@ -827,7 +833,10 @@ int main(void)
     if (RSDecYes) // вызов программы обработки комманды принятой по UART
     {
       //TST_KTB(1);
-      WrLogInfo(USB_UART);
+      //WrLogInfo(USB_UART);
+      SystLogWord += USB_UART;
+      LogInfo[CountLogEvnts+1].SizeRSCmd= RSDecYes;
+
       DecodeCommandRS();
       //TST_KTA(0);
     }
@@ -2022,22 +2031,25 @@ void GetLogData (void)
     // если накопили до конца отключаем основной таймер и тормозим все остаальные
     // если суммируем перустанавливаем основной таймер в пред окончание и его запуск
 
-void WrLogInfo (uint8_t CodeLog)
+void WrLogInfo (uint32_t CodeLog)
 {
   CountLogEvnts++;  
   LastTick = HAL_GetTick(); // начало работы, или событие
   LogInfo[CountLogEvnts].BatVolt = Ubat;
   LogInfo[CountLogEvnts].EPow_KeyP = CurrExtPow + KeyCodeP;
   LogInfo[CountLogEvnts].NumWr=CntLogEvnts++;
-  LogInfo[CountLogEvnts].SizeRSCmd= RSDecYes;
+  //LogInfo[CountLogEvnts].SizeRSCmd= RSDecYes;
   LogInfo[CountLogEvnts].TimeSysLog = LastTick; // запишем время в секундах* текущее определим по признаку начала 
   LogInfo[CountLogEvnts].CodeEvnts = CodeLog;
-  if(CodeLog == BEG_RUN)
+  if(CodeLog & BEG_RUN)
       LogInfo[CountLogEvnts].TimeSysLog = CurTime; // запишем время в секундах* текущее определим по признаку начала 
 
   // функция записи LogFile
   LogFileSave();
-
+  // чистим после записи
+  KeyCodeP = 0;
+  if(LogInfo[CountLogEvnts].SizeRSCmd) // был прием по UART
+       LogInfo[CountLogEvnts].SizeRSCmd = 0;
   if(CountLogEvnts > 254) CountLogEvnts=0;
 }
 
