@@ -1255,14 +1255,14 @@ void SetIndexIM (BYTE Index) // установка индекса длины Pulse
   case 0: //2km
   case 1: //4km
     //if (Index>WIDTH_PULSE_NUM-4)Index = WIDTH_PULSE_NUM-4; //делаем ограничение на 1000н— (3) без 20000 при 11 вариантах
-    if (Index>WIDTH_PULSE_NUM-3)Index = WIDTH_PULSE_NUM-3; //делаем ограничение на 1000н— (3) без 20000 при 10 вариантах A.K.
+    if (Index>WIDTH_PULSE_NUM-4)Index = WIDTH_PULSE_NUM-4; //делаем ограничение на 1000н— (3) без 20000 при 10 вариантах A.K.
     break;
   case 2: //8km
   case 3: //16km
   case 4: //32km
   case 5: //64km
-    //if (Index>WIDTH_PULSE_NUM-3)Index = WIDTH_PULSE_NUM-3; // делаем ограничение на 3000н— (2) без 20000
-    if (Index>WIDTH_PULSE_NUM-2)Index = WIDTH_PULSE_NUM-2; // делаем ограничение на 3000н— (2) без 20000 A.K.
+    if (Index>WIDTH_PULSE_NUM-3)Index = WIDTH_PULSE_NUM-3; // делаем ограничение на 3000н— (2) без 20000
+    //if (Index>WIDTH_PULSE_NUM-2)Index = WIDTH_PULSE_NUM-2; // делаем ограничение на 3000н— (2) без 20000 A.K.
     
     break;
   case 6: //128km
