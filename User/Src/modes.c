@@ -7621,17 +7621,21 @@ WORD CheckLevelBattery (void) // контроль заряда баттареи
 {
   static volatile WORD BufProcBat[10]={100,100,100,100,100,100,100,100,100,100};
   WORD ProcBatMed, ProcBatSum;
+#define U_BAT_MAX 5.35
+#define U_BAT_MIN 4.15
+  
   //123  ADCData = ADC0Read(BAT_ADC);//новое правило получения данных АЦП батарейки
   //ADCData = 2048;
   //Ubat = ADCData * GetSetBatStep(0)* 3 ; // так как делитель на 3, может не надо -0.3- 0.3
   float DelRes = (100./RESISTOR_PWR)+1.0;
   Ubat = 2.5*DelRes*BufADC[0]/4096; 
   
-  if (Ubat > 5.1) ProcBat = 100;
+  if (Ubat > U_BAT_MAX) ProcBat = 100;
   //else if (Ubat >= 4.0) ProcBat = (WORD)((Ubat-4.0)*90.91);//  1.1в = 100%
   //else if (Ubat >= 4.3) ProcBat = (WORD)((Ubat-4.3)*125);//  0.8в = 100%
-  else if (Ubat >= 4.15) ProcBat = (WORD)((Ubat-4.15)*105.26);//  0.95в = 100%
-  if (Ubat<4.15)
+  //else if (Ubat >= U_BAT_MIN) ProcBat = (WORD)((Ubat-4.14)*105.26);//  0.95в = 100%
+  else if (Ubat >= U_BAT_MIN) ProcBat = (WORD)((Ubat-U_BAT_MIN)*100/(U_BAT_MAX - U_BAT_MIN));//  0.95в = 100%
+  if (Ubat<U_BAT_MIN)
   {
     ProcBat = 0; // плохая батарея
   }
@@ -7648,10 +7652,11 @@ WORD CheckLevelBattery (void) // контроль заряда баттареи
   BufProcBat[0]=ProcBat;
   ProcBatSum += BufProcBat[0];
   ProcBatMed = (WORD)(ProcBatSum/10);
-  // для индикации
+  // для индикации( пытаемся подойти к 0% при 25% реальных, ДАЛЕЕ держим 0% до напряжения  4.15 с 4.4 при этом продолжаем работать
   if (ProcBatMed > 20) ProcBatInd = (WORD)(1.25*ProcBatMed - 25);
   else ProcBatInd = 0;
   //ProcBatInd = ProcBatMed;
+  // выдаем плохое питание при реальном 4.15В (0%)
   return ProcBatMed;
 }
 
