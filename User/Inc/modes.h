@@ -159,6 +159,9 @@ float MeasORL(int NumAvrgThis, int EnaReport);
 // функция инициализации страницы по номеру в NEXTION
 void CmdInitPage(int Num);
 
+// функция установки текущей яркости индикатора NEXTION
+void SetBrightness(uint8_t Bright);
+
 void SlowON (void); // медленное включение питания
 
 void AlarmSignal(int type);

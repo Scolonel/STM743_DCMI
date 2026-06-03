@@ -8332,6 +8332,26 @@ float MeasORL(int NumAvrgThis, int EnaReport)
   return Result;
 }
 
+// функци€ установки текущей €ркости индикатора NEXTION
+void SetBrightness(uint8_t Bright)
+{
+  char str[16];
+  // 
+  if(Bright<=100)
+  {
+  sprintf(str, "dim=%d€€€",Bright); // < событиe >
+  NEX_Transmit((void*)str);    //
+  }
+  else
+  {
+  if(Bright<=200)
+  {
+  sprintf(str, "dims=%d€€€",Bright-100); // < событиe >
+  NEX_Transmit((void*)str);    //
+  }    
+  }
+  //HAL_Delay(30);
+}
     
     
 //void TetrisGame (void)
