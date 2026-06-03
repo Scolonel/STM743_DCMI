@@ -368,6 +368,10 @@ void ModeFuncTmp(void)
   }
   if(SystLogWord)
   {
+    if(SystLogWord & KEYB_S) // увеличим €ркость
+      SetBrightness(100);
+    if((SystLogWord & TM_15)&&(!RunInRealTime)) // реальное врем€ // уменьшим €ркость
+      SetBrightness(40);
     WrLogInfo (SystLogWord); //пишем событие 
     SystLogWord = 0;
   }
@@ -1871,6 +1875,7 @@ void ModeStartOTDR(void) // режим накоплени€ рефлектометра
     }
     if (GetIndexVRM()==4) // разовый ~1,5 cek ... режим –еал тайм
     {
+      RunInRealTime = 1; // измер€ем в режиме RealTime
       CntNumAvrg = 0; // обнул€ем счетчик накоплений
       memset( RawData, 0, RAWSIZE * sizeof(DWORD) );
       //123      reset_timer(2); //04.02.2014
@@ -2145,7 +2150,7 @@ void ModeStartOTDR(void) // режим накоплени€ рефлектометра
     POWREF (OFF);
     // востановим пин управлени€ лазерами
     //PINSEL1 &=~0x00300000; //set P0.26 us GIO
-    
+    RunInRealTime = 0; // прекратили измерение в режиме RealTime    
     GetPlaceLS(CURRENT);
     rawPressKeyS=0;
     //123 SSPInit_Any(MEM_FL1); // ¬останавливаем »нициализацию SSP дл€ управлени€ внешней FLASH (порт 1 та что на плате отладочной)

@@ -242,7 +242,9 @@ uint32_t SystLogWord = 0; // битовое поле событий лога, взводим в пути а пишем т
 uint16_t CurrExtPow = 0;
 uint16_t KeyCodeP = 0; // дубликат KeyP но только на отработке...по коду 
 uint8_t NeedLogFile = 0; // необходимость вызвать функцию передачи LOG файла (после обработки)
+uint8_t RunInRealTime = 0; // измер€ем в режиме RealTime
 Log_Stat LogInfo[256]; // содержимое LOG file
+
 
 /* USER CODE END PV */
 
@@ -325,6 +327,8 @@ int main(void)
   //  sprintf((void*)Str, "t1.txt=\"¬ключение...\"€€€"); // auto
   //  NEX_Transmit((void*)Str);    // 
   CmdInitPage(0);// вызов окна заставки
+  
+  //SetBrightness(100);
 
   if(CheckErrID_Plate)
   {

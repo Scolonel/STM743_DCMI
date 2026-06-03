@@ -404,6 +404,7 @@ extern float Ubat; // напряжение батареи в вольтах
 void WrLogInfo (uint32_t CodeLog);
 extern uint32_t SystLogWord; // битовое поле событий лога, взводим в пути а пишем только в одном месте
 extern uint8_t NeedLogFile; // необходимость вызвать функцию передачи LOG файла (после обработки)
+extern uint8_t RunInRealTime; // измеряем в режиме RealTime
 
 // пробная функция дернуть ногой открытым коллектором USB_DP
 void ReConnectUSB (void);
