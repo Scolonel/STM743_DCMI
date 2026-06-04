@@ -42,6 +42,7 @@
 #define LED_KTT(a)    ((a>0)?(HAL_GPIO_WritePin(KTT_GPIO_Port, KTT_Pin, GPIO_PIN_SET)):(HAL_GPIO_WritePin(KTT_GPIO_Port, KTT_Pin, GPIO_PIN_RESET))) /* set LED_START to high/low */
 #define TST_KTA(a)    ((a>0)?(HAL_GPIO_WritePin(KTA_GPIO_Port, KTA_Pin, GPIO_PIN_SET)):(HAL_GPIO_WritePin(KTA_GPIO_Port, KTA_Pin, GPIO_PIN_RESET))) /* set test pinA (PG05) to high/low */
 #define TST_KTB(a)    ((a>0)?(HAL_GPIO_WritePin(KTB_GPIO_Port, KTB_Pin, GPIO_PIN_SET)):(HAL_GPIO_WritePin(KTB_GPIO_Port, KTB_Pin, GPIO_PIN_RESET))) /* set test pinA (PG05) to high/low */
+#define E_ADC(a)    ((a>0)?(HAL_GPIO_WritePin(ENA_ADC_GPIO_Port, ENA_ADC_Pin, GPIO_PIN_SET)):(HAL_GPIO_WritePin(ENA_ADC_GPIO_Port, ENA_ADC_Pin, GPIO_PIN_RESET))) /* set test pinA (PG05) to high/low */
 
 //#define LEDSTART         (1UL<<5)  // P1.5 (156) 
 

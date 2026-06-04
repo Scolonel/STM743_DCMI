@@ -83,6 +83,9 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(PM_CS_GPIO_Port, PM_CS_Pin, GPIO_PIN_SET);
 
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(ENA_ADC_GPIO_Port, ENA_ADC_Pin, GPIO_PIN_SET);
+  
   /*Configure GPIO pin : PtPin */
   GPIO_InitStruct.Pin = Beep_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
