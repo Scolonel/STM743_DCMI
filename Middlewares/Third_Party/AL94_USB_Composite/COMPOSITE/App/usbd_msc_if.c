@@ -179,11 +179,6 @@ USBD_StorageTypeDef USBD_Storage_Interface_fops =
 int8_t STORAGE_Init(uint8_t lun)
 {
   /* USER CODE BEGIN 2 */
-//    LED_START(1);
-//  int8_t ret = -1;
-//  if(MSC_or_CDC)
-//    ret = USBD_OK;
-//  return ret;
   return (USBD_OK);
   /* USER CODE END 2 */
 }
@@ -220,14 +215,7 @@ int8_t STORAGE_GetCapacity(uint8_t lun, uint32_t *block_num, uint16_t *block_siz
 int8_t STORAGE_IsReady(uint8_t lun)
 {
   /* USER CODE BEGIN 4 */
-//    LED_START(0);
-// ВНИМАНИЕ! отсутствие номального ответа приводит к нестабильной работе CDC
-//  if(MSC_or_CDC)
-//  return USBD_OK;
-//  else
-//  return -1;  
-return USBD_OK;
-  
+  return (USBD_OK);
   /* USER CODE END 4 */
 }
 
@@ -258,7 +246,7 @@ int8_t STORAGE_Read(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t blk_l
   //
   //  return (USBD_OK);
   //LED_START(1);
-  // код из примера
+  // Код из примера
   int8_t ret = USBD_FAIL;
   if(MSC_or_CDC)
   {
@@ -290,7 +278,7 @@ int8_t STORAGE_Write(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t blk_
 //  UNUSED(blk_len);
 //
 //  return (USBD_OK);
-  // код из примера
+  // Код из примера
   //  LED_START(1);
   int8_t ret = USBD_FAIL;
   if(MSC_or_CDC)
@@ -319,11 +307,6 @@ int8_t STORAGE_Write(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t blk_
 int8_t STORAGE_GetMaxLun(void)
 {
   /* USER CODE BEGIN 8 */
-  // блокировка по признаку отсутствия MSC
-//  if(!MSC_or_CDC)
-//  {
-//    return -1; //отказ устройства
-//  }
   return (STORAGE_LUN_NBR - 1);
   /* USER CODE END 8 */
 }
