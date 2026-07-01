@@ -6725,18 +6725,18 @@ void ModeCalibrate(void) // режим установки начального смещения
   Averaging(200,0,0);// включение питания и запуск прогревочного накопления 
   for (int i=0; i<NUMSHIFTZONE; ++i)
   {
-    if (i<7) SetIndexLN (i);
+    if (i<7) SetIndexLN (i); // перебираем длительности линий ((0)2-(1)4-(2)8-(3)16-(4)32-(5)64-(6)128
     if ((i>6)&&(i<12))
     {
-      SetIndexLN (i-5); 
+      SetIndexLN (i-5); //(7)8-(8)16-(9)32-(10)64-(11)128
       //SetIndexIM (7);
-      SetIndexIM (6); // 21.05.2026 A.K.
+      SetIndexIM (7); // 21.05.2026 A.K. импульс 3000нС
     }
     if (i==12)
     {
-      SetIndexLN (6); 
+      SetIndexLN (6); //128 км
       //SetIndexIM (8);
-      SetIndexIM (7); // 21.05.2026 A.K.
+      SetIndexIM (8); // 21.05.2026 A.K. (импульс 10000нС)
     }
     PointsPerPeriod = NumPointsPeriod[GetIndexLN()]; // SetPointsPerPeriod( ... );
     memset( RawData, 0, RAWSIZE * sizeof(DWORD) );
@@ -7024,7 +7024,8 @@ int SearchShiftBeg (int Size)// поиск мертвой зоны
       
       EndCalc = 1;
   }
-  return (i+2);// поправлено т.к. изменился алгоритм поиска начала!
+  // исправлено меньше на 1 , так что бы первая точка была до сигнала (30.06.2026)
+  return (i+1);// (i+2) поправлено т.к. изменился алгоритм поиска начала!
   
 }
 
@@ -8393,7 +8394,7 @@ void SlowON (void) // медленное включение питания
   // сделал с проверкой уже включенных, для ускорения...
   
   POWREF (ON);
-  HAL_Delay (400); // 0.7 С (с этой задержкой вроде работает от USB, без акк)
+  HAL_Delay (300); // 0.7 С (с этой задержкой вроде работает от USB, без акк)
   POWDET(ON);
   // а так по старому
 //  POWALT(ON);

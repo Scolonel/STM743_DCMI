@@ -17,6 +17,7 @@ static int Res_Old=0;                 // ѕредыдущее усредненное значение ј÷ѕ с у
 static int Level[40];         // Ќакопленные значени€ ј÷ѕ с учетом смещени€
 static unsigned int PMWavelenght=1310;  // “екуща€ длина волны
 
+ void MyDe_t (int lin); // подпрограмма формировани€ программной задержки
 
 
 unsigned int GetPMWavelenght(signed char DeltaLambda) //¬озвращает, либо измен€ет текущую длину волны
@@ -135,14 +136,22 @@ void SetSwitchPMMode(BYTE SwMode)
 }
 
 
- void MyDe_t (int lin) // подпрограмма формировани€ программной задержки
- { 
-   TIM7->CNT= 0;
-   TIM7->CR1 |= TIM_CR1_CEN; // START генератора TIM1 (вспомогательный генратор()
-   
-   while(TIM7->CNT < lin) {} // пауза lin мкс
-   TIM7->CR1 &= ~TIM_CR1_CEN; // stop таймера 7
- }
+// void MyDe_t (int lin) // подпрограмма формировани€ программной задержки
+// { 
+//   uint16_t Ena_RunT = 1;
+//   TIM7->CR1 &= ~TIM_CR1_CEN; // stop таймера 7
+//   TIM7->CNT= 0;
+//   TIM7->CR1 |= TIM_CR1_CEN; // START генератора TIM1 (вспомогательный генратор()
+//   
+//   //while(TIM7->CNT < lin) 
+//   while(Ena_RunT) 
+//   {
+//     __NOP();
+//     if(TIM7->CNT > lin)
+//       Ena_RunT = 0;
+//   } // пауза lin мкс
+//   TIM7->CR1 &= ~TIM_CR1_CEN; // stop таймера 7
+// }
 
 
 // ногоƒрыганное чтение данных из ј÷ѕ
@@ -601,37 +610,46 @@ int SetTypeRslt(BYTE type)                           // ”станавливает новое знач
 int AcquireShZeroLowRng(void)                          // »змерение уровней смещени€ на нижнем диапазоне (переустановка нул€)
 {
   BYTE i=0;                                     // —четчики
- // static unsigned long data;                             // ƒл€ усредненни€ данных
-  
-  
+  // static unsigned long data;                             // ƒл€ усредненни€ данных
+  uint16_t StBTN;
+  char Str[32];
+
   int AverageData=0;                              // ”средненые данные
   
-    if (GetRange()==0)
-      // установлен диапазон 0  ?
-    {
-    CreatDelay(1.2e6);    //~ 0.1 S
+  if (GetRange()==0)
+    // установлен диапазон 0  ?
+  {
+    //CreatDelay(1.2e6);    //~ 0.1 S
+    HAL_Delay(100);    //~ 0.1 S
+    //SetStateADC(FREEADC);
     for(i=0;i<3;i++)
     {    
       if(StateADC==FREEADC) GetPMData();
-      MyDe_t(1); // микро задержка
       while(StateADC!=READYDATA) 
       {
-      MyDe_t(1); // микро задержка
+        HAL_Delay(20);    //~ 0.02 S
+        GetPMData();                  
       }     
-
+      
       SetStateADC(FREEADC);
     }     
     //AverageData=0;
+    sprintf(Str, "t1.bco=YELLOW€€€"); // желтый
+    NEX_Transmit((void*)Str);//
+    // здесь заполн€ем данными пол€ нового индикатора
+    // по результатам изменений вызваныйх обработчиком клавиатуры
+    sprintf(Str,"t1.txt=\"%d\"€€€",CoeffPM.ShZeroRng[0]); // 
+    NEX_Transmit((void*)Str);    //
     
     
     
     for(i=0;i<20;i++)
     {    
       if(StateADC==FREEADC) GetPMData();
-      MyDe_t(1); // микро задержка
       while(StateADC!=READYDATA) 
       {
-      MyDe_t(1); // микро задержка
+        HAL_Delay(20);    //~ 0.1 S
+        GetPMData();                  
       }
       
       AverageData+=GetPMData();
@@ -639,11 +657,31 @@ int AcquireShZeroLowRng(void)                          // »змерение уровней смещ
     }
     AverageData = (AverageData/20);
     if ( AverageData < 300000)
-    CoeffPM.ShZeroRng[0]=(int)(AverageData);
-    
+      
+    sprintf(Str,"t1.txt=\"%d\"€€€",AverageData); // 
+    NEX_Transmit((void*)Str);    //
+      CoeffPM.ShZeroRng[0]=(int)(AverageData);
    
-  CreatDelay(1e7);  // ~ 0.8 S
-    }
+    HAL_Delay(500);    //~ 0.1 S
+    StBTN = GetExpand (); // прочитаем кнопки
+     if(!(StBTN & BTN_OK))
+     {
+       // можно записать в пам€ть!!!
+       myBeep(300);
+       WriteNeedStruct(0x02);
+       sprintf(Str, "t1.bco=RED€€€"); // красный
+       NEX_Transmit((void*)Str);//
+       
+       HAL_Delay(500);    //~ 0.1 S
+       
+     }
+    
+    sprintf(Str, "t1.bco=WHITE€€€"); // белый
+    NEX_Transmit((void*)Str);//
+    sprintf(Str,"t1.txt=\"%2.3f\"€€€",GetCurrLvldB(0)); // dBm REF
+    NEX_Transmit((void*)Str);    //
+
+  }
   return 1;
 }
 
@@ -934,5 +972,21 @@ float GetCoefSpctrKlb(WORD index, float RealPower)     // ¬озвращает спектральны
   
 }
 
+#pragma optimize=none
 
-
+ void MyDe_t (int lin) // подпрограмма формировани€ программной задержки
+ { 
+   uint16_t Ena_RunT = 1;
+   TIM7->CR1 &= ~TIM_CR1_CEN; // stop таймера 7
+   TIM7->CNT= 0;
+   TIM7->CR1 |= TIM_CR1_CEN; // START генератора TIM1 (вспомогательный генратор()
+   
+   //while(TIM7->CNT < lin) 
+   while(Ena_RunT) 
+   {
+     __NOP();
+     if(TIM7->CNT > lin)
+       Ena_RunT = 0;
+   } // пауза lin мкс
+   TIM7->CR1 &= ~TIM_CR1_CEN; // stop таймера 7
+ }
