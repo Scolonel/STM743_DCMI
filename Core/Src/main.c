@@ -298,6 +298,8 @@ int main(void)
   __HAL_UART_DISABLE_IT(&huart7, UART_IT_PE);
   /* disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
   __HAL_UART_DISABLE_IT(&huart7, UART_IT_ERR);
+
+  HAL_Delay(500);
   
   // перенастроим UART7  для NEXTION
   huart7.Init.BaudRate = 9600;

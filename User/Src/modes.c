@@ -2095,6 +2095,8 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
       }
       if (RemoutCtrl) // выдача окончания сбора если запускали дистанционно
       {
+          sprintf(Str,"%d-%dkm_%dns\r",g_SuperTest,GetLengthLine(GetIndexLN()),GetWidthPulse(GetIndexIM()));//c
+          UARTSendExt ((BYTE*)Str, strlen (Str));
         sprintf(Str,"END\r");//c
         RemoutCtrl = 0;
         UARTSendExt ((BYTE*)Str, strlen (Str));
@@ -2103,14 +2105,12 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
         ClearRS();
         if(g_SuperTest) // тут можно посмотреть не надо ли запускать снова
         {
-          sprintf(Str,"%d-%dkm_%dns\r",g_SuperTest,GetLengthLine(GetIndexLN()),GetWidthPulse(GetIndexIM()));//c
-          UARTSendExt ((BYTE*)Str, strlen (Str));
           //GetLengthLine(GetIndexLN()),GetWidthPulse(GetIndexIM())
           if(g_STindx_LN<(LENGTH_LINE_NUM))
           {
+              g_SuperTest++;// следующее измерение
             if(g_STindx_IM<(WIDTH_PULSE_NUM-1))
             {
-              g_SuperTest++;
               g_STindx_IM++;
               SetIndexLN(g_STindx_LN); // индекс длины линии
               SetIndexIM(g_STindx_IM); // индекс длительности импульса
