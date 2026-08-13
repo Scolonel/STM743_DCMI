@@ -331,7 +331,7 @@ int main(void)
   CmdInitPage(0);// вызов окна заставки
   
   //SetBrightness(100);
-
+  E_ADC(1);
   if(CheckErrID_Plate)
   {
     //  myBeep(100);

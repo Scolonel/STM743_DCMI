@@ -2095,8 +2095,8 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
       }
       if (RemoutCtrl) // выдача окончания сбора если запускали дистанционно
       {
-          sprintf(Str,"%d-%dkm_%dns\r",g_SuperTest,GetLengthLine(GetIndexLN()),GetWidthPulse(GetIndexIM()));//c
-          UARTSendExt ((BYTE*)Str, strlen (Str));
+//          sprintf(Str,"%d-%dkm_%dns\r",g_SuperTest,GetLengthLine(GetIndexLN()),GetWidthPulse(GetIndexIM()));//c
+//          UARTSendExt ((BYTE*)Str, strlen (Str));
         sprintf(Str,"END\r");//c
         RemoutCtrl = 0;
         UARTSendExt ((BYTE*)Str, strlen (Str));

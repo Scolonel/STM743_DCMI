@@ -101,7 +101,8 @@ void Averaging (int NumAccum,unsigned AddIndexLN, BYTE EnDrawGraph )// функция н
 // AddIndexLN - индекс по которому устанавливается период сбора для особых случаев
 // исходно 0 - устанвливаем период согласно выбранного диапазона
 // не 0 - устанвливает период согластно индекса диапазона оценивается в StartRunFirst
-{ 
+{
+  E_ADC(0);
   //    CntPointPick=0;
   //TST_KTA(1);
   //CurrTimeAccum = HAL_GetTick();
@@ -144,6 +145,7 @@ void Averaging (int NumAccum,unsigned AddIndexLN, BYTE EnDrawGraph )// функция н
   }
   MeasureNow =0; //выключаем ограничение на прорисовку режима
   
+  E_ADC(1);
   if (!RemoutCtrl)
   {
     // приостановим таймер времени накопления
