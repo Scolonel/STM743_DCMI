@@ -7764,12 +7764,14 @@ void UploadFW_Nextion(void) // обновление индикатора NEXTION
     //  //CreatDelay(5000000);
     //  SetModeDevice (MODEMENU); // принудительная установка режима прибора
     //  CmdInitPage(1);
+    myBeep(500);
+    HAL_Delay(500);
+    //NVIC_SystemReset(); //  уходим в сброс
     CmdInitPage(0);// вызов окна заставки
-    HAL_Delay(100);
-    SetMode (ModeWelcome);
+    HAL_Delay(100);// индикатор после сброса, время не понятно!
     CmdInitPage(0);// посылка команды переключения окна на Welcome и установка признака первого входа
-    HAL_Delay(500);// индикатор после сброса, время не понятно!
-    myBeep(125);
+    TimeBegin = HAL_GetTick();
+    SetMode (ModeWelcome);
   }
   
 }
