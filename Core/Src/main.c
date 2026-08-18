@@ -331,7 +331,6 @@ int main(void)
   CmdInitPage(0);// вызов окна заставки
   
   //SetBrightness(100);
-  E_ADC(1);
   if(CheckErrID_Plate)
   {
     //  myBeep(100);
@@ -727,6 +726,7 @@ int main(void)
   CmdInitPage(0);// вызов окна заставки
   //HAL_Delay(100);
   HAL_Delay(10);
+  E_ADC(1); //ADC Off
 
   SetMode (ModeWelcome);
   CmdInitPage(0);// посылка команды переключения окна на Welcome и установка признака первого входа

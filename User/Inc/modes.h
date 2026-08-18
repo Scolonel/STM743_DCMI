@@ -162,6 +162,7 @@ void CmdInitPage(int Num);
 // функция установки текущей яркости индикатора NEXTION
 void SetBrightness(uint8_t Bright);
 
+void GroupOFF (void); //  выключение питания
 void SlowON (void); // медленное включение питания
 
 void AlarmSignal(int type);

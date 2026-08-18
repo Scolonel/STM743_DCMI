@@ -1522,8 +1522,12 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     //Mean = 200; // тест для проверки батарейки
     if (Mean > 2000)
     {
-      POWDET(OFF);
+      // здесь возможно выключение АЦП...
+      //GroupOFF(); //  выключение питания
+
       POWREF (OFF);
+      POWDET(OFF);
+      
       SetMode(ModeErrorOTDR);
       ModeDevice = MODEERREFL;
       SubModeMeasOTDR = NOTMODE;
@@ -1895,11 +1899,12 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
       
       RawData[RAWSIZE-1]= CurrTimeAccum;// что-то хотим сохранить в данных рефлектограммы (время съема)
       EnaTimerAccum = 0;
-      
+      // здесь возможно выключение АЦП...
+      //GroupOFF(); //  выключение питания
       HV_LOW(ON); //ON LOW HIGH VOLT
       HV_SW(OFF); // OFF HIGH VOLT
-      POWDET(OFF);
       POWREF (OFF);
+      POWDET(OFF);
       // востановим пин управления лазерами
       //PINSEL1 &=~0x00300000; //set P0.26 us GIO
       
@@ -2144,10 +2149,12 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     //WrLogInfo(STOP_MEAS); // останока измерений (прерывание)
     SystLogWord += STOP_MEAS;
     myBeep(10);
+      // здесь возможно выключение АЦП...
+    //GroupOFF(); //  выключение питания
     HV_LOW(ON); //ON LOW HIGH VOLT
     HV_SW(OFF); // OFF HIGH VOLT
-    POWDET(OFF);
     POWREF (OFF);
+    POWDET(OFF);
     // востановим пин управления лазерами
     //PINSEL1 &=~0x00300000; //set P0.26 us GIO
     RunInRealTime = 0; // прекратили измерение в режиме RealTime    
@@ -6753,10 +6760,13 @@ void ModeCalibrate(void) // режим установки начального смещения
   }
   SetIndexLN (0); 
   SetIndexIM (0);
+      // здесь возможно выключение АЦП...
+  // было запущено, когда неизвестно!!!
+  //GroupOFF(); //  выключение питания
   HV_LOW(ON); //ON LOW HIGH VOLT
   HV_SW(OFF); // OFF HIGH VOLT
-  POWDET(OFF);
   POWREF (OFF);
+  POWDET(OFF);
   //123 SSPInit_Any(MEM_FL1); // Востанавливаем Инициализацию SSP для управления внешней FLASH (порт 1 та что на плате отладочной)
   WriteNeedStruct (0x04);
   //123  FlashErasePage(CFG_USER); // чистим страницу установок пользователя прибора
@@ -7210,6 +7220,7 @@ BYTE SetModeDevice (BYTE Mode) // принудительная установка режима прибора
     SetMode(ModeSetupOTDR);
     GetSetModeLW(-1); // сброс счетчика так как принудительная установка
     ModeDevice = MODESETREFL;
+    //GroupOFF(); //  выключение питания
     HV_LOW(ON); //ON LOW HIGH VOLT
     HV_SW(OFF); // OFF HIGH VOLT
     POWREF (OFF);
@@ -7227,6 +7238,7 @@ BYTE SetModeDevice (BYTE Mode) // принудительная установка режима прибора
     PreSetModeLS(0);
     SetupSource (GetModeLS()); // установка режима работы лазера  
     ModeDevice = MODEREFL;
+    //GroupOFF(); //  выключение питания
     HV_LOW(ON); //ON LOW HIGH VOLT
     HV_SW(OFF); // OFF HIGH VOLT
     POWREF (OFF);
@@ -7241,6 +7253,7 @@ BYTE SetModeDevice (BYTE Mode) // принудительная установка режима прибора
     SetupSource (GetModeLS()); // установка режима работы лазера  
     ModeDevice = MODEMEMR;
     ModeMemDraw = VIEWNEXT;
+    //GroupOFF(); //  выключение питания
     HV_LOW(ON); //ON LOW HIGH VOLT
     HV_SW(OFF); // OFF HIGH VOLT
     POWREF (OFF);
@@ -7274,6 +7287,7 @@ BYTE SetModeDevice (BYTE Mode) // принудительная установка режима прибора
     }
     else 
     {
+      //GroupOFF(); //  выключение питания
       HV_LOW(ON); //ON LOW HIGH VOLT
       HV_SW(OFF); // OFF HIGH VOLT
       POWREF (OFF);
@@ -7284,6 +7298,7 @@ BYTE SetModeDevice (BYTE Mode) // принудительная установка режима прибора
     }
     break;
   case MODESETUP:// режим установок пользователя
+    //GroupOFF(); //  выключение питания
     HV_LOW(ON); //ON LOW HIGH VOLT
     HV_SW(OFF); // OFF HIGH VOLT
     POWREF (OFF);
@@ -7314,6 +7329,7 @@ BYTE SetModeDevice (BYTE Mode) // принудительная установка режима прибора
     
     break;
   default:// режим МЕНЮ
+    //GroupOFF(); //  выключение питания
     HV_LOW(ON); //ON LOW HIGH VOLT
     HV_SW(OFF); // OFF HIGH VOLT
     POWREF (OFF);
@@ -7687,6 +7703,7 @@ void BadBattery(void) // плохая баттарейка CHECK_OFF
   WORD CntOff = 0;
   WORD LevelBat;
   REDEYE(0); // выключаем красный лазер
+  //GroupOFF(); //  выключение питания
   HV_LOW(ON); //ON LOW HIGH VOLT
   HV_SW(OFF); // OFF HIGH VOLT
   POWREF (OFF);
@@ -7726,6 +7743,7 @@ void UploadFW_Nextion(void) // обновление индикатора NEXTION
 { 
   char Str[32];
   REDEYE(0); // выключаем красный лазер
+  //GroupOFF(); //  выключение питания
   HV_LOW(ON); //ON LOW HIGH VOLT
   HV_SW(OFF); // OFF HIGH VOLT
   POWREF (OFF);
@@ -8302,10 +8320,11 @@ float MeasORL(int NumAvrgThis, int EnaReport)
   {
     SetIndexLN (0); 
     SetIndexIM (0);
+    //GroupOFF(); //  выключение питания
     HV_LOW(ON); //ON LOW HIGH VOLT
     HV_SW(OFF); // OFF HIGH VOLT
-    //POWDET(OFF);
     POWREF (OFF);
+    //POWDET(OFF);
     POWDET(ON); // включаем питание измерителя
     //123          enable_timer(3);  /* Enable Interrupt Timer3 */
     //123          enable_timer(1);  /* Enable  Timer1 JDSU */
@@ -8391,10 +8410,30 @@ void CmdInitPage(int Num)
   HAL_Delay(30);
 }
 
+
+void GroupOFF (void) //  выключение питания
+{
+  // питание детекторов и рефлектометров
+        // здесь возможно выключение АЦП...
+  //E_ADC(1); // выключение АЦП
+  HV_LOW(ON); //ON LOW HIGH VOLT
+  HV_SW(OFF); // OFF HIGH VOLT
+  POWREF (OFF);
+  // а так по старому
+//  POWALT(ON);
+//  CreatDelay (40000); // 3.3 мС
+//  POWDET(ON);
+//  CreatDelay (40000); // 3.3 мС
+//  POWREF (ON);
+//  CreatDelay (80000); // 3.3 мС
+  
+}
+
 void SlowON (void) // медленное включение питания
 {
   // сделал с проверкой уже включенных, для ускорения...
-  
+        // здесь возможно включение АЦП...
+  //E_ADC(0); // включили АЦП
   POWREF (ON);
   HAL_Delay (300); // 0.7 С (с этой задержкой вроде работает от USB, без акк)
   POWDET(ON);
@@ -8424,12 +8463,14 @@ void OnceMeas (int Num)
   CurrTimeAccum = 0;
   
   Averaging (Num,0,0);
+  //GroupOFF(); //  выключение питания
   HV_LOW(ON); //ON LOW HIGH VOLT
   HV_SW(OFF); // OFF HIGH VOLT
-  //POWDET(OFF);
   POWREF (OFF);
+  POWDET(OFF);
   LED_START(0);//Off  LED
-  
+  // stop ADC
+  //E_ADC(1); 
   
 }
 
