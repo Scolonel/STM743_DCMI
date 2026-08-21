@@ -217,7 +217,9 @@ void DrawPictureMeas (BYTE EnDraw) // рисование картинки при измерении
     {
       rct.right=480;
       rct.bottom=255;// здесь надо сделать 255, а в индикаторе масштаб 270/255 1.05
-      params.scale=(params.scale>=16)?(8):(params.scale);
+      //      InitScale = 11 ; //для 743 5300/480 = 11.1 
+      // чтобы если не выставлен масштаб, то делаем на весь экран
+      params.scale=(params.scale>=16)?(11):(params.scale);
     }
     else
     {
