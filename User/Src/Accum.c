@@ -22,11 +22,17 @@ void SUMMER (DWORD* RawDataS)
 // блок задержки обнуления буффера накопления одного прохода
       memset(&BufNAK, 0, sizeof(BufNAK));
     // LED_KTT(0);  // конец задержки "МОДУЛЬ" 2
-     if(!DistBad)
-     {
+//     if(!DistBad)
+//     {
+//  TIM1->CNT = TIM1->CCR1 - 15;
+//  //TIM1->CNT = TIM1->CCR1 - (15 + (rand()%13)); // для "размазывания"
+//     }
+  //TST_KTA(1);
+  //TST_KTA(0);
+  CreatDelay(BufADD[8]%37);
+  //TST_KTA(1);
+  //TST_KTA(0);
   TIM1->CNT = TIM1->CCR1 - 15;
-  //TIM1->CNT = TIM1->CCR1 - (15 + (rand()%13)); // для "размазывания"
-     }
   // запустим накопление 
   TIM1->CR1 |=TIM_CR1_CEN;
 
