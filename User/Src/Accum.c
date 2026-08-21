@@ -22,11 +22,13 @@ void SUMMER (DWORD* RawDataS)
 // блок задержки обнулени€ буффера накоплени€ одного прохода
       memset(&BufNAK, 0, sizeof(BufNAK));
     // LED_KTT(0);  // конец задержки "ћќƒ”Ћ№" 2
-     if(!DistBad)
-     {
-  TIM1->CNT = TIM1->CCR1 - 15;
+//     if(!DistBad)
+//     {
+  //TIM1->CNT = TIM1->CCR1 - 15;
   //TIM1->CNT = TIM1->CCR1 - (15 + (rand()%13)); // дл€ "размазывани€"
-     }
+//     }
+  CreatDelay((rand()%79));
+  TIM1->CNT = TIM1->CCR1 - 15;
   // запустим накопление 
   TIM1->CR1 |=TIM_CR1_CEN;
 

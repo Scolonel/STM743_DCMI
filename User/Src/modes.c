@@ -1890,7 +1890,8 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     Averaging (NumAvrg,IndxAddBad,1); //запуск текущего накопления
     //    TST_KTA(0); // начали накопление первая порция( первые 3 сек)
     
-    if ((GetCntNumAvrg() >= FinAvrg)||((CurrTimeAccum/1000)>GetTimeAvrg(GetIndexVRM()))) //закончили накопление рисуем рефлектограмму
+    //if ((GetCntNumAvrg() >= FinAvrg)||((CurrTimeAccum/1000)>GetTimeAvrg(GetIndexVRM()))) //закончили накопление рисуем рефлектограмму
+    if ((!RunInRealTime)&&((GetCntNumAvrg() >= FinAvrg)||((CurrTimeAccum/1000)>GetTimeAvrg(GetIndexVRM())))) //закончили накопление рисуем рефлектограмму
     {
       
       RawData[RAWSIZE-1]= CurrTimeAccum;// что-то хотим сохранить в данных рефлектограммы (время съема)
