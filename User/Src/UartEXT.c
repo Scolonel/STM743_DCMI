@@ -60,7 +60,7 @@ volatile uint32_t RSDecYes = 0;
 char NameReadFile[32]; // глобальная имя файла при чтении в сохранении
 char BufString[225];
 char Strn[16]; // to Nextion
-
+uint16_t NumRSCMD; // номер команды которую обрабатываем 
 
 void SendBelcoreSet (void); // посылает установки белкора
 //#pragma optimize=size  
@@ -181,6 +181,8 @@ void DecodeCommandRS (void)
   NeedTransmit = 0;
   if (Reciev==END_UART)                //Ежели приём команды закончен - обработка
   {
+    NumRSCMD = 255; // номер команды которую обрабатываем 
+
     for (int i=0; ((i<CntRX)&&(RX_Buf[i]!=0x20)); i++ )
     {
       if ((RX_Buf[i] >=0x61) && (RX_Buf[i]<=0x7A))RX_Buf[i] = RX_Buf[i] - 0x20;
@@ -198,9 +200,12 @@ void DecodeCommandRS (void)
         if (!memcmp ((void*)RX_Buf, "*IDN?",5))
           //if ((RX_Buf[1]=='I')&&(RX_Buf[2]=='D')&&(RX_Buf[3]=='N')&&(RX_Buf[4]=='?'))
         {
+          //TST_KTA(1);
           GetDeviceName( BufString ); // запрос сторки идентификатора
           NeedTransmit = 1;
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          //TST_KTA(0);
+          NumRSCMD = 1; // номер команды которую обрабатываем 
         }
         if (!memcmp ((void*)RX_Buf, "*IDHW",5)) // идентификатор "железной" реализации
           //if ((RX_Buf[1]=='I')&&(RX_Buf[2]=='D')&&(RX_Buf[3]=='N')&&(RX_Buf[4]=='?'))
@@ -209,6 +214,7 @@ void DecodeCommandRS (void)
           GetDeviceHW( BufString ); // запрос сторки идентификатора
           NeedTransmit = 1;
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          NumRSCMD = 2; // номер команды которую обрабатываем 
         }
         if (!memcmp ((void*)RX_Buf, "*IDLCD",6)) // идентификатор ПО "LCD"
           //if ((RX_Buf[1]=='I')&&(RX_Buf[2]=='D')&&(RX_Buf[3]=='N')&&(RX_Buf[4]=='?'))
@@ -216,6 +222,7 @@ void DecodeCommandRS (void)
           sprintf(BufString,"%s\r", VerFW_LCD);
           NeedTransmit = 1;
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          NumRSCMD = 3; // номер команды которую обрабатываем 
         }
         if (!memcmp ((void*)RX_Buf, "*ALARM",6)) // сброс памяти рефлектограмм при плохой флэшке!
         {
@@ -226,6 +233,7 @@ void DecodeCommandRS (void)
           sprintf(BufString,"AlarmReset\r");
           NeedTransmit = 1;
           UARTSendExt ((BYTE*)"AlarmReset\r", 11);
+          NumRSCMD = 4; // номер команды которую обрабатываем 
         }
         if (!memcmp ((void*)RX_Buf, "*SUPERTEST",10)) // специальный режим теста
         {
@@ -233,7 +241,7 @@ void DecodeCommandRS (void)
           g_STindx_LN = 0;
           g_STindx_IM = 0;
           // из INIT, подготовка к старту
-            // 15 с измерение с установленными параметрами, расчет событий и выдача их по окончании измерений
+          // 15 с измерение с установленными параметрами, расчет событий и выдача их по окончании измерений
           SetIndexVRM (0); // принудительная установка индекса времени накопления на 15 сек
           RemoutCtrl = 1;
           SetModeDevice (MODEMEASURE); // принудительная установка режима прибора -  запкск рефлектометрии с установленными параметрами
@@ -242,12 +250,13 @@ void DecodeCommandRS (void)
           
           SetIndexLN(g_STindx_LN); // индекс длины линии
           SetIndexIM(g_STindx_IM); // индекс длительности импульса
-
+          
           sprintf(BufString,"StartTest\r");
           NeedTransmit = 1;
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          NumRSCMD = 5; // номер команды которую обрабатываем 
         }
-                if (!memcmp ((void*)RX_Buf, "*RAWD",5)) // чтение дампа смещения первые 60 точек
+        if (!memcmp ((void*)RX_Buf, "*RAWD",5)) // чтение дампа смещения первые 60 точек
         {
           int PtrS = (int)atoi((char*)&RX_Buf[5]);
           sprintf(BufString,"%d\n", g_Noise);
@@ -257,13 +266,13 @@ void DecodeCommandRS (void)
           
           for (int i = PtrS; i< PtrS+60; i++)
           {
-          sprintf(BufString,"%d\n", RawData[i]);
-          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+            sprintf(BufString,"%d\n", RawData[i]);
+            UARTSendExt ((BYTE*)BufString, strlen (BufString));
           }
           NeedTransmit = 1;
-
+          NumRSCMD = 6; // номер команды которую обрабатываем 
         }
-                if (!memcmp ((void*)RX_Buf, "*RAWS",5)) // специальный режим чтения дампа
+        if (!memcmp ((void*)RX_Buf, "*RAWS",5)) // специальный режим чтения дампа
         {
           sprintf(BufString,"%d\n", g_Noise);
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
@@ -272,24 +281,24 @@ void DecodeCommandRS (void)
           
           for (int i = 0; i< RAWSIZE; i++)
           {
-          sprintf(BufString,"%d\n", RawData[i]);
-          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+            sprintf(BufString,"%d\n", RawData[i]);
+            UARTSendExt ((BYTE*)BufString, strlen (BufString));
           }
           NeedTransmit = 1;
-
+          NumRSCMD = 7; // номер команды которую обрабатываем 
         }
         // запрос одного измерения
-                if (!memcmp ((void*)RX_Buf, "*ONCE ",6)) // специальный режим чтения дампа одного измерения
+        if (!memcmp ((void*)RX_Buf, "*ONCE ",6)) // специальный режим чтения дампа одного измерения
         {
-        int NumAvrg = (BYTE)(atoi((char*)&RX_Buf[6]));
+          int NumAvrg = (BYTE)(atoi((char*)&RX_Buf[6]));
           OnceMeas(NumAvrg);
           for (int i = 0; i< RAWSIZE; i++)
           {
-          sprintf(BufString,"%d\n", RawData[i]);
-          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+            sprintf(BufString,"%d\n", RawData[i]);
+            UARTSendExt ((BYTE*)BufString, strlen (BufString));
           }
           NeedTransmit = 1;
-
+          NumRSCMD = 8; // номер команды которую обрабатываем 
         }
       }
       break;
@@ -310,6 +319,7 @@ void DecodeCommandRS (void)
         WriteNeedStruct (0x01);
         NeedTransmit = 1;
         UARTSendExt ((BYTE*)"OK\r", 3);
+          NumRSCMD = 9; // номер команды которую обрабатываем 
       }
       //  ;syst:uart:hi установка скорости UART 460800 ответ уже на большой скорости
       if (!memcmp ((void*)RX_Buf, ";SYST:UART:HI",13)) //
@@ -324,14 +334,14 @@ void DecodeCommandRS (void)
           Error_Handler();
         }
         g_SpeedUart = 8; // 1 - LO(57600), 2-ME(115200), 8-HI(460800)
-
+          NumRSCMD = 10; // номер команды которую обрабатываем 
         
       }
       if (!memcmp ((void*)RX_Buf, ";SYST:UART:ME",13)) //115200
       {
         UARTSendExt ((BYTE*)"OK\r", 3);
         //ReadToTrans();
-
+        
         NeedTransmit = 1;
         // отсылаем на старой скорости
         //while ( !(UART0TxEmpty & 0x01) ); // ждем конца передачи только после этого перестраиваемся
@@ -342,7 +352,7 @@ void DecodeCommandRS (void)
           Error_Handler();
         }
         g_SpeedUart = 2; // 1 - LO(57600), 2-ME(115200), 8-HI(460800)
-
+          NumRSCMD = 11; // номер команды которую обрабатываем 
         
       }
       //  ;syst:uart:lo установка скорости UART 57600 ответ уже на меньшей скорости
@@ -359,38 +369,42 @@ void DecodeCommandRS (void)
           Error_Handler();
         }
         g_SpeedUart = 1; // 1 - LO(57600), 2-ME(115200), 8-HI(460800)
-
+          NumRSCMD = 12; // номер команды которую обрабатываем 
+        
       }
       // 
       // ;MEMM:LOAD:FILE? xx
       // другая конфигурация хранения , возможно изменение
       //123
       // !!!!ACHTUNG!!!!
-            if (!memcmp ((void*)RX_Buf, ";MMEM:LOAD:FILE? ",17)) //RX_Buf[17] - номер рефл
-            {
-              
-              //SendBellcore1_0();
-              ReadToTrans();
-              NeedTransmit = 1;
-              
-              
-              //ClearScreen(screen);
-              
-            }
+      if (!memcmp ((void*)RX_Buf, ";MMEM:LOAD:FILE? ",17)) //RX_Buf[17] - номер рефл
+      {
+        
+        //SendBellcore1_0();
+        ReadToTrans();
+        NeedTransmit = 1;
+          NumRSCMD = 13; // номер команды которую обрабатываем 
+        
+        
+        //ClearScreen(screen);
+        
+      }
       // чтение файла LOG
-            if (!memcmp ((void*)RX_Buf, ";MMEM:LOG?",10)) //RX_Buf[17] - номер рефл
-            {
-              //ReadLogFile(1); // читаем весь файл
-              NeedLogFile = 1;
-              NeedTransmit = 1;
-            }
+      if (!memcmp ((void*)RX_Buf, ";MMEM:LOG?",10)) //RX_Buf[17] - номер рефл
+      {
+        //ReadLogFile(1); // читаем весь файл
+        NeedLogFile = 1;
+        NeedTransmit = 1;
+          NumRSCMD = 14; // номер команды которую обрабатываем 
+      }
       // чтение файла LOG когда включали (возможно сколько раз)
-            if (!memcmp ((void*)RX_Buf, ";MMEM:ONF?",10)) //RX_Buf[17] - номер рефл
-            {
-              //ReadLogFile(2); // читаем только времена включения
-              NeedLogFile = 2;
-              NeedTransmit = 1;
-            }
+      if (!memcmp ((void*)RX_Buf, ";MMEM:ONF?",10)) //RX_Buf[17] - номер рефл
+      {
+        //ReadLogFile(2); // читаем только времена включения
+        NeedLogFile = 2;
+        NeedTransmit = 1;
+          NumRSCMD = 15; // номер команды которую обрабатываем 
+      }
       //123      
       //      // ;MEMM:NAME? -  чтение комментариев сохраненных рефлектограмм
       //      if (!memcmp ((void*)RX_Buf, ";MMEM:NAME?",11)) //
@@ -410,25 +424,25 @@ void DecodeCommandRS (void)
       //      }
       //123
       // другая организация хранения необходимо изменеие      
-            // ;MEMM:NFIL? -  чтение имен файлов сохраненных рефлектограмм
-            if (!memcmp ((void*)RX_Buf, ";MMEM:NFIL?",11)) //
-            {
-              //EnaPrintRes =1;
-              //PressKey =1;
-              SDMMC_SDCard_DIR();
-              NeedTransmit = 0;
-      //        for (int i = 1 ; i <= GetNumTraceSaved(0); i++)
-      //        {
-      //          unsigned long PorNom = FlashReadTimeTrace (i);
-      //          // 
-      //          sprintf((char*)BufString,"(%03d)%s\n", i, NameReadFile);
-      //          UARTSendExt ((BYTE*)BufString, strlen (BufString));
-      //        }
-      //        
-      //        
-      //        sprintf(BufString,"\r");
-      //        UARTSendExt ((BYTE*)BufString, 1);
-            }
+      // ;MEMM:NFIL? -  чтение имен файлов сохраненных рефлектограмм
+      if (!memcmp ((void*)RX_Buf, ";MMEM:NFIL?",11)) //
+      {
+        //EnaPrintRes =1;
+        //PressKey =1;
+        SDMMC_SDCard_DIR();
+        NeedTransmit = 0;
+        //        for (int i = 1 ; i <= GetNumTraceSaved(0); i++)
+        //        {
+        //          unsigned long PorNom = FlashReadTimeTrace (i);
+        //          // 
+        //          sprintf((char*)BufString,"(%03d)%s\n", i, NameReadFile);
+        //          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        //        }
+        //        
+        //        
+        //        sprintf(BufString,"\r");
+        //        UARTSendExt ((BYTE*)BufString, 1);
+      }
       //123
       // контроль свободной памяти рефлектограмм
       // сейчас возможно не АКТУАЛЬНО
@@ -512,7 +526,7 @@ void DecodeCommandRS (void)
         SetModeDevice (NumMode); // принудительная установка режима прибора
         g_CardSD = 0; // сброс признака подключенной карты для правильной индикации
         MSC_or_CDC = 0; //сбросим признак активности MSC 
-
+        
         // Безответная команда - была
         sprintf(BufString,"%01d\r",GetCurrentModeDevice ());// получение текущего режима прибора
         UARTSendExt ((BYTE*)BufString, strlen (BufString));
@@ -690,6 +704,15 @@ void DecodeCommandRS (void)
       // ЗАПРОС ПОлного дампа накоплений
       if (!memcmp ((void*)RX_Buf, ";OTDR:DUMP",10))
       {
+        if(NeedCntrlEND) // контроль окончания измерений ответ на запрос
+          // ДАМПА ответом END - как бы синхронизируем ответ...
+        {
+          sprintf(BufString,"END\r"); // 
+          UARTSendExt ((BYTE*)BufString, strlen (BufString));// 
+          NeedCntrlEND = 0;
+        }
+        else
+        {
         int i=0, sm=0;
         for (i=0; i<8; i++)
         {
@@ -705,11 +728,12 @@ void DecodeCommandRS (void)
         // 0x1200 = 4608 (9*512*4)
         //for(int j=0; j<9; j++)
         //    UARTSendExt ((BYTE*)&RawData[j*512], 2048);// 
-
+        
         //TST_KTA(1);
         UARTSendExt ((BYTE*)&RawData, sizeof(RawData));// 
         //UARTSendExt ((BYTE*)&RawData, 0x4800);// 
         //TST_KTA(0);
+        }
         NeedTransmit = 1;
       }
       if (GetCurrentModeDevice()==MODEMEASURE)
@@ -723,27 +747,27 @@ void DecodeCommandRS (void)
           NeedTransmit = 1;
         }
       }
-              // ;INIT
-        if (!memcmp ((void*)RX_Buf, ";INIT",5)) //
-        { 
-          if (RX_Buf[5]=='E')
-          {
-            // 15 с измерение с установленными параметрами, расчет событий и выдача их по окончании измерений
-            SetIndexVRM (0); // принудительная установка индекса времени накопления на 15 сек
-            if (!GetSetEnaEvents(0))GetSetEnaEvents(1); // устанавливаем признак разрешения событий 
-            SetGetMonEna (1);
-          }
-          RemoutCtrl = 1;
-          if (GetIndexVRM()>3) // устанавливаем минимальное время ( для дистанционного управления не подходит)
-            SetIndexVRM (0); // установка индекса времени накопления на 15 сек
-          sprintf(BufString,"%d\r", GetTimeAvrg(GetIndexVRM())+7);//c
-          UARTSendExt ((BYTE*)BufString, strlen (BufString));
-          SetModeDevice (MODEMEASURE); // принудительная установка режима прибора -  запкск рефлектометрии с установленными параметрами
-          SystLogWord +=START_U;
-          NeedTransmit = 1;
-          //else  sprintf(BufString,"Not stopрed\r");
+      // ;INIT
+      if (!memcmp ((void*)RX_Buf, ";INIT",5)) //
+      { 
+        if (RX_Buf[5]=='E')
+        {
+          // 15 с измерение с установленными параметрами, расчет событий и выдача их по окончании измерений
+          SetIndexVRM (0); // принудительная установка индекса времени накопления на 15 сек
+          if (!GetSetEnaEvents(0))GetSetEnaEvents(1); // устанавливаем признак разрешения событий 
+          SetGetMonEna (1);
         }
-
+        RemoutCtrl = 1;
+        if (GetIndexVRM()>3) // устанавливаем минимальное время ( для дистанционного управления не подходит)
+          SetIndexVRM (0); // установка индекса времени накопления на 15 сек
+        sprintf(BufString,"%d\r", GetTimeAvrg(GetIndexVRM())+7);//c
+        UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        SetModeDevice (MODEMEASURE); // принудительная установка режима прибора -  запкск рефлектометрии с установленными параметрами
+        SystLogWord +=START_U;
+        NeedTransmit = 1;
+        //else  sprintf(BufString,"Not stopрed\r");
+      }
+      
       if ((GetCurrentModeDevice()==MODESETREFL)||(GetCurrentModeDevice()==MODEREFL))
         // режим рефлектометра
       {
@@ -829,25 +853,25 @@ void DecodeCommandRS (void)
           SendCfgOTDR (BufString); // передача конфигурации рефлектометра (настройки)
           NeedTransmit = 1;
         }
-//        // ;INIT
-//        if (!memcmp ((void*)RX_Buf, ";INIT",5)) //
-//        { 
-//          if (RX_Buf[5]=='E')
-//          {
-//            // 15 с измерение с установленными параметрами, расчет событий и выдача их по окончании измерений
-//            SetIndexVRM (0); // принудительная установка индекса времени накопления на 15 сек
-//            if (!GetSetEnaEvents(0))GetSetEnaEvents(1); // устанавливаем признак разрешения событий 
-//            SetGetMonEna (1);
-//          }
-//          RemoutCtrl = 1;
-//          if (GetIndexVRM()>3) // устанавливаем минимальное время ( для дистанционного управления не подходит)
-//            SetIndexVRM (0); // установка индекса времени накопления на 15 сек
-//          sprintf(BufString,"%d\r", GetTimeAvrg(GetIndexVRM())+5);//c
-//          UARTSendExt ((BYTE*)BufString, strlen (BufString));
-//          SetModeDevice (MODEMEASURE); // принудительная установка режима прибора -  запкск рефлектометрии с установленными параметрами
-//          NeedTransmit = 1;
-//          //else  sprintf(BufString,"Not stopрed\r");
-//        }
+        //        // ;INIT
+        //        if (!memcmp ((void*)RX_Buf, ";INIT",5)) //
+        //        { 
+        //          if (RX_Buf[5]=='E')
+        //          {
+        //            // 15 с измерение с установленными параметрами, расчет событий и выдача их по окончании измерений
+        //            SetIndexVRM (0); // принудительная установка индекса времени накопления на 15 сек
+        //            if (!GetSetEnaEvents(0))GetSetEnaEvents(1); // устанавливаем признак разрешения событий 
+        //            SetGetMonEna (1);
+        //          }
+        //          RemoutCtrl = 1;
+        //          if (GetIndexVRM()>3) // устанавливаем минимальное время ( для дистанционного управления не подходит)
+        //            SetIndexVRM (0); // установка индекса времени накопления на 15 сек
+        //          sprintf(BufString,"%d\r", GetTimeAvrg(GetIndexVRM())+5);//c
+        //          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        //          SetModeDevice (MODEMEASURE); // принудительная установка режима прибора -  запкск рефлектометрии с установленными параметрами
+        //          NeedTransmit = 1;
+        //          //else  sprintf(BufString,"Not stopрed\r");
+        //        }
         // получение необработанных данных
         if (!memcmp ((void*)RX_Buf, ";GET:RAW:DATA",13)) //
         { 
@@ -1239,7 +1263,7 @@ void DecodeCommandRS (void)
           if (RX_Buf[14] == '?') // запрос структуры устанвоки параметров белкора
           {
             SendBelcoreSet (); // посылает установки белкора
-          NeedTransmit = 1;
+            NeedTransmit = 1;
           }
           if (RX_Buf[14] == ':') //   установка  структуры параметров белкора
           {
@@ -1387,7 +1411,7 @@ void DecodeCommandRS (void)
             WriteNeedStruct(0x10);
             sprintf(BufString,"OK %f\r",Data ); // 
             
-
+            
           }
           UARTSendExt ((BYTE*)BufString, strlen (BufString));// Возвращает ответ на команду
           NeedTransmit = 1;
@@ -1419,7 +1443,7 @@ void DecodeCommandRS (void)
               sprintf(BufString,"%d ",CoeffPM.ShZeroRng[x]); // начальные смещения диапазонов
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
             }
-
+            
             // сохраняем полученные коэфф. 
             //123            SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
             
@@ -1954,18 +1978,19 @@ void DecodeCommandRS (void)
       }
       break; // от ;
     }
-      if(NeedTransmit == 0)
-      {
-        sprintf(BufString,"Err\r");// 
-        UARTSendExt ((BYTE*)BufString, strlen (BufString));
-        
-      }
+    if(NeedTransmit == 0)
+    {
+      sprintf(BufString,"Err\r");// 
+      UARTSendExt ((BYTE*)BufString, strlen (BufString));
+      
+    }
     
   }
-  RSDecYes = 0;
-  Reciev = STOP_UART;
+  //RSDecYes = 0;
+  //Reciev = STOP_UART;
   //TST_KTB(0); // индикация конца приема и обработки команды
-
+  // по наглому почистим приемный буффер еще раз
+  ClearRS();
   //VICINTENABLE = 1 << UART0_INT;  /* Enable Interrupt */
   
 }

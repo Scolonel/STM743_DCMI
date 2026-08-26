@@ -19,7 +19,10 @@ void SUMMER (DWORD* RawDataS)
   //надо запустить измерение с утановленными параметрами
       //memset(&BufADD, 0, sizeof(BufADD));
     // LED_KTT(1); // начало одного суммир "ћќƒ”Ћ№" 2 (~102мк—)
+  
+   HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_2, DAC_ALIGN_12B_R, CodeDAC[CntAccumulat&63]);
 // блок задержки обнулени€ буффера накоплени€ одного прохода
+
       memset(&BufNAK, 0, sizeof(BufNAK));
     // LED_KTT(0);  // конец задержки "ћќƒ”Ћ№" 2
 //     if(!DistBad)
@@ -29,6 +32,8 @@ void SUMMER (DWORD* RawDataS)
 //     }
   //TST_KTA(1);
   //TST_KTA(0);
+      
+      
   CreatDelay(BufADD[8]%37);
   //TST_KTA(1);
   //TST_KTA(0);

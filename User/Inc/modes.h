@@ -178,6 +178,7 @@ void CreatDelay (unsigned long a); // перенесли из LCD.h
 extern char CommentsOTDR[20]; //комментарии рефлектометра
 extern char IndexCommOTDR ;
 extern BYTE RemoutCtrl; // признак дист управления
+extern uint8_t NeedCntrlEND; // флажок необходимости контроля ответа END - при дистанционных измерениях
 
 //переменные настройки измерения ORL 
 extern float g_VolORL;

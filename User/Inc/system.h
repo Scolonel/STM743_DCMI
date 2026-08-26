@@ -132,6 +132,7 @@
 #include "pm.h" // функции измерителя
 #include "rtc.h" // 
 #include "tim.h" // 
+#include "dac.h" // 
 //#include "fatfs.h"
 #include "pca955x.h"
 #include "buttons.h"   
@@ -216,6 +217,15 @@ static const uint8_t ShFtAv[128] =
     0xef1f, 0xff3e, 0xcf5d, 0xdf7c, 0xaf9b, 0xbfba, 0x8fd9, 0x9ff8,
     0x6e17, 0x7e36, 0x4e55, 0x5e74, 0x2e93, 0x3eb2, 0x0ed1, 0x1ef0
   };
+  
+static const uint16_t CodeDAC[SizeBuf_DAC]={0,4095,0,64,192,256,320,384,448,4095,//512,
+576,640,704,768,832,896,960,4095,//1024,
+1088,1152,1216,1280,1344,1408,1472,4095,//1536,
+1600,1664,1728,1792,1856,1920,1984,4095,//2048
+2112,2176,2240,2304,2368,2432,2496,4095,//2560,//2112,2176,
+2624,2688,2752,2816,2880,2944,3008,4095,//3072,
+3136,3200,3264,3328,3392,3456,3520,4095,//3584,
+3648,3712,3776,3840,3904,3968,4032,4095,0,0,0,0,0,0,0,4095,0};//4095
 
 // from SorData
 int   WriteSorFile(const char* pszFileName, int iPlaceLS, unsigned short* pDataPoints);
@@ -362,6 +372,7 @@ typedef struct
 extern Log_Stat LogInfo[256]; // содержимое LOG file
 extern uint8_t CountLogEvnts; // счетчик событий ЛОГА для перезаписи в память при заполнении 255
 extern uint16_t KeyCodeP; // дубликат KeyP но только на отработке...по коду 
+extern uint16_t NumRSCMD; // номер команды которую обрабатываем 
 
 
 typedef struct

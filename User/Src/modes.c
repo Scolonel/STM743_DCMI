@@ -202,6 +202,7 @@ static BYTE CntLS=0; // признак счетчик перключения лазеров (равен 1 так как уже
 // признак дистанционного управления (для проверки в конце измерений, устанавливаем при приеме коменды сбрасываем когда отработали)
  unsigned long TimeMeasure3S;
  BYTE RemoutCtrl=0; // признак дист управления
+ uint8_t NeedCntrlEND = 0; // флажок необходимости контроля ответа END - при дистанционных измерениях
  float CursorScale =1.0;
 //переменные настройки измерения ORL 
 float g_VolORL = 0.0 ;
@@ -2102,14 +2103,25 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
       {
 //          sprintf(Str,"%d-%dkm_%dns\r",g_SuperTest,GetLengthLine(GetIndexLN()),GetWidthPulse(GetIndexIM()));//c
 //          UARTSendExt ((BYTE*)Str, strlen (Str));
-        sprintf(Str,"END\r");//c
-        RemoutCtrl = 0;
-        UARTSendExt ((BYTE*)Str, strlen (Str));
-        
-        HAL_Delay(250); // ПОДОЖДЕМ А ПОТОМ ВСЕ ОБНУЛИМ ЧТО БЫ НЕ ПРИНИМАТЬ
-        ClearRS();
+//        sprintf(Str,"END\r");//c
+//        RemoutCtrl = 0;
+//        UARTSendExt ((BYTE*)Str, strlen (Str));
+//        
+//        //HAL_Delay(250); // ПОДОЖДЕМ А ПОТОМ ВСЕ ОБНУЛИМ ЧТО БЫ НЕ ПРИНИМАТЬ
+//        HAL_Delay(2); // ПОДОЖДЕМ А ПОТОМ ВСЕ ОБНУЛИМ ЧТО БЫ НЕ ПРИНИМАТЬ
+//        ClearRS();
+        // окончание накоплений, нужно бы выдать "END" , но так как
+        // Мы асинхронно его выдаем, а Анатолий "ждет" END и буффер приемника
+        // не нулит, но если он при повтоном запросе дампа получает "сразу" ответ в виде "END"
+        // то он не ждет приема дампа а шлет мне запрос идентификатора
+        // а Я приняв запрос дампа пытаюсь его передать... что он и получает на запрос идентификатора
+        // поэтому здесь взведем флажок об окончании и при запросе дампа ответи "END" вместо дампа...
+        // при супер тесте будем сбрасывать флажок и ничего не выводить...
+        NeedCntrlEND = 1;
         if(g_SuperTest) // тут можно посмотреть не надо ли запускать снова
         {
+        NeedCntrlEND = 0;
+          
           //GetLengthLine(GetIndexLN()),GetWidthPulse(GetIndexIM())
           if(g_STindx_LN<(LENGTH_LINE_NUM))
           {
@@ -2198,9 +2210,12 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
     if (RemoutCtrl) // выдача окончания сбора если запускали дистанционно
     {
       // в ручную по кнопке...
-      sprintf(Str,"END\r");//c
+      //sprintf(Str,"END\r");//c
+      //UARTSendExt ((BYTE*)Str, strlen (Str));
+      // ставим признак подменного ответа назапрос дампа для синхронного выхода из измерений
+      NeedCntrlEND = 1;
+
       RemoutCtrl = 0;
-      UARTSendExt ((BYTE*)Str, strlen (Str));
       g_SuperTest = 0;
     }
   }
