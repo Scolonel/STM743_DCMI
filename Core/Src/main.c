@@ -846,10 +846,11 @@ int main(void)
     {
       //TST_KTB(1);
       //WrLogInfo(USB_UART);
-      SystLogWord += USB_UART;
-      LogInfo[CountLogEvnts+1].SizeRSCmd= RSDecYes;
 
       DecodeCommandRS();
+      SystLogWord += USB_UART;
+      LogInfo[CountLogEvnts+1].SizeRSCmd= NumRSCMD;
+      //NumRSCMD = 0;;
       //TST_KTA(0);
     }
     

@@ -405,13 +405,14 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 // передача во внешний мир, в старой реализации, передача ведется
 // побайтно, поэтому в нашем случае будем передавать также
 // плюс будем отвечать либо через USB-COM либо через UART3
-void UARTSendExt(BYTE *BufferPtr, DWORD Length )  // буфер и размер
+uint8_t UARTSendExt(BYTE *BufferPtr, DWORD Length )  // буфер и размер
 {
+  uint8_t Res;
   //LED_KTS(1);
  if (ENAUSBCOM)
   {
     //int SdSd = (int)((Length/g_SpeedUart)/5.76)+1;
-     CDC_Transmit(0, (void*)BufferPtr, Length); // выдаем блок
+     Res = CDC_Transmit(0, (void*)BufferPtr, Length); // выдаем блок
      //HAL_Delay((int)(Length/(5.76*g_SpeedUart))+1);
      // как бы скорость максимальная 
      HAL_Delay((int)(Length/(250))+1);
@@ -419,11 +420,11 @@ void UARTSendExt(BYTE *BufferPtr, DWORD Length )  // буфер и размер
   }
   else
   {
-     HAL_UART_Transmit(&huart3,(void*)BufferPtr, Length,(uint32_t)(Length/8+1));  
+     Res = HAL_UART_Transmit(&huart3,(void*)BufferPtr, Length,(uint32_t)(Length/8+1));  
 
   }
   // LED_KTS(0);
-
+  return Res;
 }
 
 void SendUartTX (uint8_t *Str_mas)

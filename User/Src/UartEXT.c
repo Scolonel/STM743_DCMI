@@ -182,7 +182,7 @@ void DecodeCommandRS (void)
   if (Reciev==END_UART)                //Ежели приём команды закончен - обработка
   {
     NumRSCMD = 255; // номер команды которую обрабатываем 
-
+    
     for (int i=0; ((i<CntRX)&&(RX_Buf[i]!=0x20)); i++ )
     {
       if ((RX_Buf[i] >=0x61) && (RX_Buf[i]<=0x7A))RX_Buf[i] = RX_Buf[i] - 0x20;
@@ -319,7 +319,7 @@ void DecodeCommandRS (void)
         WriteNeedStruct (0x01);
         NeedTransmit = 1;
         UARTSendExt ((BYTE*)"OK\r", 3);
-          NumRSCMD = 9; // номер команды которую обрабатываем 
+        NumRSCMD = 9; // номер команды которую обрабатываем 
       }
       //  ;syst:uart:hi установка скорости UART 460800 ответ уже на большой скорости
       if (!memcmp ((void*)RX_Buf, ";SYST:UART:HI",13)) //
@@ -334,7 +334,7 @@ void DecodeCommandRS (void)
           Error_Handler();
         }
         g_SpeedUart = 8; // 1 - LO(57600), 2-ME(115200), 8-HI(460800)
-          NumRSCMD = 10; // номер команды которую обрабатываем 
+        NumRSCMD = 10; // номер команды которую обрабатываем 
         
       }
       if (!memcmp ((void*)RX_Buf, ";SYST:UART:ME",13)) //115200
@@ -352,7 +352,7 @@ void DecodeCommandRS (void)
           Error_Handler();
         }
         g_SpeedUart = 2; // 1 - LO(57600), 2-ME(115200), 8-HI(460800)
-          NumRSCMD = 11; // номер команды которую обрабатываем 
+        NumRSCMD = 11; // номер команды которую обрабатываем 
         
       }
       //  ;syst:uart:lo установка скорости UART 57600 ответ уже на меньшей скорости
@@ -369,7 +369,7 @@ void DecodeCommandRS (void)
           Error_Handler();
         }
         g_SpeedUart = 1; // 1 - LO(57600), 2-ME(115200), 8-HI(460800)
-          NumRSCMD = 12; // номер команды которую обрабатываем 
+        NumRSCMD = 12; // номер команды которую обрабатываем 
         
       }
       // 
@@ -383,7 +383,7 @@ void DecodeCommandRS (void)
         //SendBellcore1_0();
         ReadToTrans();
         NeedTransmit = 1;
-          NumRSCMD = 13; // номер команды которую обрабатываем 
+        NumRSCMD = 13; // номер команды которую обрабатываем 
         
         
         //ClearScreen(screen);
@@ -395,7 +395,7 @@ void DecodeCommandRS (void)
         //ReadLogFile(1); // читаем весь файл
         NeedLogFile = 1;
         NeedTransmit = 1;
-          NumRSCMD = 14; // номер команды которую обрабатываем 
+        NumRSCMD = 14; // номер команды которую обрабатываем 
       }
       // чтение файла LOG когда включали (возможно сколько раз)
       if (!memcmp ((void*)RX_Buf, ";MMEM:ONF?",10)) //RX_Buf[17] - номер рефл
@@ -403,7 +403,7 @@ void DecodeCommandRS (void)
         //ReadLogFile(2); // читаем только времена включения
         NeedLogFile = 2;
         NeedTransmit = 1;
-          NumRSCMD = 15; // номер команды которую обрабатываем 
+        NumRSCMD = 15; // номер команды которую обрабатываем 
       }
       //123      
       //      // ;MEMM:NAME? -  чтение комментариев сохраненных рефлектограмм
@@ -442,6 +442,7 @@ void DecodeCommandRS (void)
         //        
         //        sprintf(BufString,"\r");
         //        UARTSendExt ((BYTE*)BufString, 1);
+        NumRSCMD = 16; // номер команды которую обрабатываем 
       }
       //123
       // контроль свободной памяти рефлектограмм
@@ -517,6 +518,7 @@ void DecodeCommandRS (void)
         sprintf(BufString,"%01d\r",GetCurrentModeDevice ());// получение текущего режима прибора
         UARTSendExt ((BYTE*)BufString, strlen (BufString));
         NeedTransmit = 1;
+        NumRSCMD = 17; // номер команды которую обрабатываем 
       }
       //  ;syst:mode N
       if (!memcmp ((void*)RX_Buf, ";SYST:MODE ",11)) //
@@ -531,6 +533,7 @@ void DecodeCommandRS (void)
         sprintf(BufString,"%01d\r",GetCurrentModeDevice ());// получение текущего режима прибора
         UARTSendExt ((BYTE*)BufString, strlen (BufString));
         NeedTransmit = 1;
+        NumRSCMD = 18+NumMode; // (max 24)номер команды которую обрабатываем 
       }
       // запрос установленных лазеров 
       //  ;syst:ava?
@@ -540,6 +543,7 @@ void DecodeCommandRS (void)
         sprintf(BufString,"%d,%d,%d\r",GetLengthWaveLS (0),GetLengthWaveLS (1),GetLengthWaveLS (2)); // получение длины волны от индекса установочного места
         UARTSendExt ((BYTE*)BufString, strlen (BufString));
         NeedTransmit = 1;
+        NumRSCMD = 25; // номер команды которую обрабатываем 
       }
       // запрос конфигурации OLT (измерителя ) 
       //  ;syst:olt?
@@ -549,6 +553,7 @@ void DecodeCommandRS (void)
         sprintf(BufString,"%d\r",GetCfgPM ()); // получение установки измерителя); // 
         UARTSendExt ((BYTE*)BufString, strlen (BufString));
         NeedTransmit = 1;
+        NumRSCMD = 26; // номер команды которую обрабатываем 
       }
       // запрос конфигурации VFL (красного глаза) 
       //  ;syst:vfl?
@@ -558,6 +563,7 @@ void DecodeCommandRS (void)
         sprintf(BufString,"%d\r",GetCfgRE ()); // получение установки Redeye); // 
         UARTSendExt ((BYTE*)BufString, strlen (BufString));
         NeedTransmit = 1;
+        NumRSCMD = 27; // номер команды которую обрабатываем 
       }
       // запрос значений мертвых зон
       //  ;syst:mzn?
@@ -579,6 +585,7 @@ void DecodeCommandRS (void)
                                         ,GetBegShiftZone(12));
         UARTSendExt ((BYTE*)BufString, strlen (BufString));
         NeedTransmit = 1;
+        NumRSCMD = 28; // номер команды которую обрабатываем 
       }
       // ;syst:date dd,mm,yyyy - установка даты
       if (!memcmp ((void*)RX_Buf, ";SYST:DATE ",11)) //
@@ -613,6 +620,7 @@ void DecodeCommandRS (void)
         // Безответная команда - была
         UARTSendExt ((BYTE*)BufString, strlen (BufString));
         NeedTransmit = 1;
+        NumRSCMD = 29; // номер команды которую обрабатываем 
         
       }
       // ;syst:time hh,mm,ss - установка времени
@@ -646,6 +654,7 @@ void DecodeCommandRS (void)
         // Безответная команда - была
         UARTSendExt ((BYTE*)BufString, strlen (BufString));
         NeedTransmit = 1;
+        NumRSCMD = 30; // номер команды которую обрабатываем 
       }
       // ;syst:key ss -  имитация нажатия кнопки
       if (!memcmp ((void*)RX_Buf, ";SYST:KEY ",10)) //
@@ -660,6 +669,8 @@ void DecodeCommandRS (void)
         sprintf(BufString,"%d\r",Num); // выдаем // 
         UARTSendExt ((BYTE*)BufString, strlen (BufString));
         NeedTransmit = 1;
+        NumRSCMD = 31+nBtn; // номер команды которую обрабатываем 
+        
       }
       // ;syst:msc ss -  включение . выключение обращения к памяти
       if (!memcmp ((void*)RX_Buf, ";SYST:MSC ",10)) //
@@ -674,6 +685,7 @@ void DecodeCommandRS (void)
         sprintf(BufString,"%d\r",MSC_or_CDC); // выдаем // 
         UARTSendExt ((BYTE*)BufString, strlen (BufString));
         NeedTransmit = 1;
+        NumRSCMD = 37+MSC_or_CDC; // номер команды которую обрабатываем 
       }
       // ;lcd:thup n -  просыпаемся от тача
       if (!memcmp ((void*)RX_Buf, ";LCD:THUP ",10)) //
@@ -686,6 +698,7 @@ void DecodeCommandRS (void)
         sprintf(BufString,"%d\r",Num); // выдаем // 
         UARTSendExt ((BYTE*)BufString, strlen (BufString));
         NeedTransmit = 1;
+        NumRSCMD = 39; // номер команды которую обрабатываем 
       }
       // ;lcd:slep n -  спать не спать
       if (!memcmp ((void*)RX_Buf, ";LCD:SLEP ",10)) //
@@ -698,6 +711,7 @@ void DecodeCommandRS (void)
         sprintf(BufString,"%d\r",Num); // выдаем // 
         UARTSendExt ((BYTE*)BufString, strlen (BufString));
         NeedTransmit = 1;
+        NumRSCMD = 40; // номер команды которую обрабатываем 
       }
       
       //===== КОМАНДЫ РЕЖИМА РЕФЛЕКТОМЕТРА УСТАНОВОК и ПРОСМОТРА ======================    
@@ -710,29 +724,31 @@ void DecodeCommandRS (void)
           sprintf(BufString,"END\r"); // 
           UARTSendExt ((BYTE*)BufString, strlen (BufString));// 
           NeedCntrlEND = 0;
+          NumRSCMD = 41; // номер команды которую обрабатываем 
         }
         else
         {
-        int i=0, sm=0;
-        for (i=0; i<8; i++)
-        {
-          if (Head_RAW.Head[i]== 0x20) sm++;
-          else break;
-        }
-        //TST_KTA(1);
-        UARTSendExt ((BYTE*)&Head_RAW.Head[sm], sizeof(Head_RAW)-sm);//
-        //TST_KTA(0);
-        
-        // надо передать 2 блока заголовок и дамп
-        // передадим блоками по 2048 байт то есть для проверки
-        // 0x1200 = 4608 (9*512*4)
-        //for(int j=0; j<9; j++)
-        //    UARTSendExt ((BYTE*)&RawData[j*512], 2048);// 
-        
-        //TST_KTA(1);
-        UARTSendExt ((BYTE*)&RawData, sizeof(RawData));// 
-        //UARTSendExt ((BYTE*)&RawData, 0x4800);// 
-        //TST_KTA(0);
+          int i=0, sm=0;
+          for (i=0; i<8; i++)
+          {
+            if (Head_RAW.Head[i]== 0x20) sm++;
+            else break;
+          }
+          //TST_KTA(1);
+          UARTSendExt ((BYTE*)&Head_RAW.Head[sm], sizeof(Head_RAW)-sm);//
+          //TST_KTA(0);
+          
+          // надо передать 2 блока заголовок и дамп
+          // передадим блоками по 2048 байт то есть для проверки
+          // 0x1200 = 4608 (9*512*4)
+          //for(int j=0; j<9; j++)
+          //    UARTSendExt ((BYTE*)&RawData[j*512], 2048);// 
+          
+          //TST_KTA(1);
+          UARTSendExt ((BYTE*)&RawData, sizeof(RawData));// 
+          //UARTSendExt ((BYTE*)&RawData, 0x4800);// 
+          //TST_KTA(0);
+          NumRSCMD = 42; // номер команды которую обрабатываем 
         }
         NeedTransmit = 1;
       }
@@ -745,17 +761,20 @@ void DecodeCommandRS (void)
           sprintf(BufString,"OK\r"); // 
           UARTSendExt ((BYTE*)BufString, strlen (BufString));// 
           NeedTransmit = 1;
+          NumRSCMD = 43; // номер команды которую обрабатываем 
         }
       }
       // ;INIT
       if (!memcmp ((void*)RX_Buf, ";INIT",5)) //
       { 
+        NumRSCMD = 44; // номер команды которую обрабатываем 
         if (RX_Buf[5]=='E')
         {
           // 15 с измерение с установленными параметрами, расчет событий и выдача их по окончании измерений
           SetIndexVRM (0); // принудительная установка индекса времени накопления на 15 сек
           if (!GetSetEnaEvents(0))GetSetEnaEvents(1); // устанавливаем признак разрешения событий 
           SetGetMonEna (1);
+          NumRSCMD = 45; // номер команды которую обрабатываем 
         }
         RemoutCtrl = 1;
         if (GetIndexVRM()>3) // устанавливаем минимальное время ( для дистанционного управления не подходит)
@@ -789,6 +808,7 @@ void DecodeCommandRS (void)
           
           UARTSendExt ((BYTE*)BufString, 12);
           NeedTransmit = 1;
+          NumRSCMD = 46; // номер команды которую обрабатываем 
         }
         //;SYST:SET #18 - установка рефлектометра по команде
         if (!memcmp ((void*)RX_Buf, ";SYST:SET #18",13)) //
@@ -810,6 +830,7 @@ void DecodeCommandRS (void)
           SetModeDevice (MODESETREFL); // принудительная установка режима прибора -  установка рефлектометра
           SendCfgOTDR (BufString); // передача конфигурации рефлектометра (настройки)
           NeedTransmit = 1;
+          NumRSCMD = 47; // номер команды которую обрабатываем 
           //UARTSendExt ((BYTE*)BufString, 12);
         }
         // ;syst:set:kpr  - коэфф преломления
@@ -821,17 +842,23 @@ void DecodeCommandRS (void)
           sprintf(BufString,"%.4f\r",Data); // получение установки Redeye); // 
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
           NeedTransmit = 1;
+          NumRSCMD = 48; // номер команды которую обрабатываем 
           
         }
         // ;syst:set:cfg  - установка ASCII коменда
         if (!memcmp ((void*)RX_Buf, ";SYST:SET:CFG ",14)) //
         {
           int ShI=0; // сдвиг при индексе импульса больше 9
-          SetIndexLN((BYTE)atoi((char*)&RX_Buf[14])); // индекс длины линии
-          SetIndexIM((BYTE)atoi((char*)&RX_Buf[16])); // индекс длительности импульса !!!(с 21.04.2026 неожиданно  может быть двухзначным)
+          BYTE iA, iB, iC, iD;
+          iA = (BYTE)atoi((char*)&RX_Buf[14]);
+          SetIndexLN(iA); // индекс длины линии
+          iB = (BYTE)atoi((char*)&RX_Buf[16]);
+          SetIndexIM(iB); // индекс длительности импульса !!!(с 21.04.2026 неожиданно  может быть двухзначным)
           if(GetIndexIM()>9) ShI = 1;
-          SetIndexVRM((BYTE)atoi((char*)&RX_Buf[18+ShI])); // индекс времени измерения
-          SetPlaceLS ((BYTE)atoi((char*)&RX_Buf[20+ShI])); // установка требуемого лазера
+          iC = (BYTE)atoi((char*)&RX_Buf[18+ShI]);
+          SetIndexVRM(iC); // индекс времени измерения
+          iD = (BYTE)atoi((char*)&RX_Buf[20+ShI]);
+          SetPlaceLS (iD); // установка требуемого лазера
           // индекс рабочего места 0,1,2
           // если стартуем перепишем выбранную длину волны в соответствии с памяти
           SetIndxSeqLS();
@@ -845,6 +872,7 @@ void DecodeCommandRS (void)
           // надо может чуток потупить?
           SendCfgOTDR (BufString); // передача конфигурации рефлектометра (настройки)
           NeedTransmit = 1;
+          NumRSCMD = 10000 + 1000*iA + 100*iB + 10*iC + iD; // номер команды которую обрабатываем 
           
         }
         // ;syst:get:cfg?  - запрос установок рефлектометра ASCII коменда
@@ -852,6 +880,7 @@ void DecodeCommandRS (void)
         {
           SendCfgOTDR (BufString); // передача конфигурации рефлектометра (настройки)
           NeedTransmit = 1;
+          NumRSCMD = 50; // номер команды которую обрабатываем 
         }
         //        // ;INIT
         //        if (!memcmp ((void*)RX_Buf, ";INIT",5)) //
@@ -883,6 +912,7 @@ void DecodeCommandRS (void)
           sprintf(BufString,"\r");//c
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
           NeedTransmit = 1;
+          NumRSCMD = 51; // номер команды которую обрабатываем 
         }
         // получение логарифмических данных
         if (!memcmp ((void*)RX_Buf, ";GET:LOG:DATA",13)) //
@@ -895,6 +925,7 @@ void DecodeCommandRS (void)
           sprintf(BufString,"\r");//c
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
           NeedTransmit = 1;
+          NumRSCMD = 52; // номер команды которую обрабатываем 
         }
         // 11.10.2011 - команда установки комментариев внешней программой
         // ;syst:set:comm text  - изменение коментариев сохранения рефлектограммы
@@ -918,6 +949,7 @@ void DecodeCommandRS (void)
           sprintf(BufString,"\r");//c
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
           NeedTransmit = 1;
+          NumRSCMD = 53; // номер команды которую обрабатываем 
         }
         // 11.10.2011 - команда принудительного сохранения рефлектограммы
         // ;save:trace  - сохранениe рефлектограммы 0
@@ -926,6 +958,7 @@ void DecodeCommandRS (void)
           // сохранение рефлектограммы по команде от UART)
           SaveNewOTDRTrace (1); // ответ в функции т.к. = 1
           NeedTransmit = 1;
+          NumRSCMD = 54; // номер команды которую обрабатываем 
           
         }
         // команды управления OTDR конфигурация 
@@ -951,6 +984,7 @@ void DecodeCommandRS (void)
             sprintf(BufString,"%d, %d\r",Data,Head_RAW.ValDS); // 
             UARTSendExt ((BYTE*)BufString, strlen (BufString));// 
             NeedTransmit = 1;
+            NumRSCMD = 55; // номер команды которую обрабатываем 
           }
           // установка зондирующего импульса
           if (!memcmp ((void*)&RX_Buf[10], "ZI",2)) //
@@ -967,6 +1001,7 @@ void DecodeCommandRS (void)
             sprintf(BufString,"%d\r",Data); // 
             UARTSendExt ((BYTE*)BufString, strlen (BufString));// 
             NeedTransmit = 1;
+            NumRSCMD = 56; // номер команды которую обрабатываем 
           }
         }
         
@@ -978,24 +1013,29 @@ void DecodeCommandRS (void)
         sprintf(BufString,"ORL=%.1f\nUPdB=%.1f\nkLog=%.1f\nOffdB=%.1f\r", g_VolORL, g_UpGrdB, g_kLog, g_OffSetdB);//c
         UARTSendExt ((BYTE*)BufString, strlen (BufString));
         NeedTransmit = 1;
+        NumRSCMD = 57; // номер команды которую обрабатываем 
       }
       if (!memcmp ((void*)RX_Buf, ";SET:ORL:P",10)) //
       {
         float Datf;
+        NumRSCMD = 58; // номер команды которую обрабатываем 
         if (!memcmp ((void*)&RX_Buf[10], "UP ",3)) //
         {
           Datf = atof((char*)&RX_Buf[13]);
           g_UpGrdB = Datf;
+          NumRSCMD = 59; // номер команды которую обрабатываем 
         } 
         if (!memcmp ((void*)&RX_Buf[10], "LG ",3)) //
         {
           Datf = atof((char*)&RX_Buf[13]);
           g_kLog = Datf;
+          NumRSCMD = 60; // номер команды которую обрабатываем 
         } 
         if (!memcmp ((void*)&RX_Buf[10], "DB ",3)) //
         {
           Datf = atof((char*)&RX_Buf[13]);
           g_OffSetdB = Datf;
+          NumRSCMD = 61; // номер команды которую обрабатываем 
         } 
         sprintf(BufString,"ORL=%.2f\nUPdB=%.2f\nkLog=%.2f\nOffdB=%.2f\r", g_VolORL, g_UpGrdB, g_kLog, g_OffSetdB);//c
         UARTSendExt ((BYTE*)BufString, strlen (BufString));
@@ -1014,6 +1054,7 @@ void DecodeCommandRS (void)
           sprintf(BufString,"%d\r",Data);//c
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
           NeedTransmit = 1;
+          NumRSCMD = 62; // номер команды которую обрабатываем 
         }
         // ;set:smX XXXX // посадочные места лазеров - длины волн
         if (!memcmp ((void*)RX_Buf, ";SET:SM",7)) //
@@ -1023,43 +1064,52 @@ void DecodeCommandRS (void)
           sprintf(BufString,"%d %d\r",RX_Buf[7]-'1',Data);//c
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
           NeedTransmit = 1;
+          NumRSCMD = 63; // номер команды которую обрабатываем 
           
         }
         // ;set:LW  - число и тип источников
         if (!memcmp ((void*)RX_Buf, ";SET:LW ",8)) //
         {
           BYTE Data = (BYTE)atoi((char*)&RX_Buf[8]);
+          if (Data >9) Data = 2;
           SetTypeDevice (Data); // установка типа прибора для ТОПАЗОВ
           sprintf(BufString,"%d\r",Data);//c
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
           NeedTransmit = 1;
+          NumRSCMD = 64+Data; // номер команды которую обрабатываем 
         }
         // ;set:sf  - наличие или вид измерителя
         if (!memcmp ((void*)RX_Buf, ";SET:SF ",8)) //
         {
           BYTE Data =(BYTE)atoi((char*)&RX_Buf[8]);
+          if (Data >2) Data = 0;
           SetCfgPM  (Data); // установка наличия измерителя
           sprintf(BufString,"%d\r",Data);//c
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
           NeedTransmit = 1;
+          NumRSCMD = 74+Data; // номер команды которую обрабатываем 
         }
         // ;set:re  - Признак красного глаза
         if (!memcmp ((void*)RX_Buf, ";SET:RE ",8)) //
         {
           BYTE Data =(BYTE)atoi((char*)&RX_Buf[8]);
+          if (Data > 1) Data = 0;
           SetCfgRE  (Data); // установка наличия измерителя
           sprintf(BufString,"%d\r",Data);//c
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
           NeedTransmit = 1;
+          NumRSCMD = 77+Data; // номер команды которую обрабатываем 
         }
         // ;set:ap  - установка признака лавинного фотдиода
         if (!memcmp ((void*)RX_Buf, ";SET:AP ",8)) //
         {
           BYTE Data =(BYTE)atoi((char*)&RX_Buf[8]);
+          if (Data > 1) Data = 0;
           SetupApdiSet  (Data); // установка наличия измерителя
           sprintf(BufString,"%d\r",Data);//c
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
           NeedTransmit = 1;
+          NumRSCMD = 79+Data; // номер команды которую обрабатываем 
         }
         // пишем мертвые зоны    
         if (!memcmp ((void*)RX_Buf, ";SET:MZ",7)) //
@@ -1071,6 +1121,7 @@ void DecodeCommandRS (void)
           {
             StartSettingBegShift (); // старт измерения мертвых зон
             Nans = 1;
+            NumRSCMD = 81; // номер команды которую обрабатываем 
           }
           // ;set:MZy 
           else
@@ -1081,6 +1132,7 @@ void DecodeCommandRS (void)
             //123            FlashWritePageSM(CFG_USER, StructPtr(CFG_USER), StructSize(CFG_USER), 0);
             WriteNeedStruct(0x04);
             Nans = 1;
+            NumRSCMD = 82; // номер команды которую обрабатываем 
           }
           if(Nans)
           {
@@ -1109,6 +1161,7 @@ void DecodeCommandRS (void)
             //123            FlashWritePageSM(DBNAMESTRUCT, StructPtr(DBNAMESTRUCT), StructSize(DBNAMESTRUCT), 0);
             WriteNeedStruct(0x10);
             sprintf(BufString,"OK %d\r",Data ); // 
+            NumRSCMD = 83; // номер команды которую обрабатываем 
             
           }
           UARTSendExt ((BYTE*)BufString, strlen (BufString));// Возвращает ответ на команду
@@ -1134,6 +1187,7 @@ void DecodeCommandRS (void)
           sprintf(BufString,"\r");//c
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
           NeedTransmit = 1;
+          NumRSCMD = 84; // номер команды которую обрабатываем 
         }
         if (!memcmp ((void*)RX_Buf, ";SET:DB?",8)) //проверка конфигурации альтернативного имени
         {
@@ -1144,6 +1198,7 @@ void DecodeCommandRS (void)
           sprintf(BufString,"\r");//c
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
           NeedTransmit = 1;
+          NumRSCMD = 85; // номер команды которую обрабатываем 
         }
         // Установка делителя подбора смещения
         // по умолчанию 1
@@ -1155,6 +1210,7 @@ void DecodeCommandRS (void)
             sprintf(BufString,"%d",NameDB.ShiftAddNoise);//c
             UARTSendExt ((BYTE*)BufString, strlen (BufString));
             NeedTransmit = 1;
+            NumRSCMD = 86; // номер команды которую обрабатываем 
           }
           // ;set:shan
           if (!memcmp ((void*)RX_Buf, ";SET:SHAN ",10)) //
@@ -1168,6 +1224,7 @@ void DecodeCommandRS (void)
               NameDB.ShiftAddNoise = Data;  
               WriteNeedStruct(0x10);
               sprintf(BufString,"OK %d\r",Data ); // 
+              NumRSCMD = 87 + Data; // номер команды которую обрабатываем 
               
             }
             UARTSendExt ((BYTE*)BufString, strlen (BufString));// Возвращает ответ на команду
@@ -1237,6 +1294,7 @@ void DecodeCommandRS (void)
           sprintf(BufString,"Test End\r"); // 
           UARTSendExt ((BYTE*)BufString, strlen (BufString));// Возвращает текущий диапазон работы измерительного усилителя
           NeedTransmit = 1;
+          NumRSCMD = 105; // номер команды которую обрабатываем 
         }
         // ;set:enevents  - установка признака разрешения выдачи событий
         if (!memcmp ((void*)RX_Buf, ";SET:ENEVENTS ",14)) //
@@ -1249,10 +1307,12 @@ void DecodeCommandRS (void)
           if ( GetSetEnaEvents(0))
           {
             sprintf(BufString,"Events Enable\r"); // 
+            NumRSCMD = 106; // номер команды которую обрабатываем 
           }
           else
           {
             sprintf(BufString,"Events Disable\r"); // 
+            NumRSCMD = 107; // номер команды которую обрабатываем 
           }
           UARTSendExt ((BYTE*)BufString, strlen (BufString));// 
           NeedTransmit = 1;
@@ -1264,40 +1324,49 @@ void DecodeCommandRS (void)
           {
             SendBelcoreSet (); // посылает установки белкора
             NeedTransmit = 1;
+            NumRSCMD = 108; // номер команды которую обрабатываем 
           }
           if (RX_Buf[14] == ':') //   установка  структуры параметров белкора
           {
             if (!memcmp ((void*)&RX_Buf[15], "BC ",3)) //
             {
               ReflParam.BC = ((unsigned short)atoi((char*)&RX_Buf[17])); // 
+              NumRSCMD = 109; // номер команды которую обрабатываем 
             }
             if (!memcmp ((void*)&RX_Buf[15], "FPO ",4)) //
             {
               ReflParam.FPO = ((unsigned)atoi((char*)&RX_Buf[18])); // 
+              NumRSCMD = 110; // номер команды которую обрабатываем 
             }
             if (!memcmp ((void*)&RX_Buf[15], "NF ",3)) //
             {
               ReflParam.NF = ((unsigned short)atoi((char*)&RX_Buf[17])); // 
+              NumRSCMD = 111; // номер команды которую обрабатываем 
             }
             if (!memcmp ((void*)&RX_Buf[15], "NFSF ",5)) //
             {
               ReflParam.NFSF = ((unsigned short)atoi((char*)&RX_Buf[19])); // 
+              NumRSCMD = 112; // номер команды которую обрабатываем 
             }
             if (!memcmp ((void*)&RX_Buf[15], "PO ",3)) //
             {
               ReflParam.PO = ((unsigned short)atoi((char*)&RX_Buf[17])); // 
+              NumRSCMD = 113; // номер команды которую обрабатываем 
             }
             if (!memcmp ((void*)&RX_Buf[15], "LT ",3)) //
             {
               ReflParam.LT = ((unsigned short)atoi((char*)&RX_Buf[17])); // 
+              NumRSCMD = 114; // номер команды которую обрабатываем 
             }
             if (!memcmp ((void*)&RX_Buf[15], "RT ",3)) //
             {
               ReflParam.RT = ((unsigned short)atoi((char*)&RX_Buf[17])); // 
+              NumRSCMD = 115; // номер команды которую обрабатываем 
             }
             if (!memcmp ((void*)&RX_Buf[15], "ET ",3)) //
             {
               ReflParam.ET = ((unsigned short)atoi((char*)&RX_Buf[17])); // 
+              NumRSCMD = 116; // номер команды которую обрабатываем 
             }
             CheckReflParam ();  // Проверка пользовательских настроек 
             //123            FlashErasePage(EVEN_SET); // чистим страницу установок пользователя прибора
@@ -1316,6 +1385,7 @@ void DecodeCommandRS (void)
           CurrLang = GetLang(CURRENT);
           GetDeviceName( BufString ); // запрос сторки идентификатора
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          NumRSCMD = 117; // номер команды которую обрабатываем 
         }
         WriteNeedStruct (0x01); // сохраняем изменения
         // ;set:L1  - добавка к смещению 
@@ -1349,6 +1419,7 @@ void DecodeCommandRS (void)
           sprintf(BufString,"OK\r"); // 
           UARTSendExt ((BYTE*)BufString, strlen (BufString));//
           NeedTransmit = 1;
+          NumRSCMD = 118; // номер команды которую обрабатываем 
         }
         if (!memcmp ((void*)RX_Buf, ";SET:FWLCDOFF",13)) //
         {
@@ -1356,6 +1427,7 @@ void DecodeCommandRS (void)
           UARTSendExt ((BYTE*)BufString, strlen (BufString));//
           ProgFW_LCD = 2;
           NeedTransmit = 1;
+          NumRSCMD = 119; // номер команды которую обрабатываем 
         }
         
       }
@@ -1371,6 +1443,7 @@ void DecodeCommandRS (void)
           sprintf(BufString,"%d",Mode); // 
           UARTSendExt ((BYTE*)BufString, strlen (BufString));//
           NeedTransmit = 1;
+          NumRSCMD = 120; // номер команды которую обрабатываем 
         }
         // ;SRCT:ADC?
         if (!memcmp ((void*)RX_Buf, ";SRCT:ADC?",10)) //
@@ -1378,6 +1451,7 @@ void DecodeCommandRS (void)
           sprintf(BufString,"%d %d\r",GetPMData(),GetRange()); // Читает данные из АЦП измерителя/
           UARTSendExt ((BYTE*)BufString, strlen (BufString));// Возвращает текущий диапазон работы измерительного усилителя
           NeedTransmit = 1;
+          NumRSCMD = 121; // номер команды которую обрабатываем 
           // запрос  режима работы измерителя
         }
         
@@ -1390,15 +1464,20 @@ void DecodeCommandRS (void)
           {
           case '0':
             Data = atof((char*)&RX_Buf[9]);
+            NumRSCMD = 122; // номер команды которую обрабатываем 
             break;
           case 'U':
             Data = NameDB.ph_A[0] + 0.0001;  
+            NumRSCMD = 123; // номер команды которую обрабатываем 
             break;
           case 'D':
             Data = NameDB.ph_A[0] - 0.0001;  
+            NumRSCMD = 124; // номер команды которую обрабатываем 
             break;
           default:
             Data = NameDB.ph_A[0];  
+            NumRSCMD = 125; // номер команды которую обрабатываем 
+            break;
           }
           sprintf(BufString,"Err param\r"); // 
           if ((Data < 0.03)&&(Data > -0.03)) // установим коэфф 
@@ -1410,6 +1489,7 @@ void DecodeCommandRS (void)
             //123            SSPInit_Any(SPI_PM); // востановление SSP для управления PM (порт 1 та что на плате отладочной)
             WriteNeedStruct(0x10);
             sprintf(BufString,"OK %f\r",Data ); // 
+            NumRSCMD = 126; // номер команды которую обрабатываем 
             
             
           }
@@ -1429,6 +1509,7 @@ void DecodeCommandRS (void)
             sprintf(BufString,"%d",Mode); // Запуск измерния
             UARTSendExt ((BYTE*)BufString, strlen (BufString));// Возвращает текущий диапазон работы измерительного усилителя
             NeedTransmit = 1;
+            NumRSCMD = 127+Mode; // номер команды которую обрабатываем 
           }
           // ;SRCT:ZERO
           if (!memcmp ((void*)RX_Buf, ";SRCT:ZERO",10)) //
@@ -1454,6 +1535,7 @@ void DecodeCommandRS (void)
             sprintf(BufString,"End\r"); // завершение измерения
             UARTSendExt ((BYTE*)BufString, strlen (BufString));//
             NeedTransmit = 1;
+            NumRSCMD = 131; // номер команды которую обрабатываем 
           }
           // ;SRCT:STYK x
           if (!memcmp ((void*)RX_Buf, ";SRCT:STYK ",11)) //
@@ -1463,6 +1545,7 @@ void DecodeCommandRS (void)
             
             BYTE Mode = ((BYTE)atoi((char*)&RX_Buf[11])); // получение номера диапазона
             // запуск режима измерения стыковочных коэффициентов
+            if(Mode >2) Mode = 0;
             AcquireCoefStykRange(Mode+1, &PrevRng, &CurrRng); // Вычисляет стыковычный коэффициент текущего диапазона с предыдущим
             
             sprintf(BufString,"LO=%.0f HI=%.0f ",PrevRng,CurrRng); //  диапазонов
@@ -1480,6 +1563,8 @@ void DecodeCommandRS (void)
             sprintf(BufString,"End\r"); // завершение измерения
             UARTSendExt ((BYTE*)BufString, strlen (BufString));// 
             NeedTransmit = 1;
+            NumRSCMD = 132+Mode; // 134 номер команды которую обрабатываем 
+            
           }
           // ;SRCT:KKx
           if (!memcmp ((void*)RX_Buf, ";SRCT:KK",8)) //
@@ -1499,6 +1584,7 @@ void DecodeCommandRS (void)
             sprintf(BufString,"%f\r",  Data);     // // завершение измерения Возвращает спектральный коэффициент для текущей длины волны
             UARTSendExt ((BYTE*)BufString, strlen (BufString));// 
             NeedTransmit = 1;
+            NumRSCMD = 134 + Mode; // номер команды которую обрабатываем 
           }
           // ;SRCT:KSx
           if (!memcmp ((void*)RX_Buf, ";SRCT:KS",8)) //
@@ -1514,12 +1600,14 @@ void DecodeCommandRS (void)
               if (Mode>5) Mode = 0;
               Lambda = 800 + 20*Mode;
               CoeffPM.CoefPointKlb[0] =1.0;
+              NumRSCMD = 138 + Mode; // 142 номер команды которую обрабатываем 
               break;
             case 'M':
               // запуск режима измерения коэффициентов спектралки 1200-1390
               if (Mode>9) Mode = 0;
               Lambda = 1210 + 20*Mode;
               CoeffPM.CoefPointKlb[1] =1.0;
+              NumRSCMD = 143 + Mode; // 151 номер команды которую обрабатываем 
               break;
             case 'H':
               // запуск режима измерения коэффициентов спектралки 1410-1650
@@ -1528,6 +1616,7 @@ void DecodeCommandRS (void)
               CoeffPM.CoefPointKlb[2] =1.0;
               CoeffPM.CoefPointKlb[3] =1.0;
               CoeffPM.CoefPointKlb[4] =1.0;
+              NumRSCMD = 152 + Mode; // 163 номер команды которую обрабатываем 
               break;
               
             }
@@ -1603,6 +1692,7 @@ void DecodeCommandRS (void)
           sprintf(BufString,"\r");    
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
           NeedTransmit = 1;
+          NumRSCMD = 164; //  номер команды которую обрабатываем 
         }
         // -=-=-=-=-=- КОМАНДЫ УСТАНОВКИ частот совместимости JDSU В РУЧНУЮ
         // ;SLWV:
@@ -1626,6 +1716,7 @@ void DecodeCommandRS (void)
               sprintf(BufString,"Ok\r");    
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
               NeedTransmit = 1;
+              NumRSCMD = 165 + Indx; // 169 номер команды которую обрабатываем 
             }
             
           }
@@ -1642,6 +1733,7 @@ void DecodeCommandRS (void)
           sprintf(BufString,"\r");    
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
           NeedTransmit = 1;
+          NumRSCMD = 170; //  номер команды которую обрабатываем 
         }
         // -=-=-=-=-=- КОМАНДЫ УСТАНОВКИ КОЭФФИЦИЕНТОВ В РУЧНУЮ
         // ;SPCT:
@@ -1657,6 +1749,7 @@ void DecodeCommandRS (void)
             {
               CoeffPM.ShZeroRng[Indx]= Data;
               NeedSave = 1;
+              NumRSCMD = 171 + Indx; //  номер команды которую обрабатываем 
             }
           }
           // ;SPCT:STRx
@@ -1668,6 +1761,7 @@ void DecodeCommandRS (void)
             {
               CoeffPM.CoefStykRange[Indx]= Data;
               NeedSave = 1;
+              NumRSCMD = 175 + Indx; //  номер команды которую обрабатываем 
             }
           }
           // ;SPCT:KPx
@@ -1679,6 +1773,7 @@ void DecodeCommandRS (void)
             {
               CoeffPM.PointKalib[Indx]= Data;
               NeedSave = 1;
+              NumRSCMD = 180 + Indx; //  номер команды которую обрабатываем 
             }
           }
           // ;SPCT:KKx
@@ -1690,6 +1785,7 @@ void DecodeCommandRS (void)
             {
               CoeffPM.CoefPointKlb[Indx] =Data;
               NeedSave = 1;
+              NumRSCMD = 185 + Indx; //  номер команды которую обрабатываем 
             }
           }
           // ;SPCT:KSx y.yyyy - запись спектральных коэффициентов
@@ -1704,6 +1800,7 @@ void DecodeCommandRS (void)
               {
                 CoeffPM.CoefSpctrL[Indx]= Data;
                 NeedSave = 1;
+                NumRSCMD = 190 + Indx; // 195  номер команды которую обрабатываем 
               }
               break;
             case 'M':
@@ -1711,6 +1808,7 @@ void DecodeCommandRS (void)
               {
                 CoeffPM.CoefSpctrM[Indx]= Data;
                 NeedSave = 1;
+                NumRSCMD = 196 + Indx; // 204  номер команды которую обрабатываем 
               }
               break;
             case 'H':
@@ -1718,6 +1816,7 @@ void DecodeCommandRS (void)
               {
                 CoeffPM.CoefSpctrH[Indx]= Data;
                 NeedSave = 1;
+                NumRSCMD = 205 + Indx; // 216 номер команды которую обрабатываем 
               }
               break;
             }
@@ -1769,7 +1868,7 @@ void DecodeCommandRS (void)
               sprintf(BufString,"%4d nm\r",SetPMWavelenght(NumLW));// передаем слово о начале измерения
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
               NeedTransmit = 1;
-              
+              NumRSCMD = 220; //  номер команды которую обрабатываем 
             }
             if (!memcmp ((void*)&RX_Buf[8], "MD ",3)) //установка режима работы измерителя (dB,dBm, mW)
             {
@@ -1780,6 +1879,7 @@ void DecodeCommandRS (void)
               sprintf(BufString,"%s\r",Str);// передаем слово о начале измерения
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
               NeedTransmit = 1;
+              NumRSCMD = 221 + Indx; //223  номер команды которую обрабатываем 
             }
             if (!memcmp ((void*)&RX_Buf[8], "REFF",4)) //привязка на текущей длине волны
             {
@@ -1789,6 +1889,7 @@ void DecodeCommandRS (void)
               sprintf(BufString,"%.2f dBm\r",GetCurrLvldB(0));// передаем слово о начале измерения
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
               NeedTransmit = 1;
+              NumRSCMD = 224; //  номер команды которую обрабатываем 
             }
             if (!memcmp ((void*)&RX_Buf[8], "REF ",4)) //принудительная установка привязки
             {
@@ -1800,6 +1901,7 @@ void DecodeCommandRS (void)
               sprintf(BufString,"%s\r",Str);// передаем слово о начале измерения
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
               NeedTransmit = 1;
+              NumRSCMD = 225; //  номер команды которую обрабатываем 
             }
             if (!memcmp ((void*)&RX_Buf[8], "CUR",3)) //запрос измерителя в формате длина волны и мощность
             {
@@ -1807,6 +1909,7 @@ void DecodeCommandRS (void)
               sprintf(BufString,"%4d, %.6e\r",GetPMWavelenght(0),GetLastPower()*0.001);// передаем длину волны и мощность в ватах
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
               NeedTransmit = 1;
+              NumRSCMD = 226; //  номер команды которую обрабатываем 
             }
             
           }
@@ -1817,6 +1920,7 @@ void DecodeCommandRS (void)
             sprintf(BufString,"%4d nm, %s, %.2f dBm\r",GetPMWavelenght(0),Str,GetCurrLvldB(0));// передаем слово о начале измерения
             UARTSendExt ((BYTE*)BufString, strlen (BufString));
             NeedTransmit = 1;
+            NumRSCMD = 227; //  номер команды которую обрабатываем 
           }
         }
       } // команды измерителя // только в режиме измерителя
@@ -1859,6 +1963,7 @@ void DecodeCommandRS (void)
                 sprintf(BufString,"%d,%d\r",GetCellMem(0),MaxMemPM); // сколько занято ячеек
                 UARTSendExt ((BYTE*)BufString, strlen (BufString));
                 NeedTransmit = 1;
+                NumRSCMD = 228; //  номер команды которую обрабатываем 
                 //REDEYE(0);
               }
               //else
@@ -1877,12 +1982,14 @@ void DecodeCommandRS (void)
               sprintf(BufString,"%d,%d\r",GetCellMem(0),MaxMemPM); // сколько занято ячеек
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
               NeedTransmit = 1;
+              NumRSCMD = 229; //  номер команды которую обрабатываем 
             }
             if (!memcmp ((void*)&RX_Buf[9], "FR",2)) //
             { // читаем сколько ячеек занято
               sprintf(BufString,"%d,%d\r",GetCellMem(0),MaxMemPM); // сколько занято ячеек
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
               NeedTransmit = 1;
+              NumRSCMD = 230; //  номер команды которую обрабатываем 
             }
             if (!memcmp ((void*)&RX_Buf[9], "LD? ",4)) //
             { // читаем ячейку памяти
@@ -1906,6 +2013,7 @@ void DecodeCommandRS (void)
                 memcpy( &BufString[68], "\r", 1 );
                 UARTSendExt ((BYTE*)BufString, 69);
                 NeedTransmit = 1;
+                NumRSCMD = 2000; //  номер команды которую обрабатываем 
               }
             }
           }
@@ -1924,6 +2032,7 @@ void DecodeCommandRS (void)
               sprintf(BufString,"%4d %d\r",GetLengthWaveLS (GetPlaceLS(CURRENT)), SetModeLS(Str,CURRENT,CurrLang ));// передаем слово о начале измерения
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
               NeedTransmit = 1;
+              NumRSCMD = 231; //  номер команды которую обрабатываем 
             }
             if (!memcmp ((void*)&RX_Buf[7], ":MD ",4)) //
             {
@@ -1935,6 +2044,7 @@ void DecodeCommandRS (void)
               sprintf(BufString,"%s\r",Str);// 
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
               NeedTransmit = 1;
+              NumRSCMD = 232 + Indx; // 235 номер команды которую обрабатываем 
               
             }
             if (!memcmp ((void*)&RX_Buf[7], ":LW ",4)) //
@@ -1945,6 +2055,7 @@ void DecodeCommandRS (void)
               sprintf(BufString,"%4d nm\r",GetLengthWaveLS (GetPlaceLS(CURRENT)));// передаем слово о начале измерения
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
               NeedTransmit = 1;
+              NumRSCMD = 236 + Indx; // 238  номер команды которую обрабатываем 
             }
             
           }
@@ -1962,6 +2073,7 @@ void DecodeCommandRS (void)
               sprintf(BufString,"%d\r",SetModeRE(Str,CURRENT,CurrLang ));// 
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
               NeedTransmit = 1;
+              NumRSCMD = 239; //  номер команды которую обрабатываем 
             }
             if (!memcmp ((void*)&RX_Buf[7], ":MD ",4)) //установить режим красного глаза
             {
@@ -1972,6 +2084,7 @@ void DecodeCommandRS (void)
               sprintf(BufString,"%s\r",Str);// 
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
               NeedTransmit = 1;
+              NumRSCMD = 240 + Indx; //242  номер команды которую обрабатываем 
             }
           }
         }
@@ -1982,6 +2095,7 @@ void DecodeCommandRS (void)
     {
       sprintf(BufString,"Err\r");// 
       UARTSendExt ((BYTE*)BufString, strlen (BufString));
+      NumRSCMD = 299; //  номер команды которую обрабатываем 
       
     }
     
