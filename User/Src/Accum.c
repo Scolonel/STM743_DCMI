@@ -20,7 +20,7 @@ void SUMMER (DWORD* RawDataS)
       //memset(&BufADD, 0, sizeof(BufADD));
     // LED_KTT(1); // начало одного суммир "МОДУЛЬ" 2 (~102мкС)
   
-   HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_2, DAC_ALIGN_12B_R, CodeDAC[CntAccumulat&63]);
+   //HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_2, DAC_ALIGN_12B_R, CodeDAC[CntAccumulat&63]);
 // блок задержки обнуления буффера накопления одного прохода
 
       memset(&BufNAK, 0, sizeof(BufNAK));
@@ -340,6 +340,7 @@ void RUN_SUM (DWORD* RawDataI)//
     if (1)// любые линии -> добавим точек по расчету шумов
     {
       for ( i=5530;i<5580;++i) // берем 30 точек в конце снятых данных без превышения сигнала на 100 ед АЦП от уровня смещения
+      //for ( i=5300;i<5350;++i) // берем 30 точек в конце снятых данных без превышения сигнала на 100 ед АЦП от уровня смещения
       {
         //if (RawData[i] < (NoiseBegin + 4*Avrgs)) 
         if (RawData[i] < (NoiseBegin + Avrgs)) 
@@ -537,6 +538,26 @@ void RUN_SUM (DWORD* RawDataI)//
           
         }
       }
+      // Ф.1.7 -  Фильтр малых сигналов в районе смещения...
+      //  -  если уровень текущей точки 
+      //  не превышает  разряд над смещением, тупо занижаем точку
+      // чем она дальше от смещения то не много если близко, то сильнее
+      if(0) // 
+      {
+        if((RawData[xy]< (g_Noise + Avrgs))&&(RawData[xy] > g_Noise))
+        {
+          int Razn = RawData[xy] - g_Noise; // разница над смещением
+          //LED_KTS(1);
+          
+          LocalRaw = (int)(RawData[xy]- Razn/2);
+          //LocalRaw = (int)(RawData[xy]- (int)(50*log10(Razn)));
+          //if(Razn>10)
+          //LocalRaw = (int)(RawData[xy]- (int)(Razn/log10(Razn)));
+          //LED_KTS(0);
+          
+        }
+      }
+      
       // Ф.2 -  если разница между Логарифмическими значениями текущей точкой и предыдущей()
       // и последующей не превышает 0.15 дБ, то вычисляем среднее по 3 точкам,
       // предыдущая()+ текущая + последующая

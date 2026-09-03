@@ -1173,6 +1173,8 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
   {
     //FIO1PIN |=LEDSTART;//On  LED
     // первая строка длина волны
+    // Здесь надо переписать номера длин волн в перемнные в зависимости от места и 
+    // изменять по кругу для 1310 или 1300 в цикле общего преключения по перменной преключающей для 1300\1310
     switch (GetCombLS(SettingRefl.SetModeLW))
     {
     case 1: // одиночные длины волн
@@ -2104,7 +2106,6 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
 //          sprintf(Str,"%d-%dkm_%dns\r",g_SuperTest,GetLengthLine(GetIndexLN()),GetWidthPulse(GetIndexIM()));//c
 //          UARTSendExt ((BYTE*)Str, strlen (Str));
 //        sprintf(Str,"END\r");//c
-//        RemoutCtrl = 0;
 //        UARTSendExt ((BYTE*)Str, strlen (Str));
 //        
 //        //HAL_Delay(250); // ПОДОЖДЕМ А ПОТОМ ВСЕ ОБНУЛИМ ЧТО БЫ НЕ ПРИНИМАТЬ
@@ -2117,6 +2118,7 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
         // а Я приняв запрос дампа пытаюсь его передать... что он и получает на запрос идентификатора
         // поэтому здесь взведем флажок об окончании и при запросе дампа ответи "END" вместо дампа...
         // при супер тесте будем сбрасывать флажок и ничего не выводить...
+        RemoutCtrl = 0;
         NeedCntrlEND = 1;
         if(g_SuperTest) // тут можно посмотреть не надо ли запускать снова
         {

@@ -21,7 +21,7 @@
 #include "usart.h"
 
 /* USER CODE BEGIN 0 */
-//#include "usbd_cdc_acm_if.h"
+#include "usbd_cdc_acm_if.h"
 #define ENAUSBCOM 1  // признак работы внешнего uART 0 - uart3 1 - USB-COM
 uint8_t RxBufExt[64]; // буффер что приняли извне
 
@@ -412,10 +412,11 @@ uint8_t UARTSendExt(BYTE *BufferPtr, DWORD Length )  // буфер и размер
  if (ENAUSBCOM)
   {
     //int SdSd = (int)((Length/g_SpeedUart)/5.76)+1;
-     Res = CDC_Transmit(0, (void*)BufferPtr, Length); // выдаем блок
+     Res = (uint8_t)CDC_Transmit(0, (void*)BufferPtr, Length); // выдаем блок
      //HAL_Delay((int)(Length/(5.76*g_SpeedUart))+1);
      // как бы скорость максимальная 
      HAL_Delay((int)(Length/(250))+1);
+     //HAL_Delay((int)(Length/(99))+1);
     // HAL_Delay(SdSd);
   }
   else

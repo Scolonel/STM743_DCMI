@@ -718,13 +718,15 @@ void DecodeCommandRS (void)
       // ЗАПРОС ПОлного дампа накоплений
       if (!memcmp ((void*)RX_Buf, ";OTDR:DUMP",10))
       {
+          uint8_t Stat, Stati;
         if(NeedCntrlEND) // контроль окончания измерений ответ на запрос
           // ДАМПА ответом END - как бы синхронизируем ответ...
         {
           sprintf(BufString,"END\r"); // 
-          UARTSendExt ((BYTE*)BufString, strlen (BufString));// 
+          Stat = UARTSendExt ((BYTE*)BufString, strlen (BufString));// 
           NeedCntrlEND = 0;
-          NumRSCMD = 41; // номер команды которую обрабатываем 
+          //NumRSCMD = 41; // номер команды которую обрабатываем 
+          NumRSCMD = 500 + Stat; // номер команды которую обрабатываем 
         }
         else
         {
@@ -735,7 +737,7 @@ void DecodeCommandRS (void)
             else break;
           }
           //TST_KTA(1);
-          UARTSendExt ((BYTE*)&Head_RAW.Head[sm], sizeof(Head_RAW)-sm);//
+          Stati = UARTSendExt ((BYTE*)&Head_RAW.Head[sm], sizeof(Head_RAW)-sm);//
           //TST_KTA(0);
           
           // надо передать 2 блока заголовок и дамп
@@ -745,10 +747,11 @@ void DecodeCommandRS (void)
           //    UARTSendExt ((BYTE*)&RawData[j*512], 2048);// 
           
           //TST_KTA(1);
-          UARTSendExt ((BYTE*)&RawData, sizeof(RawData));// 
+          Stat = UARTSendExt ((BYTE*)&RawData, sizeof(RawData));// 
           //UARTSendExt ((BYTE*)&RawData, 0x4800);// 
           //TST_KTA(0);
-          NumRSCMD = 42; // номер команды которую обрабатываем 
+          //NumRSCMD = 42; // номер команды которую обрабатываем 
+          NumRSCMD = 600 + 10*Stati + Stat; // номер команды которую обрабатываем 
         }
         NeedTransmit = 1;
       }
