@@ -508,7 +508,7 @@ void DecodeCommandRS (void)
       //        SetEnaMZ(NumMod); // режим разрешени€ корректировки мертвых зон
       //        sprintf(BufString,"%01d\r",GetEnaMZ());// получение текущего 
       //        UARTSendExt ((BYTE*)BufString, strlen (BufString));
-      //        
+
       //      }
       
       // ”становка и запрос режима работы прибота по индексу
@@ -564,6 +564,16 @@ void DecodeCommandRS (void)
         UARTSendExt ((BYTE*)BufString, strlen (BufString));
         NeedTransmit = 1;
         NumRSCMD = 27; // номер команды которую обрабатываем 
+      }
+      // запрос признака ‘—“Ё  
+      //  ;syst:FSB?
+      if (!memcmp ((void*)RX_Buf, ";SYST:FSB?",10)) //
+      {
+        
+        sprintf(BufString,"%d\r",GetCfgFSB ()); // получение признака ‘—“Ё ; // 
+        UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        NeedTransmit = 1;
+        NumRSCMD = 252; // номер команды которую обрабатываем 
       }
       // запрос значений мертвых зон
       //  ;syst:mzn?
@@ -1102,6 +1112,17 @@ void DecodeCommandRS (void)
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
           NeedTransmit = 1;
           NumRSCMD = 77+Data; // номер команды которую обрабатываем 
+        }
+        // ;set:fsb  - ѕризнак ‘—“Ё 
+        if (!memcmp ((void*)RX_Buf, ";SET:FSB ",9)) //
+        {
+          BYTE Data =(BYTE)atoi((char*)&RX_Buf[9]);
+          if (Data > 1) Data = 0;
+          SetCfgFSB  (Data); // установка признака ‘—“Ё 
+          sprintf(BufString,"%d\r",Data);//c
+          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          NeedTransmit = 1;
+          NumRSCMD = 250+Data; // номер команды которую обрабатываем 
         }
         // ;set:ap  - установка признака лавинного фотдиода
         if (!memcmp ((void*)RX_Buf, ";SET:AP ",8)) //

@@ -1073,6 +1073,9 @@ BYTE GetPlaceLS (BYTE Dir)// установка индекса новой длины волны из списка устан
 
 WORD GetLengthWaveLS (BYTE SetPlace) // получение длины волны от индекса установочного места
 {
+  if((SW_13)&&(ConfigDevice.PlaceLS[SetPlace]==1310)) // признак переключения длины волны 1300/1310
+    return 1300;
+  else  
     return ConfigDevice.PlaceLS[SetPlace];
 }
 
