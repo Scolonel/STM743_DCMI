@@ -249,12 +249,12 @@ unsigned InvalidDBNAME() //boolean actually
 }
 void InitDBNAME(unsigned Err)
 {
-  if (Err && 0x80) NameDB.ShiftAddNoise=1; //  устанавливаем счетчик волокна 
+  if (Err & 0x80) NameDB.ShiftAddNoise=1; //  устанавливаем счетчик волокна 
   
-  if (Err && 0x40) NameDB.FiberID=1; //  устанавливаем счетчик волокна 
-  if (Err && 0x20) NameDB.Ena_DB=1; // плохой режим , установим ТОПАЗ (Not Alternate)
+  if (Err & 0x40) NameDB.FiberID=1; //  устанавливаем счетчик волокна 
+  if (Err & 0x20) NameDB.Ena_DB=1; // плохой режим , установим ТОПАЗ (Not Alternate)
 
-  if (Err && 0x10) // string BAD!
+  if (Err & 0x10) // string BAD!
   {
   for( unsigned i = 0; i < (ARRAY_SIZE(NameDB.UserComm)-1);++i )
   {
@@ -263,7 +263,7 @@ void InitDBNAME(unsigned Err)
   NameDB.UserComm[(ARRAY_SIZE(NameDB.UserComm)-1)]=0;
   }
   
-  if (Err && 0x8) // нет конца строки
+  if (Err & 0x8) // нет конца строки
   {
   for( unsigned i = 0; i < (ARRAY_SIZE(NameDB.AltName)-2);++i )
   {
@@ -271,11 +271,11 @@ void InitDBNAME(unsigned Err)
   }
   NameDB.AltName[(ARRAY_SIZE(NameDB.AltName)-1)]=0;
   }
-  if (Err && 0x4) //плохой ph_A[0]
+  if (Err & 0x4) //плохой ph_A[0]
   NameDB.ph_A[0]=0.0;
-  if (Err && 0x2) //плохой ph_A[1]
+  if (Err & 0x2) //плохой ph_A[1]
   NameDB.ph_A[1]=0.0;
-  if (Err && 0x1) //плохой ph_A[2]
+  if (Err & 0x1) //плохой ph_A[2]
   NameDB.ph_A[2]=0.0;
 }
 
@@ -294,9 +294,9 @@ unsigned InvalidJDSU() //boolean actually
 }
 void InitJDSU(unsigned Err)
 {
-  if (Err && 0x1000) SetJDSU.CompMode=0; // плохой режим , установим ТОПАЗ
+  if (Err & 0x1000) SetJDSU.CompMode=0; // плохой режим , установим ТОПАЗ
   
-  if (Err && 0xAAA) 
+  if (Err & 0xAAA) 
   {
     SetJDSU.LambdaNum[0] = 850;
     SetJDSU.LambdaNum[1] = 1300;
@@ -305,12 +305,12 @@ void InitJDSU(unsigned Err)
     SetJDSU.LambdaNum[4] = 1550;
     SetJDSU.LambdaNum[5] = 1625;
   }
-  if (Err && 0x400) SetJDSU.FreqLambda[0] = 0;
-  if (Err && 0x100) SetJDSU.FreqLambda[1] = 0; 
-  if (Err && 0x40) SetJDSU.FreqLambda[2] = 2000;
-  if (Err && 0x10) SetJDSU.FreqLambda[3] = 0; 
-  if (Err && 0x4) SetJDSU.FreqLambda[4] = 270;
-  if (Err && 0x1) SetJDSU.FreqLambda[5] = 0; 
+  if (Err & 0x400) SetJDSU.FreqLambda[0] = 0;
+  if (Err & 0x100) SetJDSU.FreqLambda[1] = 0; 
+  if (Err & 0x40) SetJDSU.FreqLambda[2] = 2000;
+  if (Err & 0x10) SetJDSU.FreqLambda[3] = 0; 
+  if (Err & 0x4) SetJDSU.FreqLambda[4] = 270;
+  if (Err & 0x1) SetJDSU.FreqLambda[5] = 0; 
 }
 
 
@@ -354,32 +354,32 @@ void SetCurCntFiles (void)
 
 void InitDevice(unsigned Err)
 {
-  if (Err && 0x01)  
+  if (Err & 0x01)  
   {
   ConfigDevice.BatStep = 2.4414e-3; // тест контроля версий, для светодиода 2.5В
   } 
   Err = Err>>1;
-  if (Err && 0x01)  ConfigDevice.ID_Device = 0; // ТОПАЗ 
+  if (Err & 0x01)  ConfigDevice.ID_Device = 0; // ТОПАЗ 
   Err = Err>>1;
-  if (Err && 0x01) ConfigDevice.InputCheckLvl = 10;
+  if (Err & 0x01) ConfigDevice.InputCheckLvl = 10;
   Err = Err>>1;
-  if (Err && 0x01) ConfigDevice.EndCheckLvl = 9500; 
+  if (Err & 0x01) ConfigDevice.EndCheckLvl = 9500; 
   Err = Err>>1;
-  if (Err && 0x01) ConfigDevice.ApdiSet = 0;
+  if (Err & 0x01) ConfigDevice.ApdiSet = 0;
   Err = Err>>1;
-  if (Err && 0x01) ConfigDevice.CfgRE = 0;
+  if (Err & 0x01) ConfigDevice.CfgRE = 0;
   Err = Err>>1;
-  if (Err && 0x01) ConfigDevice.CfgPM = 0;
+  if (Err & 0x01) ConfigDevice.CfgPM = 0;
   Err = Err>>1;
-  if (Err && 0x01) ConfigDevice.TypeDevice = 2;
+  if (Err & 0x01) ConfigDevice.TypeDevice = 2;
   Err = Err>>1;
-  if (Err && 0x01) ConfigDevice.PlaceLS[2] = 0;
+  if (Err & 0x01) ConfigDevice.PlaceLS[2] = 0;
   Err = Err>>1;
-  if (Err && 0x01) ConfigDevice.PlaceLS[1] = 0;
+  if (Err & 0x01) ConfigDevice.PlaceLS[1] = 0;
   Err = Err>>1;
   if (Err && 0x01) ConfigDevice.PlaceLS[0] = 1310;
   Err = Err>>1;
-  if (Err && 0x01) ConfigDevice.NumDevice = 0;
+  if (Err & 0x01) ConfigDevice.NumDevice = 0;
 }
 
 float GetSetBatStep (float Dir) // возвращает или устанавливает значение шага АЦП батарейки
