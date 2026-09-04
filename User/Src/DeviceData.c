@@ -334,6 +334,7 @@ unsigned InvalidDevice() //boolean actually
   res = (res<<1) | (ConfigDevice.ID_Device >1);
   res = res<<1;
     if ((isnan(ConfigDevice.BatStep))||((ConfigDevice.BatStep<0.002)||(ConfigDevice.BatStep>0.003))) res++; 
+  if(ConfigDevice.ForFBI >1) res |=0x1000; 
   return res;
 }
 // получить/инкремент значение счетчика файлов рефлектограмм, старт с 200 
@@ -380,6 +381,8 @@ void InitDevice(unsigned Err)
   if (Err && 0x01) ConfigDevice.PlaceLS[0] = 1310;
   Err = Err>>1;
   if (Err & 0x01) ConfigDevice.NumDevice = 0;
+  Err = Err>>1;
+  if (Err & 0x01) ConfigDevice.ForFBI = 0;
 }
 
 float GetSetBatStep (float Dir) // возвращает или устанавливает значение шага АЦП батарейки
@@ -1414,6 +1417,17 @@ BYTE SetCfgRE (BYTE Data)// Setup признака установки красного глаза
 {
   if (Data > 1) Data = 0;
   return ConfigDevice.CfgRE = Data;
+}
+
+BYTE GetCfgFSB (void)// получение признака ФСТЭК
+{
+  return ConfigDevice.ForFBI;
+}
+
+BYTE SetCfgFSB (BYTE Data)// Setup признака ФСТЭК
+{
+  if (Data > 1) Data = 0;
+  return ConfigDevice.ForFBI = Data;
 }
 
 BYTE PreSetModeLS (BYTE Index) // принудительная установка режима источника

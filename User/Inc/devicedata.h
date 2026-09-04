@@ -107,6 +107,7 @@ typedef struct
   WORD EndCheckLvl; // 	порог контроля конца линии (8500)
   BYTE ID_Device; // прибор 0-ТОПАЗ или 1-MOT_700
   float BatStep; // шаг АЦП батарейки
+  BYTE ForFBI; // признак для ФСТЭК
   // 18/04/2013 
 } CFG_DEV;
 
@@ -296,6 +297,8 @@ BYTE GetCfgPM (void); // получение установки измерителя
 BYTE SetCfgPM (BYTE Data); // Setup установки измерителя
 BYTE GetCfgRE (void);// получение признака установки красного глаза
 BYTE SetCfgRE (BYTE Data);// Setup признака установки красного глаза
+BYTE GetCfgFSB (void);// получение признака ФСТЭК
+BYTE SetCfgFSB (BYTE Data);// Setup признака ФСТЭК
 BYTE SetModeLS (char* Str, int Dir, BYTE Lang); // возвращает номер режима источника, и пишет строку для отображения на индикаторе
 BYTE SetModeRE (char* Str, int Dir, BYTE Lang); // возвращает номер режима VFL, и пишет строку для отображения на индикаторе
 void CntrlRE (void); // функция контроля красным глазом

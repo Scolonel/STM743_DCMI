@@ -528,6 +528,8 @@ extern char NumCurrPage ; //
 // Filtras
 extern float g_fNoiseRange;             // размах значений шума в последнем измерении
 
+extern BYTE SW_13; // признак переключения длины волны 1300/1310
+
 //extern   FIL Fil;
 //extern   FRESULT FR_Status;
 //extern   FRESULT res;
