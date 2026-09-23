@@ -790,6 +790,7 @@ void DecodeCommandRS (void)
           NumRSCMD = 45; // номер команды которую обрабатываем 
         }
         RemoutCtrl = 1;
+        NeedCntrlEND = 0; // очистим вдруг остался
         if (GetIndexVRM()>3) // устанавливаем минимальное время ( для дистанционного управления не подходит)
           SetIndexVRM (0); // установка индекса времени накопления на 15 сек
         sprintf(BufString,"%d\r", GetTimeAvrg(GetIndexVRM())+7);//c
