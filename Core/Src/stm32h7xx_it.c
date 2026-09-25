@@ -458,6 +458,9 @@ void EXTI15_10_IRQHandler(void)
     //EnaStartRun = 1;
     // из старой проги, признак нажатой кнопки "S"
     rawPressKeyS = 1;
+    TimePressKeyS = HAL_GetTick();
+    if((TimePressKeyS - TimeEndKeyS)<500)
+      rawPressKeyS = 0;
     if(MeasureNow)  myBeep(250);
     
     CountKeyS++; // число нажатых кнопок

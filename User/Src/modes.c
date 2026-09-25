@@ -2847,44 +2847,53 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     if(ReturnModeViewRefl==SETPARAM)
     {
       myBeep(10);
-      SetMode(ModeKeyBoardOTDR);
       ModeDevice = MODEOTHER;
-      myBeep(10);
-      CheckCommOTDR ();// проверка и корректировка строки комментариев OTDR
-      
-      // подготовка строки комментария для редакции
-      IndexCommOTDR = 0;
-      CommentsOTDR[ARRAY_SIZE(CommentsOTDR)-1]=0; // последний элемент в массиве равен 0
-      for (int Ind =ARRAY_SIZE(CommentsOTDR)-2; Ind>=0; Ind--) // идем с последнего
-      {
-        if (CommentsOTDR[Ind]<0x20) CommentsOTDR[Ind]=' '; //если управляющие, то делаем их "пробелом"
-        else if (CommentsOTDR[Ind]!=' ' && IndexCommOTDR == 0)IndexCommOTDR = Ind; // фиксируем длину строки до первого НЕ"прбела"
-        //Index_Comm --;
-      }
-      if ((CommentsOTDR[IndexCommOTDR]!=' ')&&(IndexCommOTDR!=18))IndexCommOTDR ++;// если указатель на не пробел и это не последний, то увеличиваем указатель
-      KbPosX = 11;
-      KbPosY = 2;
-      // было старт терперь снова редактор сохранения
-      //        POWALT(ON);
-      //        POWREF (ON);
-      //        POWDET(ON);
-      //        Light(0); // Выключаем подсветку
-      //        SetMode(ModeStartOTDR);
-      //        ModeDevice = MODEMEASURE;
-      //        //IndexVerSize  = 0;// установка вертикального размера отображения рефлектограммы ( самый крупный)
-      //        SubModeMeasOTDR = SETPOWER;
-      //        SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
-      //        rawPressKeyS=0;
-      // посылка команды переключения окна на Клавиатуру редактирования Keyboard (вызов)  OTDR
-      if(CurrLang)// не русский
-      {
-        CmdInitPage(22);
-      }
-      else
-      {
-        CmdInitPage(23);
-      }
+      // был вызов редактора комментариев
+//      SetMode(ModeKeyBoardOTDR);
+//      myBeep(10);
+//      CheckCommOTDR ();// проверка и корректировка строки комментариев OTDR
+//      
+//      // подготовка строки комментария для редакции
+//      IndexCommOTDR = 0;
+//      CommentsOTDR[ARRAY_SIZE(CommentsOTDR)-1]=0; // последний элемент в массиве равен 0
+//      for (int Ind =ARRAY_SIZE(CommentsOTDR)-2; Ind>=0; Ind--) // идем с последнего
+//      {
+//        if (CommentsOTDR[Ind]<0x20) CommentsOTDR[Ind]=' '; //если управляющие, то делаем их "пробелом"
+//        else if (CommentsOTDR[Ind]!=' ' && IndexCommOTDR == 0)IndexCommOTDR = Ind; // фиксируем длину строки до первого НЕ"прбела"
+//        //Index_Comm --;
+//      }
+//      if ((CommentsOTDR[IndexCommOTDR]!=' ')&&(IndexCommOTDR!=18))IndexCommOTDR ++;// если указатель на не пробел и это не последний, то увеличиваем указатель
+//      KbPosX = 11;
+//      KbPosY = 2;
+//      // было старт терперь снова редактор сохранения
+//      //        POWALT(ON);
+//      //        POWREF (ON);
+//      //        POWDET(ON);
+//      //        Light(0); // Выключаем подсветку
+//      //        SetMode(ModeStartOTDR);
+//      //        ModeDevice = MODEMEASURE;
+//      //        //IndexVerSize  = 0;// установка вертикального размера отображения рефлектограммы ( самый крупный)
+//      //        SubModeMeasOTDR = SETPOWER;
+//      //        SSPInit_Any(SPI_ALT); // Инициализация SSP для управления ALTERA (порт 1 та что на плате отладочной)
+//      //        rawPressKeyS=0;
+//      // посылка команды переключения окна на Клавиатуру редактирования Keyboard (вызов)  OTDR
+//      if(CurrLang)// не русский
+//      {
+//        CmdInitPage(22);
+//      }
+//      else
+//      {
+//        CmdInitPage(23);
+//      }
+      // теперь надо вызвать новый режим Подготовки параметров сохранения
+      SetMode(ModeSaveOTDR);
+      CmdInitPage(24);
+      TimeEndKeyS = HAL_GetTick();
+
+      //HAL_Delay(200);
+
     }
+    
     
     rawPressKeyS = 0;
     
@@ -3193,7 +3202,283 @@ void ModeEventsOTDR(void) // режим отображения событий рефлектограммы CHECK_OFF
   //ClrKey (BNS_MASK); // сброс нажатых клавиш
   
 }
-
+// меню вызова редактирования перед сохранением результатов OTDR
+void ModeSaveOTDR(void) // режим сохранения результатов измерения OTDR
+{
+  static BYTE FrSaveOTDR = 1; // указатель на курсор
+  char Str[32];
+  //static BYTE ErrMemOtdr = 0; // указатель на курсор
+  //  static BYTE NeedKeyB = 0; // необходимость переключения в клавиатуру
+  
+//  if (GetCellMem(0) <MaxMemPM)
+//  {
+    if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))
+    {
+      KeyCodeP = KeyP; //
+      myBeep(10);
+      g_NeedScr = 1; // Need reDraw Screen
+      FrSaveOTDR = ChangeFrSet (FrSaveOTDR, 4, 1, MINUS);// установка курсора в рамках заданных параметров
+      //ClrKey (BTN_UP);
+    }
+    if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
+    {
+      KeyCodeP = KeyP; //
+      myBeep(10);
+      g_NeedScr = 1; // Need reDraw Screen
+      FrSaveOTDR = ChangeFrSet (FrSaveOTDR, 4, 1, PLUS);// установка курсора в рамках заданных параметров
+      //ClrKey (BTN_DOWN);
+    }
+    switch (FrSaveOTDR) // обработка выбраных полей установок
+    {
+    case 1: //вызов редактора комментария
+      if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
+      {
+        KeyCodeP = KeyP; //
+        myBeep(10);
+        g_NeedScr = 1; // Need reDraw Screen
+        SetMode(ModeKeyBoardOTDR);
+//        CheckCommOTDR ();// проверка и корректировка строки комментариев OTDR
+//        
+//        // подготовка строки комментария для редакции
+//        IndexCommOTDR = 0;
+//        CommentsOTDR[ARRAY_SIZE(CommentsOTDR)-1]=0; // последний элемент в массиве равен 0
+//        for (int Ind =ARRAY_SIZE(CommentsOTDR)-2; Ind>=0; Ind--) // идем с последнего
+//        {
+//          if (CommentsOTDR[Ind]<0x20) CommentsOTDR[Ind]=' '; //если управляющие, то делаем их "пробелом"
+//          else if (CommentsOTDR[Ind]!=' ' && IndexCommOTDR == 0)IndexCommOTDR = Ind; // фиксируем длину строки до первого НЕ"прбела"
+//          //Index_Comm --;
+//        }
+//        if ((CommentsOTDR[IndexCommOTDR]!=' ')&&(IndexCommOTDR!=18))IndexCommOTDR ++;// если указатель на не пробел и это не последний, то увеличиваем указатель
+        KbPosX = 11;
+        KbPosY = 2;
+        
+        ModeDevice = MODEOTHER;
+        NeedKeyB = 1; // необходимость переключения в клавиатуру
+      }
+      break;
+    case 2: //изменение счетчика волокон
+      if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
+      {
+        KeyCodeP = KeyP; //
+        myBeep(10);
+        g_NeedScr = 1; // Need reDraw Screen
+        if (NumFiber<999)NumFiber++;
+        else NumFiber = 0;
+        //ClrKey (BTN_RIGHT);
+      }
+      if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
+      {
+        KeyCodeP = KeyP; //
+        myBeep(10);
+        g_NeedScr = 1; // Need reDraw Screen
+        if (NumFiber>0)NumFiber--;
+        else NumFiber = 999;
+        //ClrKey (BTN_LEFT);
+      }
+      if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==INF_PRESSED))
+      {
+        KeyCodeP = KeyP; //
+        myBeep(10);
+        g_NeedScr = 1; // Need reDraw Screen
+        if (NumFiber<999)NumFiber++;
+        else NumFiber = 0;
+        //ClrKey (BTN_RIGHT);
+      }
+      if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==INF_PRESSED))
+      {
+        KeyCodeP = KeyP; //
+        myBeep(10);
+        g_NeedScr = 1; // Need reDraw Screen
+        if (NumFiber>0)NumFiber--;
+        else NumFiber = 999;
+        //ClrKey (BTN_LEFT);
+      }
+      break;
+    case 3: //перемена настройки автоинкремента
+      if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
+      {
+        KeyCodeP = KeyP; //
+        myBeep(10);
+        g_NeedScr = 1; // Need reDraw Screen
+        GetEnIncFiber(1);
+        //ClrKey (BTN_RIGHT);
+      }
+      if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
+      {
+        KeyCodeP = KeyP; //
+        myBeep(10);
+        g_NeedScr = 1; // Need reDraw Screen
+        GetEnIncFiber(1);
+        //ClrKey (BTN_LEFT);
+      }
+      break;
+    case 4: //сброс счетчика 
+      if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
+      {
+        KeyCodeP = KeyP; //
+        myBeep(10);
+        g_NeedScr = 1; // Need reDraw Screen
+        NumFiber = 0;
+        //ClrKey (BTN_OK);
+      }
+      break;
+    }
+//  }
+//  else
+//  {
+//    if(!ErrMemOlt)
+//    {
+//      ErrMemOlt = 1;
+//      // перескочим в новое окно об ошибке и заполним тут ЖЕ!
+//      // посылка команды переключения окна на MainMenu (возврат)  
+//      CmdInitPage(25);
+//      if (g_FirstScr)
+//      {
+//        
+//        sprintf(Str, "t0.txt=\"%s\"яяя", MsgMass[36][CurrLang]);
+//        NEX_Transmit((void*)Str);    // В Н И М А Н И Е
+//        sprintf(Str, "t1.txt=\"%s\"яяя", MsgMass[59][CurrLang]);
+//        NEX_Transmit((void*)Str);    // " Запись невозможна"
+//        sprintf(Str, "t2.txt=\"%s\"яяя", MsgMass[60][CurrLang]);
+//        NEX_Transmit((void*)Str);    // "нет свободной памяти"
+//        sprintf(Str, "t3.txt=\"%s\"яяя", MsgMass[38][CurrLang]);
+//        NEX_Transmit((void*)Str);    // "  для продолжения  "
+//        sprintf(Str, "t4.txt=\"%s < S >\"яяя", MsgMass[39][CurrLang]);
+//        NEX_Transmit((void*)Str);    // "    нажмите \"S\"   "
+//        g_FirstScr = 0;
+//      }
+//      
+//    }
+//  }
+  
+  //ClrKey (BNS_MASK);
+  if (g_FirstScr)
+  {
+    // здесь заполняем данными поля нового индикатора
+    // проверим - поправим комментарий
+        CheckCommOTDR ();// проверка и корректировка строки комментариев OTDR
+        
+        // подготовка строки комментария для редакции
+        IndexCommOTDR = 0;
+        CommentsOTDR[ARRAY_SIZE(CommentsOTDR)-1]=0; // последний элемент в массиве равен 0
+        for (int Ind =ARRAY_SIZE(CommentsOTDR)-2; Ind>=0; Ind--) // идем с последнего
+        {
+          if (CommentsOTDR[Ind]<0x20) CommentsOTDR[Ind]=' '; //если управляющие, то делаем их "пробелом"
+          else if (CommentsOTDR[Ind]!=' ' && IndexCommOTDR == 0)IndexCommOTDR = Ind; // фиксируем длину строки до первого НЕ"прбела"
+          //Index_Comm --;
+        }
+        if ((CommentsOTDR[IndexCommOTDR]!=' ')&&(IndexCommOTDR!=18))IndexCommOTDR ++;// если указатель на не пробел и это не последний, то увеличиваем указатель
+    // не требущие изменения при первичной инициализации
+    
+    sprintf(Str, "t0.txt=\"%s\"яяя",CommentsOTDR);
+    NEX_Transmit((void*)Str);    // 1 строка комментарии
+    
+    // не надо выводить
+    //sprintf(Str, "t1.txt=\"%04d\"яяя", PONI.NumFix);
+    //NEX_Transmit((void*)Str);    // номер волокна
+    
+    sprintf(Str, "t2.txt=\"%s\"яяя", MsgMass[54][CurrLang]);
+    NEX_Transmit((void*)Str);    // комментариим
+    
+    sprintf(Str, "t3.txt=\"%s\"яяя", MsgMass[61][CurrLang]);
+    NEX_Transmit((void*)Str);    // номер волокна
+    
+    sprintf(Str, "t4.txt=\"%s\"яяя", MsgMass[55][CurrLang]);
+    NEX_Transmit((void*)Str);    // тип счетчика волокона
+    
+    sprintf(Str, "t5.txt=\"%s\"яяя", MsgMass[58][CurrLang]);
+    NEX_Transmit((void*)Str);    // Сброс № волокна
+    
+    sprintf(Str, "t8.txt=\"\"яяя");
+    NEX_Transmit((void*)Str);    // пустое поле
+    
+    g_FirstScr = 0;
+    g_NeedScr = 1;
+  }
+  if (g_NeedScr)
+  {
+    // здесь заполняем данными поля нового индикатора
+    // по результатам изменений вызваныйх обработчиком клавиатуры
+    
+    // раскрашивание поля выбора 
+    // закрасим бэкграунды  и установим требуемый
+    sprintf(Str, "t2.bco=WHITEяяя"); // белый
+    NEX_Transmit((void*)Str); //
+    HAL_Delay(2);
+    sprintf(Str, "t3.bco=WHITEяяя"); // белый
+    NEX_Transmit((void*)Str);// 
+    HAL_Delay(2);
+    sprintf(Str, "t4.bco=WHITEяяя"); // белый
+    NEX_Transmit((void*)Str);//
+    HAL_Delay(2);
+    sprintf(Str, "t5.bco=WHITEяяя"); // белый
+    NEX_Transmit((void*)Str);//
+    HAL_Delay(2);
+    sprintf(Str, "t%d.bco=GREENяяя", FrSaveOTDR+1); // зеленый
+    NEX_Transmit((void*)Str);// 
+    
+    // не надо выводить
+    //sprintf(Str, "t1.txt=\"%04d\"яяя", PONI.NumFix);
+    //NEX_Transmit((void*)Str);    // номер записи
+    
+    HAL_Delay(2);
+    sprintf(Str, "t6.txt=\"%03d\"яяя",NumFiber);
+    NEX_Transmit((void*)Str);    ////счетчик волокна
+    
+    if (!GetEnIncFiber(0))  sprintf(Str,"t7.txt=\"%s\"яяя", MsgMass[56][CurrLang]);//ручной
+    else   sprintf(Str,"t7.txt=\"%s\"яяя", MsgMass[57][CurrLang]);//авто
+    NEX_Transmit((void*)Str);    //
+    
+    // код подсветки требуемой строки если есть есть маркер строки
+    
+    
+    g_NeedScr = 0;
+  }
+  
+  if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
+  {
+    KeyCodeP = KeyP; //
+    myBeep(10);
+    g_NeedScr = 1; // Need reDraw Screen
+    SetMode(ModeDrawOTDR);
+    //SetMode(ModeSaveOTDR); // возврат 
+    ReturnModeViewRefl = SETPARAM;//VIEWMEM -  чтобы вернуться в в установки
+    ModeDevice = MODEREFL;
+    myBeep(10);
+    // посылка команды переключения окна на DrawOTDRview (возврат)  
+    CmdInitPage(18); // 18 рисование графика после измерений 
+  }
+  if (rawPressKeyS) // key S Просто сохраняем и должны уйти в установки рефлектометра
+  {        
+    //WrLogInfo(SAVE_PM); // сохраняем измеритель
+    SystLogWord += SAVE_F; // сохраняем рефлектограмму
+    myBeep(10);
+    g_NeedScr = 1; // Need reDraw Screen
+    if (GetEnIncFiber(0))
+    {
+      if(NumFiber<999)NumFiber++;
+      else NumFiber = 0;
+      // сохраним изменения
+    NameDB.FiberID = NumFiber; // сохраняем счетчик волокон из памяти
+    EEPROM_write(&NameDB, ADR_NameDB, sizeof(NameDB));// сохраняем счетчик волокон
+    }
+    SaveNewOTDRTrace (0);
+    rawPressKeyS=0;
+  }
+  if(NeedKeyB ) // необходимость переключения в клавиатуру OLT
+  {
+        if(CurrLang)// не русский
+        {
+          CmdInitPage(22);
+        }
+        else
+        {
+          CmdInitPage(23);
+        }
+    NeedKeyB=0; 
+  }
+}
+// клавиатура редактирования комментариев для OTDR
 void ModeKeyBoardOTDR(void) // режим отображения клавиатуры редактора комментариев рефлектограммы
 {
   char Str[32];
@@ -3218,12 +3503,7 @@ void ModeKeyBoardOTDR(void) // режим отображения клавиатуры редактора комментари
   }
   if (g_NeedScr)
   {
-    sprintf(Str,"%02d%02d%02d_%02d%02d%01d.sor",TimeSaveOTDR.RTC_Year%100,
-            TimeSaveOTDR.RTC_Mon,
-            TimeSaveOTDR.RTC_Mday,
-            TimeSaveOTDR.RTC_Hour,
-            TimeSaveOTDR.RTC_Min,
-            TimeSaveOTDR.RTC_Sec/10 );
+    sprintf(Str,"%s",CommentsOTDR);
     sprintf(StrI, "t0.txt=\"%s\"яяя", Str);
     NEX_Transmit((void*)StrI);    // Date/Time записи
     g_NeedScr=0;
@@ -3251,7 +3531,8 @@ void ModeKeyBoardOTDR(void) // режим отображения клавиатуры редактора комментари
     //    UARTSend0 ((BYTE*)RX_BufNEX, 32);
     //    UARTSend0 ((BYTE*)CommentsOTDR, strlen (CommentsOTDR));
     
-    NeedSaveTr=1; // надо сохранится
+    //NeedSaveTr=1; // надо сохранится
+    NeedReturn=1; // надо вернутся с изменениями
   }
   // сохранение по кнопке OK на клавиатуре прибора (точка)
   if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
@@ -3271,19 +3552,22 @@ void ModeKeyBoardOTDR(void) // режим отображения клавиатуры редактора комментари
   if (((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))||(NeedReturn))
   {
     KeyCodeP = KeyP; //
-    SetMode(ModeDrawOTDR);
-    ReturnModeViewRefl = SETPARAM;//VIEWMEM -  чтобы вернуться в в установки
-    ModeDevice = MODEREFL;
+    //SetMode(ModeDrawOTDR);
+    SetMode(ModeSaveOTDR); // возврат 
+    //ReturnModeViewRefl = SETPARAM;//VIEWMEM -  чтобы вернуться в в установки
+    //ModeDevice = MODEREFL;
     myBeep(10);
     // посылка команды переключения окна на DrawOTDRview (возврат)  
-    CmdInitPage(18);
+    //CmdInitPage(18); // 18 рисование графика после измерений 
+    CmdInitPage(24); // выбор изменение пареметров сохранения
+    
     NeedReturn = 0;
   }
   if ((rawPressKeyS)||(NeedSaveTr))// сохранение если в редакторе по кнопке S  кроме кнопки отмена
   {
     //WrLogInfo(SAVE_F);
-    SystLogWord += SAVE_F;
-    if ((!((KbPosY == 2)&&(KbPosX == 11)))||(NeedSaveTr))  SaveNewOTDRTrace (0);
+    //SystLogWord += SAVE_F;
+    //if ((!((KbPosY == 2)&&(KbPosX == 11)))||(NeedSaveTr))  SaveNewOTDRTrace (0);
     rawPressKeyS = 0;
     NeedSaveTr = 0;
   }
@@ -4466,9 +4750,10 @@ void ModeMeasManualOLT(void) // режим работы тестера в ручном режиме CHECK_OFF
     SavePowerMeter(tmp);
     ReLoadCommOLT (); // перезагружаем комментарии для измерителя
     ModeDevice = MODEOTHER;
-    rawPressKeyS=0;
     // посылка команды переключения окна на Tester (возврат)  
     CmdInitPage(24);
+    TimeEndKeyS = HAL_GetTick();
+    rawPressKeyS=0;
   }
   
 }
@@ -4878,10 +5163,10 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
     
     ModeDevice = MODEOTHER;
     //IndexVerSize  = 0;// установка вертикального размера отображения рефлектограммы ( самый крупный)
-    rawPressKeyS=0;
     // посылка команды переключения окна на Tester (возврат)  
     CmdInitPage(24);
-  }
+     rawPressKeyS=0;
+ }
   //  LED_KTT(0);
   //  LED_KTS(0);
   
@@ -5172,12 +5457,16 @@ void ModeSaveOLT(void) // режим сохранения результатов измерителя CHECK_OFF
     // закрасим бэкграунды  и установим требуемый
     sprintf(Str, "t2.bco=WHITEяяя"); // белый
     NEX_Transmit((void*)Str); //
+    HAL_Delay(2);
     sprintf(Str, "t3.bco=WHITEяяя"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(2);
     sprintf(Str, "t4.bco=WHITEяяя"); // белый
     NEX_Transmit((void*)Str);//
+    HAL_Delay(2);
     sprintf(Str, "t5.bco=WHITEяяя"); // белый
     NEX_Transmit((void*)Str);//
+    HAL_Delay(2);
     sprintf(Str, "t%d.bco=GREENяяя", FrSaveOLT+1); // зеленый
     NEX_Transmit((void*)Str);// 
     
@@ -5185,6 +5474,7 @@ void ModeSaveOLT(void) // режим сохранения результатов измерителя CHECK_OFF
     //sprintf(Str, "t1.txt=\"%04d\"яяя", PONI.NumFix);
     //NEX_Transmit((void*)Str);    // номер записи
     
+    HAL_Delay(2);
     sprintf(Str, "t6.txt=\"%04d\"яяя",PONI.NumFix);
     NEX_Transmit((void*)Str);    ////счетчик волокна
     
@@ -5221,7 +5511,7 @@ void ModeSaveOLT(void) // режим сохранения результатов измерителя CHECK_OFF
     // согласно выбранного языка вызывем клавиатуру
     if (CurrLang) 
       // посылка команды переключения окна на EnglishOLT Keyboard 
-      CmdInitPage(20); //(22)
+      CmdInitPage(29); //(22)
     else
       // посылка команды переключения окна на RussianOLT Keyboard 
       CmdInitPage(30); //(23)

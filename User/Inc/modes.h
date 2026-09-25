@@ -65,6 +65,7 @@ void ModeStartOTDR(void); // режим накопления рефлектометра
 void ModeErrorOTDR(void); // режим отображения "Излучение на входе"
 void ModeDrawOTDR(void); // режим отображения рефлектограммы
 void ModeEventsOTDR(void); // режим отображения событий рефлектограммы
+void ModeSaveOTDR(void); // режим сохранения результатов измерения рефлектограммы
 void ModeKeyBoardOTDR(void); // режим отображения клавиатуры редактора комментариев рефлектограммы
 void ModeMemoryOTDR(void); // режим отображения сохраненных рефлектограмм и работа с ними
 void ModeSelectOLT(void); // режим выбора типа тестера

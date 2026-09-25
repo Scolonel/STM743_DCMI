@@ -2,6 +2,9 @@
 
 static volatile unsigned short KeyPressed = 0;
 volatile unsigned char rawPressKeyS = 0; // ѕоказатель того, что нажатие клавиши не обработано программой "сырое нажатие"
+uint32_t TimePressKeyS; // врем€ нажатой клавиши
+uint32_t TimeEndKeyS; // врем€ обработки клавиши (пока в ѕереходе к ModeSave...)
+
 
 typedef struct DeviceBtn
 {

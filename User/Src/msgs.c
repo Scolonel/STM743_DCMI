@@ -94,11 +94,12 @@ const char *MsgMass[MSG_NUM][LANG_NUM] =
 {"Счет волокон","Count fiber","Pocet vlaken","Сuenta fibra","Anzahl Faser","Count fiber"},//55 Anzahl Faser
 {"ручной","Manual","Rucni","Manual","Handbuch","Manual"},//56
 {"авто","Auto","Auto","Auto","Auto","Auto"},//57
-{"Сбр.счетчика","Reset count","Vynulovat","Reset ct.","Zahl loschen","Reset count"},//58 Zahl lOschen 
+{"Сбр.№ волокна","Reset count","Vynulovat","Reset ct.","Zahl loschen","Reset count"},//58 Zahl lOschen 
+//{"Сбр.счетчика","Reset Fiber","Vynulovat","Reset ct.","Zahl loschen","Reset count"},//58 Zahl lOschen 
 {" Запись невозможна","Write ERROR","Chyba zapisu","Error E.","Schreibfehler","Write ERROR"},//59
 {"нет свободной памяти","Memory full","Plna pamet","M. Llena","Speicher voll","Memory full"},//60
 {"№ волокна","Fiber"," C.vlakna","№ Fibra","Faser"," Fiber"},//61
-
+//№ волокна
 // save traces
 {"сохранено"," Saved"," Ulozeno","Guardado","Gespeichert"," Saved"},//62
 {"НЕТ ПАМЯТИ","Memory full","Plna pamet","M. Llena","Speicher voll","Memory full"},//63

@@ -455,6 +455,9 @@ extern uint8_t EnaTimerAccum; // текущее значение
 extern volatile unsigned char rawPressure;
 extern volatile unsigned char rawPressKeyS; // признак необработанной нажатой клавиши S по прерыванию
 extern volatile unsigned char KeyS; 
+extern uint32_t TimePressKeyS; // время нажатой клавиши
+extern uint32_t TimeEndKeyS; // время обработки клавиши (пока в Переходе к ModeSave...)
+
 //extern char screen[1024] ;
 extern uint8_t RX_BufNEX[BUFSIZEUART2];
 extern char VerFW_LCD[25]; //версия ПО индикатора NEXION
