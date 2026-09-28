@@ -626,14 +626,19 @@ void ModeMainMenu(void) // режим основного ћ≈Ќё
     // закрасим бэкграунды  и установим требуемый
     sprintf(Str,"t1.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str,"t2.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str,"t3.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str,"t4.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);//
+    HAL_Delay(5);
     sprintf(Str,"t%d.bco=GREEN€€€",FrSetMainMenu); // зеленый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     //    if(TypeLCD)
     //    sprintf(Str,"qr0.pco=BLACK€€€"); // QR черный
     //    else
@@ -1302,14 +1307,19 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
     // закрасим бэкграунды  и установим требуемый
     sprintf(Str,"t0.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str,"t2.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str,"t4.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str,"t6.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str,"t8.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);//
+    HAL_Delay(5);
     sprintf(Str,"t%d.bco=GREEN€€€",FrSetSetupOTDR<<1); // зеленый ?
     NEX_Transmit((void*)Str);// 
     // покраска пол€ t1 в зависимости от режима
@@ -1319,6 +1329,7 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
       sprintf(Str,"t1.bco=WHITE€€€"); // белый
     
     NEX_Transmit((void*)Str);//
+    HAL_Delay(5);
     
     //FIO1PIN &=~LEDSTART;//Off  LED
     g_NeedScr = 0;
@@ -3633,6 +3644,7 @@ void ModeFileMngDir(void) // режим файл менеджера директорий
       
       sprintf(Str, "t%d.txt=\"%s\"€€€",i+1 ,NameDir[PageDir*12+i]); // < событиe >
       NEX_Transmit((void*)Str);    //
+      HAL_Delay(2);
       
     }
     for (int i=0; i<12; i++)
@@ -3640,6 +3652,7 @@ void ModeFileMngDir(void) // режим файл менеджера директорий
       // закрасим бэкграунды  и установим требуемый
       sprintf(Str,"t%d.bco=WHITE€€€",i+1); // белый
       NEX_Transmit((void*)Str);// 
+      HAL_Delay(2);
     }
     sprintf(Str,"t%d.bco=GREEN€€€",IndexLCDNameDir+1); // GREEN
     NEX_Transmit((void*)Str);    //
@@ -3732,6 +3745,7 @@ void ModeFileMngDirD(void) // режим файл менеджера директорий
       
       sprintf(Str, "t%d.txt=\"%s\"€€€",i+1 ,NameDirD[PageDirD*12+i]); // < событиe >
       NEX_Transmit((void*)Str);    //
+      HAL_Delay(2);
       
     }
     for (int i=0; i<12; i++)
@@ -3739,6 +3753,7 @@ void ModeFileMngDirD(void) // режим файл менеджера директорий
       // закрасим бэкграунды  и установим требуемый
       sprintf(Str,"t%d.bco=WHITE€€€",i+1); // белый
       NEX_Transmit((void*)Str);// 
+      HAL_Delay(2);
     }
     sprintf(Str,"t%d.bco=GREEN€€€",IndexLCDNameDirD+1); // GREEN
     NEX_Transmit((void*)Str);    //
@@ -3890,7 +3905,7 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (ќкно 34)
       // закрасим бэкграунды  и установим требуемый
       sprintf(Str,"t%d.bco=WHITE€€€",i+1); // белый
       NEX_Transmit((void*)Str);// 
-      HAL_Delay(1);
+      HAL_Delay(2);
     }
     sprintf(Str,"t%d.bco=GREEN€€€",IndexLCDNameFiles+1); // GREEN
     NEX_Transmit((void*)Str);    //
@@ -4421,12 +4436,16 @@ void ModeSelectOLT(void) // режим выбора типа тестера CHECK_OFF
     // закрасим бэкграунды  и установим требуемый
     sprintf(Str,"t0.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str,"t1.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str,"t2.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str,"t%d.bco=GREEN€€€",FrSelectOLT); // зеленый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     
     // про красный глаз
     if(RedEye)
@@ -4685,20 +4704,27 @@ void ModeMeasManualOLT(void) // режим работы тестера в ручном режиме CHECK_OFF
     // закрасим бэкграунды  и установим требуемый
     sprintf(Str, "t2.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);//
+    HAL_Delay(5);
     sprintf(Str, "t4.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str, "t6.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str, "t8.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);//
+    HAL_Delay(5);
     sprintf(Str, "t10.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);//
+    HAL_Delay(5);
     sprintf(Str, "t%d.bco=GREEN€€€", (FrManualOLT)<<1); // зеленый
     NEX_Transmit((void*)Str);// 
     // здесь заполн€ем данными пол€ нового индикатора
     // по результатам изменений вызваныйх обработчиком клавиатуры
+    HAL_Delay(5);
     sprintf(Str,"t1.txt=\"%2.3f\"€€€",GetCurrLvldB(0)); // dBm REF
     NEX_Transmit((void*)Str);    //
+    HAL_Delay(5);
     
     sprintf(Str,"t3.txt=\"%d%s\"€€€",GetPMWavelenght(0),MsgMass[18][CurrLang]); // nm
     NEX_Transmit((void*)Str);    //
@@ -5096,10 +5122,13 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
     // закрасим бэкграунды  и установим требуемый
     sprintf(Str, "t7.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);//
+    HAL_Delay(5);
     sprintf(Str, "t8.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str, "t9.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str, "t%d.bco=GREEN€€€", (FrAutoOLT)+4); // зеленый
     NEX_Transmit((void*)Str);// 
     // код подсветки требуемой строки если есть есть маркер строки
@@ -5110,6 +5139,7 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
     SetModeLS (Strb, CURRENT, CurrLang); // получаем режим источника
     sprintf(Strc,"t10.txt=\"%s\"€€€",Strb);
     NEX_Transmit((void*)Str);    // источник
+    HAL_Delay(5);
     
     //NEX_Transmit((void*)Stra);    // источник
     NEX_Transmit((void*)Strc);    // источник
@@ -5229,16 +5259,20 @@ void ModeSourceOnly(void) // режим работы тестера только источник CHECK_OFF
     // закрасим бэкграунды  и установим требуемый
     sprintf(Str, "t1.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str, "t2.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);//
+    HAL_Delay(5);
     sprintf(Str, "t3.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);//
+    HAL_Delay(5);
     sprintf(Str, "t%d.bco=GREEN€€€", (FrSourceOnly)); // зеленый
     NEX_Transmit((void*)Str);// 
     // здесь заполн€ем данными пол€ нового индикатора
     // по результатам изменений вызваныйх обработчиком клавиатуры
     // строка про источники ()
     // запомним индекс длины волны источника
+    HAL_Delay(5);
     MemIndexLW = GetPlaceLS(CURRENT);
     NowIndexLW = MemIndexLW;
     sprintf(Str, "t1.txt=\"%s\"€€€", MsgMass[68][CurrLang]);// source
@@ -5246,9 +5280,12 @@ void ModeSourceOnly(void) // режим работы тестера только источник CHECK_OFF
     SetModeLS (Strb, CURRENT, CurrLang); // получаем режим источника
     sprintf(Strc,"t6.txt=\"%s\"€€€",Strb);
     NEX_Transmit((void*)Str);    // источник
+    HAL_Delay(5);
     
     NEX_Transmit((void*)Stra);    // источник
+    HAL_Delay(5);
     NEX_Transmit((void*)Strc);    // источник
+    HAL_Delay(5);
     
     if(RedEye) // Red eye
     {
@@ -6043,13 +6080,16 @@ void ModeClearMEM(void) // режим освобождени€ пам€ти измерител€ CHECK_OFF
     // закрасим бэкграунды  и установим требуемый
     sprintf(Str, "t1.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str, "t2.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str, "t3.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);//
-    
+    HAL_Delay(5);
     sprintf(Str, "t%d.bco=GREEN€€€", FrClearMEM); // зеленый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     // код подсветки требуемой строки если есть есть маркер строки
     g_NeedScr = 0;
   }
@@ -6428,16 +6468,22 @@ void ModeSetting(void)// режим установок прибора CHECK_IN
     // закрасим бэкграунды  и установим требуемый
     sprintf(Str, "t0.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str, "t1.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str, "t2.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str, "t3.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);//
+    HAL_Delay(5);
     sprintf(Str, "t4.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);//
+    HAL_Delay(5);
     sprintf(Str, "t%d.bco=GREEN€€€", FrSetting); // зеленый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     
     // код подсветки требуемой строки если есть есть маркер строки
     g_NeedScr = 0;
@@ -6579,12 +6625,16 @@ void ModeSetOTDRprm(void)// режим установок параметров рефлектометра прибора CHE
     // закрасим бэкграунды  и установим требуемый
     sprintf(Str, "t0.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str, "t1.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str, "t2.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str, "t%d.bco=GREEN€€€", FrSetOTDRprm); // зеленый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     // код подсветки требуемой строки если есть есть маркер строки
     g_NeedScr = 0;
   }
@@ -6793,18 +6843,24 @@ void SetBELCORE (void)
     OutSign = GetSet_ET(0.0)/1000.0;
     sprintf(Str, "t7.txt=\"%2.2f%s\"€€€",OutSign, MsgMass[47][CurrLang]);
     NEX_Transmit((void*)Str);                         // ..
+    HAL_Delay(5);
     // раскрашивание пол€ выбора 
     // закрасим бэкграунды  и установим требуемый
     sprintf(Str, "t0.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str, "t1.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str, "t2.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str, "t3.bco=WHITE€€€"); // белый
     NEX_Transmit((void*)Str);//
+    HAL_Delay(5);
     sprintf(Str, "t%d.bco=GREEN€€€", FrSetBelcore); // зеленый
     NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     
     // код подсветки требуемой строки если есть есть маркер строки
     g_NeedScr = 0;
