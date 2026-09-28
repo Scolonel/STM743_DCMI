@@ -3206,7 +3206,7 @@ void ModeEventsOTDR(void) // режим отображени€ событий рефлектограммы CHECK_OFF
 void ModeSaveOTDR(void) // режим сохранени€ результатов измерени€ OTDR
 {
   static BYTE FrSaveOTDR = 1; // указатель на курсор
-  char Str[32];
+  char Str[64];
   //static BYTE ErrMemOtdr = 0; // указатель на курсор
   //  static BYTE NeedKeyB = 0; // необходимость переключени€ в клавиатуру
   
@@ -3452,8 +3452,11 @@ void ModeSaveOTDR(void) // режим сохранени€ результатов измерени€ OTDR
   {        
     //WrLogInfo(SAVE_PM); // сохран€ем измеритель
     SystLogWord += SAVE_F; // сохран€ем рефлектограмму
-    myBeep(10);
+    myBeep(100);
     g_NeedScr = 1; // Need reDraw Screen
+    sprintf(Str,"xstr 80,145,350,60,2,BLACK,RED,0,1,1,\"%s\"€€€",MsgMass[138][CurrLang]); // сохранено
+    NEX_Transmit((void*)Str);//
+    HAL_Delay(5);
     if (GetEnIncFiber(0))
     {
       if(NumFiber<999)NumFiber++;
@@ -3462,6 +3465,7 @@ void ModeSaveOTDR(void) // режим сохранени€ результатов измерени€ OTDR
     NameDB.FiberID = NumFiber; // сохран€ем счетчик волокон из пам€ти
     EEPROM_write(&NameDB, ADR_NameDB, sizeof(NameDB));// сохран€ем счетчик волокон
     }
+    HAL_Delay(500);
     SaveNewOTDRTrace (0);
     rawPressKeyS=0;
   }
@@ -5287,7 +5291,7 @@ void ModeSourceOnly(void) // режим работы тестера только источник CHECK_OFF
 void ModeSaveOLT(void) // режим сохранени€ результатов измерител€ CHECK_OFF
 {
   static BYTE FrSaveOLT = 1; // указатель на курсор
-  char Str[32];
+  char Str[64];
   static BYTE ErrMemOlt = 0; // указатель на курсор
   //  static BYTE NeedKeyB = 0; // необходимость переключени€ в клавиатуру
   
@@ -5499,10 +5503,12 @@ void ModeSaveOLT(void) // режим сохранени€ результатов измерител€ CHECK_OFF
   {        
     //WrLogInfo(SAVE_PM); // сохран€ем измеритель
     SystLogWord += SAVE_PM;
-    myBeep(10);
+    myBeep(100);
     g_NeedScr = 1; // Need reDraw Screen
     memcpy (PONI.CommUserPM, CommentsOLT,16);
+    HAL_Delay(5);
     WriteMemPow(); // от туда же возвращаемс€ в измеритель
+
     rawPressKeyS=0;
     ErrMemOlt=0;
   }
@@ -5921,7 +5927,7 @@ void ModeReadUSB(void) // режим чтени€ по USB пам€ти флэшки установка признака
 
 void ModeClearMEM(void) // режим освобождени€ пам€ти измерител€ CHECK_OFF
 {
-  char Str[32];
+  char Str[64];
   //(InputOK)?("OK"):("???")
   BYTE PowerMeter=((GetCfgPM())?(1):(0));
   //static BYTE FrClearMEM = 1; // указатель на курсор
@@ -7783,11 +7789,14 @@ void SavePowerMeter(float Pow_mW)// функци€ сохранени€ в пам€ти »«мерений
 
 void WriteMemPow(void) // запись в пам€ть непосредственно
 {
+  char Str[64];
   WORD TmpCellMem = GetCellMem(0);
   //123 SSPInit_Any(MEM_FL1); // »нициализаци€ SSP дл€ управлени€ FLASH (порт 1 та что на плате отладочной)
   
   if (TmpCellMem < MaxMemPM)
   {
+    sprintf(Str,"xstr 80,145,350,60,2,BLACK,RED,0,1,1,\"%s\"€€€",MsgMass[138][CurrLang]); // сохранено
+    NEX_Transmit((void*)Str);//
     //123!!!      WriteCellIzm(TmpCellMem, (unsigned char*)&PONI);
     // строка записи €чейки в пам€ть
     EEPROM_write(&PONI, ADR_MemoryOLT+64*TmpCellMem, sizeof(PONI));
@@ -7801,8 +7810,9 @@ void WriteMemPow(void) // запись в пам€ть непосредственно
     //FlashErasePage(CFG_USER); // чистим страницу установок пользовател€ прибора
     //FlashWritePageSM(CFG_USER, StructPtr(CFG_USER), StructSize(CFG_USER), 0);
     WriteNeedStruct(0x04);
+    HAL_Delay(500);
   }
-  else myBeep(20);          
+  else myBeep(20); 
   ReturnToTester (1); // возврат в измеритель
   //123 SSPInit_Any(SPI_PM); // востановление SSP дл€ управлени€ PM (порт 1 та что на плате отладочной)
   

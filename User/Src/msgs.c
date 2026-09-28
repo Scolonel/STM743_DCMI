@@ -193,6 +193,7 @@ const char *MsgMass[MSG_NUM][LANG_NUM] =
 {"הכÿ קעוםטÿ","reconnect","reconnect","reconnect","reconnect","reconnect"},//134 הכÿ קעוםטÿ
 {"ךאנעû ןאלÿעט","cable USB","cable USB","cable USB","cable USB","cable USB"},//135 ךאנעû ןאלÿעט
 {"ÎÒÊËÞ×ÅÍÎ","DISCONNECTED","DISCONNECTED","DISCONNECTED","DISCONNECTED","DISCONNECTED"},//136 ÎÒÊËÞ×ÅÍÎ
-{"ÏÎÄÊËÞ×ÅÍÎ","CONNECTED","CONNECTED","CONNECTED","CONNECTED","CONNECTED"}//137 ÏÎÄÊËÞ×ÅÍÎ
+{"ÏÎÄÊËÞ×ÅÍÎ","CONNECTED","CONNECTED","CONNECTED","CONNECTED","CONNECTED"},//137 ÏÎÄÊËÞ×ÅÍÎ
+{" !!! ÑÎÕÐÀÍÅÍÎ !!! ","  !!! SAVED !!!  ","  !!! ULOZ !!!  ","  !!! SAVED !!!  ","  !!! SAVED !!!  ","  !!! SAVED !!!  "}       //138
 };
 
