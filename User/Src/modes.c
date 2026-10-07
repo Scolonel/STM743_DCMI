@@ -2041,7 +2041,8 @@ void ModeStartOTDR(void) // режим накопления рефлектометра
         memcpy( FileNameOTDR, PrefixFileNm, 10 );
         sprintf(Str,"_%03d_%04d",NumFiber,GetLengthWaveLS (GetPlaceLS(CURRENT))); // номер волокна и длинна волны на которой измерялось (8 байт)
         memcpy( &FileNameOTDR[10], &Str, 9 ); // 
-        memcpy( CommentsOTDR,FileNameOTDR, 20 );
+        // этого не надо, оставляем комментарий как есть
+        //memcpy( CommentsOTDR,FileNameOTDR, 20 );
         // сохраняем рефлектограмму в памяти 
         //123 !!!!        if (SaveTrace())
         SaveFileSD(1);
