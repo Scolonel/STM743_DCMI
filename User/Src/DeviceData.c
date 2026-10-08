@@ -895,10 +895,10 @@ DWORD CheckUserGonfig (void)  // Проверка пользовательских настроек
     Err |=0x200;
     UserSet.SubModeRef=AUTO;
   }
-  if (UserSet.EnIncFiber>1)
+  if (UserSet.EnIncFiber>1) // признак автоинкремента всегда включен!
   {
     Err |=0x400;
-    UserSet.EnIncFiber=MANUAL;
+    UserSet.EnIncFiber=AUTO;
   }
   // переставим значение времени подсветки в 1 , что будет соответствовать разрешению звуков
   if (UserSet.TimeLight>1)

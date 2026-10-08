@@ -194,6 +194,12 @@ const char *MsgMass[MSG_NUM][LANG_NUM] =
 {"карты памяти","cable USB","cable USB","cable USB","cable USB","cable USB"},//135 карты памяти
 {"ОТКЛЮЧЕНО","DISCONNECTED","DISCONNECTED","DISCONNECTED","DISCONNECTED","DISCONNECTED"},//136 ОТКЛЮЧЕНО
 {"ПОДКЛЮЧЕНО","CONNECTED","CONNECTED","CONNECTED","CONNECTED","CONNECTED"},//137 ПОДКЛЮЧЕНО
-{" !!! СОХРАНЕНО !!! ","  !!! SAVED !!!  ","  !!! ULOZ !!!  ","  !!! SAVED !!!  ","  !!! SAVED !!!  ","  !!! SAVED !!!  "}       //138
+{" !!! СОХРАНЕНО !!! ","  !!! SAVED !!!  ","  !!! ULOZ !!!  ","  !!! SAVED !!!  ","  !!! SAVED !!!  ","  !!! SAVED !!!  "},       //138
+{"Файл:","File:","Soubor:","File:","Soubor:","File:"},              //139
+{"Имя волокна","Name fiber","Nazev vlakna","Name fiber","Nazev vlakna","Name fiber"},              //140
+{"Имя кабеля","Name cable","Nazev kabelu","Name cable","Nazev kabelu","Name cable"},              //141
+{"Волокно","Fiber","Vlakna","Fiber","Vlakna","Fiber"},              //142
+{"Счет волокон","Count fiber","Soucet vlaken","Count fiber","Soucet vlaken","Count fiber"}              //143
+
 };
 

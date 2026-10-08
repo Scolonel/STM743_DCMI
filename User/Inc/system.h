@@ -21,7 +21,7 @@
 //число сообщений и языков
 #define LANG_NUM 6  // число столбцов в таблице языков
 
-#define MSG_NUM 139
+#define MSG_NUM 144
 #define CMD_NUM 35 //команды Nextion
 
 #define TIMERE 500 //время цикла красного глаза по 500 мС
@@ -515,6 +515,8 @@ extern volatile BYTE g_NeedChkAnsvNEX; // признак получения строки из редактора.
 extern volatile BYTE g_AutoSave; // признак режима авто сохранения измерений на выбраных длинах волн
 extern volatile int NeedReturn; // необходимость вернуться в окно сохранения
 //extern BYTE g_SetModeLW; // 16.11.2022 запоминаем установочную конфигурацию по длине волны Index 
+extern volatile BYTE g_NeedRetCommKB; // признак куда надо вернуться из редактора Комментария. 
+extern volatile BYTE g_NeedRetPrefKB; // признак куда надо вернуться из редактора Префикса. 
 
 extern BYTE MemTable[MaxMemOTDR+1]; // таблица рефлектограмм ячейки памяти меняется в памяти до MaxMemOTDR
 extern BYTE MemTableExt[MaxMemOTDRExt+1]; // таблица рефлектограмм расширенной ячейки памяти меняется в памяти до MaxMemOTDRExt
