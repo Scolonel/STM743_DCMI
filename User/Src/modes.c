@@ -350,12 +350,20 @@ void ModeFuncTmp(void)
   char StrL[64];
   ModeFunc();
   // если ошибка индикатора напишем сообщение
-  if(g_ErrFW_LCD && TimerDraw)
+  if((g_ErrFW_LCD || g_OldFW_LCD) && TimerDraw)
   {
+    if(g_ErrFW_LCD)
+    {
     sprintf( StrL,"xstr 10,120,460,40,2,RED,WHITE,1,1,1,\"%s\"€€€","ќЎ»Ѕ ј! ѕќ LCD "); //  сообщение об ошибке FW LCD
     NEX_Transmit((void*)StrL);//
     sprintf( StrL,"xstr 10,160,460,40,2,RED,WHITE,1,1,1,\"%s\"€€€","от другого прибора"); //  сообщение об ошибке FW LCD
     NEX_Transmit((void*)StrL);//
+    }
+    if(g_OldFW_LCD)
+    {
+      sprintf( StrL,"xstr 10,80,460,40,2,RED,WHITE,1,1,1,\"%s\"€€€","ќЅЌќ¬»“≈ ѕќ LCD "); //  сообщение об ошибке FW LCD
+      NEX_Transmit((void*)StrL);//
+    }
     TimerDraw = 0;
   }
   

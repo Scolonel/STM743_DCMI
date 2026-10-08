@@ -266,6 +266,7 @@ extern uint32_t PageFiles;
 
 extern BYTE KnowLCD ;
 extern uint8_t g_ErrFW_LCD; // не правильная прошивка индикатора
+extern uint8_t g_OldFW_LCD; // старая прошивка индикатора
 extern uint8_t TimerDraw; // время прорисовки ошибки , каждую секунду...
 
 extern uint8_t g_SpeedUart; // 0 - LO(57600), 1-ME(115200), 2-HI(460800)

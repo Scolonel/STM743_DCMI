@@ -218,6 +218,7 @@ unsigned int TimerValueJDSU; // текущее значение частоты приемника RS
 char PeriodIntADC=0; // счетчик запуска внутреннего АЦП и измерения уровня батарейки
 //float Ubat=4.1; // начальное напряжение батареи
 uint8_t g_ErrFW_LCD = 0; // не правильная прошивка индикатора
+uint8_t g_OldFW_LCD = 0; // старая прошивка индикатора
 uint8_t TimerDraw = 0; // время прорисовки ошибки , каждую секунду...
 uint8_t g_SpeedUart = 1; // 1 - LO(57600), 2-ME(115200), 8-HI(460800)
 uint8_t g_SuperTest = 0; //режим СуперТеста, по кругу проводим измерения на всех 
@@ -420,9 +421,14 @@ int main(void)
       KnowLCD = 0;
       break;
     }
-         if(VerFW_LCD[6]!='7')
-       g_ErrFW_LCD = 1;;
-
+    if(VerFW_LCD[6]!='7')
+      g_ErrFW_LCD = 1;;
+      // проверим версию индикатора 
+      g_OldFW_LCD = 0;;
+      uint32_t  NumVerLCD = atoi(&VerFW_LCD[19]);
+      if(NumVerLCD != 611) 
+        g_OldFW_LCD = 1;
+      
   }
   //  if(!KnowLCD)
   //  {
