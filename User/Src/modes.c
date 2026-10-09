@@ -3830,18 +3830,20 @@ void ModeFileCfgOTDR(void) // режим настройки файлов сохранения
     
     EEPROM_write(&UserSet, ADR_UserMeasConfig, sizeof(UserSet));
     HAL_Delay(300);
-
-    SetMode(ModeSetting);
-    ModeDevice = MODESETUP;
-    // посылка команды переключения окна на Settings (возврат)  
-    CmdInitPage(5);
+    
+    //    SetMode(ModeSetting);
+    //    ModeDevice = MODESETUP;
+    SetMode(ModeSetOTDRprm);
+    ModeDevice = MODEOTDRPRM;
+    // посылка команды переключения окна на Установка параметров OTDR (возврат)  
+    CmdInitPage(10);
     
   }
   if (rawPressKeyS) // key S игнорируем
   {        
     rawPressKeyS=0;
   }
-  if(NeedKeyB ) // необходимость переключения в клавиатуру OLT
+  if(NeedKeyB ) // необходимость переключения в клавиатуру COMM or Prefix
   {
     switch(NeedKeyB)
     {
@@ -6702,7 +6704,7 @@ void ModeSetting(void)// режим установок прибора CHECK_IN
     myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
     //FrSetting = ChangeFrSet (FrSetting, (ENAOLDLCD)?(4):(3), 0, MINUS);// установка курсора в рамках заданных параметров
-    FrSetting = ChangeFrSet (FrSetting, 4, 0, MINUS);// установка курсора в рамках заданных параметров
+    FrSetting = ChangeFrSet (FrSetting, 3, 0, MINUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_UP);
   }
   if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
@@ -6711,7 +6713,7 @@ void ModeSetting(void)// режим установок прибора CHECK_IN
     myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
     //FrSetting = ChangeFrSet (FrSetting, (ENAOLDLCD)?(4):(3), 0, PLUS);// установка курсора в рамках заданных параметров
-    FrSetting = ChangeFrSet (FrSetting, 4, 0, PLUS);// установка курсора в рамках заданных параметров
+    FrSetting = ChangeFrSet (FrSetting, 3, 0, PLUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_DOWN);
   }
   switch (FrSetting) // сделаем перестановку полей
@@ -6734,24 +6736,24 @@ void ModeSetting(void)// режим установок прибора CHECK_IN
       //ClrKey (BTN_OK);
     }
     break;
-  case 4: // Поле редактирования параметров файла (Файл)
-    if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
-    {
-      KeyCodeP = KeyP; //
-      myBeep(10);
-      g_NeedScr = 1; // Need reDraw Screen
-      //PosCurr = 6;
-      SetMode(ModeFileCfgOTDR);
-      //NeedDrawCRC = 1;
-      //ModeDevice = MODEOTHER;
-      
-      // посылка команды переключения окна на Установки Файла: (параметры сохранения)  
-      // вызовем позже!
-      SetNewWinIfOut = 35; // устнанавливаем признак перехода в другое окно если надо выйти
-      //CmdInitPage(35);
-      //ClrKey (BTN_OK);
-    }
-    break;// BlackLight
+//  case 4: // Поле редактирования параметров файла (Файл)
+//    if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
+//    {
+//      KeyCodeP = KeyP; //
+//      myBeep(10);
+//      g_NeedScr = 1; // Need reDraw Screen
+//      //PosCurr = 6;
+//      SetMode(ModeFileCfgOTDR);
+//      //NeedDrawCRC = 1;
+//      //ModeDevice = MODEOTHER;
+//      
+//      // посылка команды переключения окна на Установки Файла: (параметры сохранения)  
+//      // вызовем позже!
+//      SetNewWinIfOut = 35; // устнанавливаем признак перехода в другое окно если надо выйти
+//      //CmdInitPage(35);
+//      //ClrKey (BTN_OK);
+//    }
+//    break;// Файл
   case 1: // Language (2)
     if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
     {
@@ -6867,8 +6869,8 @@ void ModeSetting(void)// режим установок прибора CHECK_IN
     sprintf(Str, "t3.txt=\"%s\"яяя", MsgMass[130][CurrLang]); //Звук
     NEX_Transmit((void*)Str);    // Звук
 
-    sprintf(Str, "t4.txt=\"%s\"яяя", MsgMass[139][CurrLang]); //Файл
-    NEX_Transmit((void*)Str);    // Файл
+//    sprintf(Str, "t4.txt=\"%s\"яяя", MsgMass[139][CurrLang]); //Файл
+//    NEX_Transmit((void*)Str);    // Файл
     
     g_FirstScr = 0;
     g_NeedScr = 1;
@@ -6939,7 +6941,7 @@ void ModeSetOTDRprm(void)// режим установок параметров рефлектометра прибора CHE
     KeyCodeP = KeyP; //
     myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
-    FrSetOTDRprm = ChangeFrSet (FrSetOTDRprm, 2, 0, MINUS);// установка курсора в рамках заданных параметров
+    FrSetOTDRprm = ChangeFrSet (FrSetOTDRprm, 3, 0, MINUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_UP);
   }
   if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
@@ -6947,7 +6949,7 @@ void ModeSetOTDRprm(void)// режим установок параметров рефлектометра прибора CHE
     KeyCodeP = KeyP; //
     myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
-    FrSetOTDRprm = ChangeFrSet (FrSetOTDRprm, 2, 0, PLUS);// установка курсора в рамках заданных параметров
+    FrSetOTDRprm = ChangeFrSet (FrSetOTDRprm, 3, 0, PLUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_DOWN);
   }
   switch (FrSetOTDRprm)
@@ -6995,6 +6997,19 @@ void ModeSetOTDRprm(void)// режим установок параметров рефлектометра прибора CHE
       //CmdInitPage(10);
     }
     break;// калибровка
+  case 3: // Поле редактирования параметров файла (Файл)
+    if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
+    {
+      KeyCodeP = KeyP; //
+      myBeep(10);
+      g_NeedScr = 1; // Need reDraw Screen
+      SetMode(ModeFileCfgOTDR);
+      // посылка команды переключения окна на Установки Файла: (параметры сохранения)  
+      // вызовем позже!
+      IfJumpNewWin = 35; // устнанавливаем признак перехода в другое окно если надо выйти
+      //ClrKey (BTN_OK);
+    }
+    break;// Файл
     //  case 3:
     //  if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
     //  {
@@ -7027,6 +7042,8 @@ void ModeSetOTDRprm(void)// режим установок параметров рефлектометра прибора CHE
     sprintf(Str, "t2.txt=\"%s\"яяя", MsgMass[5][CurrLang]);
     NEX_Transmit((void*)Str);    // калибровка
     
+    sprintf(Str, "t3.txt=\"%s\"яяя", MsgMass[139][CurrLang]); //Файл
+    NEX_Transmit((void*)Str);    // Файл
     g_FirstScr = 0;
     g_NeedScr = 1;
   }
@@ -7034,11 +7051,6 @@ void ModeSetOTDRprm(void)// режим установок параметров рефлектометра прибора CHE
   {
     // здесь заполняем данными поля нового индикатора
     // по результатам изменений вызваныйх обработчиком клавиатуры
-    if (GetSetEnaEvents(0)) 
-      sprintf(Str, "t3.txt=\"%s\"яяя", MsgMass[113][CurrLang]);
-    else
-      sprintf(Str, "t3.txt=\"%s\"яяя", MsgMass[114][CurrLang]);
-    NEX_Transmit((void*)Str);// 
     
     // раскрашивание поля выбора 
     // закрасим бэкграунды  и установим требуемый
@@ -7051,9 +7063,17 @@ void ModeSetOTDRprm(void)// режим установок параметров рефлектометра прибора CHE
     sprintf(Str, "t2.bco=WHITEяяя"); // белый
     NEX_Transmit((void*)Str);// 
     HAL_Delay(5);
+    sprintf(Str, "t3.bco=WHITEяяя"); // белый
+    NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
     sprintf(Str, "t%d.bco=GREENяяя", FrSetOTDRprm); // зеленый
     NEX_Transmit((void*)Str);// 
     HAL_Delay(5);
+    if (GetSetEnaEvents(0)) 
+      sprintf(Str, "t4.txt=\"%s\"яяя", MsgMass[113][CurrLang]);
+    else
+      sprintf(Str, "t4.txt=\"%s\"яяя", MsgMass[114][CurrLang]);
+    NEX_Transmit((void*)Str);// 
     // код подсветки требуемой строки если есть есть маркер строки
     g_NeedScr = 0;
   }
