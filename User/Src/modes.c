@@ -134,7 +134,8 @@ struct tag_PON R_PONI; // что читаем из пам€ти при записи в файл
 
 char CommentsOTDR[20] = {"                   \0"}; //комментарии рефлектометра
 char FileNameOTDR[20] = {"                   \0"}; //комментарии рефлектометра
-char PrefixFileNm[11] = {"Fiber     \0"}; //комментарии рефлектометра
+char PrefixFileNm[11] = {"Fiber     \0"}; //префикс номера волокна
+char Volokno_Num[16] = {"               \0"}; //строка из файла, префикс волокна + єволокна
 char IndexPrefix = 0;
 static unsigned int NumFiber = 1; // авто счетчик числа жил
 char IndexCommOTDR = 0;
@@ -2786,11 +2787,11 @@ void ModeDrawOTDR(void) // режим отображени€ рефлектограммы
       
     }
     // рисуем признак активного курсора (пока это 1 или 2)
-    //   if(NumCursors==1)
-    //        sprintf( Str,"xstr 387,0,12,16,3,RED,BLACK,0,1,1,\"A\"€€€"); // 0
-    //    else 
-    //        sprintf( Str,"xstr 387,0,12,16,3,BLUE,BLACK,0,1,1,\"B\"€€€"); // 0
-    //    NEX_Transmit((void*)Str);
+//       if(NumCursors==1)
+//            sprintf( Str,"xstr 387,0,12,16,3,RED,BLACK,0,1,1,\"A\"€€€"); // 0
+//        else 
+//            sprintf( Str,"xstr 387,0,12,16,3,BLUE,BLACK,0,1,1,\"B\"€€€"); // 0
+//        NEX_Transmit((void*)Str);
     // индикаци€ масштабов
     sprintf(Stra,"Y-%.1f%s/div",(float)GetVerticalSize(IndexVerSize)/7000.0,MsgMass[47][1] );//дЅ
     
@@ -4195,9 +4196,9 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (ќкно 34)
   // таблица экрана пол€ ввода, верхн€€ строка t0, лева€ колонка t1-t12
   //        t0
   // t13  t14   t15
-  //            t16
+  // t18        t16
   // t20        t17  
-  // t21        t18
+  //        t21        
   //        t19
   char Str[32];
   char FilPath[64];
@@ -4348,7 +4349,9 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (ќкно 34)
       NEX_Transmit((void*)Str);    //
       sprintf(Str, "t17.txt=\"---\"€€€"); // < длительность импульса >
       NEX_Transmit((void*)Str);    //
-      sprintf(Str, "t21.txt=\"---\"€€€"); // < коэфф преломлени€... >
+      sprintf(Str, "t20.txt=\"---\"€€€"); // < коэфф преломлени€... >
+      NEX_Transmit((void*)Str);    //
+      sprintf(Str, "t21.txt=\"---\"€€€"); // < волокно є волокна >
       NEX_Transmit((void*)Str);    //
       sprintf(Str, "t18.txt=\"---\"€€€"); // < ¬рем€ накоплени€. >
       NEX_Transmit((void*)Str);    //
@@ -4372,9 +4375,12 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (ќкно 34)
       //sprintf(Str, "t18.txt=\"%d\"€€€", F_SOR.AR); // < какой файл выбран >
       //sprintf(Str, "t18.txt=\"%d\"€€€", F_SOR.NAV); // < число накоплений >
       //sprintf(Str, "t18.txt=\"%d\"€€€", F_SOR.AR); // < длина измер€емого участка... >
-      sprintf(Str, "t21.txt=\"%.5f\"€€€", FixParams.GI/100000.); // < коэфф преломлени€... >
+      sprintf(Str, "t20.txt=\"%.5f\"€€€", FixParams.GI/100000.); // < коэфф преломлени€... >
       NEX_Transmit((void*)Str);    //
       sprintf(Str, "t18.txt=\"%d %s\"€€€", FixParams.AT/10,MsgMass[4][CurrLang]); // < врем€ накоплени€... >
+      NEX_Transmit((void*)Str);    //
+
+      sprintf(Str, "t21.txt=\"%s\"€€€", Volokno_Num); // < —охраненный префикс и номер волокна >
       NEX_Transmit((void*)Str);    //
       sprintf(Str, "t19.bco=WHITE€€€"); // < фон сообщени€>
       NEX_Transmit((void*)Str);    //

@@ -426,7 +426,7 @@ int main(void)
       // проверим версию индикатора 
       g_OldFW_LCD = 0;;
       uint32_t  NumVerLCD = atoi(&VerFW_LCD[19]);
-      if(NumVerLCD != 611) 
+      if(NumVerLCD != 612) 
         g_OldFW_LCD = 1;
       
   }

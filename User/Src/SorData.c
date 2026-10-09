@@ -1880,11 +1880,13 @@ int ReadSorFile(const char* pszFileName, uint16_t* pDataPoints, int32_t nPointsM
     *pchBuffer = 0;
     genParams.pszFiberId = pchBuffer;
     //FID
+     
     if(!f_getsz(pchBuffer, BUFFER_SIZE, pFile))
     {
       iRes = OTDR_FILE_READ_ERROR;
       break;
     }
+    sprintf(Volokno_Num, "%s", genParams.pszFiberId); // попробуем сохранить сторку из файла 
 
     cBytesToR = sizeof(genParams.sFiberType) + sizeof(genParams.sNominalWavelength_nm);
     // считываем два Short Int FT, NW
