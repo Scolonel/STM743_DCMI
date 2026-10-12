@@ -2362,11 +2362,13 @@ void ModeDrawOTDR(void) // режим отображени€ рефлектограммы
   unsigned InitScale; // масштаб инициализации в зависимости от индикатора
   //static char ViewMode = VIEWER;//SETCSALE
   //static BYTE TypeCentral = MEDIUM;
-  static BYTE NumCursors = 1;
+  static BYTE NumCursors = 2;
+  static BYTE ActiveCursor = 1; // признак активного крсора (1 - main, 0- slave)
   float fCD; // переменна€ дл€ оценки дЅ
   static float LvlLSA; // уровень погонного затухани€
   BYTE NeedCalkLSA = 0;
   unsigned CursorMain = PosCursorMain (0);
+  unsigned CursorNowSW; // значение курсора дл€ подмены при переключении
   //unsigned CursorMain = (0);
   float TmpACI;
   
@@ -2395,7 +2397,22 @@ void ModeDrawOTDR(void) // режим отображени€ рефлектограммы
       // у нас как бы всегда 2 курсора, но при ќ  совмещаем курсоры....
       NumCursors = 2;
       NeedCalkLSA = 1;
-      SetPosCursorSlave (CursorMain);//123
+      if(ActiveCursor)  // активный красный но мен€ем значени€ курсоров slave/main main/slave и оперируем также с main но 
+        // отображении подмен€ем цвета и места
+      {
+        CursorNowSW = PosCursorMain (0);// запомним текущую позицию красного как √лавного
+        SetPosCursorMain (PosCursorSlave (0)); // установим в √лавный позицию —инего как главного
+        SetPosCursorSlave (CursorNowSW); // теперь в Slave  позици€  расного курсора
+        ActiveCursor = 0;
+      }
+      else
+      {
+        CursorNowSW = PosCursorMain (0);// запомним текущую позицию —инего как √лавного
+        SetPosCursorMain (PosCursorSlave (0)); // установим в √лавный позицию текущего красного как главного
+        SetPosCursorSlave (CursorNowSW); // теперь в Slave  вернем позицию —инего курсора
+        ActiveCursor = 1;
+      }
+      //SetPosCursorSlave (CursorMain);//123
       
       //TypeCentral = BYCUR;
       //ClrKey(BTN_OK);
@@ -2431,6 +2448,10 @@ void ModeDrawOTDR(void) // режим отображени€ рефлектограммы
       myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
       PosCursorMain (GetSetHorizontScale (0));//123
+//      if(ActiveCursor)
+//        PosCursorMain (GetSetHorizontScale(0));//123
+//      else
+//        PosCursorSlave (GetSetHorizontScale(0));//123
       NeedCalkLSA = 1;
     }
     // отпустили долго нажатую кнопку
@@ -2444,6 +2465,11 @@ void ModeDrawOTDR(void) // режим отображени€ рефлектограммы
     {
       KeyCodeP = KeyP; //
       PosCursorMain (GetSetHorizontScale(0)*5);//123 
+//      if(ActiveCursor)
+//        PosCursorMain (GetSetHorizontScale(0)*5);//123
+//      else
+//        PosCursorSlave (GetSetHorizontScale(0)*5);//123
+      
       NeedCalkLSA = 1;
       g_NeedScr = 1; // перерисовки экрана ! јккуратно! надо проверить потому что нет звука
     } 
@@ -2453,7 +2479,12 @@ void ModeDrawOTDR(void) // режим отображени€ рефлектограммы
       KeyCodeP = KeyP; //
       myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
-      PosCursorMain (-GetSetHorizontScale(0));//123
+        PosCursorMain (-GetSetHorizontScale(0));//123
+//      if(ActiveCursor)
+//        PosCursorMain (-GetSetHorizontScale(0));//123
+//      else
+//        PosCursorSlave (-GetSetHorizontScale(0));//123
+      
       NeedCalkLSA = 1;
     }
     // отпустили долго нажатую кнопку
@@ -2466,7 +2497,13 @@ void ModeDrawOTDR(void) // режим отображени€ рефлектограммы
     if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==INF_PRESSED))
     {
       KeyCodeP = KeyP; //
-      PosCursorMain (-GetSetHorizontScale(0)*5);//123 
+        PosCursorMain (-GetSetHorizontScale(0)*5);//123
+//      if(ActiveCursor)
+//        PosCursorMain (-GetSetHorizontScale(0)*5);//123
+//      else
+//        PosCursorSlave (-GetSetHorizontScale(0)*5);//123
+      
+      //PosCursorMain (-GetSetHorizontScale(0)*5);//123 
       NeedCalkLSA = 1;
       g_NeedScr = 1; // перерисовки экрана ! јккуратно! надо проверить 
     }
@@ -2586,6 +2623,12 @@ void ModeDrawOTDR(void) // режим отображени€ рефлектограммы
     
   } // от переключател€ режимов просмотра
   // устнавливаем параметры отображени€
+      CursorMain = PosCursorMain (0); //123!!!// переустановим курсор после изменений
+//      if(ActiveCursor)
+//      CursorMain = PosCursorMain (0); //123!!!// переустановим курсор после изменений
+//    else
+//      CursorMain = PosCursorSlave (0); //123!!!// переустановим курсор после изменений
+
   GraphParams params = {GetVerticalSize(IndexVerSize),CursorMain,GetSetHorizontScale(0),NumCursors, TypeCentral};//PosCursorMain (0)//123
   //GraphParams params = {22000,CursorMain,1<<3,NumCursors, TypeCentral};//PosCursorMain (0)
   //UserParams = {GetVerticalSize(IndexVerSize),CursorMain,GetSetHorizontScale(0),NumCursors, TypeCentral};//PosCursorMain (0)
@@ -2646,6 +2689,10 @@ void ModeDrawOTDR(void) // режим отображени€ рефлектограммы
     
     // устнавливаем параметры отображени€
     CursorMain = PosCursorMain (0); //123!!!// переустановим курсор после изменений
+//    if(ActiveCursor)
+//      CursorMain = PosCursorMain (0); //123!!!// переустановим курсор после изменений
+//    else
+//      CursorMain = PosCursorSlave (0); //123!!!// переустановим курсор после изменений
     //CursorMain =  (0); // переустановим курсор после изменений
     // расчет параметров графика, и курсоры, надо ставить выше расчетов значений!?
     GraphParams paramsN = {GetVerticalSize(IndexVerSize),CursorMain,GetSetHorizontScale(0),NumCursors, TypeCentral};//123!!!//PosCursorMain (0)
@@ -2684,38 +2731,61 @@ void ModeDrawOTDR(void) // режим отображени€ рефлектограммы
     
     //CreatDelay (30000); // на большом индикаторе с 30000 "глючило"
     HAL_Delay(3);
+    // подкрашивание выбранного курсора
+    if(ActiveCursor)
+    {
+      sprintf(Str,"t1.bco=WHITE€€€"); // белый
+      NEX_Transmit((void*)Str);// 
+      HAL_Delay(5);
+      sprintf(Str,"t0.bco=GREEN€€€"); // зеленый
+      NEX_Transmit((void*)Str);// 
+    }
+    else
+    {
+      sprintf(Str,"t0.bco=WHITE€€€"); // белый
+      NEX_Transmit((void*)Str);// 
+      HAL_Delay(5);
+      sprintf(Str,"t1.bco=GREEN€€€"); // зеленый
+      NEX_Transmit((void*)Str);// 
+    }
     // Main Cursor
     if (GetIndexLN()) // не 2 км ( значит в км)
     {
       if (GetIndexLN()==6) // 128 km? 2 sign
-        sprintf(Str,"t0.txt=\"A:%6.2f%s\"€€€", GetPosLine(CursorMain) ,MsgMass[20][CurrLang]);//км
+        //sprintf(Str,"t0.txt=\"A:%6.2f%s\"€€€", GetPosLine(CursorMain) ,MsgMass[20][CurrLang]);//км
+        sprintf(Str,"t0.txt=\"A:%6.2f%s\"€€€", GetPosLine((ActiveCursor)?(PosCursorMain (0)):(PosCursorSlave (0))) ,MsgMass[20][CurrLang]);//км
       else
-        sprintf(Str,"t0.txt=\"A:%6.3f%s\"€€€", GetPosLine(CursorMain) ,MsgMass[20][CurrLang]);//км
+        //sprintf(Str,"t0.txt=\"A:%6.3f%s\"€€€", GetPosLine(CursorMain) ,MsgMass[20][CurrLang]);//км
+        sprintf(Str,"t0.txt=\"A:%6.3f%s\"€€€", GetPosLine((ActiveCursor)?(PosCursorMain (0)):(PosCursorSlave (0))) ,MsgMass[20][CurrLang]);//км
     }
     else
-      sprintf(Str,"t0.txt=\"A:%.1f%s\"€€€", GetPosLine(CursorMain)*1000.0 ,MsgMass[78][CurrLang]);//м - метры
+      //sprintf(Str,"t0.txt=\"A:%.1f%s\"€€€", GetPosLine(CursorMain)*1000.0 ,MsgMass[78][CurrLang]);//м - метры
+      sprintf(Str,"t0.txt=\"A:%.1f%s\"€€€", GetPosLine((ActiveCursor)?(PosCursorMain (0)):(PosCursorSlave (0)))*1000.0 ,MsgMass[78][CurrLang]);//м - метры
     NEX_Transmit((void*)Str);// 
     // Slave Cursor  
     if (GetIndexLN()) // не 2 км ( значит в км)
     {
       if (GetIndexLN()==6) // 128 km? 2 sign
-        sprintf(Str,"t1.txt=\"B:%6.2f%s\"€€€", GetPosLine(PosCursorSlave (0)) ,MsgMass[20][CurrLang]);//км
+        sprintf(Str,"t1.txt=\"B:%6.2f%s\"€€€", GetPosLine((ActiveCursor)?(PosCursorSlave(0)):(PosCursorMain(0))) ,MsgMass[20][CurrLang]);//км
       else
-        sprintf(Str,"t1.txt=\"B:%6.3f%s\"€€€", GetPosLine(PosCursorSlave (0)) ,MsgMass[20][CurrLang]);//км
+        sprintf(Str,"t1.txt=\"B:%6.3f%s\"€€€", GetPosLine((ActiveCursor)?(PosCursorSlave(0)):(PosCursorMain(0))) ,MsgMass[20][CurrLang]);//км
     }
     else
-      sprintf(Str,"t1.txt=\"B:%.1f%s\"€€€", GetPosLine(PosCursorSlave (0))*1000.0 ,MsgMass[78][CurrLang]);//м - метры
+      sprintf(Str,"t1.txt=\"B:%.1f%s\"€€€", GetPosLine((ActiveCursor)?(PosCursorSlave(0)):(PosCursorMain(0)))*1000.0 ,MsgMass[78][CurrLang]);//м - метры
     NEX_Transmit((void*)Str);// 
     
     if (GetIndexLN()) // не 2 км ( значит в км)
     {
       if (GetIndexLN()==6) // 128 km? 2 sign
-        sprintf(Str,"t2.txt=\"A-B:%.2f%s\"€€€",fabs(GetPosLine(CursorMain)-GetPosLine(PosCursorSlave (0))) ,MsgMass[20][CurrLang]);//км
+        //sprintf(Str,"t2.txt=\"A-B:%.2f%s\"€€€",fabs(GetPosLine(CursorMain)-GetPosLine(PosCursorSlave (0))) ,MsgMass[20][CurrLang]);//км
+        sprintf(Str,"t2.txt=\"A-B:%.2f%s\"€€€",fabs(GetPosLine(PosCursorMain (0))-GetPosLine(PosCursorSlave (0))) ,MsgMass[20][CurrLang]);//км
       else
-        sprintf(Str,"t2.txt=\"A-B:%.3f%s\"€€€",fabs(GetPosLine(CursorMain)-GetPosLine(PosCursorSlave (0))) ,MsgMass[20][CurrLang]);//км
+        //sprintf(Str,"t2.txt=\"A-B:%.3f%s\"€€€",fabs(GetPosLine(CursorMain)-GetPosLine(PosCursorSlave (0))) ,MsgMass[20][CurrLang]);//км
+        sprintf(Str,"t2.txt=\"A-B:%.3f%s\"€€€",fabs(GetPosLine(PosCursorMain (0))-GetPosLine(PosCursorSlave (0))) ,MsgMass[20][CurrLang]);//км
     }
     else
-      sprintf(Str,"t2.txt=\"A-B:%.1f%s\"€€€",fabs((GetPosLine(CursorMain)-GetPosLine(PosCursorSlave (0)))*1000.0) ,MsgMass[78][CurrLang]);//м - метры
+      //sprintf(Str,"t2.txt=\"A-B:%.1f%s\"€€€",fabs((GetPosLine(CursorMain)-GetPosLine(PosCursorSlave (0)))*1000.0) ,MsgMass[78][CurrLang]);//м - метры
+      sprintf(Str,"t2.txt=\"A-B:%.1f%s\"€€€",fabs((GetPosLine(PosCursorMain (0))-GetPosLine(PosCursorSlave (0)))*1000.0) ,MsgMass[78][CurrLang]);//м - метры
     NEX_Transmit((void*)Str);// 
     // разница дЅ между курсорами
     if ((int)(PosCursorSlave(0) - PosCursorMain(0))>0)
@@ -2758,40 +2828,46 @@ void ModeDrawOTDR(void) // режим отображени€ рефлектограммы
     }
     else
     {
-      sprintf( Str,"line %d,0,%d,%d,RED€€€",CurrRed,CurrRed,(int)(rct.bottom*CursorScale)-1); // 0
+      //sprintf( Str,"line %d,0,%d,%d,RED€€€",CurrRed,CurrRed,(int)(rct.bottom*CursorScale)-1); // 0
+      sprintf( Str,"line %d,0,%d,%d,%s€€€",CurrRed,CurrRed,(int)(rct.bottom*CursorScale)-1,(ActiveCursor)?("RED"):("BLUE")); // 0
       NEX_Transmit((void*)Str);// 
       //CreatDelay (20000);
       HAL_Delay(2);
       if(CurrBlue<rct.right)
       {
-        sprintf( Str,"line %d,0,%d,%d,BLUE€€€",CurrBlue,CurrBlue,(int)(rct.bottom*CursorScale)-1); // 0
+        //sprintf( Str,"line %d,0,%d,%d,BLUE€€€",CurrBlue,CurrBlue,(int)(rct.bottom*CursorScale)-1); // 0
+        sprintf( Str,"line %d,0,%d,%d,%s€€€",CurrBlue,CurrBlue,(int)(rct.bottom*CursorScale)-1,(ActiveCursor)?("BLUE"):("RED")); // 0
       }
       else
       {
         if(CurrBlue==rct.right) // справа
         {
           if(TypeLCD)
-            sprintf( Str,"xstr 440,192,26,40,2,BLUE,BLACK,0,1,3,\">\"€€€"); // 03_5(2-40) (є шрифта-–азмер) 0
+            //sprintf( Str,"xstr 440,192,26,40,2,BLUE,BLACK,0,1,3,\">\"€€€"); // 03_5(2-40) (є шрифта-–азмер) 0
+            sprintf( Str,"xstr 440,192,26,40,2,%s,BLACK,0,1,3,\">\"€€€",(ActiveCursor)?("BLUE"):("RED")); // 03_5(2-40) (є шрифта-–азмер) 0
           else
-            sprintf( Str,"xstr 387,192,16,24,2,BLUE,BLACK,0,1,3,\">\"€€€"); // 03_2(2-24) (є шрифта-–азмер) 0
+            //sprintf( Str,"xstr 387,192,16,24,2,BLUE,BLACK,0,1,3,\">\"€€€"); // 03_2(2-24) (є шрифта-–азмер) 0
+            sprintf( Str,"xstr 387,192,16,24,2,%s,BLACK,0,1,3,\">\"€€€",(ActiveCursor)?("BLUE"):("RED")); // 03_2(2-24) (є шрифта-–азмер) 0
         }
         else
         {
           if(TypeLCD)
-            sprintf( Str,"xstr 1,192,26,40,2,BLUE,BLACK,0,1,3,\"<\"€€€"); // 03_5(2-40) (є шрифта-–азмер) 0
+            //sprintf( Str,"xstr 1,192,26,40,2,BLUE,BLACK,0,1,3,\"<\"€€€"); // 03_5(2-40) (є шрифта-–азмер) 0
+            sprintf( Str,"xstr 1,192,26,40,2,%s,BLACK,0,1,3,\"<\"€€€",(ActiveCursor)?("BLUE"):("RED")); // 03_5(2-40) (є шрифта-–азмер) 0
           else
-            sprintf( Str,"xstr 1,192,16,24,2,BLUE,BLACK,0,1,3,\"<\"€€€"); // 03_2(2-24) (є шрифта-–азмер) 0
+            //sprintf( Str,"xstr 1,192,16,24,2,BLUE,BLACK,0,1,3,\"<\"€€€"); // 03_2(2-24) (є шрифта-–азмер) 0
+            sprintf( Str,"xstr 1,192,16,24,2,%s,BLACK,0,1,3,\"<\"€€€",(ActiveCursor)?("BLUE"):("RED")); // 03_2(2-24) (є шрифта-–азмер) 0
         }
       }
       NEX_Transmit((void*)Str);// 
       
     }
     // рисуем признак активного курсора (пока это 1 или 2)
-//       if(NumCursors==1)
-//            sprintf( Str,"xstr 387,0,12,16,3,RED,BLACK,0,1,1,\"A\"€€€"); // 0
-//        else 
-//            sprintf( Str,"xstr 387,0,12,16,3,BLUE,BLACK,0,1,1,\"B\"€€€"); // 0
-//        NEX_Transmit((void*)Str);
+    //       if(NumCursors==1)
+    //            sprintf( Str,"xstr 387,0,12,16,3,RED,BLACK,0,1,1,\"A\"€€€"); // 0
+    //        else 
+    //            sprintf( Str,"xstr 387,0,12,16,3,BLUE,BLACK,0,1,1,\"B\"€€€"); // 0
+    //        NEX_Transmit((void*)Str);
     // индикаци€ масштабов
     sprintf(Stra,"Y-%.1f%s/div",(float)GetVerticalSize(IndexVerSize)/7000.0,MsgMass[47][1] );//дЅ
     
