@@ -7010,6 +7010,7 @@ void ModeSetOTDRprm(void)// режим установок параметров рефлектометра прибора CHE
   static BYTE FrSetOTDRprm = 0; // указатель на курсор
   char Str[32];
   int IfJumpNewWin = 0;
+  // с 161 версии исключаем поле калибровки
   //BYTE CurrLang=GetLang(CURRENT);
   //DWORD KeyP = SetBtnStates( KEYS_REG, 1 );
   if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))
@@ -7017,7 +7018,7 @@ void ModeSetOTDRprm(void)// режим установок параметров рефлектометра прибора CHE
     KeyCodeP = KeyP; //
     myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
-    FrSetOTDRprm = ChangeFrSet (FrSetOTDRprm, 3, 0, MINUS);// установка курсора в рамках заданных параметров
+    FrSetOTDRprm = ChangeFrSet (FrSetOTDRprm, 2, 0, MINUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_UP);
   }
   if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
@@ -7025,7 +7026,7 @@ void ModeSetOTDRprm(void)// режим установок параметров рефлектометра прибора CHE
     KeyCodeP = KeyP; //
     myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
-    FrSetOTDRprm = ChangeFrSet (FrSetOTDRprm, 3, 0, PLUS);// установка курсора в рамках заданных параметров
+    FrSetOTDRprm = ChangeFrSet (FrSetOTDRprm, 2, 0, PLUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_DOWN);
   }
   switch (FrSetOTDRprm)
@@ -7061,19 +7062,19 @@ void ModeSetOTDRprm(void)// режим установок параметров рефлектометра прибора CHE
       //ClrKey (BTN_OK);
     }
     break;
-  case 2: // алибровка
-    if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
-    {
-      // посылка команды переключени€ окна на Calibrate (вызов)  
-      KeyCodeP = KeyP; //
-      StartSettingBegShift (); // старт измерени€ мертвых зон
-      //ClrKey (BTN_OK);
-      // посылка команды переключени€ окна на Set_OTDRparams (возврат)  
-      IfJumpNewWin = 14;
-      //CmdInitPage(10);
-    }
-    break;// калибровка
-  case 3: // ѕоле редактировани€ параметров файла (‘айл)
+//  case 2: // алибровка
+//    if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
+//    {
+//      // посылка команды переключени€ окна на Calibrate (вызов)  
+//      KeyCodeP = KeyP; //
+//      StartSettingBegShift (); // старт измерени€ мертвых зон
+//      //ClrKey (BTN_OK);
+//      // посылка команды переключени€ окна на Set_OTDRparams (возврат)  
+//      IfJumpNewWin = 14;
+//      //CmdInitPage(10);
+//    }
+//    break;// калибровка
+  case 2: // ѕоле редактировани€ параметров файла (‘айл)
     if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
     {
       KeyCodeP = KeyP; //
@@ -7115,10 +7116,11 @@ void ModeSetOTDRprm(void)// режим установок параметров рефлектометра прибора CHE
     sprintf(Str, "t1.txt=\"%s\"€€€", MsgMass[112][CurrLang]);
     NEX_Transmit((void*)Str);    // параметры поиска
     
-    sprintf(Str, "t2.txt=\"%s\"€€€", MsgMass[5][CurrLang]);
-    NEX_Transmit((void*)Str);    // калибровка
+//    sprintf(Str, "t2.txt=\"%s\"€€€", MsgMass[5][CurrLang]);
+//    NEX_Transmit((void*)Str);    // калибровка
     
-    sprintf(Str, "t3.txt=\"%s\"€€€", MsgMass[139][CurrLang]); //‘айл
+//    sprintf(Str, "t3.txt=\"%s\"€€€", MsgMass[139][CurrLang]); //‘айл
+    sprintf(Str, "t2.txt=\"%s\"€€€", MsgMass[139][CurrLang]); //‘айл
     NEX_Transmit((void*)Str);    // ‘айл
     g_FirstScr = 0;
     g_NeedScr = 1;
@@ -8272,6 +8274,8 @@ void StartSettingBegShift (void) // старт измерени€ мертвых зон
   }
   SetMode(ModeCalibrate);
   ModeDevice = MODEOTHER;
+  CmdInitPage(14);// посылка команды переключени€ окна  алибровки
+
 }
 
 void InitAutoPM (void) // начальные установки измерител€ автомата
