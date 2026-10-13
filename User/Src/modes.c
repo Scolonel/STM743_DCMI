@@ -2367,6 +2367,7 @@ void ModeDrawOTDR(void) // режим отображени€ рефлектограммы
   float fCD; // переменна€ дл€ оценки дЅ
   static float LvlLSA; // уровень погонного затухани€
   BYTE NeedCalkLSA = 0;
+  static BYTE ModeLSA = 0; //  режим рассчета LSA  0 -2P, иначе по правилам LSA
   unsigned CursorMain = PosCursorMain (0);
   unsigned CursorNowSW; // значение курсора дл€ подмены при переключении
   //unsigned CursorMain = (0);
@@ -2511,8 +2512,16 @@ void ModeDrawOTDR(void) // режим отображени€ рефлектограммы
     {
       KeyCodeP = KeyP; //
       myBeep(10);
+      if(IndexVerSize)
+        TypeCentral = UP10PICS;
+      else
+      {
+        if(ModeLSA) ModeLSA=0;
+        else
+          ModeLSA = 1;
+        NeedCalkLSA = 1;// надо пересчитать наклон!
+      }
       g_NeedScr = 1; // Need reDraw Screen
-      TypeCentral = UP10PICS;
     }
     if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==INF_PRESSED))
     {
@@ -2667,8 +2676,18 @@ void ModeDrawOTDR(void) // режим отображени€ рефлектограммы
     //unsigned ptB = 128;
     if(ptA!=ptB)
     {
+      if(ModeLSA)
+      {
+        if(ptA>ptB)
+           LvlLSA = Calc_LSA(ptA,ptB);
+        else
+           LvlLSA = Calc_LSA(ptB,ptA);
+      }
+      else
+      {
       TmpACI = (GetPosLine(ptA)-GetPosLine(ptB)); // рассто€ние между точками
       LvlLSA = (LogData[ptA]-LogData[ptB])/(1000.0*TmpACI);
+      }
     }
     else
       LvlLSA  = 0.0;
@@ -2817,6 +2836,9 @@ void ModeDrawOTDR(void) // режим отображени€ рефлектограммы
     else 
       sprintf(Str,"t5.txt=\">< %s/%s\"€€€",MsgMass[47][CurrLang],MsgMass[20][CurrLang]);//дЅ/км
     
+    NEX_Transmit((void*)Str);// 
+    
+    sprintf(Str,"t7.txt=\"%s\"€€€",(ModeLSA)?("LSA"):("P2"));//дЅ/км
     NEX_Transmit((void*)Str);// 
     
     // курсоры, попробуем прорисовть бирюзовым если они вместе
