@@ -2368,7 +2368,11 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
   static float LvlLSA; // уровень погонного затухания
   BYTE NeedCalkLSA = 0;
   static BYTE ModeLSA = 0; //  режим рассчета LSA  0 -2P, иначе по правилам LSA
-  unsigned CursorMain = PosCursorMain (0);
+  static BYTE ClueCursors = 0; //  режим склеивания курсоров, 
+  //unsigned CursorMain = PosCursorMain (0);
+  static unsigned CursorMain = 0;
+  static unsigned CursorSlave = 0;
+  static unsigned ShagCursorScale = 1; // шаг изменения положения курсора в зависимости от масштаба
   unsigned CursorNowSW; // значение курсора для подмены при переключении
   //unsigned CursorMain = (0);
   float TmpACI;
@@ -2443,12 +2447,52 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     //      ClrKey (BTN_DOWN);
     //    }
     // перемещение курсора в право
-    if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED)) 
+    if ((PRESS(BTN_RIGHT))&&((getStateButtons(BTN_RIGHT)==SHORT_PRESSED)||(getStateButtons(BTN_RIGHT)==INF_PRESSED))) 
     {
       KeyCodeP = KeyP; //
       myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
-      PosCursorMain (GetSetHorizontScale (0));//123
+      
+      if(getStateButtons(BTN_RIGHT)==INF_PRESSED)
+      ShagCursorScale = GetSetHorizontScale(0)*5;
+      else
+      ShagCursorScale = GetSetHorizontScale(0);
+        
+      if(!ClueCursors)
+      PosCursorMain (ShagCursorScale);// нет склеивания курсоров просто сдвигаем Активный курсор в право
+      else // тут сложнее, выбираем курсор который стоит правее или равный и двигаем оба курсора следя за 
+        // упиранием в правую границу 5299 , необходимо сдвигаться ровно на требуемое значение до упора,
+        // так чтобы левый курсор выбрал то же значение что и правый подойдя к упору
+      {
+        CursorMain = PosCursorMain(0);
+        CursorSlave = PosCursorSlave(0);
+        if( CursorMain >= CursorSlave) // активный правее по нему и ориентируемся
+        {
+          if((CursorMain + ShagCursorScale)<= 5299)
+          { // увеличим значения обеих курсоров 
+            PosCursorMain(ShagCursorScale);
+            PosCursorSlave(ShagCursorScale);
+          }
+          else
+          { // рассчитаем разницу на которую можно сдвинуться
+            PosCursorMain(5299 - CursorMain);
+            PosCursorSlave(5299 - CursorMain);
+          }
+        }
+        else  // не Активный курсор правее, считаем по нему!
+        {
+          if((CursorSlave + ShagCursorScale)<= 5299)
+          { // увеличим значения обеих курсоров 
+            PosCursorMain(ShagCursorScale);
+            PosCursorSlave(ShagCursorScale);
+          }
+          else
+          { // рассчитаем разницу на которую можно сдвинуться
+            PosCursorMain(5299 - CursorSlave);
+            PosCursorSlave(5299 - CursorSlave);
+          }
+        }
+      }
 //      if(ActiveCursor)
 //        PosCursorMain (GetSetHorizontScale(0));//123
 //      else
@@ -2462,25 +2506,66 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
       g_NeedScr = 1; // Need reDraw Screen
       NeedCalkLSA = 1; // отпустили долго нажатую кнопку, надо пересчитать
     }
-    if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==INF_PRESSED))
-    {
-      KeyCodeP = KeyP; //
-      PosCursorMain (GetSetHorizontScale(0)*5);//123 
-//      if(ActiveCursor)
-//        PosCursorMain (GetSetHorizontScale(0)*5);//123
-//      else
-//        PosCursorSlave (GetSetHorizontScale(0)*5);//123
-      
-      NeedCalkLSA = 1;
-      g_NeedScr = 1; // перерисовки экрана ! Аккуратно! надо проверить потому что нет звука
-    } 
+//    if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==INF_PRESSED))
+//    {
+//      KeyCodeP = KeyP; //
+//      PosCursorMain (GetSetHorizontScale(0)*5);//123 
+////      if(ActiveCursor)
+////        PosCursorMain (GetSetHorizontScale(0)*5);//123
+////      else
+////        PosCursorSlave (GetSetHorizontScale(0)*5);//123
+//      
+//      NeedCalkLSA = 1;
+//      g_NeedScr = 1; // перерисовки экрана ! Аккуратно! надо проверить потому что нет звука
+//    } 
     // перемещение курсора влево
-    if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
+    if ((PRESS(BTN_LEFT))&&((getStateButtons(BTN_LEFT)==SHORT_PRESSED)||(getStateButtons(BTN_LEFT)==INF_PRESSED)))
     {
       KeyCodeP = KeyP; //
       myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
-        PosCursorMain (-GetSetHorizontScale(0));//123
+      if(getStateButtons(BTN_LEFT)==INF_PRESSED)
+      ShagCursorScale = GetSetHorizontScale(0)*5;
+      else
+      ShagCursorScale = GetSetHorizontScale(0);
+        
+      if(!ClueCursors)
+      PosCursorMain (-ShagCursorScale);// нет склеивания курсоров просто сдвигаем Активный курсор влево
+      else // тут сложнее, выбираем курсор который стоит левее или равный и двигаем оба курсора следя за 
+        // упиранием в лево до 0 , необходимо сдвигаться ровно на требуемое значение до упора,
+        // так чтобы правый курсор выбрал то же значение что и левый подойдя к упору (к 0)
+      {
+        CursorMain = PosCursorMain(0);
+        CursorSlave = PosCursorSlave(0);
+        if( CursorMain <= CursorSlave) // активный левее по нему и ориентируемся
+        {
+          if((int)(CursorMain - ShagCursorScale)>= 0)
+          { // уменьшим значения обеих курсоров 
+            PosCursorMain(-ShagCursorScale);
+            PosCursorSlave(-ShagCursorScale);
+          }
+          else
+          { // рассчитаем разницу на которую можно сдвинуться
+            PosCursorMain(-CursorMain);
+            PosCursorSlave(-CursorMain);
+          }
+        }
+        else  // не Активный курсор левее, считаем по нему!
+        {
+          if((int)(CursorSlave - ShagCursorScale)>= 0)
+          { // увеличим значения обеих курсоров 
+            PosCursorMain(-ShagCursorScale);
+            PosCursorSlave(-ShagCursorScale);
+          }
+          else
+          { // рассчитаем разницу на которую можно сдвинуться
+            PosCursorMain(-CursorSlave);
+            PosCursorSlave(-CursorSlave);
+          }
+        }
+      }
+      
+//        PosCursorMain (-GetSetHorizontScale(0));//123
 //      if(ActiveCursor)
 //        PosCursorMain (-GetSetHorizontScale(0));//123
 //      else
@@ -2495,19 +2580,19 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
       g_NeedScr = 1; // Need reDraw Screen
       NeedCalkLSA = 1; // отпустили долго нажатую кнопку, надо пересчитать
     }
-    if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==INF_PRESSED))
-    {
-      KeyCodeP = KeyP; //
-        PosCursorMain (-GetSetHorizontScale(0)*5);//123
-//      if(ActiveCursor)
+//    if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==INF_PRESSED))
+//    {
+//      KeyCodeP = KeyP; //
 //        PosCursorMain (-GetSetHorizontScale(0)*5);//123
-//      else
-//        PosCursorSlave (-GetSetHorizontScale(0)*5);//123
-      
-      //PosCursorMain (-GetSetHorizontScale(0)*5);//123 
-      NeedCalkLSA = 1;
-      g_NeedScr = 1; // перерисовки экрана ! Аккуратно! надо проверить 
-    }
+////      if(ActiveCursor)
+////        PosCursorMain (-GetSetHorizontScale(0)*5);//123
+////      else
+////        PosCursorSlave (-GetSetHorizontScale(0)*5);//123
+//      
+//      //PosCursorMain (-GetSetHorizontScale(0)*5);//123 
+//      NeedCalkLSA = 1;
+//      g_NeedScr = 1; // перерисовки экрана ! Аккуратно! надо проверить 
+//    }
     if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))
     {
       KeyCodeP = KeyP; //
@@ -2533,8 +2618,16 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     {
       KeyCodeP = KeyP; //
       myBeep(10);
+      if(IndexVerSize)
+        TypeCentral = DOWN10PICS;
+      else
+      {
+        if(ClueCursors) ClueCursors = 0;
+        else
+        ClueCursors = 1;  
+      }
       g_NeedScr = 1; // Need reDraw Screen
-      TypeCentral = DOWN10PICS;
+      
     }
     // вызов событий - долго жмем вниз
     if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==LONG_PRESSED))
@@ -2632,13 +2725,13 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     
   } // от переключателя режимов просмотра
   // устнавливаем параметры отображения
-      CursorMain = PosCursorMain (0); //123!!!// переустановим курсор после изменений
+  //    CursorMain = PosCursorMain (0); //123!!!// переустановим курсор после изменений
 //      if(ActiveCursor)
 //      CursorMain = PosCursorMain (0); //123!!!// переустановим курсор после изменений
 //    else
 //      CursorMain = PosCursorSlave (0); //123!!!// переустановим курсор после изменений
 
-  GraphParams params = {GetVerticalSize(IndexVerSize),CursorMain,GetSetHorizontScale(0),NumCursors, TypeCentral};//PosCursorMain (0)//123
+ // GraphParams params = {GetVerticalSize(IndexVerSize),CursorMain,GetSetHorizontScale(0),NumCursors, TypeCentral};//PosCursorMain (0)//123
   //GraphParams params = {22000,CursorMain,1<<3,NumCursors, TypeCentral};//PosCursorMain (0)
   //UserParams = {GetVerticalSize(IndexVerSize),CursorMain,GetSetHorizontScale(0),NumCursors, TypeCentral};//PosCursorMain (0)
   
@@ -2753,7 +2846,8 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     // подкрашивание выбранного курсора
     if(ActiveCursor)
     {
-      sprintf(Str,"t1.bco=WHITEяяя"); // белый
+      //sprintf(Str,"t1.bco=WHITEяяя"); // белый
+      sprintf(Str,"t1.bco=%sяяя",(ClueCursors)?("YELLOW"):("WHITE")); // белый
       NEX_Transmit((void*)Str);// 
       HAL_Delay(5);
       sprintf(Str,"t0.bco=GREENяяя"); // зеленый
@@ -2761,7 +2855,8 @@ void ModeDrawOTDR(void) // режим отображения рефлектограммы
     }
     else
     {
-      sprintf(Str,"t0.bco=WHITEяяя"); // белый
+      //sprintf(Str,"t0.bco=WHITEяяя"); // белый
+      sprintf(Str,"t0.bco=%sяяя",(ClueCursors)?("YELLOW"):("WHITE")); // белый
       NEX_Transmit((void*)Str);// 
       HAL_Delay(5);
       sprintf(Str,"t1.bco=GREENяяя"); // зеленый
@@ -4092,14 +4187,14 @@ void ModeFileMngDir(void) // режим файл менеджера директорий
 {
   char Str[32];
   
-  if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED)) 
+  if ((PRESS(BTN_UP))&&((getStateButtons(BTN_UP)==INF_PRESSED)||(getStateButtons(BTN_UP)==SHORT_PRESSED))) 
   {
     KeyCodeP = KeyP; //
     myBeep(10);
     if(IndexNameDir>0)IndexNameDir--;
     g_NeedScr=1;
   }
-  if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
+  if ((PRESS(BTN_DOWN))&&((getStateButtons(BTN_DOWN)==INF_PRESSED)||(getStateButtons(BTN_DOWN)==SHORT_PRESSED)))
   {
     KeyCodeP = KeyP; //
     myBeep(10);
