@@ -2365,6 +2365,7 @@ void ModeDrawOTDR(void) // режим отображени€ рефлектограммы
   static BYTE NumCursors = 2;
   static BYTE ActiveCursor = 1; // признак активного крсора (1 - main, 0- slave)
   float fCD; // переменна€ дл€ оценки дЅ
+  float fDist; // длина между курсорами в км
   static float LvlLSA; // уровень погонного затухани€
   BYTE NeedCalkLSA = 0;
   static BYTE ModeLSA = 0; //  режим рассчета LSA  0 -2P, иначе по правилам LSA
@@ -2888,22 +2889,31 @@ void ModeDrawOTDR(void) // режим отображени€ рефлектограммы
       sprintf(Str,"t1.txt=\"B:%.1f%s\"€€€", GetPosLine((ActiveCursor)?(PosCursorSlave(0)):(PosCursorMain(0)))*1000.0 ,MsgMass[78][CurrLang]);//м - метры
     NEX_Transmit((void*)Str);// 
     
+    fDist = fabs(GetPosLine(PosCursorMain (0))-GetPosLine(PosCursorSlave (0))); // рассто€ние между курсорами в км
+    
     if (GetIndexLN()) // не 2 км ( значит в км)
     {
       if (GetIndexLN()==6) // 128 km? 2 sign
         //sprintf(Str,"t2.txt=\"A-B:%.2f%s\"€€€",fabs(GetPosLine(CursorMain)-GetPosLine(PosCursorSlave (0))) ,MsgMass[20][CurrLang]);//км
-        sprintf(Str,"t2.txt=\"A-B:%.2f%s\"€€€",fabs(GetPosLine(PosCursorMain (0))-GetPosLine(PosCursorSlave (0))) ,MsgMass[20][CurrLang]);//км
+        //sprintf(Str,"t2.txt=\"A-B:%.2f%s\"€€€",fabs(GetPosLine(PosCursorMain (0))-GetPosLine(PosCursorSlave (0))) ,MsgMass[20][CurrLang]);//км
+        sprintf(Str,"t2.txt=\"A-B:%.2f%s\"€€€",fDist ,MsgMass[20][CurrLang]);//км
       else
         //sprintf(Str,"t2.txt=\"A-B:%.3f%s\"€€€",fabs(GetPosLine(CursorMain)-GetPosLine(PosCursorSlave (0))) ,MsgMass[20][CurrLang]);//км
-        sprintf(Str,"t2.txt=\"A-B:%.3f%s\"€€€",fabs(GetPosLine(PosCursorMain (0))-GetPosLine(PosCursorSlave (0))) ,MsgMass[20][CurrLang]);//км
+        //sprintf(Str,"t2.txt=\"A-B:%.3f%s\"€€€",fabs(GetPosLine(PosCursorMain (0))-GetPosLine(PosCursorSlave (0))) ,MsgMass[20][CurrLang]);//км
+        sprintf(Str,"t2.txt=\"A-B:%.3f%s\"€€€",fDist ,MsgMass[20][CurrLang]);//км
     }
     else
       //sprintf(Str,"t2.txt=\"A-B:%.1f%s\"€€€",fabs((GetPosLine(CursorMain)-GetPosLine(PosCursorSlave (0)))*1000.0) ,MsgMass[78][CurrLang]);//м - метры
-      sprintf(Str,"t2.txt=\"A-B:%.1f%s\"€€€",fabs((GetPosLine(PosCursorMain (0))-GetPosLine(PosCursorSlave (0)))*1000.0) ,MsgMass[78][CurrLang]);//м - метры
+      //sprintf(Str,"t2.txt=\"A-B:%.1f%s\"€€€",fabs((GetPosLine(PosCursorMain (0))-GetPosLine(PosCursorSlave (0)))*1000.0) ,MsgMass[78][CurrLang]);//м - метры
+      sprintf(Str,"t2.txt=\"A-B:%.1f%s\"€€€",(fDist*1000.0) ,MsgMass[78][CurrLang]);//м - метры
     NEX_Transmit((void*)Str);// 
     // разница дЅ между курсорами
+    // нужно дл€ режима LSA пересчитать по погонному затуханию
     if ((int)(PosCursorSlave(0) - PosCursorMain(0))>0)
     {
+      if(ModeLSA)
+      fCD = fDist*LvlLSA;  
+        else
       fCD=((unsigned short)(GetLevelCurs(1)>>16)-(unsigned short)(GetLevelCurs(1)&0xFFFF))/1000.0;
       if((fCD>-10.0)&&(fCD<10.0))
         sprintf(Str,"t3.txt=\"L:%.3f%s\"€€€",fCD,MsgMass[47][CurrLang]);//дЅ
@@ -2913,6 +2923,9 @@ void ModeDrawOTDR(void) // режим отображени€ рефлектограммы
     }
     else
     {
+      if(ModeLSA)
+      fCD = fDist*LvlLSA;  
+        else
       fCD= ((unsigned short)(GetLevelCurs(1)&0xFFFF)-(unsigned short)(GetLevelCurs(1)>>16))/1000.0;
       if((fCD>-10.0)&&(fCD<10.0))
         sprintf(Str,"t3.txt=\"L:%.3f%s\"€€€",fCD,MsgMass[47][CurrLang]);//дЅ
@@ -4288,14 +4301,14 @@ void ModeFileMngDirD(void) // режим файл менеджера директорий
 {
   char Str[32];
   
-  if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED)) 
+  if ((PRESS(BTN_UP))&&((getStateButtons(BTN_UP)==INF_PRESSED)||(getStateButtons(BTN_UP)==SHORT_PRESSED))) 
   {
     KeyCodeP = KeyP; //
     myBeep(10);
     if(IndexNameDirD>0)IndexNameDirD--;
     g_NeedScr=1;
   }
-  if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
+  if ((PRESS(BTN_DOWN))&&((getStateButtons(BTN_DOWN)==INF_PRESSED)||(getStateButtons(BTN_DOWN)==SHORT_PRESSED)))
   {
     KeyCodeP = KeyP; //
     myBeep(10);
