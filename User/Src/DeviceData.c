@@ -1075,6 +1075,8 @@ WORD GetLengthWaveLS (BYTE SetPlace) // получение длины волны от индекса установ
 {
   if((SW_13)&&(ConfigDevice.PlaceLS[SetPlace]==1310)) // признак переключения длины волны 1300/1310
     return 1300;
+  else if ((SW_13)&&(ConfigDevice.PlaceLS[SetPlace]==1300)) // признак переключения длины волны 1300/1310
+    return 1310;
   else  
     return ConfigDevice.PlaceLS[SetPlace];
 }

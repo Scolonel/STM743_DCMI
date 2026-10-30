@@ -797,7 +797,9 @@ void ModeSetupOTDR(void) // режим установок рефлектометра CHECK_OFF
         g_AutoSave = 0;
         // если нет признака SW_13, то устанавливаем его
         // иначе инвертируем если это длина волны 1310 и признак ‘—“Ё 
-        if((ConfigDevice.ForFBI)&&(ConfigDevice.PlaceLS[SettingRefl.SW_LW]==1310)) // признак переключени€ длины волны 1300/1310
+        //if((ConfigDevice.ForFBI)&&(ConfigDevice.PlaceLS[SettingRefl.SW_LW]==1310)) // признак переключени€ длины волны 1300/1310
+        // расширим переключение и на длину 1300 по умолчанию, тогда "слепа€" будет 1310
+        if((ConfigDevice.ForFBI)&&((ConfigDevice.PlaceLS[SettingRefl.SW_LW]==1310)||(ConfigDevice.PlaceLS[SettingRefl.SW_LW]==1300))) // признак переключени€ длины волны 1300/1310
         {
           if(SW_13)
             SW_13 = 0;

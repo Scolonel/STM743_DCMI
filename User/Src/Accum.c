@@ -374,7 +374,8 @@ void RUN_SUM (DWORD* RawDataI)//
       }
       else // для длиных от 16 км, корректируемое значение расчета смещения
       {
-     // 
+     // при 1 по-умолчанию, выбираем смещение в начале, при этом шумы могут "свалится" вниз
+        // при увеличении ShiftAddNoise до 16 - шумы будут "вылезать" вверх
       Noise = NoiseEnd + (DWORD)((NoiseBegin-NoiseEnd)/(int)(NameDB.ShiftAddNoise));
       }
     }
