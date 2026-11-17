@@ -1983,7 +1983,7 @@ void ModeStartOTDR(void) // режим накоплени€ рефлектометра
         // точки дальше 20-
         // ищем пик, смотрим например 7 точек
         CntPointPick=0;
-        if((GetIndexIM()==0)&&(PointsPerPeriod==48)) // только на мелком импульсе
+        if((GetIndexIM()==0)&&(PointsPerPeriod==8)) // только на мелком импульсе
         {
           for (int i=0; i<OUTSIZE; i++)
           { 
@@ -2751,7 +2751,7 @@ void ModeDrawOTDR(void) // режим отображени€ рефлектограммы
     //NEX_Transmit((void*)Str);// 
     //sprintf( Str,"xstr 0,224,27,16,3,BLUE,WHITE,0,1,1,\"B:\"€€€"); // 0
     //NEX_Transmit((void*)Str);// 
-    sprintf(Str,"t4.txt=\"%s\"€€€", MsgMass[118][CurrLang]);// Slope Ќаклон
+    sprintf(Str,"t4.txt=\"%s%d\"€€€", MsgMass[118][CurrLang],g_SmBE);// Slope Ќаклон
     NEX_Transmit((void*)Str);// 
     
     g_NeedScr = 1; // дл€ вызова заполнени€ значений
@@ -9047,7 +9047,7 @@ unsigned short SpliceProg (unsigned short PII)
   if(GetLengthWaveLS (GetPlaceLS(CURRENT)) == 850) deltaU = 500;
   for (int i = (int)(PII+(PII>>1)) ; ((i<OUTSIZE)&&(LogData[i]<26000)&&(!Index)); ++i) // 26/02/2014 анализ начинаем позже на 1.5 импульса
   {
-    if (LogData[i]>750)
+    if (LogData[i]>1500)
     {
       min = 0xFFFF;
       max = 0;
@@ -9098,6 +9098,7 @@ unsigned short SpliceProg (unsigned short PII)
         {
           LogData[o] = LogDataSplice[o];
         }
+        AddSh = 0;
         for (int o=Index; o<OUTSIZE; ++o) // изменение "хвоста"
         {
           // новые данные приклееного хвоста ( можно анализировать и измен€ть)
@@ -9158,12 +9159,34 @@ unsigned short SpliceProg (unsigned short PII)
             }
             if (EnaChange>2) // можно мен€ть данные
             {
-              if (LogData[o]<24000) AddSh = 700;
-              if (++AddSh > 700) AddSh = 700;
-              if (LogData[o]<32000)
+//              if (LogData[o]<24000) AddSh = 700;
+//              if (++AddSh > 700) AddSh = 700;
+//              if (LogData[o]<32000)
+              
+              if (AddSh < 3000)AddSh++;
+              
+//              {
+                LogData[o] = LogData[o] + (unsigned short)(AddSh);
+//              }
+            }
+          }
+          //вариант 16.11.2026 рассчет плавного снижени€ шумов от точки к точки на 3 дЅ
+          // от первой точки имеющей провал в шумы...
+          if(0)
+          {
+            if ((GetIndexVRM()==3)&&(GetIndexIM()>7)&&(GetIndexLN()>5))//накопление 3 минуты и импульс 10-20 мк—
+            {
+              if (LogData[o]>27000)
               {
-                LogData[o] = LogData[o] + (unsigned short)(AddSh*3);
+                EnaChange++;
               }
+              if (EnaChange>2) // можно мен€ть данные
+              {
+                if (AddSh < 3000)AddSh++;
+                
+                LogData[o] = LogData[o] + (unsigned short)(AddSh);
+              }
+              
             }
           }
           LogData[o] = LogData[o] + (unsigned short)medium;

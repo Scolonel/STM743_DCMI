@@ -8,7 +8,7 @@ uint8_t EnaTimerAccum =0; //признак разрешения счета таймера накопления
 int CntAccumulat=0; // счетчик накоплений
 static int WT_R = 0;
 
-
+uint8_t g_SmBE; // определяем какой уровень смещения применяем в начале или конце
 
 void RUN_SUM (DWORD* RawDataI);//
 
@@ -318,6 +318,11 @@ void RUN_SUM (DWORD* RawDataI)//
     uint32_t EnaBags = 0; // уровень меньше смещения, можно "генерить" шумы
     uint32_t SmNoise = 0; // уровень меньше смещения, на часть числа накоплений,для генерации шумов
     uint32_t AlreadyCorr = 0; // уже была корректировка
+    uint32_t p2km; // значение на 2 км
+    uint32_t pMaxEnd; // мах значение на последних 27 км
+    uint8_t EnaCorrDD = 0; // разрешение корректировки по признаку перехода через 0
+    float k_down = 1.000; // коэффициент снижения
+#define K_UPPER 0.0015 // коэффициент изменения
     SetCntNumAvrg(Avrgs); // сохранение
     // filtr (WOW Super)
     //if (GetCntNumAvrg()>=GetFinAvrg())
@@ -339,8 +344,9 @@ void RUN_SUM (DWORD* RawDataI)//
     //if (GetIndexLN()>2)// длинные линии -> добавим точек по расчету шумов
     if (1)// любые линии -> добавим точек по расчету шумов
     {
-      for ( i=5530;i<5580;++i) // берем 30 точек в конце снятых данных без превышения сигнала на 100 ед АЦП от уровня смещения
-      //for ( i=5300;i<5350;++i) // берем 30 точек в конце снятых данных без превышения сигнала на 100 ед АЦП от уровня смещения
+      for ( i=5200;i<5300;++i) // берем 100 точек в конце снятых данных без превышения сигнала на 100 ед АЦП от уровня смещения
+        //for ( i=5530;i<5580;++i) // ,skj lj 16/11/2026 берем 30 точек в конце снятых данных без превышения сигнала на 100 ед АЦП от уровня смещения
+        //for ( i=5300;i<5350;++i) // берем 30 точек в конце снятых данных без превышения сигнала на 100 ед АЦП от уровня смещения
       {
         //if (RawData[i] < (NoiseBegin + 4*Avrgs)) 
         if (RawData[i] < (NoiseBegin + Avrgs)) 
@@ -354,29 +360,35 @@ void RUN_SUM (DWORD* RawDataI)//
       NoiseEnd = (DWORD)1*(NoiseAdd/CntAddNoise);
     }
     //  был "простой" расчет смещения в конце, без оценок
-//    if(0)
-//    {
-//      for (int i=5530;i<5580;++i) // берем 30 точек в конце отображения окна
-//      {
-//        //CntAddNoise++;
-//        NoiseEnd +=RawData[i];
-//      }
-//      NoiseEnd = (DWORD)1*(NoiseEnd/(50));// смешение в конце
-//    }
+    //    if(0)
+    //    {
+    //      for (int i=5530;i<5580;++i) // берем 30 точек в конце отображения окна
+    //      {
+    //        //CntAddNoise++;
+    //        NoiseEnd +=RawData[i];
+    //      }
+    //      NoiseEnd = (DWORD)1*(NoiseEnd/(50));// смешение в конце
+    //    }
     // контроль уровней смещения выбор между началом и концом
     if( NoiseEnd > NoiseBegin) 
+    {
+      g_SmBE = 1;
       Noise = NoiseEnd;
+    }
     else
     { 
       if(GetIndexLN()<3) // короткие линии
       {
-      Noise = NoiseBegin;
+        Noise = NoiseBegin;
+        g_SmBE = 0;
       }
       else // для длиных от 16 км, корректируемое значение расчета смещения
       {
-     // при 1 по-умолчанию, выбираем смещение в начале, при этом шумы могут "свалится" вниз
+        // при 1 по-умолчанию, выбираем смещение в начале, при этом шумы могут "свалится" вниз
         // при увеличении ShiftAddNoise до 16 - шумы будут "вылезать" вверх
-      Noise = NoiseEnd + (DWORD)((NoiseBegin-NoiseEnd)/(int)(NameDB.ShiftAddNoise));
+        Noise = NoiseEnd + (DWORD)((NoiseBegin-NoiseEnd)/(int)(NameDB.ShiftAddNoise));
+        g_SmBE = 2;
+        
       }
     }
     // рассчитаем порог для генерации шумов
@@ -391,7 +403,34 @@ void RUN_SUM (DWORD* RawDataI)//
     //g_Noise = Noise - (uint32_t)(Avrgs/200); // 400 - 27.8dB
     //g_Noise = Noise + (uint32_t)(4*sqrt((double)Avrgs)); // 400 - 27.8dB
     //g_Noise = Noise + (uint32_t)(Avrgs/84); // 84
+    //
+    // Хитрый рассчет для длинных линий 128 км, импульс более 10000, и время накопления 3 минуты
+    //
+    if(0)
+    {
+      if ((GetIndexVRM()==3)&&(GetIndexIM()>7)&&(GetIndexLN()>5))//накопление 3 минуты и импульс 10-20 мкС
+      {
+        NeedCorrect = 1;
+        p2km = RawData[j+73]; // значение на 2 км
+        pMaxEnd = 0;
+        for ( i=4360;i<5360;++i) // берем 1000 точек в конце снятых данных без превышения сигнала на 100 ед АЦП от уровня смещения
+          //for ( i=5530;i<5580;++i) // ,skj lj 16/11/2026 берем 30 точек в конце снятых данных без превышения сигнала на 100 ед АЦП от уровня смещения
+          //for ( i=5300;i<5350;++i) // берем 30 точек в конце снятых данных без превышения сигнала на 100 ед АЦП от уровня смещения
+        {
+          //if (RawData[i] < (NoiseBegin + 4*Avrgs)) 
+          if ((RawData[i] < (NoiseBegin + Avrgs))&&(RawData[i]>pMaxEnd)) 
+          {
+            pMaxEnd = RawData[i];
+          }
+        }
+        // получили точки на 2км и макс точку в последних 27 км
+        // считаем смещение!
+        Noise = (DWORD)(pMaxEnd - (p2km/999999));
+        g_SmBE = 4;
+      }
+    }
     g_Noise = Noise ; // 84
+    EnaCorrDD = 0;
     //Noise = (DWORD)1*(Noise/(j-1));
     DWORD CurrentMaxLog =(DWORD)(5000.0*log10((double)Avrgs*1023)); // максимальный логарифм текщего накопления
     // расчет логарифмического шума (перед импульсом)
@@ -402,18 +441,18 @@ void RUN_SUM (DWORD* RawDataI)//
     // сохраение текущих шумов
     //SaveNoise (Noise/2);
     // перепишем целочисленные значения накопленных данных в массив float
-//    LED_KTS(1); // измерим время преобразования (~200uS)
-//    for (int i=0; i<RAWSIZE; i++)
-//    { 
-//      fRawData[i]= (float)RawData[i];
-//    }
-//    LED_KTS(0);
-        //if ((GetIndexLN()>4)&&(GetIndexVRM()==3)&&(GetIndexIM()>6))// длинные линии (64,128) -> и накопление 3 минуты и импульс 10-20 мкС
-        //if ((GetIndexVRM()==3)&&(GetIndexIM()>6))//накопление 3 минуты и импульс 10-20 мкС
-        if ((GetIndexVRM()==3)&&(GetIndexIM()>8))//накопление 3 минуты и импульс 10-20 мкС
-      {
-        NeedCorrect = 1;
-      }
+    //    LED_KTS(1); // измерим время преобразования (~200uS)
+    //    for (int i=0; i<RAWSIZE; i++)
+    //    { 
+    //      fRawData[i]= (float)RawData[i];
+    //    }
+    //    LED_KTS(0);
+    //if ((GetIndexLN()>4)&&(GetIndexVRM()==3)&&(GetIndexIM()>6))// длинные линии (64,128) -> и накопление 3 минуты и импульс 10-20 мкС
+    //if ((GetIndexVRM()==3)&&(GetIndexIM()>6))//накопление 3 минуты и импульс 10-20 мкС
+    //        if ((GetIndexVRM()==3)&&(GetIndexIM()>8))//накопление 3 минуты и импульс 10-20 мкС
+    //      {
+    //        NeedCorrect = 1;
+    //      }
     
     for ( i=0; i<OUTSIZE; i++)
     { 
@@ -653,8 +692,28 @@ void RUN_SUM (DWORD* RawDataI)//
       }
       
       // подготовили текущую точку , рассчитаем логарифм
-      if (LocalRaw<=g_Noise) LocalRaw=g_Noise+1;
+      if (LocalRaw<=g_Noise) 
+      {
+        LocalRaw=g_Noise+1;
+        if(i>1000)
+        {
+        EnaCorrDD = 1;
+        }
+      }
       LocalRaw= LocalRaw-g_Noise;
+      // можем корректировать когда 
+      if(EnaCorrDD)
+      {
+       //if ((GetIndexVRM()==3)&&(GetIndexIM()>7)&&(GetIndexLN()>5))//накопление 3 минуты и импульс 10-20 мкС
+        if ((GetIndexIM()>7)&&(GetIndexLN()>5))//накопление 3 минуты и импульс 10-20 мкС
+        {
+          if(k_down<3.) k_down +=K_UPPER;
+          if(LocalRaw>3)
+          {
+            LocalRaw =(DWORD)((float)(LocalRaw)/k_down);
+          }
+        }
+      }
       LogData[i] = (unsigned short)(CurrentMaxLog - (DWORD)(5000.0*log10((double)LocalRaw))) ;
       if (LogData[i] > CurrentMaxLog)
       { 
