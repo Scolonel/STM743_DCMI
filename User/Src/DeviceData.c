@@ -1840,18 +1840,23 @@ unsigned GetNumAverag (void) // получение числа накоплений рефлектограммы
 // получение индекса длины волны калибровки, в зависимости от текущей длины волны ( в основном дл€ 1300 и 1650)
 int GetIndxPON (int Lambda)
 {
+  // 18.11.2026 - расшир€ем таблицу индексов
   int i=0;
     // здесь не совпало с 5 длинами волн калибровки 1300
   if(Lambda<=900)
     i = 0; 
-  else if(Lambda<=1310)
+  else if(Lambda<=1300)
     i = 1;
-  else if(Lambda<=1490)
+  else if(Lambda<=1310)
     i = 2;
-  else if(Lambda<=1550)
+  else if(Lambda<=1490)
     i = 3;
-  else 
+  else if(Lambda<=1550)
     i = 4;
+  else if(Lambda<=1625)
+    i = 5;
+  else 
+    i = 6;// 1650
   return i;
 }
 //«уев ».ј.
@@ -1879,7 +1884,7 @@ float GetCurrLvldB(int Lambda)          // ¬озвращает текущий уровень прив€зки и
       return UserSet.CurrLvldB;
     }
   // здесь не совпало с 5 длинами волн калибровки 1300
-  UserSet.CurrLvldB=UserSet.LevelRef[GetIndxPON(Lambda)];
+  UserSet.CurrLvldB=ECoeffPM.LevelRef[GetIndxPON(Lambda)];
   SetPMWavelenght(Lambda); // устанавливаем как текущую
   return UserSet.CurrLvldB;
  
@@ -1893,13 +1898,23 @@ float SetCurrLvldB(int Lambda, float LvldBm)  // устанавливает уровень LvldBm в 
     return UserSet.CurrLvldB;
   
   UserSet.CurrLvldB   = LvldBm;
-  for(i=0;i<WAVE_LENGTHS_NUM;i++)
-    if(Lambda==CoeffPM.PointKalib[i])
-      UserSet.LevelRef[i] = UserSet.CurrLvldB;
+//  for(i=0;i<WAVE_LENGTHS_NUM;i++)
+//    if(Lambda==CoeffPM.PointKalib[i])
+//      UserSet.LevelRef[i] = UserSet.CurrLvldB;
+//  // здесь не совпало с 5 длинами волн калибровки 1300
+//  UserSet.LevelRef[GetIndxPON(Lambda)] = UserSet.CurrLvldB;
+  // измен€ем на расширенную таблицу базовых уровней
+  for(i=0;i<EWAVE_LENGTHS_NUM;i++)
+    if(Lambda==ECoeffPM.PointKalib[i])
+      ECoeffPM.LevelRef[i] = UserSet.CurrLvldB;
   // здесь не совпало с 5 длинами волн калибровки 1300
-  UserSet.LevelRef[GetIndxPON(Lambda)] = UserSet.CurrLvldB;
+  ECoeffPM.LevelRef[GetIndxPON(Lambda)] = UserSet.CurrLvldB;
   
-  EEPROM_write(&UserSet, ADR_UserMeasConfig, sizeof(UserSet));
+   WriteNeedStruct (0x44); // перезапись страницу установок пользовател€ прибора
+   // и базоых уровней расширенной таблицы
+  //EEPROM_write(&ECoeffPM, ADR_ECoeffPM, sizeof(ECoeffPM));
+
+  //EEPROM_write(&UserSet, ADR_UserMeasConfig, sizeof(UserSet));
   
   return UserSet.CurrLvldB;
   
@@ -2356,7 +2371,8 @@ void GetNumVer (char* Str) // получение номера версии
 
 void SetNewLeveldB (float RPON, int i) // установка нового уроан€ прив€зки по прин€тым волнам
 {
-  UserSet.LevelRef[i] = RPON + UserSet.LevelRef[i] ;   
+  //UserSet.LevelRef[i] = RPON + UserSet.LevelRef[i] ;  // отмена 18.11.2026 
+  ECoeffPM.LevelRef[i] = RPON + UserSet.LevelRef[i] ;   
   //UserSet.CurrLvldB = UserSet.LevelRef[i] ;      
 }
 

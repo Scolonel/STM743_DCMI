@@ -188,9 +188,11 @@ void WriteNeedStruct (int NumStruct)
       NumStruct = NumStruct>>1;
       if (NumStruct & 0x01) EEPROM_write(&ReflParam, ADR_EventSet, sizeof(ReflParam)); // установка параметров поиска событий бит 3(0x08)
       NumStruct = NumStruct>>1;
-      if (NumStruct & 0x01)   EEPROM_write(&NameDB, ADR_NameDB, sizeof(NameDB));// сохранение альтернативного имени бит 4(0x10)
+      if (NumStruct & 0x01) EEPROM_write(&NameDB, ADR_NameDB, sizeof(NameDB));// сохранение альтернативного имени бит 4(0x10)
       NumStruct = NumStruct>>1;
       if (NumStruct & 0x01) EEPROM_write(&SetJDSU, ADR_ComplJDSU, sizeof(SetJDSU)); // сохранение данных совместимости JDSU бит 5( 0x20)
+      NumStruct = NumStruct>>1;
+      if (NumStruct & 0x01) EEPROM_write(&ECoeffPM, ADR_ECoeffPM, sizeof(ECoeffPM)); // сохрананение базовых уровней раширенной таблицы (0x40)
       NumStruct = NumStruct>>1;
  
     }
