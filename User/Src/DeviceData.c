@@ -9,6 +9,7 @@ char NumVer[10];// = "180      \0";
  const uint8_t* TxGenOpt={"UUUUUUUUUUUUUUUUU"};
 
 const unsigned WAVE_LENGTHS[WAVE_LENGTHS_NUM] = {850,1310,1490,1550,1625};
+const unsigned EWAVE_LENGTHS[EWAVE_LENGTHS_NUM] = {850,1300,1310,1490,1550,1625,1650};
 
 const char *Ides[2] = {"OOO NPK SvyazServis,\0","OPTOKON Co. Ltd,\0"};
 const char *VerFW[2] = {",SW_rev \0",",SW_rev \0"};
@@ -89,6 +90,9 @@ SPB_STR SupParams;
 FPB_STR FixParams;
 // header data points
 DPNTS_STR HeadDataPoints;
+// структура калиброванных длин волн и их базовых уровней
+// расширение до 7 шт
+TAB_KLBR ECoeffPM;
 
 
 //typedef struct
@@ -838,6 +842,34 @@ void FixErrCoeff (DWORD Err)
       for (int i=0; i<ARRAY_SIZE(CoeffPM.CoefStykRange); ++i) CoeffPM.CoefStykRange[i]=1.0;
   }
 }
+// поиск и исправление таблицы базовых уровней для расширенного перечня длин волн предустановки
+DWORD FindErrECoeff (void)
+{
+  DWORD Err = 0;
+  for (int i=0; i<ARRAY_SIZE(ECoeffPM.EPointKalib); ++i)
+    if (ECoeffPM.EPointKalib[i]>2000) Err |=0x01;// длины волн расширенной предустановки 
+  for (int i=0; i<ARRAY_SIZE(ECoeffPM.LevelRef); ++i)
+    if (isnan(ECoeffPM.LevelRef[i])||(ECoeffPM.LevelRef[i]<-100.0)||(ECoeffPM.LevelRef[i]>100.0))
+    {
+    ECoeffPM.LevelRef[i] = (float)(-i);  
+    Err |=0x04;// базовые уровни длин волн расширенной предустановки
+    }
+  return Err;
+}
+
+void FixErrECoeff (DWORD Err)
+{
+
+  if (Err != 0)
+  {
+    if (Err & 0x01) 
+    {
+      for( unsigned i = 0; i < EWAVE_LENGTHS_NUM; ++i )
+        ECoeffPM.EPointKalib[i] =  EWAVE_LENGTHS[i];
+    }
+  }
+}
+
 // контроль таблицы настройки измерителя
 DWORD CheckErrCoeff (void)
 {

@@ -2,6 +2,7 @@
 #define __DEVICEDATA_H__
 
 #define WAVE_LENGTHS_NUM 5
+#define EWAVE_LENGTHS_NUM 7
 #define LENGTH_LINE_NUM 7
 //#define WIDTH_PULSE_NUM 11//8 добавили 5 нС, 21.04.2026 добавили 80 и 300 нС (11)
 #define WIDTH_PULSE_NUM 10// 21.05.2026 убрали 80 и измнили 40 на 50 нС (10) A.K.
@@ -93,6 +94,12 @@ float CoefSpctrL[6]; // коэффициенты спектральной харр. 800-900={16,15,14,13,12,
 float CoefSpctrM[10]; // коэффициенты спектральной харр. 1210-1390 (было 9 с 1370)={1,1,1,1,0.95,1,0.95,0.90,0.85,1}
 float CoefSpctrH[13]; // коэффициенты спектральной харр. 1410-1650={1,1,1,1,1,1,1,1,1,1,1,1,1}
 } TAB_SET;
+// структура расширенного списка калиброванных длин волн и их привязок
+typedef struct
+{
+unsigned int EPointKalib[EWAVE_LENGTHS_NUM];// длины волн калибровки если 0 то ее нет={850,1300,1310,1490,1550,1625,1650};
+float LevelRef[EWAVE_LENGTHS_NUM]; // коэффициенты привязки длин волн калибровки={0.0,0.0,0.0,0.0,0.0,0.0,0.0}
+} TAB_KLBR;
 
 // структура конфигурации прибора
 typedef struct
@@ -387,6 +394,9 @@ extern REFL_SET MemSetRefl;
 extern REFL_SET ReSetRefl;
 // структура коэффициентов измерителя мощности
 extern TAB_SET CoeffPM;
+// структура калиброванных длин волн и их базовых уровней
+// расширение до 7 шт
+extern TAB_KLBR ECoeffPM;
 
 extern unsigned long CurCountFiles; // порядковый номер текущего файла (читаем из памяти)
 

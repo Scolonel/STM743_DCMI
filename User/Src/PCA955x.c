@@ -205,6 +205,7 @@ uint32_t BeginConfig (void) // начальная конфигурация
   uint32_t CodeError = 0; //
     uint32_t ErrDev=0;
     uint32_t SPCTR_err=0;
+    uint32_t Kalibr_err=0;
   // проверка наличия микросхемы управления ключами 95555 на шине I2C(2)
   //конфигурация PCA9555 ( клавитатура ) адрес 0x20
   // устанавливаем как входы все! несмотря на то что после сброса уже должно быть как входд
@@ -300,6 +301,15 @@ uint32_t BeginConfig (void) // начальная конфигурация
     if (Blkr_err)
     {
       EEPROM_write(&GenParams, ADR_GenParamBelcore, sizeof(GenParams));
+    }
+    // контроль расширенной таблицы калиброванных длин волн
+    EEPROM_read(&ECoeffPM, ADR_ECoeffPM, sizeof(ECoeffPM)); //проверка таблицы коэффициентов и исправление таблицы коэффициентов
+    Kalibr_err = FindErrECoeff ();
+    if (Kalibr_err)
+    {
+      //CodeError |= ERR_SPECTR; // плохая спектралка правим! (0x100)
+      FixErrECoeff (Kalibr_err); //  фиксируем  (исправляем коэффициенты)
+      EEPROM_write(&ECoeffPM, ADR_ECoeffPM, sizeof(ECoeffPM));
     }
     
     //  // поуправляем переферией
