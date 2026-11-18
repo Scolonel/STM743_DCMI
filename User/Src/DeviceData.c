@@ -1862,11 +1862,19 @@ float GetCurrLvldB(int Lambda)          // ¬озвращает текущий уровень прив€зки и
   
   if((Lambda<800) || ((Lambda>900)&&(Lambda<1210)) || (Lambda>1650)) // ≈сли указана неверна€ длина волны 
     return UserSet.CurrLvldB;
-  
-  for(i=0;i<WAVE_LENGTHS_NUM;i++)
-    if(Lambda==CoeffPM.PointKalib[i])
+// старый - короткий список  
+//  for(i=0;i<WAVE_LENGTHS_NUM;i++)
+//    if(Lambda==CoeffPM.PointKalib[i])
+//    {      
+//      UserSet.CurrLvldB=UserSet.LevelRef[i];
+//      SetPMWavelenght(Lambda); // устанавливаем как текущую
+//      return UserSet.CurrLvldB;
+//    }
+// новый - расширенный  
+  for(i=0;i<EWAVE_LENGTHS_NUM;i++)
+    if(Lambda==ECoeffPM.EPointKalib[i])
     {      
-      UserSet.CurrLvldB=UserSet.LevelRef[i];
+      UserSet.CurrLvldB=ECoeffPM.LevelRef[i];
       SetPMWavelenght(Lambda); // устанавливаем как текущую
       return UserSet.CurrLvldB;
     }

@@ -24,20 +24,36 @@ unsigned int GetPMWavelenght(signed char DeltaLambda) //Возвращает, либо изменяе
 {
   BYTE i=0;     // Индекс
   if(!DeltaLambda) return PMWavelenght;         // Если DeltaLambda ноль,  то возращам текущую длину волны
-  
+
+// старое переключение по короткому списку  
+//  if(DeltaLambda==13)                           // Если DeltaLambda равна 13, то переключамся по калиброваным длинам волн
+//  {
+//    for(i=0;i<WAVE_LENGTHS_NUM;i++)
+//      if(PMWavelenght<CoeffPM.PointKalib[i])
+//      {
+//        PMWavelenght=CoeffPM.PointKalib[i];
+//        return CoeffPM.PointKalib[i];
+//      }
+//      
+//      PMWavelenght=CoeffPM.PointKalib[0];
+//      
+//    return  PMWavelenght;    
+//  };
+// новый - расширенный список  
   if(DeltaLambda==13)                           // Если DeltaLambda равна 13, то переключамся по калиброваным длинам волн
   {
-    for(i=0;i<WAVE_LENGTHS_NUM;i++)
-      if(PMWavelenght<CoeffPM.PointKalib[i])
+    for(i=0;i<EWAVE_LENGTHS_NUM;i++)
+      if(PMWavelenght<ECoeffPM.EPointKalib[i])
       {
-        PMWavelenght=CoeffPM.PointKalib[i];
-        return CoeffPM.PointKalib[i];
+        PMWavelenght=ECoeffPM.EPointKalib[i];
+        return ECoeffPM.EPointKalib[i];
       }
       
-      PMWavelenght=CoeffPM.PointKalib[0];
+      PMWavelenght=ECoeffPM.EPointKalib[0];
       
     return  PMWavelenght;    
   };
+
   // блок для обычных измерителей
   if (WIDE_VER)  // если нет перемычки для расширенного диапазона
   {

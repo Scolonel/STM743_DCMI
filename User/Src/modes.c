@@ -5244,8 +5244,10 @@ void ModeMeasManualOLT(void) // режим работы тестера в ручном режиме CHECK_OFF
       KeyCodeP = KeyP; //
       myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
-      GetCurrLvldB(GetPMWavelenght(13));
+      GetCurrLvldB(GetPMWavelenght(13));// в первой подфункции выбираем длину волны калибровки из основного списка (короткого)
+    // в основной функции устанавливаем базовый уровень для длины волны 
     }
+    
     
     break;
     
