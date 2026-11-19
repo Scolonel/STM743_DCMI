@@ -172,9 +172,9 @@ unsigned short PointsPickIndx[16];
   static char ViewMode = VIEWER;//SETCSALE
   static BYTE TypeCentral = MEDIUM;
 // переменные автоматического измерителя
-static float RPON[5]; // значения для записи в память PON 0-850,1-1310,2-1490,3-1550,4-1625 
-static unsigned short LWPON[5]; //длины волн принятые что бы не привязываться к калиброванным
-static unsigned short LWCNT[5]; //счетчик времени не принятия записанной волны
+static float RPON[7]; // значения для записи в память PON 0-850,1-1300,2-1310,3-1490,4-1550,5-1625 ,6-1650
+static unsigned short LWPON[7]; //длины волн принятые что бы не привязываться к калиброванным
+static unsigned short LWCNT[7]; //счетчик времени не принятия записанной волны
 static BYTE ModAutoPM = WAITING; // режим измерителя авто ожидаем
 static float LastPower; // значения для записи в память manual
 //static BYTE Pow_Yes; //признак приняли длину волны можно измерять спустя некоторое время
@@ -5200,7 +5200,7 @@ void ModeMeasManualOLT(void) // режим работы тестера в ручном режиме CHECK_OFF
       if (GetRange() == 0)
       {
         myBeep(85);
-        AcquireShZeroLowRng();                 // руная переустановка нуля на чувствительном диапазоне
+        AcquireShZeroLowRng();                 // ручная переустановка нуля на чувствительном диапазоне
       }
       //AcquireCoefStykRange(1);
     }
@@ -5506,10 +5506,11 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
   {
     KeyCodeP = KeyP; //
     myBeep(10);
-    for (int i=0; i<5; i++)
+    for (int i=0; i<7; i++)
     {
       if ( RPON[i]>-100.0)
       {
+        
         SetNewLeveldB (RPON[i], GetIndxPON(LWPON[i])); // установка нового уровня привязки по принятым волнам
       }
     }
@@ -5533,7 +5534,7 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
       LWPON[IndWavePON]=TempNumWave; // запишем длину волны в ячейку (для индикации)
       LWCNT[IndWavePON] = 0; // clear cnt текущей волны
       // myBeep(5); //писк подтверждения приема
-      for (int i=0; i<5; i++)
+      for (int i=0; i<7; i++)
       {
         if (LWPON[i] != 0) // если есть запись и совпадает с пришедшей
         {
@@ -5700,7 +5701,7 @@ void ModeMeasAutoOLT(void) // режим работы тестера в автоматическом режиме
     //LED_KTT(1);
     
     M_PON = 0;
-    for (int i=0; i<5; ++i)
+    for (int i=0; i<7; ++i)
     {
       if ((RPON[i]>-100.0)&&(M_PON<3)) // есть значение для индикации
       {

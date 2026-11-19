@@ -1905,7 +1905,7 @@ float SetCurrLvldB(int Lambda, float LvldBm)  // устанавливает уровень LvldBm в 
 //  UserSet.LevelRef[GetIndxPON(Lambda)] = UserSet.CurrLvldB;
   // изменяем на расширенную таблицу базовых уровней
   for(i=0;i<EWAVE_LENGTHS_NUM;i++)
-    if(Lambda==ECoeffPM.PointKalib[i])
+    if(Lambda==ECoeffPM.EPointKalib[i])
       ECoeffPM.LevelRef[i] = UserSet.CurrLvldB;
   // здесь не совпало с 5 длинами волн калибровки 1300
   ECoeffPM.LevelRef[GetIndxPON(Lambda)] = UserSet.CurrLvldB;
@@ -2372,7 +2372,7 @@ void GetNumVer (char* Str) // получение номера версии
 void SetNewLeveldB (float RPON, int i) // установка нового уроаня привязки по принятым волнам
 {
   //UserSet.LevelRef[i] = RPON + UserSet.LevelRef[i] ;  // отмена 18.11.2026 
-  ECoeffPM.LevelRef[i] = RPON + UserSet.LevelRef[i] ;   
+  ECoeffPM.LevelRef[i] = RPON + ECoeffPM.LevelRef[i] ;   
   //UserSet.CurrLvldB = UserSet.LevelRef[i] ;      
 }
 
